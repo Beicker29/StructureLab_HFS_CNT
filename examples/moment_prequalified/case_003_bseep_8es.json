@@ -1,0 +1,187 @@
+{
+  "project_id": "proj_bseep_si_demo",
+  "case_id": "case_si_bseep_8es_w18x175_w24x76",
+  "design_code_context": {
+    "primary_document": "AISC 358-22",
+    "supporting_documents": []
+  },
+  "units_system": "SI",
+  "connection_family": "moment_prequalified",
+  "connection_type": "bseep_8es",
+  "load_state": "strength",
+  "sections": {
+    "beam_shape": "W24X76",
+    "column_shape": "W18X175"
+  },
+  "materials": {
+    "profile_steel_type": "ASTM A572 Gr 50",
+    "plate_steel_type": "ASTM A572 Gr 50",
+    "bolt_fabrication_standard": "ASTM A490",
+    "bolt_description": "Grupo 150",
+    "bolt_shape": "P1-1/8\"X1-3/4\"",
+    "bolt_thread_condition": "N",
+    "elastic_modulus": {
+      "value": 200000,
+      "unit": "MPa"
+    }
+  },
+  "geometry": {
+    "bolt_gage": {
+      "value": 152.4,
+      "unit": "mm"
+    },
+    "end_plate_width": {
+      "value": 270.0,
+      "unit": "mm"
+    },
+    "end_plate_thickness": {
+      "value": 25.4,
+      "unit": "mm"
+    },
+    "de": {
+      "value": 60.0,
+      "unit": "mm"
+    },
+    "pb": {
+      "value": 95.0,
+      "unit": "mm"
+    },
+    "pfo": {
+      "value": 50.0,
+      "unit": "mm"
+    },
+    "pfi": {
+      "value": 50.0,
+      "unit": "mm"
+    },
+    "continuity_plate_thickness": {
+      "value": 15.9,
+      "unit": "mm"
+    },
+    "clear_distance_end_plate": {
+      "value": 50.8,
+      "unit": "mm"
+    },
+    "clear_distance_column_flange": {
+      "value": 50.8,
+      "unit": "mm"
+    },
+    "column_end_distance_to_beam_flange": {
+      "value": 762.0,
+      "unit": "mm"
+    },
+    "weld_leg_size_w": {
+      "value": 9.525,
+      "unit": "mm"
+    },
+    "stiffener_height": {
+      "value": 101.6,
+      "unit": "mm"
+    },
+    "stiffener_length": {
+      "value": 190.5,
+      "unit": "mm"
+    },
+    "stiffener_thickness": {
+      "value": 12.7,
+      "unit": "mm"
+    }
+  },
+  "loads": {
+    "probable_moment_column_face": {
+      "value": 677908.974,
+      "unit": "kN-mm"
+    },
+    "beam_gravity_shear_between_hinges": {
+      "value": 44.482,
+      "unit": "kN"
+    },
+    "required_connection_shear": {
+      "value": 889.644,
+      "unit": "kN"
+    },
+    "required_beam_shear": {
+      "value": 889.644,
+      "unit": "kN"
+    },
+    "required_web_weld_force": {
+      "value": 355.858,
+      "unit": "kN"
+    },
+    "panel_zone_demand": {
+      "value": 444.822,
+      "unit": "kN"
+    }
+  },
+  "design_factors": {
+    "phi_d": 0.9,
+    "phi_n": 0.9,
+    "ry": 1.1,
+    "member_ductility_demand_beam": "high",
+    "member_ductility_demand_column": "high",
+    "compactness_ca_beam": 0.0,
+    "compactness_ca_column": 0.062,
+    "column_beam_moment_ratio_minimum": 1.0
+  },
+  "procedure": {
+    "beam_plastic_section_modulus_ze": {
+      "value": 1310965.12,
+      "unit": "mm3"
+    },
+    "beam_span_between_plastic_hinges_lh": {
+      "value": 6096.0,
+      "unit": "mm"
+    },
+    "yield_line_parameter_yp": {
+      "value": 177.8,
+      "unit": "mm"
+    },
+    "column_yield_line_parameter_yc_unstiffened": {
+      "value": 6350.0,
+      "unit": "mm"
+    },
+    "column_yield_line_parameter_yc_stiffened": {
+      "value": 6985.0,
+      "unit": "mm"
+    },
+    "tension_bolt_line_distances": [
+      {
+        "value": 203.2,
+        "unit": "mm"
+      },
+      {
+        "value": 254.0,
+        "unit": "mm"
+      },
+      {
+        "value": 304.8,
+        "unit": "mm"
+      },
+      {
+        "value": 355.6,
+        "unit": "mm"
+      }
+    ],
+    "beam_available_shear_strength": {
+      "value": 1156.537,
+      "unit": "kN"
+    },
+    "flange_weld_available_strength": {
+      "value": 1334.466,
+      "unit": "kN"
+    },
+    "web_weld_available_strength": {
+      "value": 889.644,
+      "unit": "kN"
+    },
+    "continuity_plate_available_strength": {
+      "value": 444.822,
+      "unit": "kN"
+    },
+    "panel_zone_capacity": {
+      "value": 667.233,
+      "unit": "kN"
+    },
+    "column_beam_moment_ratio": 1.2
+  }
+}
