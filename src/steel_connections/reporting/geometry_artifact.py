@@ -286,6 +286,8 @@ def _build_bseep_8es_elevation_svg(case: AISC358MomentCase) -> str:
         beam_shape=case.sections.beam_shape,
         unit_system=case.units_system,
     )
+    tfb = beam["tf"]
+    d = beam["d"]
     de = _require_length(case, "de")
     pb = _require_length(case, "pb")
     pfo = _require_length(case, "pfo")
@@ -297,10 +299,8 @@ def _build_bseep_8es_elevation_svg(case: AISC358MomentCase) -> str:
         raise ValueError(
             "Computed psi must be positive. Check geometry.pfi, beam flange thickness tfb, and geometry.continuity_plate_thickness."
         )
-    hst = _require_length(case, "stiffener_height")
-    lst = _require_length(case, "stiffener_length")
-    tfb = beam["tf"]
-    d = beam["d"]
+    hst = Quantity(value=pfo.value + de.value, unit=pfo.unit)
+    lst = Quantity(value=hst.value / 0.5773502691896257, unit=hst.unit)
 
     info = [
         f"de = {_fmt_length(de)}",

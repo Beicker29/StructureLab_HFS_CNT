@@ -88,6 +88,9 @@ class AISC358MomentMaterials(StrictModel):
 class AISC358MomentGeometry(StrictModel):
     beam_flange_area: Quantity | None = None
     weld_effective_area: Quantity | None = None
+    beam_clear_span_length: Quantity | None = None
+    beam_shear_connector_free_length_from_column_face: Quantity | None = None
+    column_slab_connection_condition: str | None = None
     end_plate_width: Quantity | None = None
     end_plate_thickness: Quantity | None = None
     de: Quantity | None = None
@@ -95,19 +98,65 @@ class AISC358MomentGeometry(StrictModel):
     pfo: Quantity | None = None
     pfi: Quantity | None = None
     continuity_plate_thickness: Quantity | None = None
+    continuity_plate_weld_type: str | None = None
     bolt_diameter: Quantity | None = None
     bolt_gage: Quantity | None = None
+    bolt_tightening_type: str | None = None
     clear_distance_end_plate: Quantity | None = None
     clear_distance_column_flange: Quantity | None = None
     column_end_distance_to_beam_flange: Quantity | None = None
     weld_leg_size_w: Quantity | None = None
+    end_plate_beam_web_weld_type: str | None = None
+    end_plate_beam_web_weld_length_lwe: Quantity | None = None
+    end_plate_beam_web_weld_thickness_twe: Quantity | None = None
     stiffener_height: Quantity | None = None
     stiffener_thickness: Quantity | None = None
     stiffener_length: Quantity | None = None
 
+    @field_validator("column_slab_connection_condition")
+    @classmethod
+    def validate_column_slab_connection_condition(cls, value: str | None) -> str | None:
+        if value is None:
+            return value
+        normalized = value.strip().lower().replace("-", "_").replace(" ", "_")
+        if normalized in {"isolated", "aislada"}:
+            return "isolated"
+        if normalized in {"not_isolated", "no_aislada"}:
+            return "not_isolated"
+        raise ValueError(
+            "geometry.column_slab_connection_condition must be "
+            "'isolated' or 'not_isolated' (also accepts 'aislada'/'no_aislada')."
+        )
+
+    @field_validator("continuity_plate_weld_type", "end_plate_beam_web_weld_type")
+    @classmethod
+    def normalize_weld_type_fields(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        normalized = value.strip()
+        if not normalized:
+            return None
+        return normalized
+
+    @field_validator("bolt_tightening_type")
+    @classmethod
+    def normalize_bolt_tightening_type(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        normalized = value.strip().lower().replace("-", "_").replace(" ", "_")
+        if not normalized:
+            return None
+        if normalized in {"pretensioned", "pretensionado", "pretensado", "apriete_pretensionado"}:
+            return "pretensioned"
+        if normalized in {"snug_tight", "snugtight", "apriete_justo"}:
+            return "snug_tight"
+        return normalized
+
 
 class AISC358MomentLoads(StrictModel):
     beam_flange_tension: Quantity | None = None
+    pu_viga: Quantity | None = None
+    pu_columna: Quantity | None = None
     probable_moment_column_face: Quantity | None = None
     probable_moment_plastic_hinge: Quantity | None = None
     shear_plastic_hinge: Quantity | None = None
@@ -127,8 +176,6 @@ class AISC358MomentDesignFactors(StrictModel):
     ry: float | None = None
     member_ductility_demand_beam: str | None = None
     member_ductility_demand_column: str | None = None
-    compactness_ca_beam: float | None = None
-    compactness_ca_column: float | None = None
     column_beam_moment_ratio_minimum: float | None = None
 
     @field_validator(
@@ -163,15 +210,6 @@ class AISC358MomentDesignFactors(StrictModel):
         if normalized not in {"high", "moderate"}:
             raise ValueError("member_ductility_demand_* must be 'high' or 'moderate'.")
         return normalized
-
-    @field_validator("compactness_ca_beam", "compactness_ca_column")
-    @classmethod
-    def validate_compactness_ca(cls, value: float | None) -> float | None:
-        if value is None:
-            return value
-        if value < 0.0 or value >= 1.0:
-            raise ValueError("Compactness coefficient Ca must satisfy 0 <= Ca < 1.")
-        return value
 
     @field_validator("column_beam_moment_ratio_minimum")
     @classmethod
@@ -301,6 +339,8 @@ class AISC358MomentCase(CaseBase):
                 "loads.beam_flange_tension",
             )
         for field_name in (
+            "beam_clear_span_length",
+            "beam_shear_connector_free_length_from_column_face",
             "end_plate_width",
             "end_plate_thickness",
             "de",
@@ -314,6 +354,8 @@ class AISC358MomentCase(CaseBase):
             "clear_distance_column_flange",
             "column_end_distance_to_beam_flange",
             "weld_leg_size_w",
+            "end_plate_beam_web_weld_length_lwe",
+            "end_plate_beam_web_weld_thickness_twe",
             "stiffener_height",
             "stiffener_thickness",
             "stiffener_length",
@@ -334,6 +376,8 @@ class AISC358MomentCase(CaseBase):
                 "loads.required_connection_shear",
             )
         for field_name in (
+            "pu_viga",
+            "pu_columna",
             "shear_plastic_hinge",
             "beam_gravity_shear_between_hinges",
             "beam_gravity_shear_face_segment",

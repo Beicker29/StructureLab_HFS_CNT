@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Callable
 
 from steel_connections.codes.aisc358.chapter_06 import (
     compute_minimum_bolt_spacing,
@@ -33,7 +33,7 @@ from steel_connections.data.sections_repository import get_beam_profile_properti
 from steel_connections.models.errors import missing_required_input_error
 from steel_connections.models.input import AISC358MomentCase
 from steel_connections.models.output import CalculationMemory, CheckResult, CheckStatus
-from steel_connections.models.units import Quantity
+from steel_connections.models.units import Quantity, UnitSystem
 
 
 def _resolve_path(obj: Any, field_path: str) -> Any:
@@ -186,6 +186,55 @@ def _profile_kdes(profile: dict[str, Quantity], *, role: str, rule_binding: obje
     return kdes
 
 
+def _profile_ag(profile: dict[str, Quantity], *, role: str, rule_binding: object) -> Quantity:
+    ag = profile.get("ag")
+    if ag is None:
+        raise missing_required_input_error(
+            rule_id=rule_binding.rule_id,
+            source_document=rule_binding.source_document,
+            missing_fields=[f"sections.{role}_shape"],
+            message=(
+                f"Catalog property 'A' (gross area) for sections.{role}_shape is required "
+                "to compute compactness coefficient Ca = Pu/(Ry*Ag*Fy)."
+            ),
+        )
+    return ag
+
+
+def _derive_stiffener_height_from_de_pfo(*, de: Quantity, pfo: Quantity) -> Quantity:
+    return Quantity(value=pfo.value + de.value, unit=pfo.unit)
+
+
+def _derive_stiffener_length_from_hst(*, stiffener_height: Quantity, unit_system: UnitSystem) -> Quantity:
+    return compute_minimum_stiffener_length(stiffener_height, unit_system)
+
+
+def _compute_compactness_ca(
+    *,
+    pu: Quantity,
+    ry: float,
+    ag: Quantity,
+    fy: Quantity,
+    role: str,
+    unit_system: UnitSystem,
+) -> tuple[float, dict[str, Any]]:
+    # US: ksi * in2 = kip. SI: MPa * mm2 = N, convert to kN for consistency with Pu(kN).
+    denominator_base = ry * ag.value * fy.value
+    denominator_force = denominator_base if unit_system == UnitSystem.US else denominator_base / 1000.0
+    if denominator_force <= 0.0:
+        raise ValueError(f"Invalid denominator for Ca calculation in {role}: Ry*Ag*Fy must be positive.")
+    ca = pu.value / denominator_force
+    return ca, {
+        "pu": pu.model_dump(),
+        "ry": ry,
+        "ag": ag.model_dump(),
+        "fy": fy.model_dump(),
+        "formula": "Ca = Pu / (Ry * Ag * Fy)",
+        "denominator_base": denominator_base,
+        "denominator_force_units": denominator_force,
+    }
+
+
 def _compute_sh(case: AISC358MomentCase, rule_binding: object) -> Quantity:
     beam_profile = _beam_profile(case)
     stiffener_length = case.geometry.stiffener_length
@@ -194,7 +243,13 @@ def _compute_sh(case: AISC358MomentCase, rule_binding: object) -> Quantity:
         stiffener_length = None
         end_plate_thickness = None
     else:
-        stiffener_length = _require(case, "geometry.stiffener_length", rule_binding)
+        de = _require(case, "geometry.de", rule_binding)
+        pfo = _require(case, "geometry.pfo", rule_binding)
+        hst = _derive_stiffener_height_from_de_pfo(de=de, pfo=pfo)
+        stiffener_length = _derive_stiffener_length_from_hst(
+            stiffener_height=hst,
+            unit_system=case.units_system,
+        )
         end_plate_thickness = _require(case, "geometry.end_plate_thickness", rule_binding)
     return compute_sh(
         connection_type=case.connection_type,
@@ -299,11 +354,29 @@ def run_step1a_member_compactness(case: AISC358MomentCase, rule_binding: object)
     ry = _require(case, "design_factors.ry", rule_binding)
     beam_ductility = _require(case, "design_factors.member_ductility_demand_beam", rule_binding)
     column_ductility = _require(case, "design_factors.member_ductility_demand_column", rule_binding)
-    ca_beam = _require(case, "design_factors.compactness_ca_beam", rule_binding)
-    ca_column = _require(case, "design_factors.compactness_ca_column", rule_binding)
     elastic_modulus = _require(case, "materials.elastic_modulus", rule_binding)
     beam_fy = _require(case, "materials.beam_fy", rule_binding)
     column_fy = _require(case, "materials.column_fy", rule_binding)
+    pu_beam = _require(case, "loads.pu_viga", rule_binding)
+    pu_column = _require(case, "loads.pu_columna", rule_binding)
+    beam_ag = _profile_ag(beam_profile, role="beam", rule_binding=rule_binding)
+    column_ag = _profile_ag(column_profile, role="column", rule_binding=rule_binding)
+    ca_beam, ca_beam_trace = _compute_compactness_ca(
+        pu=pu_beam,
+        ry=ry,
+        ag=beam_ag,
+        fy=beam_fy,
+        role="beam",
+        unit_system=case.units_system,
+    )
+    ca_column, ca_column_trace = _compute_compactness_ca(
+        pu=pu_column,
+        ry=ry,
+        ag=column_ag,
+        fy=column_fy,
+        role="column",
+        unit_system=case.units_system,
+    )
 
     beam_flange_ratio = compute_flange_slenderness_ratio(
         flange_width=beam_profile["bf"],
@@ -382,8 +455,12 @@ def run_step1a_member_compactness(case: AISC358MomentCase, rule_binding: object)
             "beam_fy": beam_fy.model_dump(),
             "column_fy": column_fy.model_dump(),
             "ry": ry,
-            "compactness_ca_beam": ca_beam,
-            "compactness_ca_column": ca_column,
+            "pu_viga": pu_beam.model_dump(),
+            "pu_columna": pu_column.model_dump(),
+            "ag_viga": beam_ag.model_dump(),
+            "ag_columna": column_ag.model_dump(),
+            "compactness_ca_beam_calculated": ca_beam,
+            "compactness_ca_column_calculated": ca_column,
             "beam_flange_ratio_b_over_t": beam_flange_ratio,
             "beam_web_ratio_h_over_tw": beam_web_ratio,
             "column_flange_ratio_b_over_t": column_flange_ratio,
@@ -400,6 +477,8 @@ def run_step1a_member_compactness(case: AISC358MomentCase, rule_binding: object)
             "column_web_dcr": column_web_dcr,
             "beam_web_clear_depth": beam_web_intermediate["clear_web_depth"],
             "column_web_clear_depth": column_web_intermediate["clear_web_depth"],
+            "ca_beam_trace": ca_beam_trace,
+            "ca_column_trace": ca_column_trace,
         },
         design_factors={
             "ry": ry,
@@ -508,12 +587,62 @@ def run_step5_preliminary_geometry_selection(case: AISC358MomentCase, rule_bindi
 def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding: object) -> CheckResult:
     db = _require(case, "geometry.bolt_diameter", rule_binding)
     g = _require(case, "geometry.bolt_gage", rule_binding)
+    bolt_tightening_type = case.geometry.bolt_tightening_type
+    bolt_fabrication_standard = case.materials.bolt_fabrication_standard
     bp = _require(case, "geometry.end_plate_width", rule_binding)
     pb = _require(case, "geometry.pb", rule_binding)
     de = _require(case, "geometry.de", rule_binding)
     pfo = _require(case, "geometry.pfo", rule_binding)
     pfi = _require(case, "geometry.pfi", rule_binding)
-    bf = _beam_profile(case)["bf"]
+    tp = _require(case, "geometry.end_plate_thickness", rule_binding)
+    tcp = _require(case, "geometry.continuity_plate_thickness", rule_binding)
+    continuity_plate_weld_type_raw = case.geometry.continuity_plate_weld_type
+    end_plate_beam_web_weld_type_raw = case.geometry.end_plate_beam_web_weld_type
+    lwe = _require(case, "geometry.end_plate_beam_web_weld_length_lwe", rule_binding)
+    weld_fexx = _require(case, "materials.weld_fexx", rule_binding)
+    beam_clear_span_length = _require(case, "geometry.beam_clear_span_length", rule_binding)
+    shear_connector_free_length = _require(
+        case,
+        "geometry.beam_shear_connector_free_length_from_column_face",
+        rule_binding,
+    )
+    slab_connection_condition = _require(case, "geometry.column_slab_connection_condition", rule_binding)
+    beam_profile = _beam_profile(case)
+    column_profile = _column_profile(case)
+    bf = beam_profile["bf"]
+    bcf = column_profile["bf"]
+    beam_depth = beam_profile["d"]
+    beam_ductility = _require(case, "design_factors.member_ductility_demand_beam", rule_binding)
+    column_ductility = _require(case, "design_factors.member_ductility_demand_column", rule_binding)
+    ry = _require(case, "design_factors.ry", rule_binding)
+    elastic_modulus = _require(case, "materials.elastic_modulus", rule_binding)
+    beam_fy = _require(case, "materials.beam_fy", rule_binding)
+    column_fy = _require(case, "materials.column_fy", rule_binding)
+    pu_beam = _require(case, "loads.pu_viga", rule_binding)
+    pu_column = _require(case, "loads.pu_columna", rule_binding)
+    beam_ag = _profile_ag(beam_profile, role="beam", rule_binding=rule_binding)
+    column_ag = _profile_ag(column_profile, role="column", rule_binding=rule_binding)
+    end_plate_height = _derive_stiffener_height_from_de_pfo(de=de, pfo=pfo)
+    stiffener_length_derived = _derive_stiffener_length_from_hst(
+        stiffener_height=end_plate_height,
+        unit_system=case.units_system,
+    )
+    ca_beam, ca_beam_trace = _compute_compactness_ca(
+        pu=pu_beam,
+        ry=ry,
+        ag=beam_ag,
+        fy=beam_fy,
+        role="beam",
+        unit_system=case.units_system,
+    )
+    ca_column, ca_column_trace = _compute_compactness_ca(
+        pu=pu_column,
+        ry=ry,
+        ag=column_ag,
+        fy=column_fy,
+        role="column",
+        unit_system=case.units_system,
+    )
 
     min_spacing = compute_minimum_bolt_spacing(
         bolt_diameter=db,
@@ -525,57 +654,1077 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
         bolt_diameter=db,
         unit_system=case.units_system,
     )
-    per_check = {
-        "bp_ge_bf_plus_margin": {"actual": bp.value, "required": min_bp.value},
-        "bolt_gage_g_ge_3db": {"actual": g.value, "required": min_spacing.value},
-        "pitch_pb_ge_3db": {"actual": pb.value, "required": min_spacing.value},
-        "edge_de_ge_emin": {"actual": de.value, "required": min_edge.value},
-        "edge_pfo_ge_emin": {"actual": pfo.value, "required": min_edge.value},
-        "edge_pfi_ge_emin": {"actual": pfi.value, "required": min_edge.value},
-    }
-    dcr_by_check = {name: values["required"] / values["actual"] for name, values in per_check.items()}
-    max_dcr = max(dcr_by_check.values())
 
-    return _build_result(
-        rule_binding=rule_binding,
-        demand=Quantity(value=max_dcr, unit="ratio"),
-        capacity=Quantity(value=1.0, unit="ratio"),
-        equation=(
-            "AISC 358-22w Section 6.3 prequalification geometry limits: bp >= bf + 25 mm (or +1 in in US); spacing >= 3db; "
-            "minimum edge distances per Table J3.4 for standard holes"
+    def _table61_length(*, us_in: float, si_mm: float) -> Quantity:
+        if case.units_system.value == "US":
+            return Quantity(value=us_in, unit="in")
+        # Use exact in->mm conversion to avoid rounding mismatches between paired unit columns.
+        return Quantity(value=us_in * 25.4, unit="mm")
+
+    table_61_limits: dict[str, dict[str, tuple[Quantity, Quantity] | None]] = {
+        "bueep_4e": {
+            "tbf": (_table61_length(us_in=3.0 / 8.0, si_mm=10.0), _table61_length(us_in=3.0 / 4.0, si_mm=19.0)),
+            "bbf": (_table61_length(us_in=6.0, si_mm=150.0), _table61_length(us_in=9.25, si_mm=230.0)),
+            "d": (_table61_length(us_in=13.75, si_mm=350.0), _table61_length(us_in=24.0, si_mm=600.0)),
+            "tp": (_table61_length(us_in=0.5, si_mm=13.0), _table61_length(us_in=2.25, si_mm=57.0)),
+            "bp": (_table61_length(us_in=7.0, si_mm=180.0), _table61_length(us_in=10.75, si_mm=270.0)),
+            "g": (_table61_length(us_in=4.0, si_mm=100.0), _table61_length(us_in=6.0, si_mm=150.0)),
+            "pfi": (_table61_length(us_in=1.5, si_mm=38.0), _table61_length(us_in=4.5, si_mm=110.0)),
+            "pfo": (_table61_length(us_in=1.5, si_mm=38.0), _table61_length(us_in=4.5, si_mm=110.0)),
+            "pb": None,
+        },
+        "bseep_4es": {
+            "tbf": (_table61_length(us_in=3.0 / 8.0, si_mm=10.0), _table61_length(us_in=3.0 / 4.0, si_mm=19.0)),
+            "bbf": (_table61_length(us_in=6.0, si_mm=150.0), _table61_length(us_in=9.0, si_mm=230.0)),
+            "d": (_table61_length(us_in=13.75, si_mm=350.0), _table61_length(us_in=24.0, si_mm=600.0)),
+            "tp": (_table61_length(us_in=0.5, si_mm=13.0), _table61_length(us_in=1.5, si_mm=38.0)),
+            "bp": (_table61_length(us_in=7.0, si_mm=180.0), _table61_length(us_in=10.75, si_mm=270.0)),
+            "g": (_table61_length(us_in=3.25, si_mm=83.0), _table61_length(us_in=6.0, si_mm=150.0)),
+            "pfi": (_table61_length(us_in=1.75, si_mm=44.0), _table61_length(us_in=5.5, si_mm=140.0)),
+            "pfo": (_table61_length(us_in=1.75, si_mm=44.0), _table61_length(us_in=5.5, si_mm=140.0)),
+            "pb": None,
+        },
+        "bseep_8es": {
+            "tbf": (_table61_length(us_in=9.0 / 16.0, si_mm=14.0), _table61_length(us_in=1.0, si_mm=25.0)),
+            "bbf": (_table61_length(us_in=7.5, si_mm=190.0), _table61_length(us_in=12.25, si_mm=310.0)),
+            "d": (_table61_length(us_in=18.0, si_mm=460.0), _table61_length(us_in=36.0, si_mm=910.0)),
+            "tp": (_table61_length(us_in=0.75, si_mm=19.0), _table61_length(us_in=2.5, si_mm=64.0)),
+            "bp": (_table61_length(us_in=9.0, si_mm=230.0), _table61_length(us_in=15.0, si_mm=380.0)),
+            "g": (_table61_length(us_in=5.0, si_mm=130.0), _table61_length(us_in=6.0, si_mm=150.0)),
+            "pfi": (_table61_length(us_in=1.625, si_mm=41.0), _table61_length(us_in=2.0, si_mm=51.0)),
+            "pfo": (_table61_length(us_in=1.625, si_mm=41.0), _table61_length(us_in=2.0, si_mm=51.0)),
+            "pb": None,
+        },
+    }
+
+    def _step1_limit(
+        *,
+        check_id: str,
+        scope: str,
+        clause: str,
+        description: str,
+        calculated_symbol: str,
+        limit_symbol: str,
+        calculated: Quantity,
+        limit: Quantity,
+        comparison: str,
+    ) -> dict[str, Any]:
+        if comparison == "ge":
+            passes = calculated.value >= limit.value
+            margin_value = calculated.value - limit.value
+            comparison_text = ">="
+        elif comparison == "le":
+            passes = calculated.value <= limit.value
+            margin_value = limit.value - calculated.value
+            comparison_text = "<="
+        else:
+            raise ValueError("comparison must be 'ge' or 'le'.")
+
+        status = CheckStatus.PASS if passes else CheckStatus.FAIL
+        return {
+            "step": "1",
+            "id": check_id,
+            "scope": scope,
+            "clause": clause,
+            "description": description,
+            "calculated_symbol": calculated_symbol,
+            "limit_symbol": limit_symbol,
+            "calculated": calculated.model_dump(),
+            "limit": limit.model_dump(),
+            "comparison": comparison,
+            "comparison_text": comparison_text,
+            "margin": Quantity(value=margin_value, unit=calculated.unit).model_dump(),
+            "status": status.value,
+            "result": "OK" if passes else "NO_OK",
+        }
+
+    def _step1_range_limit(
+        *,
+        check_id: str,
+        scope: str,
+        clause: str,
+        description: str,
+        symbol: str,
+        calculated: Quantity,
+        minimum: Quantity,
+        maximum: Quantity,
+    ) -> dict[str, Any]:
+        eps = 1e-9
+        passes = (calculated.value >= (minimum.value - eps)) and (calculated.value <= (maximum.value + eps))
+        status = CheckStatus.PASS if passes else CheckStatus.FAIL
+        margin_to_min = calculated.value - minimum.value
+        margin_to_max = maximum.value - calculated.value
+        if abs(margin_to_min) <= eps:
+            margin_to_min = 0.0
+        if abs(margin_to_max) <= eps:
+            margin_to_max = 0.0
+        return {
+            "step": "1",
+            "id": check_id,
+            "scope": scope,
+            "clause": clause,
+            "description": description,
+            "calculated_symbol": symbol,
+            "limit_symbol": f"[{symbol}_min, {symbol}_max]",
+            "calculated": calculated.model_dump(),
+            "minimum": minimum.model_dump(),
+            "maximum": maximum.model_dump(),
+            "comparison": "range",
+            "comparison_text": "in",
+            "margin_to_min": Quantity(value=margin_to_min, unit=calculated.unit).model_dump(),
+            "margin_to_max": Quantity(value=margin_to_max, unit=calculated.unit).model_dump(),
+            "margin": Quantity(value=min(margin_to_min, margin_to_max), unit=calculated.unit).model_dump(),
+            "status": status.value,
+            "result": "OK" if passes else "NO_OK",
+        }
+
+    def _step1_compound_limit(
+        *,
+        check_id: str,
+        scope: str,
+        clause: str,
+        description: str,
+        calculated_symbol: str,
+        verification_text: str,
+        passes: bool,
+        calculated: Quantity,
+        limit_3db: Quantity | None = None,
+        minimum: Quantity | None = None,
+        maximum: Quantity | None = None,
+    ) -> dict[str, Any]:
+        status = CheckStatus.PASS if passes else CheckStatus.FAIL
+        payload: dict[str, Any] = {
+            "step": "1",
+            "id": check_id,
+            "scope": scope,
+            "clause": clause,
+            "description": description,
+            "calculated_symbol": calculated_symbol,
+            "limit_symbol": "compound",
+            "comparison": "compound",
+            "comparison_text": "compound",
+            "verification_text": verification_text,
+            "calculated": calculated.model_dump(),
+            "status": status.value,
+            "result": "OK" if passes else "NO_OK",
+        }
+        if limit_3db is not None:
+            payload["limit_3db"] = limit_3db.model_dump()
+        if minimum is not None:
+            payload["minimum"] = minimum.model_dump()
+        if maximum is not None:
+            payload["maximum"] = maximum.model_dump()
+        return payload
+
+    def _step1_text_limit(
+        *,
+        check_id: str,
+        scope: str,
+        clause: str,
+        description: str,
+        calculated_symbol: str,
+        limit_symbol: str,
+        calculated_text: str,
+        expected_text: str,
+    ) -> dict[str, Any]:
+        normalized_calc = calculated_text.strip().lower()
+        normalized_exp = expected_text.strip().lower()
+        passes = normalized_calc == normalized_exp
+        status = CheckStatus.PASS if passes else CheckStatus.FAIL
+        return {
+            "step": "1",
+            "id": check_id,
+            "scope": scope,
+            "clause": clause,
+            "description": description,
+            "calculated_symbol": calculated_symbol,
+            "limit_symbol": limit_symbol,
+            "comparison": "equals",
+            "comparison_text": "==",
+            "calculated_text": calculated_text,
+            "expected_text": expected_text,
+            "status": status.value,
+            "result": "OK" if passes else "NO_OK",
+        }
+
+    def _step1_text_in_set_limit(
+        *,
+        check_id: str,
+        scope: str,
+        clause: str,
+        description: str,
+        calculated_symbol: str,
+        limit_symbol: str,
+        calculated_text: str,
+        allowed_values: tuple[str, ...],
+        normalizer: Callable[[str], str] | None = None,
+    ) -> dict[str, Any]:
+        normalized_calc = normalizer(calculated_text) if normalizer is not None else calculated_text.strip().lower()
+        normalized_allowed = (
+            {normalizer(item) for item in allowed_values}
+            if normalizer is not None
+            else {item.strip().lower() for item in allowed_values}
+        )
+        passes = normalized_calc in normalized_allowed
+        status = CheckStatus.PASS if passes else CheckStatus.FAIL
+        return {
+            "step": "1",
+            "id": check_id,
+            "scope": scope,
+            "clause": clause,
+            "description": description,
+            "calculated_symbol": calculated_symbol,
+            "limit_symbol": limit_symbol,
+            "comparison": "in_set",
+            "comparison_text": "in",
+            "calculated_text": calculated_text,
+            "allowed_values": list(allowed_values),
+            "status": status.value,
+            "result": "OK" if passes else "NO_OK",
+        }
+
+    def _step1_shape_family_limit(
+        *,
+        check_id: str,
+        scope: str,
+        clause: str,
+        description: str,
+        calculated_symbol: str,
+        limit_symbol: str,
+        shape_text: str,
+        allowed_families: tuple[str, ...],
+    ) -> dict[str, Any]:
+        normalized = shape_text.strip().upper()
+        passes = any(normalized.startswith(prefix) for prefix in allowed_families)
+        status = CheckStatus.PASS if passes else CheckStatus.FAIL
+        return {
+            "step": "1",
+            "id": check_id,
+            "scope": scope,
+            "clause": clause,
+            "description": description,
+            "calculated_symbol": calculated_symbol,
+            "limit_symbol": limit_symbol,
+            "comparison": "family_in",
+            "comparison_text": "in",
+            "calculated_text": shape_text,
+            "allowed_families": list(allowed_families),
+            "status": status.value,
+            "result": "OK" if passes else "NO_OK",
+        }
+
+    def _normalize_bolt_tightening(raw: str | None) -> str:
+        if raw is None:
+            return "not_provided"
+        normalized = raw.strip().lower().replace("-", "_").replace(" ", "_")
+        if not normalized:
+            return "not_provided"
+        if normalized in {"pretensioned", "pretensionado", "pretensado", "apriete_pretensionado"}:
+            return "pretensioned"
+        if normalized in {"snug_tight", "snugtight", "apriete_justo"}:
+            return "snug_tight"
+        return normalized
+
+    def _normalize_bolt_standard(raw: str) -> str:
+        return "".join(ch for ch in raw.upper() if ch.isalnum())
+
+    def _normalize_continuity_plate_weld_type(raw: str | None) -> str:
+        if raw is None:
+            return "not_provided"
+        normalized = raw.strip().lower().replace("-", "_").replace(" ", "_")
+        if not normalized:
+            return "not_provided"
+        if normalized in {"double_sided_fillet", "double_fillet", "fillet_double_sided", "filete_doble_cara"}:
+            return "double_sided_fillet"
+        if normalized in {"cjp", "complete_joint_penetration"}:
+            return "cjp"
+        if normalized in {"pjp", "partial_joint_penetration"}:
+            return "pjp"
+        return normalized
+
+    def _normalize_end_plate_beam_web_weld_type(raw: str | None) -> str:
+        if raw is None:
+            return "not_provided"
+        normalized = raw.strip().lower().replace("-", "_").replace(" ", "_")
+        if not normalized:
+            return "not_provided"
+        if normalized in {"cjp", "complete_joint_penetration"}:
+            return "cjp"
+        if normalized in {"double_sided_fillet", "double_fillet", "fillet_double_sided"}:
+            return "double_sided_fillet"
+        if normalized in {"single_sided_fillet", "single_fillet", "fillet_single_sided", "single_sided_fille"}:
+            return "single_sided_fillet"
+        return normalized
+
+    def _step1_continuity_plate_weld_limit(
+        *,
+        check_id: str,
+        scope: str,
+        clause: str,
+        description: str,
+        continuity_plate_thickness: Quantity,
+        thickness_limit: Quantity,
+        weld_type_raw: str | None,
+    ) -> dict[str, Any]:
+        weld_type = _normalize_continuity_plate_weld_type(weld_type_raw)
+        allowed_values = ["double_sided_fillet", "cjp", "pjp"]
+        condition_applies = continuity_plate_thickness.value <= (thickness_limit.value + 1e-9)
+        if weld_type in {"cjp", "pjp"}:
+            passes = True
+            governing_condition = "cjp_or_pjp_always_permitted"
+        elif weld_type == "double_sided_fillet":
+            passes = condition_applies
+            governing_condition = "double_sided_fillet_requires_tcp_le_limit"
+        else:
+            passes = False
+            governing_condition = "weld_type_not_permitted"
+        status = CheckStatus.PASS if passes else CheckStatus.FAIL
+        return {
+            "step": "1",
+            "id": check_id,
+            "scope": scope,
+            "clause": clause,
+            "description": description,
+            "calculated_symbol": "weld_cp",
+            "limit_symbol": "{double_sided_fillet, cjp, pjp} if tcp<=tcp_limit",
+            "comparison": "conditional_allowed_set",
+            "comparison_text": "in_if",
+            "thickness": continuity_plate_thickness.model_dump(),
+            "thickness_limit": thickness_limit.model_dump(),
+            "condition_applies": condition_applies,
+            "governing_condition": governing_condition,
+            "calculated_text": weld_type,
+            "allowed_values": allowed_values,
+            "status": status.value,
+            "result": "OK" if passes else "NO_OK",
+        }
+
+    allowed_shape_families = ("W", "HEA", "HEB", "IPE")
+
+    if case.connection_type == "bueep_4e":
+        protected_zone_candidate_a = beam_depth
+        protected_zone_formula = "Lpz = min(d, 3bf)"
+        protected_zone_candidate_a_label = "d"
+    else:
+        stiffener_length_for_pz = case.geometry.stiffener_length
+        if stiffener_length_for_pz is None:
+            protected_zone_candidate_a = None
+            protected_zone_formula = "Lpz = min(lst + 0.5d, 3bf)"
+            protected_zone_candidate_a_label = "lst + 0.5d"
+        else:
+            protected_zone_candidate_a = Quantity(
+                value=stiffener_length_for_pz.value + 0.5 * beam_depth.value,
+                unit=beam_depth.unit,
+            )
+            protected_zone_formula = "Lpz = min(lst + 0.5d, 3bf)"
+            protected_zone_candidate_a_label = "lst + 0.5d"
+    protected_zone_candidate_b = Quantity(value=3.0 * bf.value, unit=bf.unit)
+    if protected_zone_candidate_a is not None:
+        protected_zone_value = (
+            protected_zone_candidate_a
+            if protected_zone_candidate_a.value <= protected_zone_candidate_b.value
+            else protected_zone_candidate_b
+        )
+    else:
+        protected_zone_value = None
+    step_1_notes = [
+        {
+            "step": "1",
+            "id": "section_2_3_4.protected_zone_length",
+            "scope": "beam",
+            "clause": "Section 2.3.4 (8)",
+            "description": "Protected zone length measured from column face",
+            "formula": protected_zone_formula,
+            "candidate_a_label": protected_zone_candidate_a_label,
+            "candidate_a": protected_zone_candidate_a.model_dump() if protected_zone_candidate_a is not None else None,
+            "candidate_b_label": "3bf",
+            "candidate_b": protected_zone_candidate_b.model_dump(),
+            "protected_zone_length": protected_zone_value.model_dump() if protected_zone_value is not None else None,
+        },
+        {
+            "step": "1",
+            "id": "section_6_3.end_plate_connection_location",
+            "scope": "column",
+            "clause": "Section 6.3 (2)",
+            "description": "End-plate connection location on column",
+            "requirement": "The end plate shall be connected to the flange of the column.",
+        },
+        {
+            "step": "1",
+            "id": "section_6_3.end_plate_height_derived",
+            "scope": "end_plate",
+            "clause": "Section 6.3",
+            "description": "Derived end-plate height reference",
+            "requirement": "end_plate_height = pfo + de",
+            "formula": "h_ep = pfo + de",
+            "candidate_a_label": "pfo",
+            "candidate_a": pfo.model_dump(),
+            "candidate_b_label": "de",
+            "candidate_b": de.model_dump(),
+            "derived_value": end_plate_height.model_dump(),
+        },
+        {
+            "step": "1",
+            "id": "section_6_3.end_plate_stiffener_geometry_note",
+            "scope": "end_plate_stiffener",
+            "clause": "Section 6.3",
+            "description": "Derived end-plate stiffener geometry and detailing edge requirement",
+            "requirement": "hst = pfo + de; Lst = hst/tan(30 deg); edge detailing >= 25 mm",
+            "formula": "hst = pfo + de; Lst = hst / tan(30 deg)",
+            "candidate_a_label": "hst",
+            "candidate_a": end_plate_height.model_dump(),
+            "candidate_b_label": "Lst",
+            "candidate_b": stiffener_length_derived.model_dump(),
+            "derived_value": Quantity(
+                value=25.0 if case.units_system == UnitSystem.SI else (25.0 / 25.4),
+                unit="mm" if case.units_system == UnitSystem.SI else "in",
+            ).model_dump(),
+        },
+        {
+            "step": "1",
+            "id": "section_6_7.beam_flange_to_end_plate_weld_note",
+            "scope": "welds",
+            "clause": "Section 6.7",
+            "description": "Requisitos de soldadura entre ala de viga y placa de extremo",
+            "requirement": (
+                "La unión entre el ala de la viga y la placa de extremo debe ejecutarse con una soldadura "
+                "de ranura CJP sin respaldo. La soldadura de ranura CJP debe realizarse de modo que la raíz "
+                "de la soldadura quede del lado del alma de la viga respecto del ala. La cara interior del ala "
+                "debe tener una soldadura de filete de c in. (8 mm). Estas soldaduras deben ser de demanda crítica."
+            ),
+        },
+        {
+            "step": "1",
+            "id": "section_6_7.stiffened_end_plate_weld_sequence_note",
+            "scope": "welds",
+            "clause": "Section 6.7",
+            "description": "Secuencia de soldadura para conexiones end-plate rigidizadas",
+            "requirement": (
+                "Para conexiones end-plate rigidizadas, la soldadura entre el ala de la viga y la placa "
+                "de extremo debe ejecutarse antes de instalar el rigidizador."
+            ),
+        },
+        {
+            "step": "1",
+            "id": "section_4_2.installation_requirements",
+            "scope": "bolts",
+            "clause": "Section 4.2",
+            "description": "Installation requirements for bolted assemblies",
+            "requirement": (
+                "Installation requirements shall be in accordance with the AISC Seismic Provisions and "
+                "the RCSC Specification, except as otherwise specifically indicated in this standard."
+            ),
+        },
+        {
+            "step": "1",
+            "id": "section_4_3.quality_control_assurance",
+            "scope": "bolts",
+            "clause": "Section 4.3",
+            "description": "Quality control and quality assurance for bolted assemblies",
+            "requirement": (
+                "Quality control and quality assurance shall be in accordance with the AISC Seismic Provisions."
+            ),
+        },
+    ]
+
+    span_to_depth_limit = 7.0 if beam_ductility == "high" else 5.0
+    frame_system = "SMF" if beam_ductility == "high" else "IMF"
+    clear_span_to_depth_ratio = Quantity(
+        value=beam_clear_span_length.value / beam_depth.value,
+        unit="ratio",
+    )
+    beam_flange_ratio = compute_flange_slenderness_ratio(
+        flange_width=beam_profile["bf"],
+        flange_thickness=beam_profile["tf"],
+        unit_system=case.units_system,
+    )
+    beam_web_ratio, _ = compute_web_slenderness_ratio(
+        section_depth=beam_profile["d"],
+        k_design=_profile_kdes(beam_profile, role="beam", rule_binding=rule_binding),
+        web_thickness=beam_profile["tw"],
+        unit_system=case.units_system,
+    )
+    beam_flange_limit = compute_flange_slenderness_limit(
+        elastic_modulus=elastic_modulus,
+        fy=beam_fy,
+        ry=ry,
+        member_ductility_demand=beam_ductility,
+        unit_system=case.units_system,
+    )
+    beam_web_limit = compute_web_slenderness_limit(
+        elastic_modulus=elastic_modulus,
+        fy=beam_fy,
+        ry=ry,
+        ca=ca_beam,
+        member_ductility_demand=beam_ductility,
+        unit_system=case.units_system,
+    )
+    column_flange_ratio = compute_flange_slenderness_ratio(
+        flange_width=column_profile["bf"],
+        flange_thickness=column_profile["tf"],
+        unit_system=case.units_system,
+    )
+    column_web_ratio, _ = compute_web_slenderness_ratio(
+        section_depth=column_profile["d"],
+        k_design=_profile_kdes(column_profile, role="column", rule_binding=rule_binding),
+        web_thickness=column_profile["tw"],
+        unit_system=case.units_system,
+    )
+    column_flange_limit = compute_flange_slenderness_limit(
+        elastic_modulus=elastic_modulus,
+        fy=column_fy,
+        ry=ry,
+        member_ductility_demand=column_ductility,
+        unit_system=case.units_system,
+    )
+    column_web_limit = compute_web_slenderness_limit(
+        elastic_modulus=elastic_modulus,
+        fy=column_fy,
+        ry=ry,
+        ca=ca_column,
+        member_ductility_demand=column_ductility,
+        unit_system=case.units_system,
+    )
+
+    active_table_61 = table_61_limits[case.connection_type]
+
+    beam_limits = [
+        _step1_shape_family_limit(
+            check_id="beam.shape_family",
+            scope="beam",
+            clause="Section 2.3.4",
+            description="Beam profile family allowed for prequalification",
+            calculated_symbol="shape_beam",
+            limit_symbol="{W, HEA, HEB, IPE}",
+            shape_text=case.sections.beam_shape,
+            allowed_families=allowed_shape_families,
         ),
-        inputs={
-            "bolt_diameter": db.model_dump(),
-            "beam_flange_width_bf": bf.model_dump(),
-            "end_plate_width_bp": bp.model_dump(),
-            "bolt_gage_g": g.model_dump(),
-            "pitch_pb": pb.model_dump(),
-            "edge_de": de.model_dump(),
-            "edge_pfo": pfo.model_dump(),
-            "edge_pfi": pfi.model_dump(),
-        },
-        intermediates={
-            "minimum_spacing_3db": min_spacing.model_dump(),
-            "minimum_bp_bf_plus_margin": min_bp.model_dump(),
-            "bp_margin": bp_margin,
-            "minimum_edge_distance_j34": min_edge.model_dump(),
-            "j34_lookup": edge_intermediate,
-            "per_check": per_check,
-            "dcr_by_check": dcr_by_check,
-            "max_dcr": max_dcr,
-        },
-        design_factors={},
-        units_trace={
-            "db": db.unit,
-            "bf": bf.unit,
-            "bp": bp.unit,
-            "g": g.unit,
-            "pb": pb.unit,
-            "de": de.unit,
-            "pfo": pfo.unit,
-            "pfi": pfi.unit,
-            "ratios": "ratio",
-        },
+        _step1_limit(
+            check_id="beam.bp_ge_bf_plus_margin",
+            scope="beam",
+            clause="Section 6.3 / Table 6.1",
+            description="End-plate width vs beam flange width",
+            calculated_symbol="bp",
+            limit_symbol="bf + margin",
+            calculated=bp,
+            limit=min_bp,
+            comparison="ge",
+        ),
+        _step1_limit(
+            check_id="beam.bolt_gage_g_ge_3db",
+            scope="beam",
+            clause="Section 6.3 / Table 6.1",
+            description="Bolt gage minimum spacing",
+            calculated_symbol="g",
+            limit_symbol="3db",
+            calculated=g,
+            limit=min_spacing,
+            comparison="ge",
+        ),
+        _step1_limit(
+            check_id="section_2_3_4.no_shear_connectors_zone",
+            scope="beam",
+            clause="Section 2.3.4 (2)",
+            description="Length without shear connectors from column face",
+            calculated_symbol="Lsc",
+            limit_symbol="1.5d",
+            calculated=shear_connector_free_length,
+            limit=Quantity(value=1.5 * beam_depth.value, unit=beam_depth.unit),
+            comparison="ge",
+        ),
+        _step1_limit(
+            check_id="section_2_3_4.clear_span_to_depth_ratio",
+            scope="beam",
+            clause="Section 2.3.4 (5)",
+            description="Clear span-to-depth ratio by frame system",
+            calculated_symbol="Lclear/d",
+            limit_symbol=f"{span_to_depth_limit:.0f} ({frame_system})",
+            calculated=clear_span_to_depth_ratio,
+            limit=Quantity(value=span_to_depth_limit, unit="ratio"),
+            comparison="ge",
+        ),
+        _step1_limit(
+            check_id="section_2_3_4.beam_flange_width_to_thickness",
+            scope="beam",
+            clause="Section 2.3.4 (6) + AISC Seismic Provisions",
+            description="Beam flange width-to-thickness compactness",
+            calculated_symbol="lambda_f_beam",
+            limit_symbol="lambda_f_limit",
+            calculated=Quantity(value=beam_flange_ratio, unit="ratio"),
+            limit=Quantity(value=beam_flange_limit, unit="ratio"),
+            comparison="le",
+        ),
+        _step1_limit(
+            check_id="section_2_3_4.beam_web_width_to_thickness",
+            scope="beam",
+            clause="Section 2.3.4 (6) + AISC Seismic Provisions",
+            description="Beam web width-to-thickness compactness",
+            calculated_symbol="lambda_w_beam",
+            limit_symbol="lambda_w_limit",
+            calculated=Quantity(value=beam_web_ratio, unit="ratio"),
+            limit=Quantity(value=beam_web_limit, unit="ratio"),
+            comparison="le",
+        ),
+    ]
+
+    column_depth_max = Quantity(
+        value=36.0 if case.units_system == UnitSystem.US else 920.0,
+        unit="in" if case.units_system == UnitSystem.US else "mm",
+    )
+    column_limits = [
+        _step1_shape_family_limit(
+            check_id="column.shape_family",
+            scope="column",
+            clause="Section 2.3.4",
+            description="Column profile family allowed for prequalification",
+            calculated_symbol="shape_col",
+            limit_symbol="{W, HEA, HEB, IPE}",
+            shape_text=str(case.sections.column_shape),
+            allowed_families=allowed_shape_families,
+        ),
+        _step1_limit(
+            check_id="section_6_3.column_depth_maximum",
+            scope="column",
+            clause="Section 6.3 (3)",
+            description="Column profile depth maximum (W36/W920)",
+            calculated_symbol="d_col",
+            limit_symbol="W36/W920",
+            calculated=column_profile["d"],
+            limit=column_depth_max,
+            comparison="le",
+        ),
+        _step1_limit(
+            check_id="column.bp_le_bcf",
+            scope="column",
+            clause="Section 6.3 / Table 6.1",
+            description="End-plate fit within column flange width",
+            calculated_symbol="bp",
+            limit_symbol="bcf",
+            calculated=bp,
+            limit=bcf,
+            comparison="le",
+        ),
+        _step1_text_limit(
+            check_id="section_2_3_4.slab_isolation_condition",
+            scope="column",
+            clause="Section 2.3.4 (3)",
+            description="Column-slab connection condition",
+            calculated_symbol="col_losa",
+            limit_symbol="isolated",
+            calculated_text=str(slab_connection_condition),
+            expected_text="isolated",
+        ),
+        _step1_limit(
+            check_id="section_2_3_4.column_flange_width_to_thickness",
+            scope="column",
+            clause="Section 2.3.4 (6) + AISC Seismic Provisions",
+            description="Column flange width-to-thickness compactness",
+            calculated_symbol="lambda_f_col",
+            limit_symbol="lambda_f_limit",
+            calculated=Quantity(value=column_flange_ratio, unit="ratio"),
+            limit=Quantity(value=column_flange_limit, unit="ratio"),
+            comparison="le",
+        ),
+        _step1_limit(
+            check_id="section_2_3_4.column_web_width_to_thickness",
+            scope="column",
+            clause="Section 2.3.4 (6) + AISC Seismic Provisions",
+            description="Column web width-to-thickness compactness",
+            calculated_symbol="lambda_w_col",
+            limit_symbol="lambda_w_limit",
+            calculated=Quantity(value=column_web_ratio, unit="ratio"),
+            limit=Quantity(value=column_web_limit, unit="ratio"),
+            comparison="le",
+        ),
+    ]
+
+    bp_bounds = active_table_61.get("bp")
+    end_plate_limits: list[dict[str, Any]] = []
+    if bp_bounds is not None:
+        bp_min, bp_max = bp_bounds
+        bp_plus_beam_margin = Quantity(value=bf.value + bp_margin, unit=bf.unit)
+        bp_governing_max = Quantity(
+            value=min(bp_max.value, bp_plus_beam_margin.value, bcf.value),
+            unit=bp.unit,
+        )
+        bp_pass = (bp.value <= bp_plus_beam_margin.value) and (bp.value <= bcf.value) and (bp.value >= bp_min.value)
+        beam_margin_label = (
+            f"{bp_margin:.0f} mm" if case.units_system == UnitSystem.SI else f"{bp_margin:.3f} in"
+        )
+        end_plate_limits.append(
+            _step1_compound_limit(
+                check_id="section_6_3.end_plate_width_dual_limit",
+                scope="end_plate",
+                clause="Section 6.3 / Table 6.1",
+                description="End-plate width explicit dual inequalities",
+                calculated_symbol="bp",
+                verification_text=(
+                    f"bp <= bbf + {beam_margin_label}; "
+                    "bp <= bcf"
+                ),
+                passes=bp_pass,
+                calculated=bp,
+                minimum=bp_min,
+                maximum=bp_governing_max,
+            )
+        )
+
+    end_plate_stiffener_limits = [
+        _step1_compound_limit(
+            check_id="section_6_3.end_plate_stiffener_height_derived",
+            scope="end_plate_stiffener",
+            clause="Section 6.3",
+            description="End-plate stiffener height derived from end-plate geometry",
+            calculated_symbol="hst",
+            verification_text=(
+                f"hst = pfo + de; {end_plate_height.value:.3f} {end_plate_height.unit} = "
+                f"{pfo.value:.3f} {pfo.unit} + {de.value:.3f} {de.unit}"
+            ),
+            passes=end_plate_height.value > 0.0,
+            calculated=end_plate_height,
+        )
+    ]
+
+    continuity_plate_weld_thickness_limit = Quantity(
+        value=3.0 / 8.0 if case.units_system == UnitSystem.US else 10.0,
+        unit="in" if case.units_system == UnitSystem.US else "mm",
+    )
+    continuity_plate_weld_type_normalized = _normalize_continuity_plate_weld_type(continuity_plate_weld_type_raw)
+    continuity_plate_limits = [
+        _step1_text_in_set_limit(
+            check_id="section_6_3.continuity_plate_weld_type_declared",
+            scope="continuity_plate",
+            clause="Section 6.3 (continuity plate weld detail)",
+            description="Continuity-plate weld type shall be explicitly declared with an allowed weld category",
+            calculated_symbol="weld_cp",
+            limit_symbol="{double_sided_fillet, cjp, pjp}",
+            calculated_text=continuity_plate_weld_type_normalized,
+            allowed_values=("double_sided_fillet", "cjp", "pjp"),
+        ),
+        _step1_continuity_plate_weld_limit(
+            check_id="section_6_3.continuity_plate_weld_type_for_thin_plate",
+            scope="continuity_plate",
+            clause="Section 6.3 (continuity plate weld detail)",
+            description=(
+                "Continuity-plate weld type when plate thickness is less than or equal to 3/8 in (10 mm)"
+            ),
+            continuity_plate_thickness=tcp,
+            thickness_limit=continuity_plate_weld_thickness_limit,
+            weld_type_raw=continuity_plate_weld_type_raw,
+        )
+    ]
+
+    end_plate_beam_web_weld_type_normalized = _normalize_end_plate_beam_web_weld_type(end_plate_beam_web_weld_type_raw)
+    weld_limits = [
+        _step1_text_in_set_limit(
+            check_id="section_6_7.end_plate_beam_web_weld_type_allowed",
+            scope="welds",
+            clause="Section 6.7",
+            description="End-plate to beam-web weld type shall be an allowed category",
+            calculated_symbol="weld_ep_web",
+            limit_symbol="{cjp, double_sided_fillet, single_sided_fillet}",
+            calculated_text=end_plate_beam_web_weld_type_normalized,
+            allowed_values=("cjp", "double_sided_fillet", "single_sided_fillet"),
+        )
+    ]
+
+    tightening_type_normalized = _normalize_bolt_tightening(bolt_tightening_type)
+    bolt_standard_text = str(bolt_fabrication_standard or "not_provided")
+    required_bolt_standards = (
+        "ASTM F3125/F3125M",
+        "ASTM A325",
+        "ASTM A325M",
+        "ASTM A490",
+        "ASTM A490M",
+        "ASTM F1852",
+        "ASTM F2280",
+    )
+    bolt_limits = [
+        _step1_text_in_set_limit(
+            check_id="section_4_1.bolt_tightening_type_valid",
+            scope="bolts",
+            clause="Section 4.1 FASTENER ASSEMBLIES",
+            description="Bolt tightening type must be one recognized category",
+            calculated_symbol="tight_bolt",
+            limit_symbol="{pretensioned, snug_tight}",
+            calculated_text=tightening_type_normalized,
+            allowed_values=("pretensioned", "snug_tight"),
+        ),
+        _step1_text_limit(
+            check_id="section_4_1.bolt_tightening_required_pretensioned",
+            scope="bolts",
+            clause="Section 4.1 FASTENER ASSEMBLIES",
+            description="Bolts shall be pretensioned unless a specific connection permits otherwise",
+            calculated_symbol="tight_bolt",
+            limit_symbol="pretensioned",
+            calculated_text=tightening_type_normalized,
+            expected_text="pretensioned",
+        ),
+        _step1_text_in_set_limit(
+            check_id="section_4_1.bolt_fabrication_standard_permitted",
+            scope="bolts",
+            clause="Section 4.1 FASTENER ASSEMBLIES",
+            description="Bolt fabrication standard must be an allowed high-strength ASTM designation",
+            calculated_symbol="std_bolt",
+            limit_symbol="{ASTM F3125/F3125M, ASTM A325, ASTM A325M, ASTM A490, ASTM A490M, ASTM F1852, ASTM F2280}",
+            calculated_text=bolt_standard_text,
+            allowed_values=required_bolt_standards,
+            normalizer=_normalize_bolt_standard,
+        ),
+    ]
+
+    pfo_bounds = active_table_61.get("pfo")
+    pfi_bounds = active_table_61.get("pfi")
+    pso = pfo
+    tfb = beam_profile["tf"]
+    psi = Quantity(value=pfi.value + tfb.value - tcp.value, unit=pfi.unit)
+
+    table_61_checks = [
+        _step1_limit(
+            check_id="table_6_1.edge_de_ge_emin",
+            scope="table_6_1",
+            clause="Table 6.1 + AISC 360 Table J3.4",
+            description="Edge distance at de",
+            calculated_symbol="de",
+            limit_symbol="emin",
+            calculated=de,
+            limit=min_edge,
+            comparison="ge",
+        ),
+    ]
+    if pfo_bounds is not None:
+        pfo_min, pfo_max = pfo_bounds
+        pfo_min_label = f"{pfo_min.value:.0f} {pfo_min.unit}" if pfo_min.unit == "mm" else f"{pfo_min.value:.3f} {pfo_min.unit}"
+        pfo_max_label = f"{pfo_max.value:.0f} {pfo_max.unit}" if pfo_max.unit == "mm" else f"{pfo_max.value:.3f} {pfo_max.unit}"
+        pfo_pass = (
+            (pfo.value >= min_edge.value)
+            and (pfo.value >= pfo_min.value)
+            and (pfo.value <= pfo_max.value)
+        )
+        table_61_checks.append(
+            _step1_compound_limit(
+                check_id="table_6_1.edge_pfo_ge_emin",
+                scope="table_6_1",
+                clause="Table 6.1 + AISC 360 Table J3.4",
+                description="Outside bolt-row distance limits",
+                calculated_symbol="pfo - pso",
+                verification_text=(
+                    f"pso (=pfo) >= emin; pfo <= {pfo_max_label}; pfo >= {pfo_min_label}"
+                ),
+                passes=pfo_pass,
+                calculated=pfo,
+                minimum=pfo_min,
+                maximum=pfo_max,
+            )
+        )
+    if pfi_bounds is not None:
+        pfi_min, pfi_max = pfi_bounds
+        pfi_min_label = f"{pfi_min.value:.0f} {pfi_min.unit}" if pfi_min.unit == "mm" else f"{pfi_min.value:.3f} {pfi_min.unit}"
+        pfi_max_label = f"{pfi_max.value:.0f} {pfi_max.unit}" if pfi_max.unit == "mm" else f"{pfi_max.value:.3f} {pfi_max.unit}"
+        psi_pass = psi.value > 0.0
+        pfi_pass = (
+            (pfi.value >= min_edge.value)
+            and (pfi.value >= pfi_min.value)
+            and (pfi.value <= pfi_max.value)
+            and psi_pass
+        )
+        table_61_checks.append(
+            _step1_compound_limit(
+                check_id="table_6_1.edge_pfi_ge_emin",
+                scope="table_6_1",
+                clause="Table 6.1 + AISC 360 Table J3.4",
+                description="Inside bolt-row distance limits",
+                calculated_symbol="pfi - psi",
+                verification_text=(
+                    f"pfi >= emin; pfi <= {pfi_max_label}; pfi >= {pfi_min_label}; "
+                    "psi = pfi + tfb - tcp; psi > 0"
+                ),
+                passes=pfi_pass,
+                calculated=pfi,
+                minimum=pfi_min,
+                maximum=pfi_max,
+            )
+        )
+    if case.connection_type == "bseep_4es":
+        table_61_checks.insert(
+            0,
+            _step1_limit(
+                check_id="table_6_1.pitch_pb_ge_3db",
+                scope="table_6_1",
+                clause="Table 6.1",
+                description="Vertical pitch minimum spacing",
+                calculated_symbol="pb",
+                limit_symbol="3db",
+                calculated=pb,
+                limit=min_spacing,
+                comparison="ge",
+            ),
+        )
+    if case.connection_type == "bseep_8es":
+        pb_8es_min = _table61_length(us_in=89.0 / 25.4, si_mm=89.0)
+        pb_8es_max = _table61_length(us_in=95.0 / 25.4, si_mm=95.0)
+        pb_passes = (
+            (pb.value >= min_spacing.value)
+            and (pb.value <= pb_8es_max.value)
+            and (pb.value >= pb_8es_min.value)
+        )
+        table_61_checks.insert(
+            0,
+            _step1_compound_limit(
+                check_id="table_6_1.pitch_pb_ge_3db",
+                scope="table_6_1",
+                clause="Table 6.1 (BSEEP-8ES)",
+                description="Vertical pitch minimum spacing",
+                calculated_symbol="pb",
+                verification_text=(
+                    f"pb >= 3db; pb <= {pb_8es_max.value:.3f} {pb_8es_max.unit}; "
+                    f"pb >= "
+                    f"{pb_8es_min.value:.0f} {pb_8es_min.unit}"
+                    if pb_8es_min.unit == "mm"
+                    else f"pb >= 3db; pb <= {pb_8es_max.value:.3f} {pb_8es_max.unit}; pb >= {pb_8es_min.value:.3f} {pb_8es_min.unit}"
+                ),
+                passes=pb_passes,
+                calculated=pb,
+                limit_3db=min_spacing,
+                minimum=pb_8es_min,
+                maximum=pb_8es_max,
+            ),
+        )
+
+    table_61_values: list[tuple[str, str, Quantity]] = [
+        ("tbf", "Beam flange thickness", beam_profile["tf"]),
+        ("bbf", "Beam flange width", beam_profile["bf"]),
+        ("d", "Connecting beam depth", beam_profile["d"]),
+        ("tp", "End-plate thickness", tp),
+        ("bp", "End-plate width", bp),
+        ("g", "Horizontal bolt spacing", g),
+        ("pb", "Vertical bolt-row spacing", pb),
+    ]
+
+    for symbol, description, value in table_61_values:
+        bounds = active_table_61.get(symbol)
+        if bounds is None:
+            continue
+        minimum, maximum = bounds
+        if symbol == "bp":
+            continue
+        table_61_checks.append(
+            _step1_range_limit(
+                check_id=f"table_6_1.{symbol}.range",
+                scope="table_6_1",
+                clause="Table 6.1",
+                description=f"{description} limits",
+                symbol=symbol,
+                calculated=value,
+                minimum=minimum,
+                maximum=maximum,
+            )
+        )
+
+    step_1_limits = (
+        beam_limits
+        + column_limits
+        + end_plate_limits
+        + end_plate_stiffener_limits
+        + weld_limits
+        + continuity_plate_limits
+        + bolt_limits
+        + table_61_checks
+    )
+
+    overall_status = CheckStatus.PASS if all(item["status"] == CheckStatus.PASS.value for item in step_1_limits) else CheckStatus.FAIL
+
+    return CheckResult(
+        name=rule_binding.name,
+        rule_id=rule_binding.rule_id,
+        clause=rule_binding.clause,
+        source_document=rule_binding.source_document,
+        demand=None,
+        capacity=None,
+        dcr=None,
+        status=overall_status,
+        calculation_memory=CalculationMemory(
+            inputs={
+                "bolt_diameter": db.model_dump(),
+                "beam_flange_width_bf": bf.model_dump(),
+                "column_flange_width_bcf": bcf.model_dump(),
+                "column_depth_d_col": column_profile["d"].model_dump(),
+                "column_depth_limit_max": column_depth_max.model_dump(),
+                "continuity_plate_thickness_tcp": tcp.model_dump(),
+                "continuity_plate_weld_type": continuity_plate_weld_type_raw,
+                "end_plate_beam_web_weld_type": end_plate_beam_web_weld_type_raw,
+                "end_plate_beam_web_weld_length_lwe": lwe.model_dump(),
+                "weld_fexx": weld_fexx.model_dump(),
+                "end_plate_beam_web_weld_thickness_twe": (
+                    case.geometry.end_plate_beam_web_weld_thickness_twe.model_dump()
+                    if case.geometry.end_plate_beam_web_weld_thickness_twe is not None
+                    else None
+                ),
+                "bolt_tightening_type": bolt_tightening_type,
+                "bolt_fabrication_standard": bolt_fabrication_standard,
+                "end_plate_width_bp": bp.model_dump(),
+                "bolt_gage_g": g.model_dump(),
+                "pitch_pb": pb.model_dump(),
+                "edge_de": de.model_dump(),
+                "edge_pfo": pfo.model_dump(),
+                "edge_pfi": pfi.model_dump(),
+                "end_plate_height": end_plate_height.model_dump(),
+                "stiffener_length": stiffener_length_derived.model_dump(),
+                "beam_clear_span_length": beam_clear_span_length.model_dump(),
+                "beam_shear_connector_free_length_from_column_face": shear_connector_free_length.model_dump(),
+                "column_slab_connection_condition": slab_connection_condition,
+                "beam_ductility_demand": beam_ductility,
+                "column_ductility_demand": column_ductility,
+                "pu_viga": pu_beam.model_dump(),
+                "pu_columna": pu_column.model_dump(),
+                "ag_viga": beam_ag.model_dump(),
+                "ag_columna": column_ag.model_dump(),
+                "compactness_ca_beam_calculated": ca_beam,
+                "compactness_ca_column_calculated": ca_column,
+            },
+            intermediates={
+                "minimum_spacing_3db": min_spacing.model_dump(),
+                "minimum_bp_bf_plus_margin": min_bp.model_dump(),
+                "bp_margin": bp_margin,
+                "minimum_edge_distance_j34": min_edge.model_dump(),
+                "clear_span_to_depth_ratio": clear_span_to_depth_ratio.model_dump(),
+                "clear_span_to_depth_limit": {"value": span_to_depth_limit, "unit": "ratio"},
+                "frame_system_for_span_ratio": frame_system,
+                "beam_flange_compactness_ratio": beam_flange_ratio,
+                "beam_flange_compactness_limit": beam_flange_limit,
+                "beam_web_compactness_ratio": beam_web_ratio,
+                "beam_web_compactness_limit": beam_web_limit,
+                "column_flange_compactness_ratio": column_flange_ratio,
+                "column_flange_compactness_limit": column_flange_limit,
+                "column_web_compactness_ratio": column_web_ratio,
+                "column_web_compactness_limit": column_web_limit,
+                "ca_beam_trace": ca_beam_trace,
+                "ca_column_trace": ca_column_trace,
+                "continuity_plate_weld_thickness_limit": continuity_plate_weld_thickness_limit.model_dump(),
+                "j34_lookup": edge_intermediate,
+                "step_1_notes": step_1_notes,
+                "step_1_limits": step_1_limits,
+                "prequalification_limits": step_1_limits,
+            },
+            design_factors={},
+            equation=(
+                "Step 1 PREQUALIFICATION LIMITS: compute each geometric value and compare directly against Table 6.1 limits "
+                "using calculated vs limit checks (>= or <=, no DCR format)."
+            ),
+            units_trace={
+                "db": db.unit,
+                "bf": bf.unit,
+                "bcf": bcf.unit,
+                "bp": bp.unit,
+                "g": g.unit,
+                "pb": pb.unit,
+                "de": de.unit,
+                "pfo": pfo.unit,
+                "pfi": pfi.unit,
+            },
+            final_capacity=None,
+        ),
+        notes=None,
     )
 
 
@@ -925,8 +2074,10 @@ def run_bolt_bearing_tearout_column_flange(case: AISC358MomentCase, rule_binding
 
 
 def run_stiffener_minimum_length(case: AISC358MomentCase, rule_binding: object) -> CheckResult:
-    hst = _require(case, "geometry.stiffener_height", rule_binding)
-    lst = _require(case, "geometry.stiffener_length", rule_binding)
+    de = _require(case, "geometry.de", rule_binding)
+    pfo = _require(case, "geometry.pfo", rule_binding)
+    hst = _derive_stiffener_height_from_de_pfo(de=de, pfo=pfo)
+    lst = _derive_stiffener_length_from_hst(stiffener_height=hst, unit_system=case.units_system)
 
     required_lst = compute_minimum_stiffener_length(hst, case.units_system)
     demand = required_lst
@@ -944,11 +2095,16 @@ def run_stiffener_minimum_length(case: AISC358MomentCase, rule_binding: object) 
         dcr=dcr,
         status=status,
         calculation_memory=CalculationMemory(
-            inputs={"stiffener_height": hst.model_dump(), "stiffener_length": lst.model_dump()},
+            inputs={
+                "de": de.model_dump(),
+                "pfo": pfo.model_dump(),
+                "stiffener_height_derived": hst.model_dump(),
+                "stiffener_length_derived": lst.model_dump(),
+            },
             intermediates={},
             design_factors={},
-            equation="Lst >= hst / tan(30 deg) (Eq. 6.6-1)",
-            units_trace={"hst": hst.unit, "lst": lst.unit},
+            equation="hst = pfo + de; Lst >= hst / tan(30 deg) (Eq. 6.6-1)",
+            units_trace={"de": de.unit, "pfo": pfo.unit, "hst": hst.unit, "lst": lst.unit},
             final_capacity=capacity,
         ),
         notes=None,
@@ -1000,7 +2156,9 @@ def run_stiffener_thickness(case: AISC358MomentCase, rule_binding: object) -> Ch
 
 
 def run_stiffener_local_buckling(case: AISC358MomentCase, rule_binding: object) -> CheckResult:
-    hst = _require(case, "geometry.stiffener_height", rule_binding)
+    de = _require(case, "geometry.de", rule_binding)
+    pfo = _require(case, "geometry.pfo", rule_binding)
+    hst = _derive_stiffener_height_from_de_pfo(de=de, pfo=pfo)
     ts = _require(case, "geometry.stiffener_thickness", rule_binding)
     elastic_modulus = _require(case, "materials.elastic_modulus", rule_binding)
     stiffener_fy = _require(case, "materials.stiffener_fy", rule_binding)
@@ -1027,15 +2185,17 @@ def run_stiffener_local_buckling(case: AISC358MomentCase, rule_binding: object) 
         status=status,
         calculation_memory=CalculationMemory(
             inputs={
-                "stiffener_height": hst.model_dump(),
+                "de": de.model_dump(),
+                "pfo": pfo.model_dump(),
+                "stiffener_height_derived": hst.model_dump(),
                 "stiffener_thickness": ts.model_dump(),
                 "elastic_modulus": elastic_modulus.model_dump(),
                 "stiffener_fy": stiffener_fy.model_dump(),
             },
             intermediates={"hst_over_ts": ratio, "limit": limit},
             design_factors={},
-            equation="hst/ts <= 0.56 * sqrt(E/Fys) (Eq. 6.7-10)",
-            units_trace={"hst": hst.unit, "ts": ts.unit, "ratio": "ratio"},
+            equation="hst = pfo + de; hst/ts <= 0.56 * sqrt(E/Fys) (Eq. 6.7-10)",
+            units_trace={"de": de.unit, "pfo": pfo.unit, "hst": hst.unit, "ts": ts.unit, "ratio": "ratio"},
             final_capacity=capacity,
         ),
         notes=None,

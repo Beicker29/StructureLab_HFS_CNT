@@ -129,6 +129,7 @@ def _load_sections_index() -> dict[str, dict[str, float]]:
             idx_tw = header_map["tw"]
             idx_kdes = header_map.get("kdes")
             idx_zx = header_map.get("zx")
+            idx_a = header_map.get("a") or header_map.get("ag")
 
             for row in row_elements[1:]:
                 row_values: dict[int, str | float | None] = {}
@@ -171,6 +172,14 @@ def _load_sections_index() -> dict[str, dict[str, float]]:
                     except (TypeError, ValueError):
                         zx_cm3 = None
 
+                ag_mm2: float | None = None
+                if idx_a is not None:
+                    ag_raw = row_values.get(idx_a)
+                    try:
+                        ag_mm2 = float(ag_raw) if ag_raw is not None else None
+                    except (TypeError, ValueError):
+                        ag_mm2 = None
+
                 if shape not in shapes:
                     record = {
                         "d_mm": d_mm,
@@ -182,6 +191,8 @@ def _load_sections_index() -> dict[str, dict[str, float]]:
                         record["kdes_mm"] = kdes_mm
                     if zx_cm3 is not None:
                         record["zx_cm3"] = zx_cm3
+                    if ag_mm2 is not None:
+                        record["ag_mm2"] = ag_mm2
                     shapes[shape] = record
     finally:
         archive.close()
@@ -210,6 +221,12 @@ def _cm3_to_section_modulus_unit(cm3_value: float, unit_system: UnitSystem) -> Q
     if unit_system == UnitSystem.SI:
         return Quantity(value=cm3_value * 1000.0, unit="mm3")
     return Quantity(value=cm3_value / 16.387064, unit="in3")
+
+
+def _mm2_to_area_unit(mm2_value: float, unit_system: UnitSystem) -> Quantity:
+    if unit_system == UnitSystem.SI:
+        return Quantity(value=mm2_value, unit="mm2")
+    return Quantity(value=mm2_value / 645.16, unit="in2")
 
 
 def _in_to_length_unit(in_value: float, unit_system: UnitSystem) -> Quantity:
@@ -246,6 +263,9 @@ def get_shape_profile_properties(*, shape: str, unit_system: UnitSystem) -> dict
     zx_cm3 = shape_data.get("zx_cm3")
     if zx_cm3 is not None:
         output["zx"] = _cm3_to_section_modulus_unit(float(zx_cm3), unit_system)
+    ag_mm2 = shape_data.get("ag_mm2")
+    if ag_mm2 is not None:
+        output["ag"] = _mm2_to_area_unit(float(ag_mm2), unit_system)
     return output
 
 

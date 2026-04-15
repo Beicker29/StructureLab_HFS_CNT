@@ -28,15 +28,11 @@ Motor de diseno de conexiones de acero estructural hot-rolled, deterministico, a
 ## Alcance v1
 - Operativo: familia `moment_prequalified` (`connection_type = wuf_w`) con chequeos iniciales trazables.
 - Operativo: Chapter 6 AISC 358 para `connection_type = bueep_4e`, `bseep_4es`, `bseep_8es` con chequeos trazables de:
-  - procedimiento 6.7 completo (lado viga y lado columna) en flujo deterministico `validate -> route -> evaluate -> emit`
-  - pasos 1, 1a y 2 a 18 de 6.7.1 (incluyendo 11-12 para 4E y verificaciones de rigidizador para BSEEP)
-  - Paso 1a: revision de compacidad de viga y columna con limites segun demanda de ductilidad (`high` / `moderate`) usando AISC 341-22 Tabla D1.1
-  - pasos 1 a 7 de 6.7.2 (incluyendo panel zone y column-beam moment ratio)
-  - gage de pernos (Sec. 6.6.1)
-  - cortante de placa en 4E (Ecs. 6.7-7 y 6.7-8)
-  - ruptura por cortante de pernos (Ec. 6.7-11)
-  - aplastamiento/tearout en placa y ala de columna (Ec. 6.7-12)
-  - geometria/espesor/pandeo local de rigidizador en BSEEP (Ecs. 6.6-1, 6.7-9, 6.7-10)
+  - chequeo inicial `PREQUALIFICATION LIMITS` (Section 6.3 + Table 6.1) en flujo deterministico `validate -> route -> evaluate -> emit`
+  - detalle por subchequeo para:
+    - viga (`beam`)
+    - columna (`column`)
+    - tabla 6.1 (`table_6_1`)
 - Preparado y bloqueante por alcance: familia `base_plate_anchor_rod` (`connection_type = dg1_base_plate`) via `NOT_IMPLEMENTED`.
 - Nota tecnica: parametros tabulados (p. ej. `Yp`, `Yc`) se reciben por `procedure.*` con trazabilidad explicita; no hay inferencias ocultas.
 
@@ -72,19 +68,40 @@ Campos obligatorios de alto nivel:
 Campos clave en `materials` para Chapter 6:
 - `profile_steel_type` (lookup en `materials.xlsx` hoja `HRS`)
 - `plate_steel_type` (lookup en `materials.xlsx` hoja `Platinas`)
-- `bolt_fabrication_standard`, `bolt_description`, `bolt_shape`, `bolt_thread_condition`
-  - `bolt_shape` se valida/lee contra `sections.xlsx` hoja `Perno`
+- `bolt_fabrication_standard`, `bolt_description`
   - `bolt_fabrication_standard` + `bolt_description` se validan/leen contra `materials.xlsx` hoja `Pernos`
-  - `bolt_thread_condition` obligatorio para Chapter 6: `N` (threads included in shear plane) o `X` (threads excluded), para seleccionar `Fnv` correcto desde `materials.xlsx`
+  - `bolt_shape` y `bolt_thread_condition` se reportan en `geometry.bolts.*`
+  - `bolt_shape` se valida/lee contra `sections.xlsx` hoja `Perno`
+  - `bolt_thread_condition` obligatorio: `N` (threads included in shear plane) o `X` (threads excluded), para seleccionar `Fnv` correcto desde `materials.xlsx`
 
 Campos clave en `design_factors` para Chapter 6 Step 1a:
 - `member_ductility_demand_beam`: `high` o `moderate`
 - `member_ductility_demand_column`: `high` o `moderate`
-- `compactness_ca_beam`: coeficiente `Ca` del miembro de viga (`0 <= Ca < 1`)
-- `compactness_ca_column`: coeficiente `Ca` del miembro de columna (`0 <= Ca < 1`)
+- `ry`: factor `Ry` para calcular `Ca` internamente.
+
+Campos clave en `loads` para compactacion Chapter 6:
+- `pu_viga`: carga axial `Pu` de la viga.
+- `pu_columna`: carga axial `Pu` de la columna.
+- El motor calcula `Ca` automaticamente como `Ca = Pu / (Ry * Ag * Fy)`:
+  - `Ag` desde `data/sections.xlsx` (catalogo de secciones)
+  - `Fy` desde `data/materials.xlsx` (hoja `HRS`)
+  - `Ry` desde `design_factors.ry`
 
 Campos geometricos clave para artefacto tecnico (`geometry.svg`) en Chapter 6:
-- `de`, `pb`, `pfo`, `pfi` como longitudes explicitas (sin defaults ocultos)
+- Estructura agrupada recomendada:
+  - `geometry.beam`
+  - `geometry.column`
+  - `geometry.end_plate`
+  - `geometry.continuity_plate`
+  - `geometry.stiffener`
+  - `geometry.bolts`
+  - `geometry.welds`
+- `geometry.beam.clear_span_length`: luz libre de la viga.
+- `geometry.beam.shear_connector_free_length_from_column_face`: longitud sin conectores de cortante medida desde la cara de columna (`Lsc`).
+- `geometry.column.slab_connection_condition`: condicion union columna-losa (`isolated`/`not_isolated`; tambien acepta `aislada`/`no_aislada`).
+- `geometry.welds.continuity_plate_weld_type`: tipo de soldadura para la platina de continuidad (`double_sided_fillet`, `CJP`, `PJP`).
+- `geometry.bolts.bolt_tightening_type`: tipo de apriete de pernos (`pretensioned` o `snug_tight`).
+- En particular: `geometry.end_plate.de`, `geometry.end_plate.pb`, `geometry.end_plate.pfo`, `geometry.end_plate.pfi`
 - El artefacto muestra y traza: `bp`, `g`, `de`, `pb`, `pfo`, `pfi`, `h1`, `h2`, `h3`, `h4`
 - En el detalle, `h1..h4` se acotan desde la mitad del espesor de la aleta inferior y `tbf` corresponde al espesor de la aleta.
 
@@ -100,11 +117,13 @@ Cada magnitud numerica usa objeto:
 ```
 
 ## Salida
-- Consola: resumen compacto de estado global, conteos y peor DCR.
-- Carpeta por example: `results/<example_json_sin_extension>/`.
+- Consola: resumen compacto de estado global, conteos y pasos de verificacion legibles (`calculado` vs `limite`) con simbolos tecnicos (`bp`, `bf`, `db`, etc.).
+- Carpeta por example (default): `results/moment_prequalified/<example_json_sin_extension>/`.
 - Archivo detallado: `detailed.json`.
+- Memoria de presentacion: `memory.md`.
 - Artefacto grafico: `geometry.svg` (esquema de geometria de la conexion para auditoria tecnica).
-- Cada chequeo incluye `name`, `clause`, `demand`, `capacity`, `dcr`, `status`, `calculation_memory`.
+- En esta etapa (Paso 1), cada chequeo reporta subverificaciones con `calculated`, `limit`, `comparison`, `margin` y `result`.
+- El Paso 1 tambien incluye los requisitos de Section 2.3.4: `Lsc >= 1.5d` y losa `isolated`.
 
 ## Ejemplos canonicos Chapter 6
 - Se mantiene un solo JSON por variacion:
@@ -122,7 +141,7 @@ python -m src.steel_connections.run examples/moment_prequalified/case_003_bseep_
 
 Salida por defecto:
 ```bash
-results/<example_json_sin_extension>/detailed.json
+results/moment_prequalified/<example_json_sin_extension>/detailed.json
 ```
 
 Opcionalmente puedes indicar carpeta de salida como segundo argumento:

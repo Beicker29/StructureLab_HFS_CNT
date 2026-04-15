@@ -94,7 +94,7 @@ def test_compute_compactness_ratios_and_limits() -> None:
     assert round(web_ratio, 2) == 48.84
     assert round(web_inter["clear_web_depth"], 1) == 547.0
     assert round(flange_limit, 2) == 6.89
-    assert round(web_limit, 2) == 57.39
+    assert round(web_limit, 2) == 56.24
 
 
 def test_compute_minimum_bolt_spacing_si() -> None:

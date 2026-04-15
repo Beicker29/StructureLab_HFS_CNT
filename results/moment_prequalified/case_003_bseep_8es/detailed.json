@@ -1,0 +1,1867 @@
+{
+  "project_id": "proj_bseep_si_demo",
+  "case_id": "case_si_bseep_8es_w18x175_w24x76",
+  "connection_family": "moment_prequalified",
+  "connection_type": "bseep_8es",
+  "load_state": "strength",
+  "global_status": "PASS",
+  "checks": [
+    {
+      "name": "bseep_8es Section 6.3 prequalification limits",
+      "rule_id": "AISC358.06.3.bseep_8es.prequalification_limits",
+      "clause": "Chapter 6 / Section 6.3 + AISC 360-22 Table J3.4",
+      "source_document": "AISC 358-22",
+      "demand": null,
+      "capacity": null,
+      "dcr": null,
+      "status": "PASS",
+      "calculation_memory": {
+        "inputs": {
+          "bolt_diameter": {
+            "value": 28.575,
+            "unit": "mm"
+          },
+          "beam_flange_width_bf": {
+            "value": 228.0,
+            "unit": "mm"
+          },
+          "column_flange_width_bcf": {
+            "value": 290.0,
+            "unit": "mm"
+          },
+          "column_depth_d_col": {
+            "value": 508.0,
+            "unit": "mm"
+          },
+          "column_depth_limit_max": {
+            "value": 920.0,
+            "unit": "mm"
+          },
+          "continuity_plate_thickness_tcp": {
+            "value": 15.9,
+            "unit": "mm"
+          },
+          "continuity_plate_weld_type": "CJP",
+          "end_plate_beam_web_weld_type": "CJP",
+          "end_plate_beam_web_weld_length_lwe": {
+            "value": 300.0,
+            "unit": "mm"
+          },
+          "weld_fexx": {
+            "value": 490.0,
+            "unit": "MPa"
+          },
+          "end_plate_beam_web_weld_thickness_twe": {
+            "value": 8.0,
+            "unit": "mm"
+          },
+          "bolt_tightening_type": "pretensioned",
+          "bolt_fabrication_standard": "ASTM A490",
+          "end_plate_width_bp": {
+            "value": 253.0,
+            "unit": "mm"
+          },
+          "bolt_gage_g": {
+            "value": 152.4,
+            "unit": "mm"
+          },
+          "pitch_pb": {
+            "value": 95.0,
+            "unit": "mm"
+          },
+          "edge_de": {
+            "value": 60.0,
+            "unit": "mm"
+          },
+          "edge_pfo": {
+            "value": 50.0,
+            "unit": "mm"
+          },
+          "edge_pfi": {
+            "value": 50.0,
+            "unit": "mm"
+          },
+          "end_plate_height": {
+            "value": 110.0,
+            "unit": "mm"
+          },
+          "stiffener_length": {
+            "value": 190.52558883257652,
+            "unit": "mm"
+          },
+          "beam_clear_span_length": {
+            "value": 6096.0,
+            "unit": "mm"
+          },
+          "beam_shear_connector_free_length_from_column_face": {
+            "value": 1000.0,
+            "unit": "mm"
+          },
+          "column_slab_connection_condition": "isolated",
+          "beam_ductility_demand": "high",
+          "column_ductility_demand": "high",
+          "pu_viga": {
+            "value": 0.0,
+            "unit": "kN"
+          },
+          "pu_columna": {
+            "value": 696.654,
+            "unit": "kN"
+          },
+          "ag_viga": {
+            "value": 14500.0,
+            "unit": "mm2"
+          },
+          "ag_columna": {
+            "value": 33200.0,
+            "unit": "mm2"
+          },
+          "compactness_ca_beam_calculated": 0.0,
+          "compactness_ca_column_calculated": 0.05529263298252298
+        },
+        "intermediates": {
+          "minimum_spacing_3db": {
+            "value": 85.725,
+            "unit": "mm"
+          },
+          "minimum_bp_bf_plus_margin": {
+            "value": 253.0,
+            "unit": "mm"
+          },
+          "bp_margin": 25.0,
+          "minimum_edge_distance_j34": {
+            "value": 38.099999999999994,
+            "unit": "mm"
+          },
+          "clear_span_to_depth_ratio": {
+            "value": 10.042833607907744,
+            "unit": "ratio"
+          },
+          "clear_span_to_depth_limit": {
+            "value": 7.0,
+            "unit": "ratio"
+          },
+          "frame_system_for_span_ratio": "SMF",
+          "beam_flange_compactness_ratio": 6.589595375722543,
+          "beam_flange_compactness_limit": 6.887004431501818,
+          "beam_web_compactness_ratio": 48.839285714285715,
+          "beam_web_compactness_limit": 56.24386952393152,
+          "column_flange_compactness_ratio": 3.589108910891089,
+          "column_flange_compactness_limit": 6.887004431501818,
+          "column_web_compactness_ratio": 18.008849557522122,
+          "column_web_compactness_limit": 53.00960302342372,
+          "ca_beam_trace": {
+            "pu": {
+              "value": 0.0,
+              "unit": "kN"
+            },
+            "ry": 1.1,
+            "ag": {
+              "value": 14500.0,
+              "unit": "mm2"
+            },
+            "fy": {
+              "value": 345.0,
+              "unit": "MPa"
+            },
+            "formula": "Ca = Pu / (Ry * Ag * Fy)",
+            "denominator_base": 5502750.000000001,
+            "denominator_force_units": 5502.750000000001
+          },
+          "ca_column_trace": {
+            "pu": {
+              "value": 696.654,
+              "unit": "kN"
+            },
+            "ry": 1.1,
+            "ag": {
+              "value": 33200.0,
+              "unit": "mm2"
+            },
+            "fy": {
+              "value": 345.0,
+              "unit": "MPa"
+            },
+            "formula": "Ca = Pu / (Ry * Ag * Fy)",
+            "denominator_base": 12599400.0,
+            "denominator_force_units": 12599.4
+          },
+          "continuity_plate_weld_thickness_limit": {
+            "value": 10.0,
+            "unit": "mm"
+          },
+          "j34_lookup": {
+            "db_in": 1.125,
+            "table_row": "db=1.125 in",
+            "in_to_mm": 25.4
+          },
+          "step_1_notes": [
+            {
+              "step": "1",
+              "id": "section_2_3_4.protected_zone_length",
+              "scope": "beam",
+              "clause": "Section 2.3.4 (8)",
+              "description": "Protected zone length measured from column face",
+              "formula": "Lpz = min(lst + 0.5d, 3bf)",
+              "candidate_a_label": "lst + 0.5d",
+              "candidate_a": {
+                "value": 494.02558883257655,
+                "unit": "mm"
+              },
+              "candidate_b_label": "3bf",
+              "candidate_b": {
+                "value": 684.0,
+                "unit": "mm"
+              },
+              "protected_zone_length": {
+                "value": 494.02558883257655,
+                "unit": "mm"
+              }
+            },
+            {
+              "step": "1",
+              "id": "section_6_3.end_plate_connection_location",
+              "scope": "column",
+              "clause": "Section 6.3 (2)",
+              "description": "End-plate connection location on column",
+              "requirement": "The end plate shall be connected to the flange of the column."
+            },
+            {
+              "step": "1",
+              "id": "section_6_3.end_plate_height_derived",
+              "scope": "end_plate",
+              "clause": "Section 6.3",
+              "description": "Derived end-plate height reference",
+              "requirement": "end_plate_height = pfo + de",
+              "formula": "h_ep = pfo + de",
+              "candidate_a_label": "pfo",
+              "candidate_a": {
+                "value": 50.0,
+                "unit": "mm"
+              },
+              "candidate_b_label": "de",
+              "candidate_b": {
+                "value": 60.0,
+                "unit": "mm"
+              },
+              "derived_value": {
+                "value": 110.0,
+                "unit": "mm"
+              }
+            },
+            {
+              "step": "1",
+              "id": "section_6_3.end_plate_stiffener_geometry_note",
+              "scope": "end_plate_stiffener",
+              "clause": "Section 6.3",
+              "description": "Derived end-plate stiffener geometry and detailing edge requirement",
+              "requirement": "hst = pfo + de; Lst = hst/tan(30 deg); edge detailing >= 25 mm",
+              "formula": "hst = pfo + de; Lst = hst / tan(30 deg)",
+              "candidate_a_label": "hst",
+              "candidate_a": {
+                "value": 110.0,
+                "unit": "mm"
+              },
+              "candidate_b_label": "Lst",
+              "candidate_b": {
+                "value": 190.52558883257652,
+                "unit": "mm"
+              },
+              "derived_value": {
+                "value": 25.0,
+                "unit": "mm"
+              }
+            },
+            {
+              "step": "1",
+              "id": "section_6_7.beam_flange_to_end_plate_weld_note",
+              "scope": "welds",
+              "clause": "Section 6.7",
+              "description": "Requisitos de soldadura entre ala de viga y placa de extremo",
+              "requirement": "La unión entre el ala de la viga y la placa de extremo debe ejecutarse con una soldadura de ranura CJP sin respaldo. La soldadura de ranura CJP debe realizarse de modo que la raíz de la soldadura quede del lado del alma de la viga respecto del ala. La cara interior del ala debe tener una soldadura de filete de c in. (8 mm). Estas soldaduras deben ser de demanda crítica."
+            },
+            {
+              "step": "1",
+              "id": "section_6_7.stiffened_end_plate_weld_sequence_note",
+              "scope": "welds",
+              "clause": "Section 6.7",
+              "description": "Secuencia de soldadura para conexiones end-plate rigidizadas",
+              "requirement": "Para conexiones end-plate rigidizadas, la soldadura entre el ala de la viga y la placa de extremo debe ejecutarse antes de instalar el rigidizador."
+            },
+            {
+              "step": "1",
+              "id": "section_4_2.installation_requirements",
+              "scope": "bolts",
+              "clause": "Section 4.2",
+              "description": "Installation requirements for bolted assemblies",
+              "requirement": "Installation requirements shall be in accordance with the AISC Seismic Provisions and the RCSC Specification, except as otherwise specifically indicated in this standard."
+            },
+            {
+              "step": "1",
+              "id": "section_4_3.quality_control_assurance",
+              "scope": "bolts",
+              "clause": "Section 4.3",
+              "description": "Quality control and quality assurance for bolted assemblies",
+              "requirement": "Quality control and quality assurance shall be in accordance with the AISC Seismic Provisions."
+            }
+          ],
+          "step_1_limits": [
+            {
+              "step": "1",
+              "id": "beam.shape_family",
+              "scope": "beam",
+              "clause": "Section 2.3.4",
+              "description": "Beam profile family allowed for prequalification",
+              "calculated_symbol": "shape_beam",
+              "limit_symbol": "{W, HEA, HEB, IPE}",
+              "comparison": "family_in",
+              "comparison_text": "in",
+              "calculated_text": "W24X76",
+              "allowed_families": [
+                "W",
+                "HEA",
+                "HEB",
+                "IPE"
+              ],
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "beam.bp_ge_bf_plus_margin",
+              "scope": "beam",
+              "clause": "Section 6.3 / Table 6.1",
+              "description": "End-plate width vs beam flange width",
+              "calculated_symbol": "bp",
+              "limit_symbol": "bf + margin",
+              "calculated": {
+                "value": 253.0,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 253.0,
+                "unit": "mm"
+              },
+              "comparison": "ge",
+              "comparison_text": ">=",
+              "margin": {
+                "value": 0.0,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "beam.bolt_gage_g_ge_3db",
+              "scope": "beam",
+              "clause": "Section 6.3 / Table 6.1",
+              "description": "Bolt gage minimum spacing",
+              "calculated_symbol": "g",
+              "limit_symbol": "3db",
+              "calculated": {
+                "value": 152.4,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 85.725,
+                "unit": "mm"
+              },
+              "comparison": "ge",
+              "comparison_text": ">=",
+              "margin": {
+                "value": 66.67500000000001,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "section_2_3_4.no_shear_connectors_zone",
+              "scope": "beam",
+              "clause": "Section 2.3.4 (2)",
+              "description": "Length without shear connectors from column face",
+              "calculated_symbol": "Lsc",
+              "limit_symbol": "1.5d",
+              "calculated": {
+                "value": 1000.0,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 910.5,
+                "unit": "mm"
+              },
+              "comparison": "ge",
+              "comparison_text": ">=",
+              "margin": {
+                "value": 89.5,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "section_2_3_4.clear_span_to_depth_ratio",
+              "scope": "beam",
+              "clause": "Section 2.3.4 (5)",
+              "description": "Clear span-to-depth ratio by frame system",
+              "calculated_symbol": "Lclear/d",
+              "limit_symbol": "7 (SMF)",
+              "calculated": {
+                "value": 10.042833607907744,
+                "unit": "ratio"
+              },
+              "limit": {
+                "value": 7.0,
+                "unit": "ratio"
+              },
+              "comparison": "ge",
+              "comparison_text": ">=",
+              "margin": {
+                "value": 3.0428336079077436,
+                "unit": "ratio"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "section_2_3_4.beam_flange_width_to_thickness",
+              "scope": "beam",
+              "clause": "Section 2.3.4 (6) + AISC Seismic Provisions",
+              "description": "Beam flange width-to-thickness compactness",
+              "calculated_symbol": "lambda_f_beam",
+              "limit_symbol": "lambda_f_limit",
+              "calculated": {
+                "value": 6.589595375722543,
+                "unit": "ratio"
+              },
+              "limit": {
+                "value": 6.887004431501818,
+                "unit": "ratio"
+              },
+              "comparison": "le",
+              "comparison_text": "<=",
+              "margin": {
+                "value": 0.29740905577927546,
+                "unit": "ratio"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "section_2_3_4.beam_web_width_to_thickness",
+              "scope": "beam",
+              "clause": "Section 2.3.4 (6) + AISC Seismic Provisions",
+              "description": "Beam web width-to-thickness compactness",
+              "calculated_symbol": "lambda_w_beam",
+              "limit_symbol": "lambda_w_limit",
+              "calculated": {
+                "value": 48.839285714285715,
+                "unit": "ratio"
+              },
+              "limit": {
+                "value": 56.24386952393152,
+                "unit": "ratio"
+              },
+              "comparison": "le",
+              "comparison_text": "<=",
+              "margin": {
+                "value": 7.404583809645807,
+                "unit": "ratio"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "column.shape_family",
+              "scope": "column",
+              "clause": "Section 2.3.4",
+              "description": "Column profile family allowed for prequalification",
+              "calculated_symbol": "shape_col",
+              "limit_symbol": "{W, HEA, HEB, IPE}",
+              "comparison": "family_in",
+              "comparison_text": "in",
+              "calculated_text": "W18X175",
+              "allowed_families": [
+                "W",
+                "HEA",
+                "HEB",
+                "IPE"
+              ],
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "section_6_3.column_depth_maximum",
+              "scope": "column",
+              "clause": "Section 6.3 (3)",
+              "description": "Column profile depth maximum (W36/W920)",
+              "calculated_symbol": "d_col",
+              "limit_symbol": "W36/W920",
+              "calculated": {
+                "value": 508.0,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 920.0,
+                "unit": "mm"
+              },
+              "comparison": "le",
+              "comparison_text": "<=",
+              "margin": {
+                "value": 412.0,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "column.bp_le_bcf",
+              "scope": "column",
+              "clause": "Section 6.3 / Table 6.1",
+              "description": "End-plate fit within column flange width",
+              "calculated_symbol": "bp",
+              "limit_symbol": "bcf",
+              "calculated": {
+                "value": 253.0,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 290.0,
+                "unit": "mm"
+              },
+              "comparison": "le",
+              "comparison_text": "<=",
+              "margin": {
+                "value": 37.0,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "section_2_3_4.slab_isolation_condition",
+              "scope": "column",
+              "clause": "Section 2.3.4 (3)",
+              "description": "Column-slab connection condition",
+              "calculated_symbol": "col_losa",
+              "limit_symbol": "isolated",
+              "comparison": "equals",
+              "comparison_text": "==",
+              "calculated_text": "isolated",
+              "expected_text": "isolated",
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "section_2_3_4.column_flange_width_to_thickness",
+              "scope": "column",
+              "clause": "Section 2.3.4 (6) + AISC Seismic Provisions",
+              "description": "Column flange width-to-thickness compactness",
+              "calculated_symbol": "lambda_f_col",
+              "limit_symbol": "lambda_f_limit",
+              "calculated": {
+                "value": 3.589108910891089,
+                "unit": "ratio"
+              },
+              "limit": {
+                "value": 6.887004431501818,
+                "unit": "ratio"
+              },
+              "comparison": "le",
+              "comparison_text": "<=",
+              "margin": {
+                "value": 3.297895520610729,
+                "unit": "ratio"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "section_2_3_4.column_web_width_to_thickness",
+              "scope": "column",
+              "clause": "Section 2.3.4 (6) + AISC Seismic Provisions",
+              "description": "Column web width-to-thickness compactness",
+              "calculated_symbol": "lambda_w_col",
+              "limit_symbol": "lambda_w_limit",
+              "calculated": {
+                "value": 18.008849557522122,
+                "unit": "ratio"
+              },
+              "limit": {
+                "value": 53.00960302342372,
+                "unit": "ratio"
+              },
+              "comparison": "le",
+              "comparison_text": "<=",
+              "margin": {
+                "value": 35.000753465901596,
+                "unit": "ratio"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "section_6_3.end_plate_width_dual_limit",
+              "scope": "end_plate",
+              "clause": "Section 6.3 / Table 6.1",
+              "description": "End-plate width explicit dual inequalities",
+              "calculated_symbol": "bp",
+              "limit_symbol": "compound",
+              "comparison": "compound",
+              "comparison_text": "compound",
+              "verification_text": "bp <= bbf + 25 mm; bp <= bcf",
+              "calculated": {
+                "value": 253.0,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK",
+              "minimum": {
+                "value": 228.6,
+                "unit": "mm"
+              },
+              "maximum": {
+                "value": 253.0,
+                "unit": "mm"
+              }
+            },
+            {
+              "step": "1",
+              "id": "section_6_3.end_plate_stiffener_height_derived",
+              "scope": "end_plate_stiffener",
+              "clause": "Section 6.3",
+              "description": "End-plate stiffener height derived from end-plate geometry",
+              "calculated_symbol": "hst",
+              "limit_symbol": "compound",
+              "comparison": "compound",
+              "comparison_text": "compound",
+              "verification_text": "hst = pfo + de; 110.000 mm = 50.000 mm + 60.000 mm",
+              "calculated": {
+                "value": 110.0,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "section_6_7.end_plate_beam_web_weld_type_allowed",
+              "scope": "welds",
+              "clause": "Section 6.7",
+              "description": "End-plate to beam-web weld type shall be an allowed category",
+              "calculated_symbol": "weld_ep_web",
+              "limit_symbol": "{cjp, double_sided_fillet, single_sided_fillet}",
+              "comparison": "in_set",
+              "comparison_text": "in",
+              "calculated_text": "cjp",
+              "allowed_values": [
+                "cjp",
+                "double_sided_fillet",
+                "single_sided_fillet"
+              ],
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "section_6_3.continuity_plate_weld_type_declared",
+              "scope": "continuity_plate",
+              "clause": "Section 6.3 (continuity plate weld detail)",
+              "description": "Continuity-plate weld type shall be explicitly declared with an allowed weld category",
+              "calculated_symbol": "weld_cp",
+              "limit_symbol": "{double_sided_fillet, cjp, pjp}",
+              "comparison": "in_set",
+              "comparison_text": "in",
+              "calculated_text": "cjp",
+              "allowed_values": [
+                "double_sided_fillet",
+                "cjp",
+                "pjp"
+              ],
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "section_6_3.continuity_plate_weld_type_for_thin_plate",
+              "scope": "continuity_plate",
+              "clause": "Section 6.3 (continuity plate weld detail)",
+              "description": "Continuity-plate weld type when plate thickness is less than or equal to 3/8 in (10 mm)",
+              "calculated_symbol": "weld_cp",
+              "limit_symbol": "{double_sided_fillet, cjp, pjp} if tcp<=tcp_limit",
+              "comparison": "conditional_allowed_set",
+              "comparison_text": "in_if",
+              "thickness": {
+                "value": 15.9,
+                "unit": "mm"
+              },
+              "thickness_limit": {
+                "value": 10.0,
+                "unit": "mm"
+              },
+              "condition_applies": false,
+              "governing_condition": "cjp_or_pjp_always_permitted",
+              "calculated_text": "cjp",
+              "allowed_values": [
+                "double_sided_fillet",
+                "cjp",
+                "pjp"
+              ],
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "section_4_1.bolt_tightening_type_valid",
+              "scope": "bolts",
+              "clause": "Section 4.1 FASTENER ASSEMBLIES",
+              "description": "Bolt tightening type must be one recognized category",
+              "calculated_symbol": "tight_bolt",
+              "limit_symbol": "{pretensioned, snug_tight}",
+              "comparison": "in_set",
+              "comparison_text": "in",
+              "calculated_text": "pretensioned",
+              "allowed_values": [
+                "pretensioned",
+                "snug_tight"
+              ],
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "section_4_1.bolt_tightening_required_pretensioned",
+              "scope": "bolts",
+              "clause": "Section 4.1 FASTENER ASSEMBLIES",
+              "description": "Bolts shall be pretensioned unless a specific connection permits otherwise",
+              "calculated_symbol": "tight_bolt",
+              "limit_symbol": "pretensioned",
+              "comparison": "equals",
+              "comparison_text": "==",
+              "calculated_text": "pretensioned",
+              "expected_text": "pretensioned",
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "section_4_1.bolt_fabrication_standard_permitted",
+              "scope": "bolts",
+              "clause": "Section 4.1 FASTENER ASSEMBLIES",
+              "description": "Bolt fabrication standard must be an allowed high-strength ASTM designation",
+              "calculated_symbol": "std_bolt",
+              "limit_symbol": "{ASTM F3125/F3125M, ASTM A325, ASTM A325M, ASTM A490, ASTM A490M, ASTM F1852, ASTM F2280}",
+              "comparison": "in_set",
+              "comparison_text": "in",
+              "calculated_text": "ASTM A490",
+              "allowed_values": [
+                "ASTM F3125/F3125M",
+                "ASTM A325",
+                "ASTM A325M",
+                "ASTM A490",
+                "ASTM A490M",
+                "ASTM F1852",
+                "ASTM F2280"
+              ],
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "table_6_1.pitch_pb_ge_3db",
+              "scope": "table_6_1",
+              "clause": "Table 6.1 (BSEEP-8ES)",
+              "description": "Vertical pitch minimum spacing",
+              "calculated_symbol": "pb",
+              "limit_symbol": "compound",
+              "comparison": "compound",
+              "comparison_text": "compound",
+              "verification_text": "pb >= 3db; pb <= 95.000 mm; pb >= 89 mm",
+              "calculated": {
+                "value": 95.0,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK",
+              "limit_3db": {
+                "value": 85.725,
+                "unit": "mm"
+              },
+              "minimum": {
+                "value": 89.0,
+                "unit": "mm"
+              },
+              "maximum": {
+                "value": 95.0,
+                "unit": "mm"
+              }
+            },
+            {
+              "step": "1",
+              "id": "table_6_1.edge_de_ge_emin",
+              "scope": "table_6_1",
+              "clause": "Table 6.1 + AISC 360 Table J3.4",
+              "description": "Edge distance at de",
+              "calculated_symbol": "de",
+              "limit_symbol": "emin",
+              "calculated": {
+                "value": 60.0,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 38.099999999999994,
+                "unit": "mm"
+              },
+              "comparison": "ge",
+              "comparison_text": ">=",
+              "margin": {
+                "value": 21.900000000000006,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "table_6_1.edge_pfo_ge_emin",
+              "scope": "table_6_1",
+              "clause": "Table 6.1 + AISC 360 Table J3.4",
+              "description": "Outside bolt-row distance limits",
+              "calculated_symbol": "pfo - pso",
+              "limit_symbol": "compound",
+              "comparison": "compound",
+              "comparison_text": "compound",
+              "verification_text": "pso (=pfo) >= emin; pfo <= 51 mm; pfo >= 41 mm",
+              "calculated": {
+                "value": 50.0,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK",
+              "minimum": {
+                "value": 41.275,
+                "unit": "mm"
+              },
+              "maximum": {
+                "value": 50.8,
+                "unit": "mm"
+              }
+            },
+            {
+              "step": "1",
+              "id": "table_6_1.edge_pfi_ge_emin",
+              "scope": "table_6_1",
+              "clause": "Table 6.1 + AISC 360 Table J3.4",
+              "description": "Inside bolt-row distance limits",
+              "calculated_symbol": "pfi - psi",
+              "limit_symbol": "compound",
+              "comparison": "compound",
+              "comparison_text": "compound",
+              "verification_text": "pfi >= emin; pfi <= 51 mm; pfi >= 41 mm; psi = pfi + tfb - tcp; psi > 0",
+              "calculated": {
+                "value": 50.0,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK",
+              "minimum": {
+                "value": 41.275,
+                "unit": "mm"
+              },
+              "maximum": {
+                "value": 50.8,
+                "unit": "mm"
+              }
+            },
+            {
+              "step": "1",
+              "id": "table_6_1.tbf.range",
+              "scope": "table_6_1",
+              "clause": "Table 6.1",
+              "description": "Beam flange thickness limits",
+              "calculated_symbol": "tbf",
+              "limit_symbol": "[tbf_min, tbf_max]",
+              "calculated": {
+                "value": 17.3,
+                "unit": "mm"
+              },
+              "minimum": {
+                "value": 14.2875,
+                "unit": "mm"
+              },
+              "maximum": {
+                "value": 25.4,
+                "unit": "mm"
+              },
+              "comparison": "range",
+              "comparison_text": "in",
+              "margin_to_min": {
+                "value": 3.012500000000001,
+                "unit": "mm"
+              },
+              "margin_to_max": {
+                "value": 8.099999999999998,
+                "unit": "mm"
+              },
+              "margin": {
+                "value": 3.012500000000001,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "table_6_1.bbf.range",
+              "scope": "table_6_1",
+              "clause": "Table 6.1",
+              "description": "Beam flange width limits",
+              "calculated_symbol": "bbf",
+              "limit_symbol": "[bbf_min, bbf_max]",
+              "calculated": {
+                "value": 228.0,
+                "unit": "mm"
+              },
+              "minimum": {
+                "value": 190.5,
+                "unit": "mm"
+              },
+              "maximum": {
+                "value": 311.15,
+                "unit": "mm"
+              },
+              "comparison": "range",
+              "comparison_text": "in",
+              "margin_to_min": {
+                "value": 37.5,
+                "unit": "mm"
+              },
+              "margin_to_max": {
+                "value": 83.14999999999998,
+                "unit": "mm"
+              },
+              "margin": {
+                "value": 37.5,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "table_6_1.d.range",
+              "scope": "table_6_1",
+              "clause": "Table 6.1",
+              "description": "Connecting beam depth limits",
+              "calculated_symbol": "d",
+              "limit_symbol": "[d_min, d_max]",
+              "calculated": {
+                "value": 607.0,
+                "unit": "mm"
+              },
+              "minimum": {
+                "value": 457.2,
+                "unit": "mm"
+              },
+              "maximum": {
+                "value": 914.4,
+                "unit": "mm"
+              },
+              "comparison": "range",
+              "comparison_text": "in",
+              "margin_to_min": {
+                "value": 149.8,
+                "unit": "mm"
+              },
+              "margin_to_max": {
+                "value": 307.4,
+                "unit": "mm"
+              },
+              "margin": {
+                "value": 149.8,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "table_6_1.tp.range",
+              "scope": "table_6_1",
+              "clause": "Table 6.1",
+              "description": "End-plate thickness limits",
+              "calculated_symbol": "tp",
+              "limit_symbol": "[tp_min, tp_max]",
+              "calculated": {
+                "value": 25.4,
+                "unit": "mm"
+              },
+              "minimum": {
+                "value": 19.049999999999997,
+                "unit": "mm"
+              },
+              "maximum": {
+                "value": 63.5,
+                "unit": "mm"
+              },
+              "comparison": "range",
+              "comparison_text": "in",
+              "margin_to_min": {
+                "value": 6.350000000000001,
+                "unit": "mm"
+              },
+              "margin_to_max": {
+                "value": 38.1,
+                "unit": "mm"
+              },
+              "margin": {
+                "value": 6.350000000000001,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "table_6_1.g.range",
+              "scope": "table_6_1",
+              "clause": "Table 6.1",
+              "description": "Horizontal bolt spacing limits",
+              "calculated_symbol": "g",
+              "limit_symbol": "[g_min, g_max]",
+              "calculated": {
+                "value": 152.4,
+                "unit": "mm"
+              },
+              "minimum": {
+                "value": 127.0,
+                "unit": "mm"
+              },
+              "maximum": {
+                "value": 152.39999999999998,
+                "unit": "mm"
+              },
+              "comparison": "range",
+              "comparison_text": "in",
+              "margin_to_min": {
+                "value": 25.400000000000006,
+                "unit": "mm"
+              },
+              "margin_to_max": {
+                "value": 0.0,
+                "unit": "mm"
+              },
+              "margin": {
+                "value": 0.0,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
+            }
+          ],
+          "prequalification_limits": [
+            {
+              "step": "1",
+              "id": "beam.shape_family",
+              "scope": "beam",
+              "clause": "Section 2.3.4",
+              "description": "Beam profile family allowed for prequalification",
+              "calculated_symbol": "shape_beam",
+              "limit_symbol": "{W, HEA, HEB, IPE}",
+              "comparison": "family_in",
+              "comparison_text": "in",
+              "calculated_text": "W24X76",
+              "allowed_families": [
+                "W",
+                "HEA",
+                "HEB",
+                "IPE"
+              ],
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "beam.bp_ge_bf_plus_margin",
+              "scope": "beam",
+              "clause": "Section 6.3 / Table 6.1",
+              "description": "End-plate width vs beam flange width",
+              "calculated_symbol": "bp",
+              "limit_symbol": "bf + margin",
+              "calculated": {
+                "value": 253.0,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 253.0,
+                "unit": "mm"
+              },
+              "comparison": "ge",
+              "comparison_text": ">=",
+              "margin": {
+                "value": 0.0,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "beam.bolt_gage_g_ge_3db",
+              "scope": "beam",
+              "clause": "Section 6.3 / Table 6.1",
+              "description": "Bolt gage minimum spacing",
+              "calculated_symbol": "g",
+              "limit_symbol": "3db",
+              "calculated": {
+                "value": 152.4,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 85.725,
+                "unit": "mm"
+              },
+              "comparison": "ge",
+              "comparison_text": ">=",
+              "margin": {
+                "value": 66.67500000000001,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "section_2_3_4.no_shear_connectors_zone",
+              "scope": "beam",
+              "clause": "Section 2.3.4 (2)",
+              "description": "Length without shear connectors from column face",
+              "calculated_symbol": "Lsc",
+              "limit_symbol": "1.5d",
+              "calculated": {
+                "value": 1000.0,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 910.5,
+                "unit": "mm"
+              },
+              "comparison": "ge",
+              "comparison_text": ">=",
+              "margin": {
+                "value": 89.5,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "section_2_3_4.clear_span_to_depth_ratio",
+              "scope": "beam",
+              "clause": "Section 2.3.4 (5)",
+              "description": "Clear span-to-depth ratio by frame system",
+              "calculated_symbol": "Lclear/d",
+              "limit_symbol": "7 (SMF)",
+              "calculated": {
+                "value": 10.042833607907744,
+                "unit": "ratio"
+              },
+              "limit": {
+                "value": 7.0,
+                "unit": "ratio"
+              },
+              "comparison": "ge",
+              "comparison_text": ">=",
+              "margin": {
+                "value": 3.0428336079077436,
+                "unit": "ratio"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "section_2_3_4.beam_flange_width_to_thickness",
+              "scope": "beam",
+              "clause": "Section 2.3.4 (6) + AISC Seismic Provisions",
+              "description": "Beam flange width-to-thickness compactness",
+              "calculated_symbol": "lambda_f_beam",
+              "limit_symbol": "lambda_f_limit",
+              "calculated": {
+                "value": 6.589595375722543,
+                "unit": "ratio"
+              },
+              "limit": {
+                "value": 6.887004431501818,
+                "unit": "ratio"
+              },
+              "comparison": "le",
+              "comparison_text": "<=",
+              "margin": {
+                "value": 0.29740905577927546,
+                "unit": "ratio"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "section_2_3_4.beam_web_width_to_thickness",
+              "scope": "beam",
+              "clause": "Section 2.3.4 (6) + AISC Seismic Provisions",
+              "description": "Beam web width-to-thickness compactness",
+              "calculated_symbol": "lambda_w_beam",
+              "limit_symbol": "lambda_w_limit",
+              "calculated": {
+                "value": 48.839285714285715,
+                "unit": "ratio"
+              },
+              "limit": {
+                "value": 56.24386952393152,
+                "unit": "ratio"
+              },
+              "comparison": "le",
+              "comparison_text": "<=",
+              "margin": {
+                "value": 7.404583809645807,
+                "unit": "ratio"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "column.shape_family",
+              "scope": "column",
+              "clause": "Section 2.3.4",
+              "description": "Column profile family allowed for prequalification",
+              "calculated_symbol": "shape_col",
+              "limit_symbol": "{W, HEA, HEB, IPE}",
+              "comparison": "family_in",
+              "comparison_text": "in",
+              "calculated_text": "W18X175",
+              "allowed_families": [
+                "W",
+                "HEA",
+                "HEB",
+                "IPE"
+              ],
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "section_6_3.column_depth_maximum",
+              "scope": "column",
+              "clause": "Section 6.3 (3)",
+              "description": "Column profile depth maximum (W36/W920)",
+              "calculated_symbol": "d_col",
+              "limit_symbol": "W36/W920",
+              "calculated": {
+                "value": 508.0,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 920.0,
+                "unit": "mm"
+              },
+              "comparison": "le",
+              "comparison_text": "<=",
+              "margin": {
+                "value": 412.0,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "column.bp_le_bcf",
+              "scope": "column",
+              "clause": "Section 6.3 / Table 6.1",
+              "description": "End-plate fit within column flange width",
+              "calculated_symbol": "bp",
+              "limit_symbol": "bcf",
+              "calculated": {
+                "value": 253.0,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 290.0,
+                "unit": "mm"
+              },
+              "comparison": "le",
+              "comparison_text": "<=",
+              "margin": {
+                "value": 37.0,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "section_2_3_4.slab_isolation_condition",
+              "scope": "column",
+              "clause": "Section 2.3.4 (3)",
+              "description": "Column-slab connection condition",
+              "calculated_symbol": "col_losa",
+              "limit_symbol": "isolated",
+              "comparison": "equals",
+              "comparison_text": "==",
+              "calculated_text": "isolated",
+              "expected_text": "isolated",
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "section_2_3_4.column_flange_width_to_thickness",
+              "scope": "column",
+              "clause": "Section 2.3.4 (6) + AISC Seismic Provisions",
+              "description": "Column flange width-to-thickness compactness",
+              "calculated_symbol": "lambda_f_col",
+              "limit_symbol": "lambda_f_limit",
+              "calculated": {
+                "value": 3.589108910891089,
+                "unit": "ratio"
+              },
+              "limit": {
+                "value": 6.887004431501818,
+                "unit": "ratio"
+              },
+              "comparison": "le",
+              "comparison_text": "<=",
+              "margin": {
+                "value": 3.297895520610729,
+                "unit": "ratio"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "section_2_3_4.column_web_width_to_thickness",
+              "scope": "column",
+              "clause": "Section 2.3.4 (6) + AISC Seismic Provisions",
+              "description": "Column web width-to-thickness compactness",
+              "calculated_symbol": "lambda_w_col",
+              "limit_symbol": "lambda_w_limit",
+              "calculated": {
+                "value": 18.008849557522122,
+                "unit": "ratio"
+              },
+              "limit": {
+                "value": 53.00960302342372,
+                "unit": "ratio"
+              },
+              "comparison": "le",
+              "comparison_text": "<=",
+              "margin": {
+                "value": 35.000753465901596,
+                "unit": "ratio"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "section_6_3.end_plate_width_dual_limit",
+              "scope": "end_plate",
+              "clause": "Section 6.3 / Table 6.1",
+              "description": "End-plate width explicit dual inequalities",
+              "calculated_symbol": "bp",
+              "limit_symbol": "compound",
+              "comparison": "compound",
+              "comparison_text": "compound",
+              "verification_text": "bp <= bbf + 25 mm; bp <= bcf",
+              "calculated": {
+                "value": 253.0,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK",
+              "minimum": {
+                "value": 228.6,
+                "unit": "mm"
+              },
+              "maximum": {
+                "value": 253.0,
+                "unit": "mm"
+              }
+            },
+            {
+              "step": "1",
+              "id": "section_6_3.end_plate_stiffener_height_derived",
+              "scope": "end_plate_stiffener",
+              "clause": "Section 6.3",
+              "description": "End-plate stiffener height derived from end-plate geometry",
+              "calculated_symbol": "hst",
+              "limit_symbol": "compound",
+              "comparison": "compound",
+              "comparison_text": "compound",
+              "verification_text": "hst = pfo + de; 110.000 mm = 50.000 mm + 60.000 mm",
+              "calculated": {
+                "value": 110.0,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "section_6_7.end_plate_beam_web_weld_type_allowed",
+              "scope": "welds",
+              "clause": "Section 6.7",
+              "description": "End-plate to beam-web weld type shall be an allowed category",
+              "calculated_symbol": "weld_ep_web",
+              "limit_symbol": "{cjp, double_sided_fillet, single_sided_fillet}",
+              "comparison": "in_set",
+              "comparison_text": "in",
+              "calculated_text": "cjp",
+              "allowed_values": [
+                "cjp",
+                "double_sided_fillet",
+                "single_sided_fillet"
+              ],
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "section_6_3.continuity_plate_weld_type_declared",
+              "scope": "continuity_plate",
+              "clause": "Section 6.3 (continuity plate weld detail)",
+              "description": "Continuity-plate weld type shall be explicitly declared with an allowed weld category",
+              "calculated_symbol": "weld_cp",
+              "limit_symbol": "{double_sided_fillet, cjp, pjp}",
+              "comparison": "in_set",
+              "comparison_text": "in",
+              "calculated_text": "cjp",
+              "allowed_values": [
+                "double_sided_fillet",
+                "cjp",
+                "pjp"
+              ],
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "section_6_3.continuity_plate_weld_type_for_thin_plate",
+              "scope": "continuity_plate",
+              "clause": "Section 6.3 (continuity plate weld detail)",
+              "description": "Continuity-plate weld type when plate thickness is less than or equal to 3/8 in (10 mm)",
+              "calculated_symbol": "weld_cp",
+              "limit_symbol": "{double_sided_fillet, cjp, pjp} if tcp<=tcp_limit",
+              "comparison": "conditional_allowed_set",
+              "comparison_text": "in_if",
+              "thickness": {
+                "value": 15.9,
+                "unit": "mm"
+              },
+              "thickness_limit": {
+                "value": 10.0,
+                "unit": "mm"
+              },
+              "condition_applies": false,
+              "governing_condition": "cjp_or_pjp_always_permitted",
+              "calculated_text": "cjp",
+              "allowed_values": [
+                "double_sided_fillet",
+                "cjp",
+                "pjp"
+              ],
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "section_4_1.bolt_tightening_type_valid",
+              "scope": "bolts",
+              "clause": "Section 4.1 FASTENER ASSEMBLIES",
+              "description": "Bolt tightening type must be one recognized category",
+              "calculated_symbol": "tight_bolt",
+              "limit_symbol": "{pretensioned, snug_tight}",
+              "comparison": "in_set",
+              "comparison_text": "in",
+              "calculated_text": "pretensioned",
+              "allowed_values": [
+                "pretensioned",
+                "snug_tight"
+              ],
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "section_4_1.bolt_tightening_required_pretensioned",
+              "scope": "bolts",
+              "clause": "Section 4.1 FASTENER ASSEMBLIES",
+              "description": "Bolts shall be pretensioned unless a specific connection permits otherwise",
+              "calculated_symbol": "tight_bolt",
+              "limit_symbol": "pretensioned",
+              "comparison": "equals",
+              "comparison_text": "==",
+              "calculated_text": "pretensioned",
+              "expected_text": "pretensioned",
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "section_4_1.bolt_fabrication_standard_permitted",
+              "scope": "bolts",
+              "clause": "Section 4.1 FASTENER ASSEMBLIES",
+              "description": "Bolt fabrication standard must be an allowed high-strength ASTM designation",
+              "calculated_symbol": "std_bolt",
+              "limit_symbol": "{ASTM F3125/F3125M, ASTM A325, ASTM A325M, ASTM A490, ASTM A490M, ASTM F1852, ASTM F2280}",
+              "comparison": "in_set",
+              "comparison_text": "in",
+              "calculated_text": "ASTM A490",
+              "allowed_values": [
+                "ASTM F3125/F3125M",
+                "ASTM A325",
+                "ASTM A325M",
+                "ASTM A490",
+                "ASTM A490M",
+                "ASTM F1852",
+                "ASTM F2280"
+              ],
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "table_6_1.pitch_pb_ge_3db",
+              "scope": "table_6_1",
+              "clause": "Table 6.1 (BSEEP-8ES)",
+              "description": "Vertical pitch minimum spacing",
+              "calculated_symbol": "pb",
+              "limit_symbol": "compound",
+              "comparison": "compound",
+              "comparison_text": "compound",
+              "verification_text": "pb >= 3db; pb <= 95.000 mm; pb >= 89 mm",
+              "calculated": {
+                "value": 95.0,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK",
+              "limit_3db": {
+                "value": 85.725,
+                "unit": "mm"
+              },
+              "minimum": {
+                "value": 89.0,
+                "unit": "mm"
+              },
+              "maximum": {
+                "value": 95.0,
+                "unit": "mm"
+              }
+            },
+            {
+              "step": "1",
+              "id": "table_6_1.edge_de_ge_emin",
+              "scope": "table_6_1",
+              "clause": "Table 6.1 + AISC 360 Table J3.4",
+              "description": "Edge distance at de",
+              "calculated_symbol": "de",
+              "limit_symbol": "emin",
+              "calculated": {
+                "value": 60.0,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 38.099999999999994,
+                "unit": "mm"
+              },
+              "comparison": "ge",
+              "comparison_text": ">=",
+              "margin": {
+                "value": 21.900000000000006,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "table_6_1.edge_pfo_ge_emin",
+              "scope": "table_6_1",
+              "clause": "Table 6.1 + AISC 360 Table J3.4",
+              "description": "Outside bolt-row distance limits",
+              "calculated_symbol": "pfo - pso",
+              "limit_symbol": "compound",
+              "comparison": "compound",
+              "comparison_text": "compound",
+              "verification_text": "pso (=pfo) >= emin; pfo <= 51 mm; pfo >= 41 mm",
+              "calculated": {
+                "value": 50.0,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK",
+              "minimum": {
+                "value": 41.275,
+                "unit": "mm"
+              },
+              "maximum": {
+                "value": 50.8,
+                "unit": "mm"
+              }
+            },
+            {
+              "step": "1",
+              "id": "table_6_1.edge_pfi_ge_emin",
+              "scope": "table_6_1",
+              "clause": "Table 6.1 + AISC 360 Table J3.4",
+              "description": "Inside bolt-row distance limits",
+              "calculated_symbol": "pfi - psi",
+              "limit_symbol": "compound",
+              "comparison": "compound",
+              "comparison_text": "compound",
+              "verification_text": "pfi >= emin; pfi <= 51 mm; pfi >= 41 mm; psi = pfi + tfb - tcp; psi > 0",
+              "calculated": {
+                "value": 50.0,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK",
+              "minimum": {
+                "value": 41.275,
+                "unit": "mm"
+              },
+              "maximum": {
+                "value": 50.8,
+                "unit": "mm"
+              }
+            },
+            {
+              "step": "1",
+              "id": "table_6_1.tbf.range",
+              "scope": "table_6_1",
+              "clause": "Table 6.1",
+              "description": "Beam flange thickness limits",
+              "calculated_symbol": "tbf",
+              "limit_symbol": "[tbf_min, tbf_max]",
+              "calculated": {
+                "value": 17.3,
+                "unit": "mm"
+              },
+              "minimum": {
+                "value": 14.2875,
+                "unit": "mm"
+              },
+              "maximum": {
+                "value": 25.4,
+                "unit": "mm"
+              },
+              "comparison": "range",
+              "comparison_text": "in",
+              "margin_to_min": {
+                "value": 3.012500000000001,
+                "unit": "mm"
+              },
+              "margin_to_max": {
+                "value": 8.099999999999998,
+                "unit": "mm"
+              },
+              "margin": {
+                "value": 3.012500000000001,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "table_6_1.bbf.range",
+              "scope": "table_6_1",
+              "clause": "Table 6.1",
+              "description": "Beam flange width limits",
+              "calculated_symbol": "bbf",
+              "limit_symbol": "[bbf_min, bbf_max]",
+              "calculated": {
+                "value": 228.0,
+                "unit": "mm"
+              },
+              "minimum": {
+                "value": 190.5,
+                "unit": "mm"
+              },
+              "maximum": {
+                "value": 311.15,
+                "unit": "mm"
+              },
+              "comparison": "range",
+              "comparison_text": "in",
+              "margin_to_min": {
+                "value": 37.5,
+                "unit": "mm"
+              },
+              "margin_to_max": {
+                "value": 83.14999999999998,
+                "unit": "mm"
+              },
+              "margin": {
+                "value": 37.5,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "table_6_1.d.range",
+              "scope": "table_6_1",
+              "clause": "Table 6.1",
+              "description": "Connecting beam depth limits",
+              "calculated_symbol": "d",
+              "limit_symbol": "[d_min, d_max]",
+              "calculated": {
+                "value": 607.0,
+                "unit": "mm"
+              },
+              "minimum": {
+                "value": 457.2,
+                "unit": "mm"
+              },
+              "maximum": {
+                "value": 914.4,
+                "unit": "mm"
+              },
+              "comparison": "range",
+              "comparison_text": "in",
+              "margin_to_min": {
+                "value": 149.8,
+                "unit": "mm"
+              },
+              "margin_to_max": {
+                "value": 307.4,
+                "unit": "mm"
+              },
+              "margin": {
+                "value": 149.8,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "table_6_1.tp.range",
+              "scope": "table_6_1",
+              "clause": "Table 6.1",
+              "description": "End-plate thickness limits",
+              "calculated_symbol": "tp",
+              "limit_symbol": "[tp_min, tp_max]",
+              "calculated": {
+                "value": 25.4,
+                "unit": "mm"
+              },
+              "minimum": {
+                "value": 19.049999999999997,
+                "unit": "mm"
+              },
+              "maximum": {
+                "value": 63.5,
+                "unit": "mm"
+              },
+              "comparison": "range",
+              "comparison_text": "in",
+              "margin_to_min": {
+                "value": 6.350000000000001,
+                "unit": "mm"
+              },
+              "margin_to_max": {
+                "value": 38.1,
+                "unit": "mm"
+              },
+              "margin": {
+                "value": 6.350000000000001,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "table_6_1.g.range",
+              "scope": "table_6_1",
+              "clause": "Table 6.1",
+              "description": "Horizontal bolt spacing limits",
+              "calculated_symbol": "g",
+              "limit_symbol": "[g_min, g_max]",
+              "calculated": {
+                "value": 152.4,
+                "unit": "mm"
+              },
+              "minimum": {
+                "value": 127.0,
+                "unit": "mm"
+              },
+              "maximum": {
+                "value": 152.39999999999998,
+                "unit": "mm"
+              },
+              "comparison": "range",
+              "comparison_text": "in",
+              "margin_to_min": {
+                "value": 25.400000000000006,
+                "unit": "mm"
+              },
+              "margin_to_max": {
+                "value": 0.0,
+                "unit": "mm"
+              },
+              "margin": {
+                "value": 0.0,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
+            }
+          ]
+        },
+        "design_factors": {},
+        "equation": "Step 1 PREQUALIFICATION LIMITS: compute each geometric value and compare directly against Table 6.1 limits using calculated vs limit checks (>= or <=, no DCR format).",
+        "units_trace": {
+          "db": "mm",
+          "bf": "mm",
+          "bcf": "mm",
+          "bp": "mm",
+          "g": "mm",
+          "pb": "mm",
+          "de": "mm",
+          "pfo": "mm",
+          "pfi": "mm"
+        },
+        "final_capacity": null
+      },
+      "notes": null
+    }
+  ],
+  "errors": [],
+  "summary": {
+    "pass_count": 1,
+    "fail_count": 0,
+    "error_count": 0,
+    "not_implemented_count": 0,
+    "worst_dcr": null
+  }
+}

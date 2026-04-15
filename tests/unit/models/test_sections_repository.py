@@ -18,6 +18,8 @@ def test_beam_profile_is_loaded_from_sections_catalog_us() -> None:
     assert round(props["kdes"].value, 3) == round(30.0 / 25.4, 3)
     assert props["zx"].unit == "in3"
     assert round(props["zx"].value, 3) == round(3280.0 / 16.387064, 3)
+    assert props["ag"].unit == "in2"
+    assert round(props["ag"].value, 2) == round(14500.0 / 645.16, 2)
 
 
 def test_unknown_beam_shape_fails_hard() -> None:

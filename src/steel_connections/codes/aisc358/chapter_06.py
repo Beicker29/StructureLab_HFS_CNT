@@ -82,8 +82,18 @@ def compute_web_slenderness_limit(
         raise ValueError("Compactness coefficient Ca must satisfy 0 <= Ca < 1.")
     if member_ductility_demand not in {"high", "moderate"}:
         raise ValueError("member_ductility_demand must be 'high' or 'moderate'.")
-    factor = 2.5 if member_ductility_demand == "high" else 5.4
-    return factor * ((1.0 - ca) ** 2.3) * math.sqrt(elastic_modulus.value / (ry * fy.value))
+    sqrt_term = math.sqrt(elastic_modulus.value / (ry * fy.value))
+    if member_ductility_demand == "high":
+        if ca <= 0.113:
+            limit = 2.45 * (1.0 - 1.04 * ca) * sqrt_term
+        else:
+            limit = 2.26 * (1.0 - 0.38 * ca) * sqrt_term
+    else:
+        if ca <= 0.113:
+            limit = 3.76 * (1.0 - 3.05 * ca) * sqrt_term
+        else:
+            limit = 2.61 * (1.0 - 0.49 * ca) * sqrt_term
+    return max(limit, 1.56 * sqrt_term)
 
 
 def compute_mpr(
