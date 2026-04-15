@@ -138,7 +138,7 @@
       }
   },
   "loads": {
-    "pu_viga": {
+    "pu_viga_right": {
       "value": 0.0,
       "unit": "kN"
     },
@@ -150,30 +150,15 @@
       "value": 677908.974,
       "unit": "kN-mm"
     },
-    "beam_gravity_shear_between_hinges": {
+    "Beam_right_Vgravity": {
       "value": 44.482,
-      "unit": "kN"
-    },
-    "required_connection_shear": {
-      "value": 578.269,
-      "unit": "kN"
-    },
-    "required_beam_shear": {
-      "value": 578.269,
-      "unit": "kN"
-    },
-    "required_web_weld_force": {
-      "value": 355.858,
-      "unit": "kN"
-    },
-    "panel_zone_demand": {
-      "value": 444.822,
       "unit": "kN"
     }
   },
   "design_factors": {
     "phi_d": 0.9,
     "phi_n": 0.9,
+    "beam_connection_sides": "right_only",
     "member_ductility_demand_beam": "high",
     "member_ductility_demand_column": "high",
     "column_beam_moment_ratio_minimum": 1.0

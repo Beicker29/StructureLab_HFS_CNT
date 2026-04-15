@@ -452,39 +452,79 @@ def _render_step_3_sh(step_3: dict) -> str:
 def _render_step_4_vh(step_4: dict) -> str:
     inputs = step_4.get("inputs", {})
     inter = step_4.get("intermediates", {})
+    beam_connection_sides = _format_text(inputs.get("beam_connection_sides"))
+    sides = ["der"]
+    if beam_connection_sides == "both_sides":
+        sides.append("izq")
     lines = [
-        "## Paso 4 - Cortante Probable En Rotula Plastica (Vh)",
+        "## Paso 4 - Cortante Probable En Rotula Plastica (Vhmax, Vhmin)",
         "",
-        "Calculo de `Vh` segun Eq. (2.4-3): `Vh = 2*Mpr/Lh + Vgravity`.",
+        "Calculo por lado segun Eq. (2.4-3): `Vhmax = 2*Mpr/Lh + Vgravity` y `Vhmin = 2*Mpr/Lh - Vgravity`.",
         "",
         f"- Clausula: `{_format_text(step_4.get('clause'))}`",
         f"- Ecuacion: `{_format_text(step_4.get('equation'))}`",
-        f"- Lh: `{_format_quantity(inputs.get('lh'))}`",
-        f"- Vgravity: `{_format_quantity(inputs.get('vgravity_between_hinges'))}`",
-        f"- 2*Mpr/Lh: `{_format_text(inter.get('2mpr_over_lh'))}`",
-        f"- Vh calculado: `{_format_quantity(step_4.get('demand'))}`",
+        f"- Configuracion de vigas: `{beam_connection_sides}`",
+        f"- Lado gobernante Vhmax: `{_format_text(inputs.get('governing_side_vhmax'))}`",
+        f"- Fuente Vhmax seleccionado: `{_format_text(inputs.get('selected_vhmax_source'))}`",
+        f"- Mpr: `{_format_text(inter.get('mpr'))}`",
+    ]
+    for side in sides:
+        vgravity_label = "Beam_right_Vgravity" if side == "der" else "Beam_left_Vgravity"
+        lines.extend(
+            [
+                f"- Lh.{side}: `{_format_quantity(inputs.get(f'lh_{side}'))}`",
+                f"- {vgravity_label}: `{_format_quantity(inputs.get(f'vgravity_between_hinges_{side}'))}`",
+                f"- 2*Mpr/Lh.{side}: `{_format_text(inter.get(f'2mpr_over_lh_{side}'))}`",
+                f"- Vh.{side}max: `{_format_text(inter.get(f'vh_{side}max'))}`",
+                f"- Vh.{side}min: `{_format_text(inter.get(f'vh_{side}min'))}`",
+            ]
+        )
+    lines.extend(
+        [
+            f"- Vhmax gobernante: `{_format_quantity(step_4.get('demand'))}`",
         f"- Resultado: `{_format_text(step_4.get('status'))}`",
         "",
-    ]
+        ]
+    )
     return "\n".join(lines)
 
 
 def _render_step_5_mf(step_5: dict) -> str:
+    inputs = step_5.get("inputs", {})
     inter = step_5.get("intermediates", {})
+    beam_connection_sides = _format_text(inputs.get("beam_connection_sides"))
+    sides = ["der"]
+    if beam_connection_sides == "both_sides":
+        sides.append("izq")
     lines = [
-        "## Paso 5 - Momento Probable Maximo En Cara De Columna (Mf)",
+        "## Paso 5 - Momento Probable En Cara De Columna (Mfmax, Mfmin)",
         "",
-        "Calculo de `Mf` segun Eq. (2.4-4): `Mf = Mpr + Vh*Sh`.",
+        "Calculo por lado segun Eq. (2.4-4): `Mfmax = Mpr + Vhmax*Sh` y `Mfmin = Mpr + Vhmin*Sh`.",
         "",
         f"- Clausula: `{_format_text(step_5.get('clause'))}`",
         f"- Ecuacion: `{_format_text(step_5.get('equation'))}`",
+        f"- Configuracion de vigas: `{beam_connection_sides}`",
+        f"- Lado gobernante Mfmax: `{_format_text(inputs.get('governing_side_mfmax'))}`",
+        f"- Fuente Mfmax seleccionado: `{_format_text(inputs.get('selected_mfmax_source'))}`",
         f"- Mpr (intermedio): `{_format_text(inter.get('mpr'))}`",
-        f"- Vh (intermedio): `{_format_text(inter.get('vh'))}`",
         f"- Sh (intermedio): `{_format_text(inter.get('sh'))}`",
-        f"- Mf calculado: `{_format_quantity(step_5.get('demand'))}`",
+    ]
+    for side in sides:
+        lines.extend(
+            [
+                f"- Vh.{side}max (intermedio): `{_format_text(inter.get(f'vh_{side}max'))}`",
+                f"- Vh.{side}min (intermedio): `{_format_text(inter.get(f'vh_{side}min'))}`",
+                f"- Mf.{side}max: `{_format_text(inter.get(f'mf_{side}max'))}`",
+                f"- Mf.{side}min: `{_format_text(inter.get(f'mf_{side}min'))}`",
+            ]
+        )
+    lines.extend(
+        [
+        f"- Mfmax gobernante: `{_format_quantity(step_5.get('demand'))}`",
         f"- Resultado: `{_format_text(step_5.get('status'))}`",
         "",
-    ]
+        ]
+    )
     return "\n".join(lines)
 
 
@@ -528,7 +568,7 @@ def _render_step_6_bolts(step_6_1: dict | None, step_6_2: dict | None) -> str:
                 f"- Clausula: `{_format_text(step_6_2.get('clause'))}`",
                 f"- Ecuacion: `{_format_text(step_6_2.get('equation'))}`",
                 f"- phi usado: `{_format_text(design_factors.get('phi'))}`",
-                f"- Vh: `{_format_quantity(inputs.get('vh'))}`",
+                f"- Vhmax: `{_format_quantity(inputs.get('vhmax'))}`",
                 f"- nb: `{_format_text(inputs.get('nb'))}`",
                 f"- Vub: `{_format_quantity(step_6_2.get('demand'))}`",
                 f"- phiVnb: `{_format_quantity(step_6_2.get('capacity'))}`",

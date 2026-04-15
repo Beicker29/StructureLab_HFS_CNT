@@ -88,6 +88,10 @@ class AISC358MomentMaterials(StrictModel):
 class AISC358MomentGeometry(StrictModel):
     beam_flange_area: Quantity | None = None
     weld_effective_area: Quantity | None = None
+    beam_clear_span_length_der: Quantity | None = None
+    beam_clear_span_length_izq: Quantity | None = None
+    beam_shear_connector_free_length_from_column_face_der: Quantity | None = None
+    beam_shear_connector_free_length_from_column_face_izq: Quantity | None = None
     beam_clear_span_length: Quantity | None = None
     beam_shear_connector_free_length_from_column_face: Quantity | None = None
     column_slab_connection_condition: str | None = None
@@ -186,17 +190,23 @@ class AISC358MomentGeometry(StrictModel):
 
 class AISC358MomentLoads(StrictModel):
     beam_flange_tension: Quantity | None = None
+    pu_viga_right: Quantity | None = None
+    pu_viga_left: Quantity | None = None
     pu_viga: Quantity | None = None
     pu_columna: Quantity | None = None
     probable_moment_column_face: Quantity | None = None
     probable_moment_plastic_hinge: Quantity | None = None
+    shear_plastic_hinge_dermax: Quantity | None = None
+    shear_plastic_hinge_dermin: Quantity | None = None
+    shear_plastic_hinge_izqmax: Quantity | None = None
+    shear_plastic_hinge_izqmin: Quantity | None = None
     shear_plastic_hinge: Quantity | None = None
+    beam_right_vgravity: Quantity | None = None
+    beam_left_vgravity: Quantity | None = None
+    beam_gravity_shear_between_hinges_der: Quantity | None = None
+    beam_gravity_shear_between_hinges_izq: Quantity | None = None
     beam_gravity_shear_between_hinges: Quantity | None = None
     beam_gravity_shear_face_segment: Quantity | None = None
-    required_connection_shear: Quantity | None = None
-    required_beam_shear: Quantity | None = None
-    required_web_weld_force: Quantity | None = None
-    panel_zone_demand: Quantity | None = None
 
 
 class AISC358MomentDesignFactors(StrictModel):
@@ -205,6 +215,7 @@ class AISC358MomentDesignFactors(StrictModel):
     phi_d: float | None = None
     phi_n: float | None = None
     ry: float | None = None
+    beam_connection_sides: str | None = None
     member_ductility_demand_beam: str | None = None
     member_ductility_demand_column: str | None = None
     column_beam_moment_ratio_minimum: float | None = None
@@ -231,6 +242,21 @@ class AISC358MomentDesignFactors(StrictModel):
         if value < 1.0:
             raise ValueError("Ry must be >= 1.0.")
         return value
+
+    @field_validator("beam_connection_sides")
+    @classmethod
+    def normalize_beam_connection_sides(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        normalized = value.strip().lower().replace("-", "_").replace(" ", "_")
+        if normalized in {"right", "right_only", "der", "derecha", "solo_derecha"}:
+            return "right_only"
+        if normalized in {"both", "both_sides", "ambas", "ambos_lados", "izq_der"}:
+            return "both_sides"
+        raise ValueError(
+            "design_factors.beam_connection_sides must be 'right_only' or 'both_sides' "
+            "(also accepts 'derecha'/'ambas')."
+        )
 
     @field_validator("member_ductility_demand_beam", "member_ductility_demand_column")
     @classmethod
@@ -370,6 +396,10 @@ class AISC358MomentCase(CaseBase):
                 "loads.beam_flange_tension",
             )
         for field_name in (
+            "beam_clear_span_length_der",
+            "beam_clear_span_length_izq",
+            "beam_shear_connector_free_length_from_column_face_der",
+            "beam_shear_connector_free_length_from_column_face_izq",
             "beam_clear_span_length",
             "beam_shear_connector_free_length_from_column_face",
             "end_plate_width",
@@ -403,22 +433,22 @@ class AISC358MomentCase(CaseBase):
                     self.units_system,
                     f"geometry.{field_name}",
                 )
-        if self.loads.required_connection_shear is not None:
-            validate_quantity_unit(
-                self.loads.required_connection_shear,
-                "force",
-                self.units_system,
-                "loads.required_connection_shear",
-            )
         for field_name in (
+            "pu_viga_right",
+            "pu_viga_left",
             "pu_viga",
             "pu_columna",
+            "shear_plastic_hinge_dermax",
+            "shear_plastic_hinge_dermin",
+            "shear_plastic_hinge_izqmax",
+            "shear_plastic_hinge_izqmin",
             "shear_plastic_hinge",
+            "beam_right_vgravity",
+            "beam_left_vgravity",
+            "beam_gravity_shear_between_hinges_der",
+            "beam_gravity_shear_between_hinges_izq",
             "beam_gravity_shear_between_hinges",
             "beam_gravity_shear_face_segment",
-            "required_beam_shear",
-            "required_web_weld_force",
-            "panel_zone_demand",
         ):
             value = getattr(self.loads, field_name)
             if value is not None:

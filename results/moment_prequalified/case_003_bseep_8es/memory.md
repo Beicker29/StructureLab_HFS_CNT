@@ -4,7 +4,7 @@
 - Caso: `case_si_bseep_8es_w18x175_w24x76`
 - Familia: `moment_prequalified`
 - Tipo: `bseep_8es`
-- Estado global: `PASS`
+- Estado global: `FAIL`
 
 ## Paso 1 - PREQUALIFICATION LIMITS
 
@@ -362,28 +362,49 @@ Para 4E: `Sh = min(d/2, 3bf)`. Para 4ES/8ES: `Sh = Lst + tp`.
 - Sh calculado: `215.93 mm`
 - Resultado: `PASS`
 
-## Paso 4 - Cortante Probable En Rotula Plastica (Vh)
+## Paso 4 - Cortante Probable En Rotula Plastica (Vhmax, Vhmin)
 
-Calculo de `Vh` segun Eq. (2.4-3): `Vh = 2*Mpr/Lh + Vgravity`.
+Calculo por lado segun Eq. (2.4-3): `Vhmax = 2*Mpr/Lh + Vgravity` y `Vhmin = 2*Mpr/Lh - Vgravity`.
 
 - Clausula: `Chapter 6 / Section 6.7.1 Step 4 + Eq. (2.4-3)`
-- Ecuacion: `Vh = 2*Mpr/Lh + Vgravity (Eq. 2.4-3)`
-- Lh: `6096 mm`
-- Vgravity: `44.48 kN`
-- 2*Mpr/Lh: `470.53`
-- Vh calculado: `515.01 kN`
+- Ecuacion: `Vhmax = 2*Mpr/Lh + Vgravity; Vhmin = 2*Mpr/Lh - Vgravity (Eq. 2.4-3, side-specific der/izq)`
+- Configuracion de vigas: `both_sides`
+- Lado gobernante Vhmax: `der`
+- Fuente Vhmax seleccionado: `step4_computed_vhmax_der (governing_side=der)`
+- Mpr: `1434180`
+- Lh.der: `6096 mm`
+- Beam_right_Vgravity: `44.48 kN`
+- 2*Mpr/Lh.der: `470.53`
+- Vh.dermax: `515.01`
+- Vh.dermin: `426.05`
+- Lh.izq: `6096 mm`
+- Beam_left_Vgravity: `44.48 kN`
+- 2*Mpr/Lh.izq: `470.53`
+- Vh.izqmax: `515.01`
+- Vh.izqmin: `426.05`
+- Vhmax gobernante: `515.01 kN`
 - Resultado: `PASS`
 
-## Paso 5 - Momento Probable Maximo En Cara De Columna (Mf)
+## Paso 5 - Momento Probable En Cara De Columna (Mfmax, Mfmin)
 
-Calculo de `Mf` segun Eq. (2.4-4): `Mf = Mpr + Vh*Sh`.
+Calculo por lado segun Eq. (2.4-4): `Mfmax = Mpr + Vhmax*Sh` y `Mfmin = Mpr + Vhmin*Sh`.
 
 - Clausula: `Chapter 6 / Section 6.7.1 Step 5 + Eq. (2.4-4)`
-- Ecuacion: `Mf = Mpr + Vh * Sh (Eq. 2.4-4)`
+- Ecuacion: `Mfmax = Mpr + Vhmax*Sh; Mfmin = Mpr + Vhmin*Sh (Eq. 2.4-4, side-specific der/izq)`
+- Configuracion de vigas: `both_sides`
+- Lado gobernante Mfmax: `der`
+- Fuente Mfmax seleccionado: `step5_computed_mf_dermax (governing_side=der)`
 - Mpr (intermedio): `1434180`
-- Vh (intermedio): `515.01`
 - Sh (intermedio): `215.93`
-- Mf calculado: `1545.38 kN-m`
+- Vh.dermax (intermedio): `515.01`
+- Vh.dermin (intermedio): `426.05`
+- Mf.dermax: `1545384.59`
+- Mf.dermin: `1526174.99`
+- Vh.izqmax (intermedio): `515.01`
+- Vh.izqmin (intermedio): `426.05`
+- Mf.izqmax: `1545384.59`
+- Mf.izqmin: `1526174.99`
+- Mfmax gobernante: `1545.38 kN-m`
 - Resultado: `PASS`
 
 ## Paso 6 - Revision De Resistencia Pernos
@@ -399,9 +420,9 @@ Calculo de `Mf` segun Eq. (2.4-4): `Mf = Mpr + Vh*Sh`.
 - h2: `648.35 mm`
 - h3: `529.65 mm`
 - h4: `434.65 mm`
-- Pub: `143.87 kN`
+- Pub: `327.97 kN`
 - phiPnb: `450.19 kN`
-- DCRbt: `0.32`
+- DCRbt: `0.73`
 - Resultado: `PASS`
 
 ### 6.2 Revision de capacidad a cortante
@@ -409,9 +430,9 @@ Calculo de `Mf` segun Eq. (2.4-4): `Mf = Mpr + Vh*Sh`.
 #### 6.2.1 ELR #1: Rotura por cortante en el perno
 
 - Clausula: `Chapter 6 / Section 6.7.1 Step 6.2 + AISC 360-22 J3.7`
-- Ecuacion: `Vub = Vh/nb, phiVnb = phi * Ab * Fnv, Ab = pi*db^2/4, nb = 4 (4E/4ES) or 8 (8ES), phi = 0.9 (AISC 360-22 J3.7)`
+- Ecuacion: `Vub = Vhmax/nb, phiVnb = phi * Ab * Fnv, Ab = pi*db^2/4, nb = 4 (4E/4ES) or 8 (8ES), phi = 0.9 (AISC 360-22 J3.7)`
 - phi usado: `0.9`
-- Vh: `515.01 kN`
+- Vhmax: `515.01 kN`
 - nb: `8`
 - Vub: `64.38 kN`
 - phiVnb: `271.27 kN`
@@ -427,9 +448,9 @@ Calculo de `Mf` segun Eq. (2.4-4): `Mf = Mpr + Vh*Sh`.
 - Clausula: `Chapter 6 / Section 6.7.1 Step 7.1.1 + Eq. (6.7-8)`
 - Ecuacion: `Mup = Mf; phiMnb = phi * tp^2 * Fyp * Yp (AISC 358-22 Eq. 6.7-8)`
 - phi usado: `0.9`
-- Mup: `677.91 kN-m`
+- Mup: `1545.38 kN-m`
 - phiMnb: `1645.5 kN-m`
-- DCRpm: `0.41`
+- DCRpm: `0.94`
 - Yp calculado: `8214.25 mm`
 - Tabla Yp aplicada: `AISC 358-22 Table 6.4`
 - Caso Yp: `Case 1 (de <= s)`
@@ -445,30 +466,30 @@ Calculo de `Mf` segun Eq. (2.4-4): `Mf = Mpr + Vh*Sh`.
 - Clausula: `Chapter 6 / Section 6.7.1 Step 7.2.1 + Eq. (6.7-10)`
 - Ecuacion: `Vup = Mf / (2*(d - tbf)); phiVnb = phi * 0.6 * Fyp * bp * tp (AISC 358-22 Eq. 6.7-10)`
 - phi usado: `0.9`
-- Vup: `574.79 kN`
+- Vup: `1310.31 kN`
 - phiVn1p: `1197.2 kN`
-- DCRpv: `0.48`
+- DCRpv: `1.09`
 - d (altura viga): `607 mm`
-- Resultado: `PASS`
+- Resultado: `FAIL`
 
 #### 7.2.2. Eje #2: Rotura por cortante (AISC 358-22 G7-12)
 
 - Clausula: `Chapter 6 / Section 6.7.1 Step 7.2.2 + Eq. (6.7-12)`
 - Ecuacion: `Vup = Mf / (2*(d - tbf)); phiVnb = phi * 0.6 * Fup * tp * (bp - 2*dh) (AISC 358-22 Eq. 6.7-12)`
 - phi usado: `0.9`
-- Vup: `574.79 kN`
+- Vup: `1310.31 kN`
 - phiVnb: `1169.63 kN`
-- DCRpv: `0.49`
+- DCRpv: `1.12`
 - dh (diametro agujero estandar): `31.75 mm`
 - d (altura viga): `607 mm`
-- Resultado: `PASS`
+- Resultado: `FAIL`
 
 ### 7.3. Revision de capacidad a cortante paralelo al plano de la platina
 
 #### 7.3.1. ELR #1: Desgarramiento en la perforacion del perno (AISC 360-22 J3.11a)
 
 - Clausula: `Chapter 6 / Section 7.3.1 + AISC 360-22 J3.11(a)`
-- Ecuacion: `Vu2p = Vh/nb; phiVn2p = phi * 1.2 * lc * tp * Fup (AISC 360-22 J3.11a)`
+- Ecuacion: `Vu2p = Vhmax/nb; phiVn2p = phi * 1.2 * lc * tp * Fup (AISC 360-22 J3.11a)`
 - phi usado: `0.9`
 - Vu2p: `64.38 kN`
 - phiVn2p: `780.73 kN`
@@ -481,7 +502,7 @@ Calculo de `Mf` segun Eq. (2.4-4): `Mf = Mpr + Vh*Sh`.
 #### 7.3.2. ELR #2: Aplastamiento en la perforacion del perno (AISC 360-22 J3.11a)
 
 - Clausula: `Chapter 6 / Section 7.3.2 + AISC 360-22 J3.11(a)`
-- Ecuacion: `Vu2p = Vh/nb; phiVn2p = phi * 2.4 * (db + 1.6 mm) * tp * Fup (AISC 360-22 J3.11a)`
+- Ecuacion: `Vu2p = Vhmax/nb; phiVn2p = phi * 2.4 * (db + 1.6 mm) * tp * Fup (AISC 360-22 J3.11a)`
 - phi usado: `0.9`
 - Vu2p: `64.38 kN`
 - phiVn2p: `744.98 kN`
@@ -536,7 +557,7 @@ Calculo de `Mf` segun Eq. (2.4-4): `Mf = Mpr + Vh*Sh`.
 #### 10.1.1. ELR #1: Fluencia por cortante (AISC 360-22 G2.1)
 
 - Clausula: `Chapter 6 / Section 6.7.1 Step 10.1.1 + AISC 360-22 G2.1`
-- Ecuacion: `Vubm = Vh; phiVnbm = phi * 0.6 * Fybm * tw,bm * d * Cv1 (AISC 360-22 G2.1, Eq. G2-3/G2-4; kv=5.34 for webs without transverse stiffeners)`
+- Ecuacion: `Vubm = Vhmax; phiVnbm = phi * 0.6 * Fybm * tw,bm * d * Cv1 (AISC 360-22 G2.1, Eq. G2-3/G2-4; kv=5.34 for webs without transverse stiffeners)`
 - phi usado: `1`
 - Vubm: `515.01 kN`
 - phiVnbm: `1407.27 kN`

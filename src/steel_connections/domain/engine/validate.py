@@ -28,8 +28,21 @@ def _normalize_moment_geometry_payload(payload: dict[str, Any]) -> dict[str, Any
     if not isinstance(geometry, dict):
         return normalized
 
+    if "beam_connection_sides" in geometry:
+        design_factors = normalized.get("design_factors")
+        if not isinstance(design_factors, dict):
+            design_factors = {}
+            normalized["design_factors"] = design_factors
+        if "beam_connection_sides" not in design_factors:
+            design_factors["beam_connection_sides"] = geometry["beam_connection_sides"]
+        geometry = deepcopy(geometry)
+        geometry.pop("beam_connection_sides", None)
+        normalized["geometry"] = geometry
+
     grouped_aliases: dict[str, list[str]] = {
         "beam": ["beam", "viga"],
+        "beam_right": ["beam_right", "beam_der", "viga_derecha"],
+        "beam_left": ["beam_left", "beam_izq", "viga_izquierda"],
         "column": ["column", "columna"],
         "end_plate": ["end_plate", "placa_extremo", "placa_extrema"],
         "continuity_plate": ["continuity_plate", "platina_continuidad", "platinas_continuidad"],
@@ -56,6 +69,10 @@ def _normalize_moment_geometry_payload(payload: dict[str, Any]) -> dict[str, Any
 
     mapping: dict[str, tuple[str, ...]] = {
         "beam": (
+            "beam_clear_span_length_der",
+            "beam_clear_span_length_izq",
+            "beam_shear_connector_free_length_from_column_face_der",
+            "beam_shear_connector_free_length_from_column_face_izq",
             "beam_flange_area",
             "beam_clear_span_length",
             "beam_shear_connector_free_length_from_column_face",
@@ -93,6 +110,103 @@ def _normalize_moment_geometry_payload(payload: dict[str, Any]) -> dict[str, Any
     for group_name, field_names in mapping.items():
         block = _group_block(group_name)
         if group_name == "beam":
+            beam_right_block = _group_block("beam_right")
+            beam_left_block = _group_block("beam_left")
+            if "connection_sides" in block and "beam_connection_sides" not in flat_geometry:
+                flat_geometry["beam_connection_sides"] = block["connection_sides"]
+            if "lados_conexion" in block and "beam_connection_sides" not in flat_geometry:
+                flat_geometry["beam_connection_sides"] = block["lados_conexion"]
+            if "beam_connection_sides" in block:
+                flat_geometry["beam_connection_sides"] = block["beam_connection_sides"]
+
+            def _map_side_block(side_block: dict[str, Any], *, side_suffix: str) -> None:
+                if not side_block:
+                    return
+                clear_span_key = f"beam_clear_span_length_{side_suffix}"
+                clear_connect_key = f"beam_shear_connector_free_length_from_column_face_{side_suffix}"
+                if "clear_span_length" in side_block:
+                    flat_geometry[clear_span_key] = side_block["clear_span_length"]
+                if "luz_libre" in side_block and clear_span_key not in flat_geometry:
+                    flat_geometry[clear_span_key] = side_block["luz_libre"]
+                if "luz_libre_viga" in side_block and clear_span_key not in flat_geometry:
+                    flat_geometry[clear_span_key] = side_block["luz_libre_viga"]
+                if "clear_span_length_right" in side_block:
+                    flat_geometry["beam_clear_span_length_der"] = side_block["clear_span_length_right"]
+                if "clear_span_length_left" in side_block:
+                    flat_geometry["beam_clear_span_length_izq"] = side_block["clear_span_length_left"]
+                if "shear_connector_free_length_from_column_face" in side_block:
+                    flat_geometry[clear_connect_key] = side_block["shear_connector_free_length_from_column_face"]
+                if (
+                    "longitud_sin_conectores_desde_cara_columna" in side_block
+                    and clear_connect_key not in flat_geometry
+                ):
+                    flat_geometry[clear_connect_key] = side_block["longitud_sin_conectores_desde_cara_columna"]
+                if "shear_connector_free_length_from_column_face_right" in side_block:
+                    flat_geometry["beam_shear_connector_free_length_from_column_face_der"] = side_block[
+                        "shear_connector_free_length_from_column_face_right"
+                    ]
+                if "shear_connector_free_length_from_column_face_left" in side_block:
+                    flat_geometry["beam_shear_connector_free_length_from_column_face_izq"] = side_block[
+                        "shear_connector_free_length_from_column_face_left"
+                    ]
+
+            _map_side_block(beam_right_block, side_suffix="der")
+            _map_side_block(beam_left_block, side_suffix="izq")
+
+            if "clear_span_length_der" in block and "beam_clear_span_length_der" not in flat_geometry:
+                flat_geometry["beam_clear_span_length_der"] = block["clear_span_length_der"]
+            if "luz_libre_der" in block and "beam_clear_span_length_der" not in flat_geometry:
+                flat_geometry["beam_clear_span_length_der"] = block["luz_libre_der"]
+            if (
+                "shear_connector_free_length_from_column_face_der" in block
+                and "beam_shear_connector_free_length_from_column_face_der" not in flat_geometry
+            ):
+                flat_geometry["beam_shear_connector_free_length_from_column_face_der"] = block[
+                    "shear_connector_free_length_from_column_face_der"
+                ]
+            if (
+                "longitud_sin_conectores_desde_cara_columna_der" in block
+                and "beam_shear_connector_free_length_from_column_face_der" not in flat_geometry
+            ):
+                flat_geometry["beam_shear_connector_free_length_from_column_face_der"] = block[
+                    "longitud_sin_conectores_desde_cara_columna_der"
+                ]
+            if "clear_span_length_izq" in block and "beam_clear_span_length_izq" not in flat_geometry:
+                flat_geometry["beam_clear_span_length_izq"] = block["clear_span_length_izq"]
+            if "luz_libre_izq" in block and "beam_clear_span_length_izq" not in flat_geometry:
+                flat_geometry["beam_clear_span_length_izq"] = block["luz_libre_izq"]
+            if (
+                "shear_connector_free_length_from_column_face_izq" in block
+                and "beam_shear_connector_free_length_from_column_face_izq" not in flat_geometry
+            ):
+                flat_geometry["beam_shear_connector_free_length_from_column_face_izq"] = block[
+                    "shear_connector_free_length_from_column_face_izq"
+                ]
+            if (
+                "longitud_sin_conectores_desde_cara_columna_izq" in block
+                and "beam_shear_connector_free_length_from_column_face_izq" not in flat_geometry
+            ):
+                flat_geometry["beam_shear_connector_free_length_from_column_face_izq"] = block[
+                    "longitud_sin_conectores_desde_cara_columna_izq"
+                ]
+            if "clear_span_length_right" in block and "beam_clear_span_length_der" not in flat_geometry:
+                flat_geometry["beam_clear_span_length_der"] = block["clear_span_length_right"]
+            if "clear_span_length_left" in block and "beam_clear_span_length_izq" not in flat_geometry:
+                flat_geometry["beam_clear_span_length_izq"] = block["clear_span_length_left"]
+            if (
+                "shear_connector_free_length_from_column_face_right" in block
+                and "beam_shear_connector_free_length_from_column_face_der" not in flat_geometry
+            ):
+                flat_geometry["beam_shear_connector_free_length_from_column_face_der"] = block[
+                    "shear_connector_free_length_from_column_face_right"
+                ]
+            if (
+                "shear_connector_free_length_from_column_face_left" in block
+                and "beam_shear_connector_free_length_from_column_face_izq" not in flat_geometry
+            ):
+                flat_geometry["beam_shear_connector_free_length_from_column_face_izq"] = block[
+                    "shear_connector_free_length_from_column_face_left"
+                ]
             if "clear_span_length" in block and "beam_clear_span_length" not in block:
                 flat_geometry["beam_clear_span_length"] = block["clear_span_length"]
             if "luz_libre" in block and "beam_clear_span_length" not in block:
@@ -245,7 +359,77 @@ def _normalize_moment_geometry_payload(payload: dict[str, Any]) -> dict[str, Any
     if "bolt_thread_condition" in bolt_block and not materials.get("bolt_thread_condition"):
         materials["bolt_thread_condition"] = bolt_block["bolt_thread_condition"]
 
+    if "beam_connection_sides" in flat_geometry:
+        design_factors = normalized.get("design_factors")
+        if not isinstance(design_factors, dict):
+            design_factors = {}
+            normalized["design_factors"] = design_factors
+        if "beam_connection_sides" not in design_factors:
+            design_factors["beam_connection_sides"] = flat_geometry["beam_connection_sides"]
+        flat_geometry.pop("beam_connection_sides", None)
+
+    if "beam_clear_span_length_right" in flat_geometry and "beam_clear_span_length_der" not in flat_geometry:
+        flat_geometry["beam_clear_span_length_der"] = flat_geometry.pop("beam_clear_span_length_right")
+    if "beam_clear_span_length_left" in flat_geometry and "beam_clear_span_length_izq" not in flat_geometry:
+        flat_geometry["beam_clear_span_length_izq"] = flat_geometry.pop("beam_clear_span_length_left")
+    if (
+        "beam_shear_connector_free_length_from_column_face_right" in flat_geometry
+        and "beam_shear_connector_free_length_from_column_face_der" not in flat_geometry
+    ):
+        flat_geometry["beam_shear_connector_free_length_from_column_face_der"] = flat_geometry.pop(
+            "beam_shear_connector_free_length_from_column_face_right"
+        )
+    if (
+        "beam_shear_connector_free_length_from_column_face_left" in flat_geometry
+        and "beam_shear_connector_free_length_from_column_face_izq" not in flat_geometry
+    ):
+        flat_geometry["beam_shear_connector_free_length_from_column_face_izq"] = flat_geometry.pop(
+            "beam_shear_connector_free_length_from_column_face_left"
+        )
+
     normalized["geometry"] = flat_geometry
+    return normalized
+
+
+def _normalize_moment_loads_payload(payload: dict[str, Any]) -> dict[str, Any]:
+    normalized = deepcopy(payload)
+    if normalized.get("connection_family") != "moment_prequalified":
+        return normalized
+    loads = normalized.get("loads")
+    if not isinstance(loads, dict):
+        return normalized
+
+    # Backward compatibility: map legacy single-beam names to right-beam names.
+    if "Beam_right_Vgravity" in loads:
+        if "beam_right_vgravity" not in loads:
+            loads["beam_right_vgravity"] = loads["Beam_right_Vgravity"]
+        loads.pop("Beam_right_Vgravity", None)
+    if "Beam_left_Vgravity" in loads:
+        if "beam_left_vgravity" not in loads:
+            loads["beam_left_vgravity"] = loads["Beam_left_Vgravity"]
+        loads.pop("Beam_left_Vgravity", None)
+    if "beam_right_vgravity" not in loads and "beam_gravity_shear_between_hinges_der" in loads:
+        loads["beam_right_vgravity"] = loads["beam_gravity_shear_between_hinges_der"]
+    if "beam_left_vgravity" not in loads and "beam_gravity_shear_between_hinges_izq" in loads:
+        loads["beam_left_vgravity"] = loads["beam_gravity_shear_between_hinges_izq"]
+    if "beam_right_vgravity" not in loads and "beam_gravity_shear_between_hinges" in loads:
+        loads["beam_right_vgravity"] = loads["beam_gravity_shear_between_hinges"]
+    if "beam_right_vgravity" not in loads and "beam_gravity_shear_between_hinges_right" in loads:
+        loads["beam_right_vgravity"] = loads["beam_gravity_shear_between_hinges_right"]
+    if "beam_left_vgravity" not in loads and "beam_gravity_shear_between_hinges_left" in loads:
+        loads["beam_left_vgravity"] = loads["beam_gravity_shear_between_hinges_left"]
+    if "shear_plastic_hinge_dermax" not in loads and "shear_plastic_hinge" in loads:
+        loads["shear_plastic_hinge_dermax"] = loads["shear_plastic_hinge"]
+    if "shear_plastic_hinge_dermax" not in loads and "shear_plastic_hinge_rightmax" in loads:
+        loads["shear_plastic_hinge_dermax"] = loads["shear_plastic_hinge_rightmax"]
+    if "shear_plastic_hinge_izqmax" not in loads and "shear_plastic_hinge_leftmax" in loads:
+        loads["shear_plastic_hinge_izqmax"] = loads["shear_plastic_hinge_leftmax"]
+    if "pu_viga_right" not in loads and "pu_viga" in loads:
+        loads["pu_viga_right"] = loads["pu_viga"]
+    if "pu_viga_right" not in loads and "pu_viga_der" in loads:
+        loads["pu_viga_right"] = loads["pu_viga_der"]
+    if "pu_viga_left" not in loads and "pu_viga_izq" in loads:
+        loads["pu_viga_left"] = loads["pu_viga_izq"]
     return normalized
 
 
@@ -365,6 +549,125 @@ def _resolve_catalog_driven_properties(case: AISC358MomentCase) -> None:
                 missing_fields=["procedure.column_yield_line_parameter_yc_stiffened"],
                 source_document="AISC 358-22",
             )
+
+    beam_connection_sides = case.design_factors.beam_connection_sides or "right_only"
+    case.design_factors.beam_connection_sides = beam_connection_sides
+
+    if case.geometry.beam_clear_span_length_der is None and case.geometry.beam_clear_span_length is not None:
+        case.geometry.beam_clear_span_length_der = case.geometry.beam_clear_span_length
+    if (
+        case.geometry.beam_shear_connector_free_length_from_column_face_der is None
+        and case.geometry.beam_shear_connector_free_length_from_column_face is not None
+    ):
+        case.geometry.beam_shear_connector_free_length_from_column_face_der = (
+            case.geometry.beam_shear_connector_free_length_from_column_face
+        )
+
+    if case.loads.beam_right_vgravity is None and case.loads.beam_gravity_shear_between_hinges_der is not None:
+        case.loads.beam_right_vgravity = case.loads.beam_gravity_shear_between_hinges_der
+    if case.loads.beam_left_vgravity is None and case.loads.beam_gravity_shear_between_hinges_izq is not None:
+        case.loads.beam_left_vgravity = case.loads.beam_gravity_shear_between_hinges_izq
+    if case.loads.beam_right_vgravity is None and case.loads.beam_gravity_shear_between_hinges is not None:
+        case.loads.beam_right_vgravity = case.loads.beam_gravity_shear_between_hinges
+    if case.loads.pu_viga_right is None and case.loads.pu_viga is not None:
+        case.loads.pu_viga_right = case.loads.pu_viga
+    if case.loads.shear_plastic_hinge_dermax is None and case.loads.shear_plastic_hinge is not None:
+        case.loads.shear_plastic_hinge_dermax = case.loads.shear_plastic_hinge
+    if case.geometry.beam_clear_span_length_der is None:
+        _raise_validation_error(
+            message="Required input 'geometry.beam_clear_span_length_der' is missing.",
+            missing_fields=["geometry.beam_clear_span_length_der"],
+            source_document="AISC 358-22 Section 2.3.4",
+        )
+    if case.geometry.beam_shear_connector_free_length_from_column_face_der is None:
+        _raise_validation_error(
+            message="Required input 'geometry.beam_shear_connector_free_length_from_column_face_der' is missing.",
+            missing_fields=["geometry.beam_shear_connector_free_length_from_column_face_der"],
+            source_document="AISC 358-22 Section 2.3.4",
+        )
+    if case.loads.beam_right_vgravity is None:
+        _raise_validation_error(
+            message="Required input 'loads.beam_right_vgravity' (Beam_right_Vgravity) is missing.",
+            missing_fields=["loads.beam_right_vgravity"],
+            source_document="AISC 358-22 Eq. 2.4-3",
+        )
+    if case.loads.pu_viga_right is None:
+        _raise_validation_error(
+            message="Required input 'loads.pu_viga_right' is missing.",
+            missing_fields=["loads.pu_viga_right"],
+            source_document="AISC 358-22 Section 2.3.4",
+        )
+
+    if beam_connection_sides == "both_sides":
+        for field_path, value in (
+            ("geometry.beam_clear_span_length_izq", case.geometry.beam_clear_span_length_izq),
+            (
+                "geometry.beam_shear_connector_free_length_from_column_face_izq",
+                case.geometry.beam_shear_connector_free_length_from_column_face_izq,
+            ),
+            ("loads.beam_left_vgravity", case.loads.beam_left_vgravity),
+            ("loads.pu_viga_left", case.loads.pu_viga_left),
+        ):
+            if value is None:
+                _raise_validation_error(
+                    message=f"Required input '{field_path}' is missing for beam_connection_sides='both_sides'.",
+                    missing_fields=[field_path],
+                    source_document="AISC 358-22",
+                )
+
+    def _min_quantity(first: Quantity, second: Quantity, field_name: str) -> Quantity:
+        if first.unit != second.unit:
+            _raise_validation_error(
+                message=(
+                    f"Incompatible units in '{field_name}': '{first.unit}' vs '{second.unit}'. "
+                    "Use the same unit for right and left beam values."
+                ),
+                missing_fields=[field_name],
+                source_document="AISC 358-22",
+            )
+        return first if first.value <= second.value else second
+
+    def _max_quantity(first: Quantity, second: Quantity, field_name: str) -> Quantity:
+        if first.unit != second.unit:
+            _raise_validation_error(
+                message=(
+                    f"Incompatible units in '{field_name}': '{first.unit}' vs '{second.unit}'. "
+                    "Use the same unit for right and left beam values."
+                ),
+                missing_fields=[field_name],
+                source_document="AISC 358-22",
+            )
+        return first if first.value >= second.value else second
+
+    # Preserve legacy single-beam fields for existing checks (conservative when both sides are present).
+    if beam_connection_sides == "both_sides":
+        case.geometry.beam_clear_span_length = _min_quantity(
+            case.geometry.beam_clear_span_length_der,
+            case.geometry.beam_clear_span_length_izq,  # type: ignore[arg-type]
+            "geometry.beam_clear_span_length_der/izq",
+        )
+        case.geometry.beam_shear_connector_free_length_from_column_face = _min_quantity(
+            case.geometry.beam_shear_connector_free_length_from_column_face_der,
+            case.geometry.beam_shear_connector_free_length_from_column_face_izq,  # type: ignore[arg-type]
+            "geometry.beam_shear_connector_free_length_from_column_face_der/izq",
+        )
+        case.loads.pu_viga = _max_quantity(
+            case.loads.pu_viga_right,
+            case.loads.pu_viga_left,  # type: ignore[arg-type]
+            "loads.pu_viga_right/left",
+        )
+    else:
+        case.geometry.beam_clear_span_length = case.geometry.beam_clear_span_length_der
+        case.geometry.beam_shear_connector_free_length_from_column_face = (
+            case.geometry.beam_shear_connector_free_length_from_column_face_der
+        )
+        case.loads.pu_viga = case.loads.pu_viga_right
+
+    case.loads.beam_gravity_shear_between_hinges_der = case.loads.beam_right_vgravity
+    case.loads.beam_gravity_shear_between_hinges_izq = case.loads.beam_left_vgravity
+    case.loads.beam_gravity_shear_between_hinges = case.loads.beam_right_vgravity
+    if case.loads.shear_plastic_hinge is None:
+        case.loads.shear_plastic_hinge = case.loads.shear_plastic_hinge_dermax
 
     # Geometry parameters used in detailed audit diagram and Chapter 6 bolt layout traceability.
     _require_quantity(case.geometry.de, "geometry.de", "AISC 358-22 Section 6.7")
@@ -591,6 +894,7 @@ def validate_case(case: InputCase) -> None:
 
 def parse_and_validate_payload(payload: dict[str, Any]) -> InputCase:
     normalized_payload = _normalize_moment_geometry_payload(payload)
+    normalized_payload = _normalize_moment_loads_payload(normalized_payload)
     try:
         case = parse_input_case(normalized_payload)
     except ValidationError as exc:

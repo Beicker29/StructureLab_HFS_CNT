@@ -20,6 +20,6 @@ def test_run_si_bseep_4es_case() -> None:
 
 def test_run_si_bseep_8es_case() -> None:
     result = run_case_file("examples/moment_prequalified/case_003_bseep_8es.json")
-    assert result.global_status == GlobalStatus.PASS
+    assert result.global_status == GlobalStatus.FAIL
     assert len(result.checks) == 15
-    assert all(check.status == CheckStatus.PASS for check in result.checks)
+    assert any(check.status == CheckStatus.FAIL for check in result.checks)

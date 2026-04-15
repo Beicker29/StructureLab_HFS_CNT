@@ -21,7 +21,7 @@ def test_dispatcher_resolves_dg1_rule(dg1_payload: dict) -> None:
 def test_dispatcher_resolves_bueep_rules(bueep_4e_payload: dict) -> None:
     case = parse_input_case(bueep_4e_payload)
     rules = resolve_applicable_rules(case)
-    assert len(rules) == 10
+    assert len(rules) == 12
     assert all(rule.rule_id.startswith("AISC358.06.") for rule in rules)
     assert any(".step2_probable_moment_plastic_hinge" in rule.rule_id for rule in rules)
     assert any(".step3_plastic_hinge_distance" in rule.rule_id for rule in rules)
@@ -37,7 +37,7 @@ def test_dispatcher_resolves_bueep_rules(bueep_4e_payload: dict) -> None:
 def test_dispatcher_resolves_bseep_rules(bseep_8es_payload: dict) -> None:
     case = parse_input_case(bseep_8es_payload)
     rules = resolve_applicable_rules(case)
-    assert len(rules) == 10
+    assert len(rules) == 15
     assert all(rule.rule_id.startswith("AISC358.06.") for rule in rules)
     assert any(".step2_probable_moment_plastic_hinge" in rule.rule_id for rule in rules)
     assert any(".step3_plastic_hinge_distance" in rule.rule_id for rule in rules)
@@ -53,7 +53,7 @@ def test_dispatcher_resolves_bseep_rules(bseep_8es_payload: dict) -> None:
 def test_dispatcher_resolves_bseep_4es_rules(bseep_4es_payload: dict) -> None:
     case = parse_input_case(bseep_4es_payload)
     rules = resolve_applicable_rules(case)
-    assert len(rules) == 10
+    assert len(rules) == 15
     assert all(rule.rule_id.startswith("AISC358.06.") for rule in rules)
     assert any(".step2_probable_moment_plastic_hinge" in rule.rule_id for rule in rules)
     assert any(".step3_plastic_hinge_distance" in rule.rule_id for rule in rules)

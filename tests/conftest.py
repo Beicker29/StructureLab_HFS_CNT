@@ -103,11 +103,7 @@ BUEEP_4E_CASE_PAYLOAD = {
         "pu_viga": {"value": 0.0, "unit": "kip"},
         "pu_columna": {"value": 0.0, "unit": "kip"},
         "probable_moment_column_face": {"value": 6000.0, "unit": "kip-in"},
-        "beam_gravity_shear_between_hinges": {"value": 10.0, "unit": "kip"},
-        "required_connection_shear": {"value": 130.0, "unit": "kip"},
-        "required_beam_shear": {"value": 130.0, "unit": "kip"},
-        "required_web_weld_force": {"value": 80.0, "unit": "kip"},
-        "panel_zone_demand": {"value": 100.0, "unit": "kip"}
+        "beam_right_vgravity": {"value": 10.0, "unit": "kip"}
     },
     "design_factors": {
         "phi_d": 0.9,
@@ -187,11 +183,8 @@ BSEEP_8ES_CASE_PAYLOAD = {
         "pu_viga": {"value": 0.0, "unit": "kip"},
         "pu_columna": {"value": 0.0, "unit": "kip"},
         "probable_moment_column_face": {"value": 6000.0, "unit": "kip-in"},
-        "beam_gravity_shear_between_hinges": {"value": 10.0, "unit": "kip"},
-        "required_connection_shear": {"value": 200.0, "unit": "kip"},
-        "required_beam_shear": {"value": 200.0, "unit": "kip"},
-        "required_web_weld_force": {"value": 80.0, "unit": "kip"},
-        "panel_zone_demand": {"value": 100.0, "unit": "kip"}
+        "beam_right_vgravity": {"value": 10.0, "unit": "kip"},
+        "beam_left_vgravity": {"value": 10.0, "unit": "kip"}
     },
     "design_factors": {
         "phi_d": 0.9,
@@ -219,8 +212,6 @@ BSEEP_8ES_CASE_PAYLOAD = {
 BSEEP_4ES_CASE_PAYLOAD = deepcopy(BSEEP_8ES_CASE_PAYLOAD)
 BSEEP_4ES_CASE_PAYLOAD["connection_type"] = "bseep_4es"
 BSEEP_4ES_CASE_PAYLOAD["case_id"] = "case_bseep_4es_001"
-BSEEP_4ES_CASE_PAYLOAD["loads"]["required_connection_shear"]["value"] = 130.0
-BSEEP_4ES_CASE_PAYLOAD["loads"]["required_beam_shear"]["value"] = 130.0
 
 
 @pytest.fixture

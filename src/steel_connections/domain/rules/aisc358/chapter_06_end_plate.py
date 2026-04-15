@@ -28,7 +28,6 @@ from steel_connections.codes.aisc358.chapter_06 import (
     compute_stiffener_slenderness_ratio_limit,
     compute_web_slenderness_limit,
     compute_web_slenderness_ratio,
-    compute_vh,
 )
 from steel_connections.data.sections_repository import get_beam_profile_properties, get_column_profile_properties
 from steel_connections.models.errors import missing_required_input_error
@@ -218,6 +217,189 @@ def _derive_stiffener_length_from_hst(*, stiffener_height: Quantity, unit_system
     return compute_minimum_stiffener_length(stiffener_height, unit_system)
 
 
+def _active_beam_sides(case: AISC358MomentCase) -> tuple[str, ...]:
+    if case.design_factors.beam_connection_sides == "both_sides":
+        return ("der", "izq")
+    return ("der",)
+
+
+def _require_geometry_by_side(
+    case: AISC358MomentCase,
+    *,
+    base_field: str,
+    side: str,
+    rule_binding: object,
+) -> tuple[Quantity, str]:
+    field_name = f"{base_field}_{side}"
+    value = getattr(case.geometry, field_name)
+    if value is not None:
+        return value, f"geometry.{field_name}"
+    if side == "der":
+        legacy_value = getattr(case.geometry, base_field)
+        if legacy_value is not None:
+            return legacy_value, f"geometry.{base_field}"
+    raise missing_required_input_error(
+        rule_id=rule_binding.rule_id,
+        source_document=rule_binding.source_document,
+        missing_fields=[f"geometry.{field_name}"],
+        message=f"Required input 'geometry.{field_name}' is missing for applicable rule.",
+    )
+
+
+def _require_load_by_side(
+    case: AISC358MomentCase,
+    *,
+    base_field: str,
+    side: str,
+    rule_binding: object,
+) -> tuple[Quantity, str]:
+    if base_field == "beam_gravity_shear_between_hinges":
+        side_field = "beam_right_vgravity" if side == "der" else "beam_left_vgravity"
+        value = getattr(case.loads, side_field)
+        if value is not None:
+            return value, f"loads.{side_field}"
+    field_name = f"{base_field}_{side}"
+    value = getattr(case.loads, field_name)
+    if value is not None:
+        return value, f"loads.{field_name}"
+    if side == "der":
+        legacy_value = getattr(case.loads, base_field)
+        if legacy_value is not None:
+            return legacy_value, f"loads.{base_field}"
+    raise missing_required_input_error(
+        rule_id=rule_binding.rule_id,
+        source_document=rule_binding.source_document,
+        missing_fields=[f"loads.{field_name}"],
+        message=f"Required input 'loads.{field_name}' is missing for applicable rule.",
+    )
+
+
+def _select_max_quantity_by_side(values: dict[str, Quantity]) -> tuple[str, Quantity]:
+    units = {item.unit for item in values.values()}
+    if len(units) != 1:
+        raise ValueError("Incompatible units between beam sides; right/left values must use the same unit.")
+    winning_side = max(values, key=lambda side: values[side].value)
+    return winning_side, values[winning_side]
+
+
+def _compute_vh_by_side(
+    case: AISC358MomentCase,
+    rule_binding: object,
+) -> dict[str, Any]:
+    mpr, _ = _compute_mpr(case, rule_binding)
+    force_unit = "kip" if case.units_system == UnitSystem.US else "kN"
+    sides = _active_beam_sides(case)
+    side_data: dict[str, Any] = {}
+
+    for side in sides:
+        lh, lh_source = _require_geometry_by_side(
+            case,
+            base_field="beam_clear_span_length",
+            side=side,
+            rule_binding=rule_binding,
+        )
+        vgravity, vgravity_source = _require_load_by_side(
+            case,
+            base_field="beam_gravity_shear_between_hinges",
+            side=side,
+            rule_binding=rule_binding,
+        )
+        base_shear = (2.0 * mpr.value) / lh.value
+        vhmax = Quantity(value=base_shear + vgravity.value, unit=force_unit)
+        vhmin = Quantity(value=base_shear - vgravity.value, unit=force_unit)
+        side_data[side] = {
+            "lh": lh,
+            "lh_source": lh_source,
+            "vgravity": vgravity,
+            "vgravity_source": vgravity_source,
+            "2mpr_over_lh": base_shear,
+            "vhmax": vhmax,
+            "vhmin": vhmin,
+        }
+
+    vhmax_values = {side: data["vhmax"] for side, data in side_data.items()}
+    governing_side, governing_vhmax = _select_max_quantity_by_side(vhmax_values)
+    return {
+        "mpr": mpr,
+        "sides": side_data,
+        "governing_vhmax_side": governing_side,
+        "governing_vhmax": governing_vhmax,
+    }
+
+
+def _compute_mf_by_side(
+    case: AISC358MomentCase,
+    rule_binding: object,
+) -> dict[str, Any]:
+    vh_data = _compute_vh_by_side(case, rule_binding)
+    mpr = vh_data["mpr"]
+    sh = _compute_sh(case, rule_binding)
+    side_data: dict[str, Any] = vh_data["sides"]
+    for side, data in side_data.items():
+        vhmax = data["vhmax"]
+        vhmin = data["vhmin"]
+        data["mf_derivation_sh"] = sh
+        data["mfmax"] = compute_mf(
+            mpr=mpr,
+            vh=vhmax,
+            sh=sh,
+            unit_system=case.units_system,
+        )
+        data["mfmin"] = compute_mf(
+            mpr=mpr,
+            vh=vhmin,
+            sh=sh,
+            unit_system=case.units_system,
+        )
+
+    mfmax_values = {side: data["mfmax"] for side, data in side_data.items()}
+    governing_side, governing_mfmax = _select_max_quantity_by_side(mfmax_values)
+    return {
+        **vh_data,
+        "sh": sh,
+        "governing_mfmax_side": governing_side,
+        "governing_mfmax": governing_mfmax,
+    }
+
+
+def _select_stated_vhmax_for_design(
+    case: AISC358MomentCase,
+    computed_by_side: dict[str, Any],
+) -> tuple[Quantity, str]:
+    candidates: dict[str, tuple[Quantity, str]] = {}
+    for side in _active_beam_sides(case):
+        side_specific = getattr(case.loads, f"shear_plastic_hinge_{side}max")
+        if side_specific is not None:
+            candidates[side] = (side_specific, f"loads.shear_plastic_hinge_{side}max")
+        elif side == "der" and case.loads.shear_plastic_hinge is not None:
+            candidates[side] = (case.loads.shear_plastic_hinge, "loads.shear_plastic_hinge")
+        else:
+            candidates[side] = (computed_by_side["sides"][side]["vhmax"], f"step4_computed_vhmax_{side}")
+    governing_side = max(candidates, key=lambda item: candidates[item][0].value)
+    selected, source = candidates[governing_side]
+    return selected, f"{source} (governing_side={governing_side})"
+
+
+def _select_vu_connection_for_design(
+    case: AISC358MomentCase,
+    rule_binding: object,
+) -> tuple[Quantity, str]:
+    vh_data = _compute_vh_by_side(case, rule_binding)
+    vu_selected, source = _select_stated_vhmax_for_design(case, vh_data)
+    return vu_selected, source
+
+
+def _select_stated_mfmax_for_design(
+    case: AISC358MomentCase,
+    computed_by_side: dict[str, Any],
+) -> tuple[Quantity, str]:
+    if case.loads.probable_moment_column_face is not None:
+        return case.loads.probable_moment_column_face, "loads.probable_moment_column_face (legacy)"
+    governing_side = computed_by_side["governing_mfmax_side"]
+    selected = computed_by_side["sides"][governing_side]["mfmax"]
+    return selected, f"step5_computed_mf_{governing_side}max (governing_side={governing_side})"
+
+
 def _compute_compactness_ca(
     *,
     pu: Quantity,
@@ -270,29 +452,30 @@ def _compute_sh(case: AISC358MomentCase, rule_binding: object) -> Quantity:
     )
 
 
-def _compute_vh(case: AISC358MomentCase, rule_binding: object) -> tuple[Quantity, dict[str, float]]:
-    mpr, _ = _compute_mpr(case, rule_binding)
-    lh = _require(case, "geometry.beam_clear_span_length", rule_binding)
-    vgravity = _require(case, "loads.beam_gravity_shear_between_hinges", rule_binding)
-    return compute_vh(
-        mpr=mpr,
-        lh=lh,
-        vgravity_between_hinges=vgravity,
-        unit_system=case.units_system,
-    )
+def _compute_vh(case: AISC358MomentCase, rule_binding: object) -> tuple[Quantity, dict[str, Any]]:
+    vh_data = _compute_vh_by_side(case, rule_binding)
+    governing_side = vh_data["governing_vhmax_side"]
+    governing_vhmax = vh_data["governing_vhmax"]
+    side_data = vh_data["sides"][governing_side]
+    return governing_vhmax, {
+        "mpr": vh_data["mpr"].value,
+        "2mpr_over_lh": side_data["2mpr_over_lh"],
+        "governing_side": governing_side,
+    }
 
 
-def _compute_mf(case: AISC358MomentCase, rule_binding: object) -> tuple[Quantity, dict[str, float]]:
-    mpr, mpr_intermediate = _compute_mpr(case, rule_binding)
-    sh = _compute_sh(case, rule_binding)
-    vh, vh_intermediate = _compute_vh(case, rule_binding)
-    mf = compute_mf(
-        mpr=mpr,
-        vh=vh,
-        sh=sh,
-        unit_system=case.units_system,
-    )
-    return mf, {**mpr_intermediate, **vh_intermediate, "sh": sh.value, "mpr": mpr.value, "vh": vh.value}
+def _compute_mf(case: AISC358MomentCase, rule_binding: object) -> tuple[Quantity, dict[str, Any]]:
+    mf_data = _compute_mf_by_side(case, rule_binding)
+    governing_side = mf_data["governing_mfmax_side"]
+    governing_mfmax = mf_data["governing_mfmax"]
+    side_data = mf_data["sides"][governing_side]
+    return governing_mfmax, {
+        "mpr": mf_data["mpr"].value,
+        "sh": mf_data["sh"].value,
+        "vhmax": side_data["vhmax"].value,
+        "vhmin": side_data["vhmin"].value,
+        "governing_side": governing_side,
+    }
 
 
 def _compute_end_plate_h_distances(case: AISC358MomentCase, rule_binding: object) -> dict[str, Quantity]:
@@ -325,11 +508,10 @@ def _compute_end_plate_h_distances(case: AISC358MomentCase, rule_binding: object
 
 
 def _select_mf_for_design(case: AISC358MomentCase, rule_binding: object) -> tuple[Quantity, str, Quantity]:
-    mf_computed, _ = _compute_mf(case, rule_binding)
-    mf_stated = case.loads.probable_moment_column_face
-    if mf_stated is not None:
-        return mf_stated, "loads.probable_moment_column_face", mf_computed
-    return mf_computed, "step5_computed_mf", mf_computed
+    mf_data = _compute_mf_by_side(case, rule_binding)
+    mf_computed = mf_data["governing_mfmax"]
+    mf_selected, source = _select_stated_mfmax_for_design(case, mf_data)
+    return mf_selected, source, mf_computed
 
 
 def _derive_yp_from_tables_6_2_6_3_6_4(case: AISC358MomentCase, rule_binding: object) -> tuple[Quantity, dict[str, Any]]:
@@ -728,50 +910,91 @@ def run_step2_plastic_hinge_distance(case: AISC358MomentCase, rule_binding: obje
 
 
 def run_step3_shear_at_plastic_hinge(case: AISC358MomentCase, rule_binding: object) -> CheckResult:
-    vh, intermediates = _compute_vh(case, rule_binding)
-    stated_vh = case.loads.shear_plastic_hinge
-    demand = vh
-    capacity = stated_vh if stated_vh is not None else vh
+    vh_data = _compute_vh_by_side(case, rule_binding)
+    demand = vh_data["governing_vhmax"]
+    _, selected_source = _select_stated_vhmax_for_design(case, vh_data)
+    capacity = demand
+    sides = _active_beam_sides(case)
+    side_inputs: dict[str, Any] = {}
+    side_intermediates: dict[str, Any] = {}
+    for side in sides:
+        side_data = vh_data["sides"][side]
+        side_inputs[f"lh_{side}"] = side_data["lh"].model_dump()
+        side_inputs[f"lh_{side}_source"] = side_data["lh_source"]
+        side_inputs[f"vgravity_between_hinges_{side}"] = side_data["vgravity"].model_dump()
+        side_inputs[f"vgravity_between_hinges_{side}_source"] = side_data["vgravity_source"]
+        stated_side = getattr(case.loads, f"shear_plastic_hinge_{side}max")
+        if side == "der" and stated_side is None:
+            stated_side = case.loads.shear_plastic_hinge
+        side_inputs[f"stated_vh_{side}max"] = stated_side.model_dump() if stated_side is not None else None
+        side_intermediates[f"2mpr_over_lh_{side}"] = side_data["2mpr_over_lh"]
+        side_intermediates[f"vh_{side}max"] = side_data["vhmax"].value
+        side_intermediates[f"vh_{side}min"] = side_data["vhmin"].value
     return _build_result(
         rule_binding=rule_binding,
         demand=demand,
         capacity=capacity,
-        equation="Vh = 2*Mpr/Lh + Vgravity (Eq. 2.4-3)",
+        equation=(
+            "Vhmax = 2*Mpr/Lh + Vgravity; "
+            "Vhmin = 2*Mpr/Lh - Vgravity (Eq. 2.4-3, side-specific der/izq)"
+        ),
         inputs={
-            "lh": _require(case, "geometry.beam_clear_span_length", rule_binding).model_dump(),
-            "vgravity_between_hinges": _require(
-                case,
-                "loads.beam_gravity_shear_between_hinges",
-                rule_binding,
-            ).model_dump(),
-            "stated_vh": stated_vh.model_dump() if stated_vh is not None else None,
+            "beam_connection_sides": case.design_factors.beam_connection_sides or "right_only",
+            "governing_side_vhmax": vh_data["governing_vhmax_side"],
+            "selected_vhmax_source": selected_source,
+            **side_inputs,
         },
-        intermediates=intermediates,
+        intermediates={
+            "mpr": vh_data["mpr"].value,
+            **side_intermediates,
+        },
         design_factors={},
-        units_trace={"vh_computed": vh.unit, "vh_stated": capacity.unit},
+        units_trace={"vhmax_governing": demand.unit, "vhmax_selected": capacity.unit},
     )
 
 
 def run_step4_probable_moment_face_column(case: AISC358MomentCase, rule_binding: object) -> CheckResult:
-    mf, intermediates = _compute_mf(case, rule_binding)
-    stated_mf = case.loads.probable_moment_column_face
+    mf_data = _compute_mf_by_side(case, rule_binding)
+    demand = mf_data["governing_mfmax"]
+    _, selected_source = _select_stated_mfmax_for_design(case, mf_data)
+    capacity = demand
+    sides = _active_beam_sides(case)
+    side_inputs: dict[str, Any] = {}
+    side_intermediates: dict[str, Any] = {}
+    for side in sides:
+        side_data = mf_data["sides"][side]
+        stated_side = case.loads.probable_moment_column_face if side == "der" else None
+        side_inputs[f"stated_mf_{side}max"] = stated_side.model_dump() if stated_side is not None else None
+        side_intermediates[f"mf_{side}max"] = side_data["mfmax"].value
+        side_intermediates[f"mf_{side}min"] = side_data["mfmin"].value
+        side_intermediates[f"vh_{side}max"] = side_data["vhmax"].value
+        side_intermediates[f"vh_{side}min"] = side_data["vhmin"].value
     return _build_result(
         rule_binding=rule_binding,
-        demand=mf,
-        capacity=mf,
-        equation="Mf = Mpr + Vh * Sh (Eq. 2.4-4)",
-        inputs={"stated_mf": stated_mf.model_dump() if stated_mf is not None else None},
-        intermediates=intermediates,
+        demand=demand,
+        capacity=capacity,
+        equation=(
+            "Mfmax = Mpr + Vhmax*Sh; "
+            "Mfmin = Mpr + Vhmin*Sh (Eq. 2.4-4, side-specific der/izq)"
+        ),
+        inputs={
+            "beam_connection_sides": case.design_factors.beam_connection_sides or "right_only",
+            "governing_side_mfmax": mf_data["governing_mfmax_side"],
+            "selected_mfmax_source": selected_source,
+            **side_inputs,
+        },
+        intermediates={
+            "mpr": mf_data["mpr"].value,
+            "sh": mf_data["sh"].value,
+            **side_intermediates,
+        },
         design_factors={},
-        units_trace={"mf_computed": mf.unit},
+        units_trace={"mfmax_governing": demand.unit, "mfmax_selected": capacity.unit},
     )
 
 
 def run_step6_1_bolt_tension_rupture(case: AISC358MomentCase, rule_binding: object) -> CheckResult:
-    mf_computed, _ = _compute_mf(case, rule_binding)
-    mf_stated = case.loads.probable_moment_column_face
-    mf = mf_stated if mf_stated is not None else mf_computed
-    mf_source = "loads.probable_moment_column_face" if mf_stated is not None else "step5_computed_mf"
+    mf, mf_source, mf_computed = _select_mf_for_design(case, rule_binding)
     fnt = _require(case, "materials.bolt_fnt", rule_binding)
     db = _require(case, "geometry.bolt_diameter", rule_binding)
     h_distances = _compute_end_plate_h_distances(case, rule_binding)
@@ -830,10 +1053,9 @@ def run_step6_1_bolt_tension_rupture(case: AISC358MomentCase, rule_binding: obje
 
 
 def run_step6_2_bolt_shear_rupture(case: AISC358MomentCase, rule_binding: object) -> CheckResult:
-    vh_computed, _ = _compute_vh(case, rule_binding)
-    vh_stated = case.loads.shear_plastic_hinge
-    vh = vh_stated if vh_stated is not None else vh_computed
-    vh_source = "loads.shear_plastic_hinge" if vh_stated is not None else "step4_computed_vh"
+    vh_data = _compute_vh_by_side(case, rule_binding)
+    vh_computed = vh_data["governing_vhmax"]
+    vh, vh_source = _select_stated_vhmax_for_design(case, vh_data)
     fnv = _require(case, "materials.bolt_fnv", rule_binding)
     db = _require(case, "geometry.bolt_diameter", rule_binding)
     nb = _compression_bolt_count(case)
@@ -850,13 +1072,13 @@ def run_step6_2_bolt_shear_rupture(case: AISC358MomentCase, rule_binding: object
         demand=vup,
         capacity=phi_vnp,
         equation=(
-            "Vub = Vh/nb, phiVnb = phi * Ab * Fnv, Ab = pi*db^2/4, "
+            "Vub = Vhmax/nb, phiVnb = phi * Ab * Fnv, Ab = pi*db^2/4, "
             "nb = 4 (4E/4ES) or 8 (8ES), phi = 0.9 (AISC 360-22 J3.7)"
         ),
         inputs={
-            "vh": vh.model_dump(),
-            "vh_source": vh_source,
-            "vh_computed": vh_computed.model_dump(),
+            "vhmax": vh.model_dump(),
+            "vhmax_source": vh_source,
+            "vhmax_computed": vh_computed.model_dump(),
             "nb": nb,
             "bolt_diameter": db.model_dump(),
             "bolt_fnv": fnv.model_dump(),
@@ -1053,10 +1275,9 @@ def _compute_step7_3_lc(case: AISC358MomentCase, rule_binding: object) -> tuple[
 
 
 def run_step7_3_1_end_plate_hole_tearout(case: AISC358MomentCase, rule_binding: object) -> CheckResult:
-    vh_computed, _ = _compute_vh(case, rule_binding)
-    vh_stated = case.loads.shear_plastic_hinge
-    vh = vh_stated if vh_stated is not None else vh_computed
-    vh_source = "loads.shear_plastic_hinge" if vh_stated is not None else "step4_computed_vh"
+    vh_data = _compute_vh_by_side(case, rule_binding)
+    vh_computed = vh_data["governing_vhmax"]
+    vh, vh_source = _select_stated_vhmax_for_design(case, vh_data)
     nb = _compression_bolt_count(case)
     vu2p = Quantity(value=vh.value / float(nb), unit=vh.unit)
 
@@ -1076,11 +1297,11 @@ def run_step7_3_1_end_plate_hole_tearout(case: AISC358MomentCase, rule_binding: 
         rule_binding=rule_binding,
         demand=vu2p,
         capacity=phi_vn2p,
-        equation="Vu2p = Vh/nb; phiVn2p = phi * 1.2 * lc * tp * Fup (AISC 360-22 J3.11a)",
+        equation="Vu2p = Vhmax/nb; phiVn2p = phi * 1.2 * lc * tp * Fup (AISC 360-22 J3.11a)",
         inputs={
-            "vh": vh.model_dump(),
-            "vh_source": vh_source,
-            "vh_computed": vh_computed.model_dump(),
+            "vhmax": vh.model_dump(),
+            "vhmax_source": vh_source,
+            "vhmax_computed": vh_computed.model_dump(),
             "nb": nb,
             "lc": lc.model_dump(),
             "tp": tp.model_dump(),
@@ -1105,10 +1326,9 @@ def run_step7_3_1_end_plate_hole_tearout(case: AISC358MomentCase, rule_binding: 
 
 
 def run_step7_3_2_end_plate_hole_bearing(case: AISC358MomentCase, rule_binding: object) -> CheckResult:
-    vh_computed, _ = _compute_vh(case, rule_binding)
-    vh_stated = case.loads.shear_plastic_hinge
-    vh = vh_stated if vh_stated is not None else vh_computed
-    vh_source = "loads.shear_plastic_hinge" if vh_stated is not None else "step4_computed_vh"
+    vh_data = _compute_vh_by_side(case, rule_binding)
+    vh_computed = vh_data["governing_vhmax"]
+    vh, vh_source = _select_stated_vhmax_for_design(case, vh_data)
     nb = _compression_bolt_count(case)
     vu2p = Quantity(value=vh.value / float(nb), unit=vh.unit)
 
@@ -1130,11 +1350,11 @@ def run_step7_3_2_end_plate_hole_bearing(case: AISC358MomentCase, rule_binding: 
         rule_binding=rule_binding,
         demand=vu2p,
         capacity=phi_vn2p,
-        equation="Vu2p = Vh/nb; phiVn2p = phi * 2.4 * (db + 1.6 mm) * tp * Fup (AISC 360-22 J3.11a)",
+        equation="Vu2p = Vhmax/nb; phiVn2p = phi * 2.4 * (db + 1.6 mm) * tp * Fup (AISC 360-22 J3.11a)",
         inputs={
-            "vh": vh.model_dump(),
-            "vh_source": vh_source,
-            "vh_computed": vh_computed.model_dump(),
+            "vhmax": vh.model_dump(),
+            "vhmax_source": vh_source,
+            "vhmax_computed": vh_computed.model_dump(),
             "nb": nb,
             "lc": lc.model_dump(),
             "tp": tp.model_dump(),
@@ -1400,10 +1620,9 @@ def run_step10_1_1_beam_shear_yielding(case: AISC358MomentCase, rule_binding: ob
     kdes = _profile_kdes(beam_profile, role="beam", rule_binding=rule_binding)
     fybm = _require(case, "materials.beam_fy", rule_binding)
     elastic_modulus = _require(case, "materials.elastic_modulus", rule_binding)
-    vh_computed, _ = _compute_vh(case, rule_binding)
-    vh_stated = case.loads.shear_plastic_hinge
-    vh_source = "loads.shear_plastic_hinge" if vh_stated is not None else "step4_computed_vh"
-    vubm = vh_stated if vh_stated is not None else vh_computed
+    vh_data = _compute_vh_by_side(case, rule_binding)
+    vh_computed = vh_data["governing_vhmax"]
+    vubm, vh_source = _select_stated_vhmax_for_design(case, vh_data)
 
     h_over_tw, web_intermediate = compute_web_slenderness_ratio(
         section_depth=d,
@@ -1429,13 +1648,13 @@ def run_step10_1_1_beam_shear_yielding(case: AISC358MomentCase, rule_binding: ob
         demand=vubm,
         capacity=phi_vnbm,
         equation=(
-            "Vubm = Vh; phiVnbm = phi * 0.6 * Fybm * tw,bm * d * Cv1 "
+            "Vubm = Vhmax; phiVnbm = phi * 0.6 * Fybm * tw,bm * d * Cv1 "
             "(AISC 360-22 G2.1, Eq. G2-3/G2-4; kv=5.34 for webs without transverse stiffeners)"
         ),
         inputs={
-            "vh": vubm.model_dump(),
-            "vh_source": vh_source,
-            "vh_computed": vh_computed.model_dump(),
+            "vhmax": vubm.model_dump(),
+            "vhmax_source": vh_source,
+            "vhmax_computed": vh_computed.model_dump(),
             "fybm": fybm.model_dump(),
             "tw_bm": tw.model_dump(),
             "d": d.model_dump(),
@@ -1506,6 +1725,34 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
         "geometry.beam_shear_connector_free_length_from_column_face",
         rule_binding,
     )
+    beam_connection_sides = case.design_factors.beam_connection_sides or "right_only"
+    beam_clear_span_length_der, _ = _require_geometry_by_side(
+        case,
+        base_field="beam_clear_span_length",
+        side="der",
+        rule_binding=rule_binding,
+    )
+    shear_connector_free_length_der, _ = _require_geometry_by_side(
+        case,
+        base_field="beam_shear_connector_free_length_from_column_face",
+        side="der",
+        rule_binding=rule_binding,
+    )
+    beam_clear_span_length_izq: Quantity | None = None
+    shear_connector_free_length_izq: Quantity | None = None
+    if beam_connection_sides == "both_sides":
+        beam_clear_span_length_izq, _ = _require_geometry_by_side(
+            case,
+            base_field="beam_clear_span_length",
+            side="izq",
+            rule_binding=rule_binding,
+        )
+        shear_connector_free_length_izq, _ = _require_geometry_by_side(
+            case,
+            base_field="beam_shear_connector_free_length_from_column_face",
+            side="izq",
+            rule_binding=rule_binding,
+        )
     slab_connection_condition = _require(case, "geometry.column_slab_connection_condition", rule_binding)
     stc = _require(case, "geometry.column_end_distance_to_beam_flange", rule_binding)
     beam_profile = _beam_profile(case)
@@ -2717,6 +2964,17 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
                 "end_plate_height": end_plate_height.model_dump(),
                 "stiffener_height": stiffener_height.model_dump(),
                 "stiffener_length": stiffener_length_derived.model_dump(),
+                "beam_connection_sides": beam_connection_sides,
+                "beam_clear_span_length_der": beam_clear_span_length_der.model_dump(),
+                "beam_shear_connector_free_length_from_column_face_der": shear_connector_free_length_der.model_dump(),
+                "beam_clear_span_length_izq": beam_clear_span_length_izq.model_dump()
+                if beam_clear_span_length_izq is not None
+                else None,
+                "beam_shear_connector_free_length_from_column_face_izq": (
+                    shear_connector_free_length_izq.model_dump()
+                    if shear_connector_free_length_izq is not None
+                    else None
+                ),
                 "beam_clear_span_length": beam_clear_span_length.model_dump(),
                 "beam_shear_connector_free_length_from_column_face": shear_connector_free_length.model_dump(),
                 "column_slab_connection_condition": slab_connection_condition,
@@ -2780,7 +3038,7 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
 
 
 def run_step6_required_bolt_diameter(case: AISC358MomentCase, rule_binding: object) -> CheckResult:
-    mf = _require(case, "loads.probable_moment_column_face", rule_binding)
+    mf, _, _ = _select_mf_for_design(case, rule_binding)
     fnt = _require(case, "materials.bolt_fnt", rule_binding)
     phi_n = _require(case, "design_factors.phi_n", rule_binding)
     distances = _require_procedure(case, "tension_bolt_line_distances", rule_binding)
@@ -2812,7 +3070,7 @@ def run_step6_required_bolt_diameter(case: AISC358MomentCase, rule_binding: obje
 
 
 def run_step7_select_trial_bolt(case: AISC358MomentCase, rule_binding: object) -> CheckResult:
-    mf = _require(case, "loads.probable_moment_column_face", rule_binding)
+    mf, _, _ = _select_mf_for_design(case, rule_binding)
     fnt = _require(case, "materials.bolt_fnt", rule_binding)
     phi_n = _require(case, "design_factors.phi_n", rule_binding)
     distances = _require_procedure(case, "tension_bolt_line_distances", rule_binding)
@@ -2838,7 +3096,7 @@ def run_step7_select_trial_bolt(case: AISC358MomentCase, rule_binding: object) -
 
 
 def run_step8_required_end_plate_thickness(case: AISC358MomentCase, rule_binding: object) -> CheckResult:
-    mf = _require(case, "loads.probable_moment_column_face", rule_binding)
+    mf, _, _ = _select_mf_for_design(case, rule_binding)
     beam_depth = _beam_profile(case)["d"]
     end_plate_fy = _require(case, "materials.end_plate_fy", rule_binding)
     yp, yp_intermediates = _derive_yp_from_tables_6_2_6_3_6_4(case, rule_binding)
@@ -2888,7 +3146,7 @@ def run_step9_select_end_plate_thickness(case: AISC358MomentCase, rule_binding: 
 
 def run_step10_factored_beam_flange_force(case: AISC358MomentCase, rule_binding: object) -> CheckResult:
     beam_profile = _beam_profile(case)
-    mf = _require(case, "loads.probable_moment_column_face", rule_binding)
+    mf, _, _ = _select_mf_for_design(case, rule_binding)
     ffu, intermediates = compute_beam_flange_force_from_mf(
         mf=mf,
         beam_depth=beam_profile["d"],
@@ -2914,7 +3172,7 @@ def run_step10_factored_beam_flange_force(case: AISC358MomentCase, rule_binding:
 
 def run_end_plate_shear_yielding_4e(case: AISC358MomentCase, rule_binding: object) -> CheckResult:
     beam_profile = _beam_profile(case)
-    mf = _require(case, "loads.probable_moment_column_face", rule_binding)
+    mf, _, _ = _select_mf_for_design(case, rule_binding)
     beam_depth = beam_profile["d"]
     beam_flange_thickness = beam_profile["tf"]
     end_plate_fy = _require(case, "materials.end_plate_fy", rule_binding)
@@ -2968,7 +3226,7 @@ def run_end_plate_shear_yielding_4e(case: AISC358MomentCase, rule_binding: objec
 
 def run_end_plate_shear_rupture_4e(case: AISC358MomentCase, rule_binding: object) -> CheckResult:
     beam_profile = _beam_profile(case)
-    mf = _require(case, "loads.probable_moment_column_face", rule_binding)
+    mf, _, _ = _select_mf_for_design(case, rule_binding)
     beam_depth = beam_profile["d"]
     beam_flange_thickness = beam_profile["tf"]
     end_plate_fu = _require(case, "materials.end_plate_fu", rule_binding)
@@ -3019,7 +3277,7 @@ def run_end_plate_shear_rupture_4e(case: AISC358MomentCase, rule_binding: object
 
 
 def run_bolt_shear_rupture(case: AISC358MomentCase, rule_binding: object) -> CheckResult:
-    vu = _require(case, "loads.required_connection_shear", rule_binding)
+    vu, vu_source = _select_vu_connection_for_design(case, rule_binding)
     bolt_fnv = _require(case, "materials.bolt_fnv", rule_binding)
     bolt_diameter = _require(case, "geometry.bolt_diameter", rule_binding)
     phi_n = _require(case, "design_factors.phi_n", rule_binding)
@@ -3036,9 +3294,10 @@ def run_bolt_shear_rupture(case: AISC358MomentCase, rule_binding: object) -> Che
         rule_binding=rule_binding,
         demand=vu,
         capacity=capacity,
-        equation="Vu <= phi_n * nb * Fnv * Ab (Eq. 6.7-11)",
+        equation="Vu = Vhmax (Eq. 2.4-3); Vu <= phi_n * nb * Fnv * Ab (Eq. 6.7-11)",
         inputs={
-            "vu": vu.model_dump(),
+            "vu_connection_derived": vu.model_dump(),
+            "vu_connection_source": vu_source,
             "bolt_fnv": bolt_fnv.model_dump(),
             "bolt_diameter": bolt_diameter.model_dump(),
             "n_bolts_compression": n_bolts,
@@ -3050,7 +3309,7 @@ def run_bolt_shear_rupture(case: AISC358MomentCase, rule_binding: object) -> Che
 
 
 def run_bolt_bearing_tearout_end_plate(case: AISC358MomentCase, rule_binding: object) -> CheckResult:
-    vu = _require(case, "loads.required_connection_shear", rule_binding)
+    vu, vu_source = _select_vu_connection_for_design(case, rule_binding)
     end_plate_fu = _require(case, "materials.end_plate_fu", rule_binding)
     lc = _require(case, "geometry.clear_distance_end_plate", rule_binding)
     tp = _require(case, "geometry.end_plate_thickness", rule_binding)
@@ -3071,9 +3330,13 @@ def run_bolt_bearing_tearout_end_plate(case: AISC358MomentCase, rule_binding: ob
         rule_binding=rule_binding,
         demand=vu,
         capacity=capacity,
-        equation="Vu <= phi_n * sum[min(1.2*lc*t*Fu, 2.4*db*t*Fu)] (Eq. 6.7-12, end plate)",
+        equation=(
+            "Vu = Vhmax (Eq. 2.4-3); "
+            "Vu <= phi_n * sum[min(1.2*lc*t*Fu, 2.4*db*t*Fu)] (Eq. 6.7-12, end plate)"
+        ),
         inputs={
-            "vu": vu.model_dump(),
+            "vu_connection_derived": vu.model_dump(),
+            "vu_connection_source": vu_source,
             "end_plate_fu": end_plate_fu.model_dump(),
             "lc_end_plate": lc.model_dump(),
             "end_plate_thickness": tp.model_dump(),
@@ -3087,7 +3350,7 @@ def run_bolt_bearing_tearout_end_plate(case: AISC358MomentCase, rule_binding: ob
 
 
 def run_bolt_bearing_tearout_column_flange(case: AISC358MomentCase, rule_binding: object) -> CheckResult:
-    vu = _require(case, "loads.required_connection_shear", rule_binding)
+    vu, vu_source = _select_vu_connection_for_design(case, rule_binding)
     column_fu = _require(case, "materials.column_fu", rule_binding)
     lc = _require(case, "geometry.clear_distance_column_flange", rule_binding)
     column_profile = _column_profile(case)
@@ -3109,9 +3372,13 @@ def run_bolt_bearing_tearout_column_flange(case: AISC358MomentCase, rule_binding
         rule_binding=rule_binding,
         demand=vu,
         capacity=capacity,
-        equation="Vu <= phi_n * sum[min(1.2*lc*t*Fu, 2.4*db*t*Fu)] (Eq. 6.7-12, column flange)",
+        equation=(
+            "Vu = Vhmax (Eq. 2.4-3); "
+            "Vu <= phi_n * sum[min(1.2*lc*t*Fu, 2.4*db*t*Fu)] (Eq. 6.7-12, column flange)"
+        ),
         inputs={
-            "vu": vu.model_dump(),
+            "vu_connection_derived": vu.model_dump(),
+            "vu_connection_source": vu_source,
             "column_shape": case.sections.column_shape,
             "column_fu": column_fu.model_dump(),
             "lc_column_flange": lc.model_dump(),
@@ -3255,14 +3522,18 @@ def run_stiffener_local_buckling(case: AISC358MomentCase, rule_binding: object) 
 
 
 def run_step14_beam_shear_strength(case: AISC358MomentCase, rule_binding: object) -> CheckResult:
-    vu = _require(case, "loads.required_beam_shear", rule_binding)
+    vu, vu_source = _select_vu_connection_for_design(case, rule_binding)
     beam_shear_capacity = _require_procedure(case, "beam_available_shear_strength", rule_binding)
     return _build_result(
         rule_binding=rule_binding,
         demand=vu,
         capacity=beam_shear_capacity,
-        equation="Vu <= phi*Vn (AISC Specification per Section 6.7.1 Step 14)",
-        inputs={"required_beam_shear": vu.model_dump(), "beam_available_shear_strength": beam_shear_capacity.model_dump()},
+        equation="Vu_beam = Vhmax (Eq. 2.4-3); Vu_beam <= phi*Vn (AISC Specification per Section 6.7.1 Step 14)",
+        inputs={
+            "vu_beam_derived": vu.model_dump(),
+            "vu_beam_source": vu_source,
+            "beam_available_shear_strength": beam_shear_capacity.model_dump(),
+        },
         intermediates={},
         design_factors={},
         units_trace={"vu": vu.unit, "capacity": beam_shear_capacity.unit},
@@ -3270,26 +3541,28 @@ def run_step14_beam_shear_strength(case: AISC358MomentCase, rule_binding: object
 
 
 def run_step15_connection_shear_requirement(case: AISC358MomentCase, rule_binding: object) -> CheckResult:
-    required_beam_shear = _require(case, "loads.required_beam_shear", rule_binding)
-    required_connection_shear = _require(case, "loads.required_connection_shear", rule_binding)
+    vu_beam, vu_beam_source = _select_vu_connection_for_design(case, rule_binding)
+    vu_connection, vu_connection_source = vu_beam, vu_beam_source
     return _build_result(
         rule_binding=rule_binding,
-        demand=required_beam_shear,
-        capacity=required_connection_shear,
-        equation="Vu(connection) = Vu(beam) (Section 6.7.1 Step 15)",
+        demand=vu_beam,
+        capacity=vu_connection,
+        equation="Vu(beam) = Vhmax and Vu(connection) = Vhmax (Eq. 2.4-3); Vu(connection) = Vu(beam) (Section 6.7.1 Step 15)",
         inputs={
-            "required_beam_shear": required_beam_shear.model_dump(),
-            "required_connection_shear": required_connection_shear.model_dump(),
+            "vu_beam_derived": vu_beam.model_dump(),
+            "vu_beam_source": vu_beam_source,
+            "vu_connection_derived": vu_connection.model_dump(),
+            "vu_connection_source": vu_connection_source,
         },
         intermediates={},
         design_factors={},
-        units_trace={"vu_beam": required_beam_shear.unit, "vu_connection": required_connection_shear.unit},
+        units_trace={"vu_beam": vu_beam.unit, "vu_connection": vu_connection.unit},
     )
 
 
 def run_step18_weld_design(case: AISC358MomentCase, rule_binding: object) -> CheckResult:
     beam_profile = _beam_profile(case)
-    mf = _require(case, "loads.probable_moment_column_face", rule_binding)
+    mf, _, _ = _select_mf_for_design(case, rule_binding)
     ffu, ffu_intermediate = compute_beam_flange_force_from_mf(
         mf=mf,
         beam_depth=beam_profile["d"],
@@ -3298,7 +3571,11 @@ def run_step18_weld_design(case: AISC358MomentCase, rule_binding: object) -> Che
     )
     flange_weld_capacity = _require_procedure(case, "flange_weld_available_strength", rule_binding)
     web_weld_capacity = _require_procedure(case, "web_weld_available_strength", rule_binding)
-    required_web_weld = _require(case, "loads.required_web_weld_force", rule_binding)
+    vu_connection, vu_source = _select_vu_connection_for_design(case, rule_binding)
+    required_web_weld = Quantity(
+        value=0.4 * vu_connection.value,
+        unit=vu_connection.unit,
+    )
 
     flange_dcr = ffu.value / flange_weld_capacity.value
     web_dcr = required_web_weld.value / web_weld_capacity.value
@@ -3317,7 +3594,9 @@ def run_step18_weld_design(case: AISC358MomentCase, rule_binding: object) -> Che
         calculation_memory=CalculationMemory(
             inputs={
                 "mf": mf.model_dump(),
-                "required_web_weld_force": required_web_weld.model_dump(),
+                "required_web_weld_force_derived": required_web_weld.model_dump(),
+                "vu_connection_derived": vu_connection.model_dump(),
+                "vu_connection_source": vu_source,
                 "flange_weld_available_strength": flange_weld_capacity.model_dump(),
                 "web_weld_available_strength": web_weld_capacity.model_dump(),
             },
@@ -3326,6 +3605,7 @@ def run_step18_weld_design(case: AISC358MomentCase, rule_binding: object) -> Che
                 "ffu": ffu.value,
                 "flange_weld_dcr": flange_dcr,
                 "web_weld_dcr": web_dcr,
+                "required_web_weld_factor_from_vu": 0.4,
             },
             design_factors={},
             equation="Section 6.7.1 Step 18 + Section 6.6.6 weld design checks",
@@ -3337,7 +3617,7 @@ def run_step18_weld_design(case: AISC358MomentCase, rule_binding: object) -> Che
 
 
 def run_column_step1_flange_yielding(case: AISC358MomentCase, rule_binding: object) -> CheckResult:
-    mf = _require(case, "loads.probable_moment_column_face", rule_binding)
+    mf, _, _ = _select_mf_for_design(case, rule_binding)
     beam_depth = _beam_profile(case)["d"]
     column_profile = _column_profile(case)
     column_fy = _require(case, "materials.column_fy", rule_binding)
@@ -3386,7 +3666,7 @@ def run_column_step2_stiffener_force(case: AISC358MomentCase, rule_binding: obje
         unit_system=case.units_system,
     )
     ffu, _ = compute_beam_flange_force_from_mf(
-        mf=_require(case, "loads.probable_moment_column_face", rule_binding),
+        mf=_select_mf_for_design(case, rule_binding)[0],
         beam_depth=beam_profile["d"],
         beam_flange_thickness=beam_profile["tf"],
         unit_system=case.units_system,
@@ -3425,7 +3705,7 @@ def run_column_step3_web_local_yielding(case: AISC358MomentCase, rule_binding: o
         unit_system=case.units_system,
     )
     ffu, _ = compute_beam_flange_force_from_mf(
-        mf=_require(case, "loads.probable_moment_column_face", rule_binding),
+        mf=_select_mf_for_design(case, rule_binding)[0],
         beam_depth=beam_profile["d"],
         beam_flange_thickness=beam_profile["tf"],
         unit_system=case.units_system,
@@ -3467,7 +3747,7 @@ def run_column_step4_web_local_crippling(case: AISC358MomentCase, rule_binding: 
         unit_system=case.units_system,
     )
     ffu, _ = compute_beam_flange_force_from_mf(
-        mf=_require(case, "loads.probable_moment_column_face", rule_binding),
+        mf=_select_mf_for_design(case, rule_binding)[0],
         beam_depth=beam_profile["d"],
         beam_flange_thickness=beam_profile["tf"],
         unit_system=case.units_system,
@@ -3486,7 +3766,7 @@ def run_column_step4_web_local_crippling(case: AISC358MomentCase, rule_binding: 
 
 def run_column_step5_continuity_plate_strength(case: AISC358MomentCase, rule_binding: object) -> CheckResult:
     beam_profile = _beam_profile(case)
-    mf = _require(case, "loads.probable_moment_column_face", rule_binding)
+    mf, _, _ = _select_mf_for_design(case, rule_binding)
     ffu, _ = compute_beam_flange_force_from_mf(
         mf=mf,
         beam_depth=beam_profile["d"],
@@ -3515,15 +3795,21 @@ def run_column_step5_continuity_plate_strength(case: AISC358MomentCase, rule_bin
 
 
 def run_column_step6_panel_zone(case: AISC358MomentCase, rule_binding: object) -> CheckResult:
-    demand = _require(case, "loads.panel_zone_demand", rule_binding)
+    vu_connection, vu_source = _select_vu_connection_for_design(case, rule_binding)
+    demand = Quantity(value=0.5 * vu_connection.value, unit=vu_connection.unit)
     capacity = _require_procedure(case, "panel_zone_capacity", rule_binding)
     return _build_result(
         rule_binding=rule_binding,
         demand=demand,
         capacity=capacity,
         equation="Panel zone check per Section 2.7 / AISC Seismic Provisions",
-        inputs={"panel_zone_demand": demand.model_dump(), "panel_zone_capacity": capacity.model_dump()},
-        intermediates={},
+        inputs={
+            "panel_zone_demand_derived": demand.model_dump(),
+            "vu_connection_derived": vu_connection.model_dump(),
+            "vu_connection_source": vu_source,
+            "panel_zone_capacity": capacity.model_dump(),
+        },
+        intermediates={"panel_zone_demand_factor_from_vu": 0.5},
         design_factors={},
         units_trace={"demand": demand.unit, "capacity": capacity.unit},
     )

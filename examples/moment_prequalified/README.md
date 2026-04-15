@@ -92,14 +92,18 @@ El archivo debe tener estos bloques:
 
 ## 5) Cargas
 
-- `loads.pu_viga`: carga axial `Pu` en la viga (se usa para calcular `Ca` de viga).
+- `loads.pu_viga_right`: carga axial `Pu` de la viga derecha (se usa para calcular `Ca` de viga).
+- `loads.pu_viga_left`: carga axial `Pu` de la viga izquierda (obligatoria si `design_factors.beam_connection_sides = both_sides`).
+- `loads.pu_viga`: alias legacy (el motor lo mapea a `pu_viga_right` si se usa un solo lado).
 - `loads.pu_columna`: carga axial `Pu` en la columna (se usa para calcular `Ca` de columna).
-- `loads.probable_moment_column_face`: `Mf`, momento probable en cara de columna.
-- `loads.beam_gravity_shear_between_hinges`: cortante de gravedad entre rótulas plásticas.
-- `loads.required_connection_shear`: `Vu` requerida en la conexión.
-- `loads.required_beam_shear`: `Vu` requerida de la viga.
-- `loads.required_web_weld_force`: fuerza requerida para soldadura de alma.
-- `loads.panel_zone_demand`: demanda en panel zone.
+- `loads.probable_moment_column_face`: alias legacy opcional para forzar `Mf`; por defecto `Mf` se calcula automáticamente (Paso 5).
+- `loads.Beam_right_Vgravity`: `Vgravity` de la viga derecha (input preferido).
+- `loads.Beam_left_Vgravity`: `Vgravity` de la viga izquierda (obligatorio si `beam_connection_sides = both_sides`).
+- `loads.beam_gravity_shear_between_hinges*`: aliases legacy para compatibilidad.
+- `Vu` de viga ya no se ingresa como input; se deriva automáticamente desde `Vhmax` del Paso 3 (por lado der/izq y gobernante).
+- `Vu` de conexión ya no se ingresa como input; se deriva automáticamente desde `Vhmax` del Paso 3.
+- `loads.required_web_weld_force`: ya no se acepta como input; se deriva internamente a partir de `Vu` de conexión (temporalmente con factor 0.4).
+- `loads.panel_zone_demand`: ya no se acepta como input; se deriva internamente a partir de `Vu` de conexión (temporalmente con factor 0.5).
 
 ## 6) Factores de diseño
 
@@ -112,7 +116,7 @@ El archivo debe tener estos bloques:
 Nota de compactacion:
 - `Ca` ya no se ingresa como input.
 - El motor calcula `Ca = Pu / (Ry * Ag * Fy)` para viga y columna usando:
-  - `Pu` desde `loads.pu_viga` / `loads.pu_columna`
+  - `Pu` desde `loads.pu_viga_right` (y `loads.pu_viga_left` cuando aplica) / `loads.pu_columna`
   - `Ry` derivado automáticamente desde `data/materials.xlsx` (hoja `HRS`) según `materials.profile_steel_type`
   - `Ag` desde `data/sections.xlsx`
   - `Fy` desde `data/materials.xlsx` (hoja `HRS`)

@@ -52,8 +52,8 @@ def test_example_results_folder_and_geometry_artifact() -> None:
     assert "## Paso 1 - PREQUALIFICATION LIMITS" in memory
     assert "## Paso 2 - Probable Maximum Moment At Plastic Hinge (Mpr)" in memory
     assert "## Paso 3 - Distancia De Rotula Plastica Desde La Cara De Columna (Sh)" in memory
-    assert "## Paso 4 - Cortante Probable En Rotula Plastica (Vh)" in memory
-    assert "## Paso 5 - Momento Probable Maximo En Cara De Columna (Mf)" in memory
+    assert "## Paso 4 - Cortante Probable En Rotula Plastica (Vhmax, Vhmin)" in memory
+    assert "## Paso 5 - Momento Probable En Cara De Columna (Mfmax, Mfmin)" in memory
     assert "## Paso 6 - Revision De Resistencia Pernos" in memory
     assert "### 6.1 Revision de capacidad a traccion" in memory
     assert "### 6.2 Revision de capacidad a cortante" in memory
