@@ -128,6 +128,24 @@ def _chapter6_common_steps(connection_type: str) -> list[RuleBinding]:
             connection_type=connection_type,
             evaluator=chapter_06_end_plate.run_step7_2_2_end_plate_shear_rupture,
         ),
+        _bind(
+            rule_id=f"AISC358.06.7.{connection_type}.step7_3_1_end_plate_hole_tearout",
+            name=f"{connection_type} Step 7.3.1 end-plate hole tearout",
+            clause="Chapter 6 / Section 7.3.1 + AISC 360-22 J3.11(a)",
+            page="16.1-113",
+            connection_type=connection_type,
+            evaluator=chapter_06_end_plate.run_step7_3_1_end_plate_hole_tearout,
+            source_document="AISC 360-22",
+        ),
+        _bind(
+            rule_id=f"AISC358.06.7.{connection_type}.step7_3_2_end_plate_hole_bearing",
+            name=f"{connection_type} Step 7.3.2 end-plate hole bearing",
+            clause="Chapter 6 / Section 7.3.2 + AISC 360-22 J3.11(a)",
+            page="16.1-113",
+            connection_type=connection_type,
+            evaluator=chapter_06_end_plate.run_step7_3_2_end_plate_hole_bearing,
+            source_document="AISC 360-22",
+        ),
     ]
 
 
@@ -152,6 +170,15 @@ def _chapter6_stiffened_specific_steps(connection_type: str) -> list[RuleBinding
             page="9.2-24",
             connection_type=connection_type,
             evaluator=chapter_06_end_plate.run_step9_1_1_stiffener_beam_weld_shear_rupture,
+        ),
+        _bind(
+            rule_id=f"AISC358.06.7.{connection_type}.step10_1_1_beam_shear_yielding",
+            name=f"{connection_type} Step 10.1.1 beam shear yielding",
+            clause="Chapter 6 / Section 6.7.1 Step 10.1.1 + AISC 360-22 G2.1",
+            page="16.1-77",
+            connection_type=connection_type,
+            evaluator=chapter_06_end_plate.run_step10_1_1_beam_shear_yielding,
+            source_document="AISC 360-22",
         ),
     ]
 

@@ -66,7 +66,7 @@
             "unit": "mm"
           },
           "pitch_pb": {
-            "value": 95.0,
+            "value": 94.996,
             "unit": "mm"
           },
           "edge_de": {
@@ -82,6 +82,10 @@
             "unit": "mm"
           },
           "end_plate_height": {
+            "value": 827.0,
+            "unit": "mm"
+          },
+          "stiffener_height": {
             "value": 110.0,
             "unit": "mm"
           },
@@ -232,22 +236,65 @@
               "scope": "end_plate",
               "clause": "Section 6.3",
               "description": "Derived end-plate height reference",
-              "requirement": "end_plate_height = pfo + de",
-              "formula": "h_ep = pfo + de",
-              "candidate_a_label": "pfo",
+              "requirement": "hp = d + 2*pfo + 2*de",
+              "formula": "hp = d + 2*pfo + 2*de",
+              "candidate_a_label": "d",
               "candidate_a": {
-                "value": 50.0,
+                "value": 607.0,
                 "unit": "mm"
               },
-              "candidate_b_label": "de",
+              "candidate_b_label": "2*pfo + 2*de",
               "candidate_b": {
-                "value": 60.0,
+                "value": 220.0,
                 "unit": "mm"
               },
               "derived_value": {
-                "value": 110.0,
+                "value": 827.0,
                 "unit": "mm"
               }
+            },
+            {
+              "step": "1",
+              "id": "section_6_3.end_plate_h_distances_note",
+              "scope": "end_plate",
+              "clause": "Section 6.3",
+              "description": "Distancias verticales h1, h2, h3 y h4 para trazabilidad geometrica",
+              "requirement": "h1, h2, h3 y h4 medidos desde la mitad del espesor del ala inferior de la viga",
+              "formula": "h1=d-0.5tf+pso+pb; h2=d-0.5tf+pso; h3=d-1.5tf-psi; h4=d-1.5tf-psi-pb",
+              "h1": {
+                "value": 743.346,
+                "unit": "mm"
+              },
+              "h2": {
+                "value": 648.35,
+                "unit": "mm"
+              },
+              "h3": {
+                "value": 529.65,
+                "unit": "mm"
+              },
+              "h4": {
+                "value": 434.654,
+                "unit": "mm"
+              }
+            },
+            {
+              "step": "1",
+              "id": "section_6_7.end_plate_standard_hole_diameter_note",
+              "scope": "end_plate",
+              "clause": "AISC 360-22 Table J3.3",
+              "description": "Diametro estandar de perforacion (dh) para pernos en end plate",
+              "requirement": "dh segun tabla de agujero estandar: d+1/16 (hasta 7/8 in); d+1/8 (>=1 in)",
+              "formula": "dh = d + 1/16 in (db<=7/8 in) else dh = d + 1/8 in",
+              "db": {
+                "value": 28.575,
+                "unit": "mm"
+              },
+              "dh": {
+                "value": 31.75,
+                "unit": "mm"
+              },
+              "hole_add_in": 0.125
             },
             {
               "step": "1",
@@ -287,6 +334,14 @@
               "clause": "Section 6.7",
               "description": "Secuencia de soldadura para conexiones end-plate rigidizadas",
               "requirement": "Para conexiones end-plate rigidizadas, la soldadura entre el ala de la viga y la placa de extremo debe ejecutarse antes de instalar el rigidizador."
+            },
+            {
+              "step": "1",
+              "id": "section_6_7.flange_root_backing_exception_note",
+              "scope": "welds",
+              "clause": "Section 6.7",
+              "description": "Excepcion de respaldo en la raiz cerca del alma de la viga",
+              "requirement": "No se requiere respaldo en la raiz del ala, directamente por encima y por debajo del alma de la viga, en una longitud igual a 1.5k1. En esa ubicacion se permite una soldadura de ranura PJP de profundidad completa."
             },
             {
               "step": "1",
@@ -657,6 +712,56 @@
             },
             {
               "step": "1",
+              "id": "section_6_7_1.stiffener_thickness_minimum",
+              "scope": "end_plate_stiffener",
+              "clause": "Section 6.7.1 Eq. (6.7-9)",
+              "description": "Stiffener thickness minimum requirement",
+              "calculated_symbol": "ts",
+              "limit_symbol": "tbw*(Fyb/Fys)",
+              "calculated": {
+                "value": 12.7,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 11.2,
+                "unit": "mm"
+              },
+              "comparison": "ge",
+              "comparison_text": ">=",
+              "margin": {
+                "value": 1.5,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "section_6_7_1.stiffener_local_buckling_limit",
+              "scope": "end_plate_stiffener",
+              "clause": "Section 6.7.1 Eq. (6.7-10)",
+              "description": "Stiffener local buckling width-thickness limit",
+              "calculated_symbol": "hst/ts",
+              "limit_symbol": "0.56*sqrt(E/Fys)",
+              "calculated": {
+                "value": 8.661417322834646,
+                "unit": "ratio"
+              },
+              "limit": {
+                "value": 13.481461433702425,
+                "unit": "ratio"
+              },
+              "comparison": "le",
+              "comparison_text": "<=",
+              "margin": {
+                "value": 4.820044110867778,
+                "unit": "ratio"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
               "id": "section_6_7.end_plate_beam_web_weld_type_allowed",
               "scope": "welds",
               "clause": "Section 6.7",
@@ -787,7 +892,7 @@
               "calculated_symbol": "pb",
               "limit_symbol": "3db",
               "calculated": {
-                "value": 95.0,
+                "value": 94.996,
                 "unit": "mm"
               },
               "limit": {
@@ -797,7 +902,7 @@
               "comparison": "ge",
               "comparison_text": ">=",
               "margin": {
-                "value": 9.275000000000006,
+                "value": 9.271,
                 "unit": "mm"
               },
               "status": "PASS",
@@ -1418,6 +1523,56 @@
             },
             {
               "step": "1",
+              "id": "section_6_7_1.stiffener_thickness_minimum",
+              "scope": "end_plate_stiffener",
+              "clause": "Section 6.7.1 Eq. (6.7-9)",
+              "description": "Stiffener thickness minimum requirement",
+              "calculated_symbol": "ts",
+              "limit_symbol": "tbw*(Fyb/Fys)",
+              "calculated": {
+                "value": 12.7,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 11.2,
+                "unit": "mm"
+              },
+              "comparison": "ge",
+              "comparison_text": ">=",
+              "margin": {
+                "value": 1.5,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "section_6_7_1.stiffener_local_buckling_limit",
+              "scope": "end_plate_stiffener",
+              "clause": "Section 6.7.1 Eq. (6.7-10)",
+              "description": "Stiffener local buckling width-thickness limit",
+              "calculated_symbol": "hst/ts",
+              "limit_symbol": "0.56*sqrt(E/Fys)",
+              "calculated": {
+                "value": 8.661417322834646,
+                "unit": "ratio"
+              },
+              "limit": {
+                "value": 13.481461433702425,
+                "unit": "ratio"
+              },
+              "comparison": "le",
+              "comparison_text": "<=",
+              "margin": {
+                "value": 4.820044110867778,
+                "unit": "ratio"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
               "id": "section_6_7.end_plate_beam_web_weld_type_allowed",
               "scope": "welds",
               "clause": "Section 6.7",
@@ -1548,7 +1703,7 @@
               "calculated_symbol": "pb",
               "limit_symbol": "3db",
               "calculated": {
-                "value": 95.0,
+                "value": 94.996,
                 "unit": "mm"
               },
               "limit": {
@@ -1558,7 +1713,7 @@
               "comparison": "ge",
               "comparison_text": ">=",
               "margin": {
-                "value": 9.275000000000006,
+                "value": 9.271,
                 "unit": "mm"
               },
               "status": "PASS",
@@ -1844,14 +1999,865 @@
         "final_capacity": null
       },
       "notes": null
+    },
+    {
+      "name": "bseep_4es Step 2 probable maximum moment at plastic hinge",
+      "rule_id": "AISC358.06.7.bseep_4es.step2_probable_moment_plastic_hinge",
+      "clause": "Chapter 6 / Section 6.7.1 Step 2 + Eq. (2.4-1) and Eq. (2.4-2)",
+      "source_document": "AISC 358-22",
+      "demand": {
+        "value": 1434180.0000000002,
+        "unit": "kN-mm"
+      },
+      "capacity": {
+        "value": 1434180.0000000002,
+        "unit": "kN-mm"
+      },
+      "dcr": 1.0,
+      "status": "PASS",
+      "calculation_memory": {
+        "inputs": {
+          "beam_fy": {
+            "value": 345.0,
+            "unit": "MPa"
+          },
+          "beam_fu": {
+            "value": 450.0,
+            "unit": "MPa"
+          },
+          "ry": 1.1,
+          "ze": {
+            "value": 3280000.0,
+            "unit": "mm3"
+          },
+          "ze_source": "sections_catalog_zx",
+          "ze_input": null,
+          "stated_mpr": null
+        },
+        "intermediates": {
+          "cpr": 1.1521739130434783,
+          "ry": 1.1,
+          "nmm_to_knmm": 0.001
+        },
+        "design_factors": {},
+        "equation": "Mpr = Cpr * Ry * Fy * Ze (Eq. 2.4-1 and Eq. 2.4-2)",
+        "units_trace": {
+          "mpr_computed": "kN-mm",
+          "mpr_stated": "kN-mm"
+        },
+        "final_capacity": {
+          "value": 1434180.0000000002,
+          "unit": "kN-mm"
+        }
+      },
+      "notes": null
+    },
+    {
+      "name": "bseep_4es Step 3 plastic hinge distance from column face",
+      "rule_id": "AISC358.06.7.bseep_4es.step3_plastic_hinge_distance",
+      "clause": "Chapter 6 / Section 6.7.1 Step 3 + Eq. (6.7-1) and Eq. (6.7-2)",
+      "source_document": "AISC 358-22",
+      "demand": {
+        "value": 215.92558883257652,
+        "unit": "mm"
+      },
+      "capacity": {
+        "value": 215.92558883257652,
+        "unit": "mm"
+      },
+      "dcr": 1.0,
+      "status": "PASS",
+      "calculation_memory": {
+        "inputs": {
+          "connection_type": "bseep_4es",
+          "beam_shape": "W24X76",
+          "stiffener_length": {
+            "value": 190.52558883257652,
+            "unit": "mm"
+          },
+          "end_plate_thickness": {
+            "value": 25.4,
+            "unit": "mm"
+          }
+        },
+        "intermediates": {},
+        "design_factors": {},
+        "equation": "Sh from connection-specific rules (Eq. 6.7-1 or Eq. 6.7-2)",
+        "units_trace": {
+          "sh": "mm"
+        },
+        "final_capacity": {
+          "value": 215.92558883257652,
+          "unit": "mm"
+        }
+      },
+      "notes": null
+    },
+    {
+      "name": "bseep_4es Step 4 shear force at plastic hinge",
+      "rule_id": "AISC358.06.7.bseep_4es.step4_shear_at_plastic_hinge",
+      "clause": "Chapter 6 / Section 6.7.1 Step 4 + Eq. (2.4-3)",
+      "source_document": "AISC 358-22",
+      "demand": {
+        "value": 515.0134960629922,
+        "unit": "kN"
+      },
+      "capacity": {
+        "value": 515.0134960629922,
+        "unit": "kN"
+      },
+      "dcr": 1.0,
+      "status": "PASS",
+      "calculation_memory": {
+        "inputs": {
+          "lh": {
+            "value": 6096.0,
+            "unit": "mm"
+          },
+          "vgravity_between_hinges": {
+            "value": 44.482,
+            "unit": "kN"
+          },
+          "stated_vh": null
+        },
+        "intermediates": {
+          "2mpr_over_lh": 470.5314960629922
+        },
+        "design_factors": {},
+        "equation": "Vh = 2*Mpr/Lh + Vgravity (Eq. 2.4-3)",
+        "units_trace": {
+          "vh_computed": "kN",
+          "vh_stated": "kN"
+        },
+        "final_capacity": {
+          "value": 515.0134960629922,
+          "unit": "kN"
+        }
+      },
+      "notes": null
+    },
+    {
+      "name": "bseep_4es Step 5 probable maximum moment at face of column",
+      "rule_id": "AISC358.06.7.bseep_4es.step5_probable_moment_face_column",
+      "clause": "Chapter 6 / Section 6.7.1 Step 5 + Eq. (2.4-4)",
+      "source_document": "AISC 358-22",
+      "demand": {
+        "value": 1545384.5923941256,
+        "unit": "kN-mm"
+      },
+      "capacity": {
+        "value": 1545384.5923941256,
+        "unit": "kN-mm"
+      },
+      "dcr": 1.0,
+      "status": "PASS",
+      "calculation_memory": {
+        "inputs": {
+          "stated_mf": {
+            "value": 677908.974,
+            "unit": "kN-mm"
+          }
+        },
+        "intermediates": {
+          "cpr": 1.1521739130434783,
+          "ry": 1.1,
+          "nmm_to_knmm": 0.001,
+          "2mpr_over_lh": 470.5314960629922,
+          "sh": 215.92558883257652,
+          "mpr": 1434180.0000000002,
+          "vh": 515.0134960629922
+        },
+        "design_factors": {},
+        "equation": "Mf = Mpr + Vh * Sh (Eq. 2.4-4)",
+        "units_trace": {
+          "mf_computed": "kN-mm"
+        },
+        "final_capacity": {
+          "value": 1545384.5923941256,
+          "unit": "kN-mm"
+        }
+      },
+      "notes": null
+    },
+    {
+      "name": "bseep_4es Step 6.1 bolt tension rupture capacity",
+      "rule_id": "AISC358.06.7.bseep_4es.step6_1_bolt_tension_rupture",
+      "clause": "Chapter 6 / Section 6.7.1 Step 6.1 + AISC 360-22 J3.7",
+      "source_document": "AISC 358-22",
+      "demand": {
+        "value": 243.55497680527935,
+        "unit": "kN"
+      },
+      "capacity": {
+        "value": 450.193760569405,
+        "unit": "kN"
+      },
+      "dcr": 0.5410003383814805,
+      "status": "PASS",
+      "calculation_memory": {
+        "inputs": {
+          "mf": {
+            "value": 677908.974,
+            "unit": "kN-mm"
+          },
+          "mf_source": "loads.probable_moment_column_face",
+          "mf_computed": {
+            "value": 1545384.5923941256,
+            "unit": "kN-mm"
+          },
+          "h1": {
+            "value": 743.346,
+            "unit": "mm"
+          },
+          "h2": {
+            "value": 648.35,
+            "unit": "mm"
+          },
+          "h3": {
+            "value": 529.65,
+            "unit": "mm"
+          },
+          "h4": {
+            "value": 434.654,
+            "unit": "mm"
+          },
+          "bolt_diameter": {
+            "value": 28.575,
+            "unit": "mm"
+          },
+          "bolt_fnt": {
+            "value": 780.0,
+            "unit": "MPa"
+          },
+          "connection_type": "bseep_4es"
+        },
+        "intermediates": {
+          "sum_h": 1391.696,
+          "bolt_area": 641.3016532327706,
+          "nominal_tension_capacity_per_bolt": 500.2152895215611,
+          "pu": 243.55497680527935,
+          "phi_pn": 450.193760569405
+        },
+        "design_factors": {
+          "phi": 0.9
+        },
+        "equation": "Pub = Mf / (2*(h1 + h2)); phiPnb = phi * Ab * Fnt, Ab = pi*db^2/4, phi = 0.9 (AISC 360-22 J3.7)",
+        "units_trace": {
+          "pu": "kN",
+          "phi_pn": "kN"
+        },
+        "final_capacity": {
+          "value": 450.193760569405,
+          "unit": "kN"
+        }
+      },
+      "notes": null
+    },
+    {
+      "name": "bseep_4es Step 6.2 bolt shear rupture capacity",
+      "rule_id": "AISC358.06.7.bseep_4es.step6_2_bolt_shear_rupture",
+      "clause": "Chapter 6 / Section 6.7.1 Step 6.2 + AISC 360-22 J3.7",
+      "source_document": "AISC 358-22",
+      "demand": {
+        "value": 128.75337401574805,
+        "unit": "kN"
+      },
+      "capacity": {
+        "value": 271.270599317462,
+        "unit": "kN"
+      },
+      "dcr": 0.47463077215039745,
+      "status": "PASS",
+      "calculation_memory": {
+        "inputs": {
+          "vh": {
+            "value": 515.0134960629922,
+            "unit": "kN"
+          },
+          "vh_source": "step4_computed_vh",
+          "vh_computed": {
+            "value": 515.0134960629922,
+            "unit": "kN"
+          },
+          "nb": 4,
+          "bolt_diameter": {
+            "value": 28.575,
+            "unit": "mm"
+          },
+          "bolt_fnv": {
+            "value": 470.0,
+            "unit": "MPa"
+          },
+          "connection_type": "bseep_4es"
+        },
+        "intermediates": {
+          "bolt_area": 641.3016532327706,
+          "nominal_shear_capacity_per_bolt": 301.41177701940217,
+          "vup": 128.75337401574805,
+          "phi_vnp": 271.270599317462
+        },
+        "design_factors": {
+          "phi": 0.9
+        },
+        "equation": "Vub = Vh/nb, phiVnb = phi * Ab * Fnv, Ab = pi*db^2/4, nb = 4 (4E/4ES) or 8 (8ES), phi = 0.9 (AISC 360-22 J3.7)",
+        "units_trace": {
+          "vup": "kN",
+          "phi_vnp": "kN"
+        },
+        "final_capacity": {
+          "value": 271.270599317462,
+          "unit": "kN"
+        }
+      },
+      "notes": null
+    },
+    {
+      "name": "bseep_4es Step 7.1.1 end-plate flexural yielding",
+      "rule_id": "AISC358.06.7.bseep_4es.step7_1_1_end_plate_flexural_yielding",
+      "clause": "Chapter 6 / Section 6.7.1 Step 7.1.1 + Eq. (6.7-8)",
+      "source_document": "AISC 358-22",
+      "demand": {
+        "value": 677908.974,
+        "unit": "kN-mm"
+      },
+      "capacity": {
+        "value": 1497174.625684733,
+        "unit": "kN-mm"
+      },
+      "dcr": 0.4527921876113538,
+      "status": "PASS",
+      "calculation_memory": {
+        "inputs": {
+          "mf": {
+            "value": 677908.974,
+            "unit": "kN-mm"
+          },
+          "mf_source": "loads.probable_moment_column_face",
+          "mf_computed": {
+            "value": 1545384.5923941256,
+            "unit": "kN-mm"
+          },
+          "tp": {
+            "value": 25.4,
+            "unit": "mm"
+          },
+          "fyp": {
+            "value": 345.0,
+            "unit": "MPa"
+          },
+          "yp": {
+            "value": 7473.833529990205,
+            "unit": "mm"
+          },
+          "yp_source": "derived_from_aisc358_tables_6_2_6_3_6_4",
+          "yp_table": "AISC 358-22 Table 6.3",
+          "yp_case": "Case 1 (de <= s)"
+        },
+        "intermediates": {
+          "nominal_moment": 1663527.3618719256,
+          "design_moment": 1497174.625684733,
+          "table_reference": "AISC 358-22 Table 6.3",
+          "case_reference": "Case 1 (de <= s)",
+          "formula": "Yp = bp/2*[h2*(1/pfi + 1/s) + h1*(1/pfo + 1/(2de))] + (2/g)*[h2*(pfi + s) + h1*(de + pfo)]",
+          "s": {
+            "value": 98.17993685066212,
+            "unit": "mm"
+          },
+          "pfi_input": {
+            "value": 50.0,
+            "unit": "mm"
+          },
+          "pfi_effective": {
+            "value": 50.0,
+            "unit": "mm"
+          },
+          "de": {
+            "value": 60.0,
+            "unit": "mm"
+          },
+          "de_le_s": true
+        },
+        "design_factors": {
+          "phi": 0.9
+        },
+        "equation": "Mup = Mf; phiMnb = phi * tp^2 * Fyp * Yp (AISC 358-22 Eq. 6.7-8)",
+        "units_trace": {
+          "mup": "kN-mm",
+          "phi_mnb": "kN-mm"
+        },
+        "final_capacity": {
+          "value": 1497174.625684733,
+          "unit": "kN-mm"
+        }
+      },
+      "notes": null
+    },
+    {
+      "name": "bseep_4es Step 7.2.1 end-plate shear yielding",
+      "rule_id": "AISC358.06.7.bseep_4es.step7_2_1_end_plate_shear_yielding",
+      "clause": "Chapter 6 / Section 6.7.1 Step 7.2.1 + Eq. (6.7-10)",
+      "source_document": "AISC 358-22",
+      "demand": {
+        "value": 574.7913973206715,
+        "unit": "kN"
+      },
+      "capacity": {
+        "value": 1197.20106,
+        "unit": "kN"
+      },
+      "dcr": 0.48011266989746193,
+      "status": "PASS",
+      "calculation_memory": {
+        "inputs": {
+          "mf": {
+            "value": 677908.974,
+            "unit": "kN-mm"
+          },
+          "mf_source": "loads.probable_moment_column_face",
+          "mf_computed": {
+            "value": 1545384.5923941256,
+            "unit": "kN-mm"
+          },
+          "d": {
+            "value": 607.0,
+            "unit": "mm"
+          },
+          "tbf": {
+            "value": 17.3,
+            "unit": "mm"
+          },
+          "bp": {
+            "value": 253.0,
+            "unit": "mm"
+          },
+          "tp": {
+            "value": 25.4,
+            "unit": "mm"
+          },
+          "fyp": {
+            "value": 345.0,
+            "unit": "MPa"
+          }
+        },
+        "intermediates": {
+          "lever_arm": 589.7,
+          "nominal_shear": 1330.2233999999999,
+          "design_shear": 1197.20106
+        },
+        "design_factors": {
+          "phi": 0.9
+        },
+        "equation": "Vup = Mf / (2*(d - tbf)); phiVnb = phi * 0.6 * Fyp * bp * tp (AISC 358-22 Eq. 6.7-10)",
+        "units_trace": {
+          "vup": "kN",
+          "phi_vnb": "kN"
+        },
+        "final_capacity": {
+          "value": 1197.20106,
+          "unit": "kN"
+        }
+      },
+      "notes": null
+    },
+    {
+      "name": "bseep_4es Step 7.2.2 end-plate shear rupture",
+      "rule_id": "AISC358.06.7.bseep_4es.step7_2_2_end_plate_shear_rupture",
+      "clause": "Chapter 6 / Section 6.7.1 Step 7.2.2 + Eq. (6.7-12)",
+      "source_document": "AISC 358-22",
+      "demand": {
+        "value": 574.7913973206715,
+        "unit": "kN"
+      },
+      "capacity": {
+        "value": 1169.6319,
+        "unit": "kN"
+      },
+      "dcr": 0.4914293097859861,
+      "status": "PASS",
+      "calculation_memory": {
+        "inputs": {
+          "mf": {
+            "value": 677908.974,
+            "unit": "kN-mm"
+          },
+          "mf_source": "loads.probable_moment_column_face",
+          "mf_computed": {
+            "value": 1545384.5923941256,
+            "unit": "kN-mm"
+          },
+          "d": {
+            "value": 607.0,
+            "unit": "mm"
+          },
+          "tbf": {
+            "value": 17.3,
+            "unit": "mm"
+          },
+          "bp": {
+            "value": 253.0,
+            "unit": "mm"
+          },
+          "tp": {
+            "value": 25.4,
+            "unit": "mm"
+          },
+          "fup": {
+            "value": 450.0,
+            "unit": "MPa"
+          },
+          "db": {
+            "value": 28.575,
+            "unit": "mm"
+          },
+          "dh": {
+            "value": 31.75,
+            "unit": "mm"
+          }
+        },
+        "intermediates": {
+          "lever_arm": 589.7,
+          "net_width": 189.5,
+          "nominal_shear": 1299.591,
+          "design_shear": 1169.6319,
+          "db_in": 1.125,
+          "hole_add_in": 0.125
+        },
+        "design_factors": {
+          "phi": 0.9
+        },
+        "equation": "Vup = Mf / (2*(d - tbf)); phiVnb = phi * 0.6 * Fup * tp * (bp - 2*dh) (AISC 358-22 Eq. 6.7-12)",
+        "units_trace": {
+          "vup": "kN",
+          "phi_vnb": "kN"
+        },
+        "final_capacity": {
+          "value": 1169.6319,
+          "unit": "kN"
+        }
+      },
+      "notes": null
+    },
+    {
+      "name": "bseep_4es Step 7.3.1 end-plate hole tearout",
+      "rule_id": "AISC358.06.7.bseep_4es.step7_3_1_end_plate_hole_tearout",
+      "clause": "Chapter 6 / Section 7.3.1 + AISC 360-22 J3.11(a)",
+      "source_document": "AISC 360-22",
+      "demand": {
+        "value": 128.75337401574805,
+        "unit": "kN"
+      },
+      "capacity": {
+        "value": 1056.0634200000002,
+        "unit": "kN"
+      },
+      "dcr": 0.12191822155505398,
+      "status": "PASS",
+      "calculation_memory": {
+        "inputs": {
+          "vh": {
+            "value": 515.0134960629922,
+            "unit": "kN"
+          },
+          "vh_source": "step4_computed_vh",
+          "vh_computed": {
+            "value": 515.0134960629922,
+            "unit": "kN"
+          },
+          "nb": 4,
+          "lc": {
+            "value": 85.55,
+            "unit": "mm"
+          },
+          "tp": {
+            "value": 25.4,
+            "unit": "mm"
+          },
+          "fup": {
+            "value": 450.0,
+            "unit": "MPa"
+          },
+          "pb": {
+            "value": 94.996,
+            "unit": "mm"
+          },
+          "pfo": {
+            "value": 50.0,
+            "unit": "mm"
+          },
+          "pfi": {
+            "value": 50.0,
+            "unit": "mm"
+          },
+          "de": {
+            "value": 60.0,
+            "unit": "mm"
+          },
+          "tbf": {
+            "value": 17.3,
+            "unit": "mm"
+          },
+          "db": {
+            "value": 28.575,
+            "unit": "mm"
+          },
+          "dh": {
+            "value": 31.75,
+            "unit": "mm"
+          }
+        },
+        "intermediates": {
+          "lc_1_pb_minus_dh": 63.245999999999995,
+          "lc_2_pfo_plus_pfi_plus_tbf_minus_dh": 85.55,
+          "lc_rule_selector": 2.0,
+          "dh": 31.75,
+          "db": 28.575,
+          "db_in": 1.125,
+          "hole_add_in": 0.125,
+          "vu2p": 128.75337401574805,
+          "nominal_strength": 1173.4038,
+          "design_strength": 1056.0634200000002
+        },
+        "design_factors": {
+          "phi": 0.9
+        },
+        "equation": "Vu2p = Vh/nb; phiVn2p = phi * 1.2 * lc * tp * Fup (AISC 360-22 J3.11a)",
+        "units_trace": {
+          "vu2p": "kN",
+          "phi_vn2p": "kN"
+        },
+        "final_capacity": {
+          "value": 1056.0634200000002,
+          "unit": "kN"
+        }
+      },
+      "notes": null
+    },
+    {
+      "name": "bseep_4es Step 7.3.2 end-plate hole bearing",
+      "rule_id": "AISC358.06.7.bseep_4es.step7_3_2_end_plate_hole_bearing",
+      "clause": "Chapter 6 / Section 7.3.2 + AISC 360-22 J3.11(a)",
+      "source_document": "AISC 360-22",
+      "demand": {
+        "value": 128.75337401574805,
+        "unit": "kN"
+      },
+      "capacity": {
+        "value": 744.98454,
+        "unit": "kN"
+      },
+      "dcr": 0.17282690727481143,
+      "status": "PASS",
+      "calculation_memory": {
+        "inputs": {
+          "vh": {
+            "value": 515.0134960629922,
+            "unit": "kN"
+          },
+          "vh_source": "step4_computed_vh",
+          "vh_computed": {
+            "value": 515.0134960629922,
+            "unit": "kN"
+          },
+          "nb": 4,
+          "lc": {
+            "value": 85.55,
+            "unit": "mm"
+          },
+          "tp": {
+            "value": 25.4,
+            "unit": "mm"
+          },
+          "fup": {
+            "value": 450.0,
+            "unit": "MPa"
+          },
+          "db": {
+            "value": 28.575,
+            "unit": "mm"
+          },
+          "db_plus_1p6mm": {
+            "value": 30.175,
+            "unit": "mm"
+          },
+          "dh": {
+            "value": 31.75,
+            "unit": "mm"
+          }
+        },
+        "intermediates": {
+          "lc_1_pb_minus_dh": 63.245999999999995,
+          "lc_2_pfo_plus_pfi_plus_tbf_minus_dh": 85.55,
+          "lc_rule_selector": 2.0,
+          "dh": 31.75,
+          "db": 28.575,
+          "db_in": 1.125,
+          "hole_add_in": 0.125,
+          "vu2p": 128.75337401574805,
+          "nominal_strength": 827.7606,
+          "design_strength": 744.98454,
+          "db_plus_1p6mm": 30.175
+        },
+        "design_factors": {
+          "phi": 0.9
+        },
+        "equation": "Vu2p = Vh/nb; phiVn2p = phi * 2.4 * (db + 1.6 mm) * tp * Fup (AISC 360-22 J3.11a)",
+        "units_trace": {
+          "vu2p": "kN",
+          "phi_vn2p": "kN"
+        },
+        "final_capacity": {
+          "value": 744.98454,
+          "unit": "kN"
+        }
+      },
+      "notes": null
+    },
+    {
+      "name": "bseep_4es Step 8.1.1 stiffener weld tension rupture",
+      "rule_id": "AISC358.06.7.bseep_4es.step8_1_1_stiffener_weld_tension_rupture",
+      "clause": "Chapter 6 / Section 6.7.1 Step 8.1.1 + AISC 360-22 J2.4",
+      "source_document": "AISC 358-22",
+      "demand": {
+        "value": 0.0,
+        "unit": "ratio"
+      },
+      "capacity": {
+        "value": 1.0,
+        "unit": "ratio"
+      },
+      "dcr": 0.0,
+      "status": "PASS",
+      "calculation_memory": {
+        "inputs": {
+          "end_plate_stiffener_weld_type": "CJP",
+          "weld_type_normalized": "cjp"
+        },
+        "intermediates": {},
+        "design_factors": {},
+        "equation": "CJP => cumple (AISC 360-22 J2.4)",
+        "units_trace": {
+          "dcr": "ratio"
+        },
+        "final_capacity": {
+          "value": 1.0,
+          "unit": "ratio"
+        }
+      },
+      "notes": null
+    },
+    {
+      "name": "bseep_4es Step 9.1.1 stiffener-beam weld shear rupture",
+      "rule_id": "AISC358.06.7.bseep_4es.step9_1_1_stiffener_beam_weld_shear_rupture",
+      "clause": "Chapter 6 / Section 6.7.1 Step 9.1.1 + AISC 360-22 J2.4",
+      "source_document": "AISC 358-22",
+      "demand": {
+        "value": 0.0,
+        "unit": "ratio"
+      },
+      "capacity": {
+        "value": 1.0,
+        "unit": "ratio"
+      },
+      "dcr": 0.0,
+      "status": "PASS",
+      "calculation_memory": {
+        "inputs": {
+          "beam_stiffener_weld_type": "CJP",
+          "weld_type_source": "geometry.beam_stiffener_weld_type",
+          "weld_type_normalized": "cjp"
+        },
+        "intermediates": {},
+        "design_factors": {},
+        "equation": "CJP => cumple (AISC 360-22 J2.4)",
+        "units_trace": {
+          "dcr": "ratio"
+        },
+        "final_capacity": {
+          "value": 1.0,
+          "unit": "ratio"
+        }
+      },
+      "notes": null
+    },
+    {
+      "name": "bseep_4es Step 10.1.1 beam shear yielding",
+      "rule_id": "AISC358.06.7.bseep_4es.step10_1_1_beam_shear_yielding",
+      "clause": "Chapter 6 / Section 6.7.1 Step 10.1.1 + AISC 360-22 G2.1",
+      "source_document": "AISC 360-22",
+      "demand": {
+        "value": 515.0134960629922,
+        "unit": "kN"
+      },
+      "capacity": {
+        "value": 1407.2687999999998,
+        "unit": "kN"
+      },
+      "dcr": 0.3659666838794353,
+      "status": "PASS",
+      "calculation_memory": {
+        "inputs": {
+          "vh": {
+            "value": 515.0134960629922,
+            "unit": "kN"
+          },
+          "vh_source": "step4_computed_vh",
+          "vh_computed": {
+            "value": 515.0134960629922,
+            "unit": "kN"
+          },
+          "fybm": {
+            "value": 345.0,
+            "unit": "MPa"
+          },
+          "tw_bm": {
+            "value": 11.2,
+            "unit": "mm"
+          },
+          "d": {
+            "value": 607.0,
+            "unit": "mm"
+          },
+          "kdes": {
+            "value": 30.0,
+            "unit": "mm"
+          },
+          "elastic_modulus": {
+            "value": 199947.965,
+            "unit": "MPa"
+          },
+          "cv1": 1.0
+        },
+        "intermediates": {
+          "h_clear": 547.0,
+          "h_over_tw": 48.839285714285715,
+          "kv": 5.34,
+          "lambda_r": 61.19448163647211,
+          "cv1": 1.0,
+          "nominal_shear": 1407.2687999999998,
+          "design_shear": 1407.2687999999998
+        },
+        "design_factors": {
+          "phi": 1.0
+        },
+        "equation": "Vubm = Vh; phiVnbm = phi * 0.6 * Fybm * tw,bm * d * Cv1 (AISC 360-22 G2.1, Eq. G2-3/G2-4; kv=5.34 for webs without transverse stiffeners)",
+        "units_trace": {
+          "vubm": "kN",
+          "phi_vnbm": "kN"
+        },
+        "final_capacity": {
+          "value": 1407.2687999999998,
+          "unit": "kN"
+        }
+      },
+      "notes": null
     }
   ],
   "errors": [],
   "summary": {
-    "pass_count": 1,
+    "pass_count": 15,
     "fail_count": 0,
     "error_count": 0,
     "not_implemented_count": 0,
-    "worst_dcr": null
+    "worst_dcr": 1.0
   }
 }

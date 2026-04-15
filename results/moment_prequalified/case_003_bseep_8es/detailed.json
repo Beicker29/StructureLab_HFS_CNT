@@ -102,6 +102,22 @@
             "unit": "mm"
           },
           "column_slab_connection_condition": "isolated",
+          "column_end_distance_to_beam_flange_stc": {
+            "value": 762.0,
+            "unit": "mm"
+          },
+          "column_stc_min": {
+            "value": 217.49599999999998,
+            "unit": "mm"
+          },
+          "beam_sc": {
+            "value": 617.004,
+            "unit": "mm"
+          },
+          "beam_s_threshold": {
+            "value": 100.74720839804942,
+            "unit": "mm"
+          },
           "beam_ductility_demand": "high",
           "column_ductility_demand": "high",
           "pu_viga": {
@@ -458,6 +474,24 @@
             },
             {
               "step": "1",
+              "id": "section_6_3_1.beam_sc_greater_than_s_threshold",
+              "scope": "beam",
+              "clause": "Section 6.3.1 (beam clearance criterion)",
+              "description": "Beam clearance criterion using Sc and S threshold",
+              "calculated_symbol": "Sc",
+              "limit_symbol": "compound",
+              "comparison": "compound",
+              "comparison_text": "compound",
+              "verification_text": "Sc = Stc - pfo - pb; S = 0.5*sqrt(bcf*g); Sc > S => 617.004 mm > 100.747 mm",
+              "calculated": {
+                "value": 617.004,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
               "id": "section_2_3_4.clear_span_to_depth_ratio",
               "scope": "beam",
               "clause": "Section 2.3.4 (5)",
@@ -613,6 +647,31 @@
               "comparison_text": "==",
               "calculated_text": "isolated",
               "expected_text": "isolated",
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "section_6_3_1.column_stc_minimum_requirement",
+              "scope": "column",
+              "clause": "Section 6.3.1 (column top clearance criterion)",
+              "description": "Stc >= pfo + pb + de + 12.5 mm",
+              "calculated_symbol": "Stc",
+              "limit_symbol": "Stc_min",
+              "calculated": {
+                "value": 762.0,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 217.49599999999998,
+                "unit": "mm"
+              },
+              "comparison": "ge",
+              "comparison_text": ">=",
+              "margin": {
+                "value": 544.504,
+                "unit": "mm"
+              },
               "status": "PASS",
               "result": "OK"
             },
@@ -1274,6 +1333,24 @@
             },
             {
               "step": "1",
+              "id": "section_6_3_1.beam_sc_greater_than_s_threshold",
+              "scope": "beam",
+              "clause": "Section 6.3.1 (beam clearance criterion)",
+              "description": "Beam clearance criterion using Sc and S threshold",
+              "calculated_symbol": "Sc",
+              "limit_symbol": "compound",
+              "comparison": "compound",
+              "comparison_text": "compound",
+              "verification_text": "Sc = Stc - pfo - pb; S = 0.5*sqrt(bcf*g); Sc > S => 617.004 mm > 100.747 mm",
+              "calculated": {
+                "value": 617.004,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
               "id": "section_2_3_4.clear_span_to_depth_ratio",
               "scope": "beam",
               "clause": "Section 2.3.4 (5)",
@@ -1429,6 +1506,31 @@
               "comparison_text": "==",
               "calculated_text": "isolated",
               "expected_text": "isolated",
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "section_6_3_1.column_stc_minimum_requirement",
+              "scope": "column",
+              "clause": "Section 6.3.1 (column top clearance criterion)",
+              "description": "Stc >= pfo + pb + de + 12.5 mm",
+              "calculated_symbol": "Stc",
+              "limit_symbol": "Stc_min",
+              "calculated": {
+                "value": 762.0,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 217.49599999999998,
+                "unit": "mm"
+              },
+              "comparison": "ge",
+              "comparison_text": ">=",
+              "margin": {
+                "value": 544.504,
+                "unit": "mm"
+              },
               "status": "PASS",
               "result": "OK"
             },
@@ -2548,6 +2650,181 @@
       "notes": null
     },
     {
+      "name": "bseep_8es Step 7.3.1 end-plate hole tearout",
+      "rule_id": "AISC358.06.7.bseep_8es.step7_3_1_end_plate_hole_tearout",
+      "clause": "Chapter 6 / Section 7.3.1 + AISC 360-22 J3.11(a)",
+      "source_document": "AISC 360-22",
+      "demand": {
+        "value": 64.37668700787403,
+        "unit": "kN"
+      },
+      "capacity": {
+        "value": 780.7339223999998,
+        "unit": "kN"
+      },
+      "dcr": 0.08245662851433191,
+      "status": "PASS",
+      "calculation_memory": {
+        "inputs": {
+          "vh": {
+            "value": 515.0134960629922,
+            "unit": "kN"
+          },
+          "vh_source": "step4_computed_vh",
+          "vh_computed": {
+            "value": 515.0134960629922,
+            "unit": "kN"
+          },
+          "nb": 8,
+          "lc": {
+            "value": 63.245999999999995,
+            "unit": "mm"
+          },
+          "tp": {
+            "value": 25.4,
+            "unit": "mm"
+          },
+          "fup": {
+            "value": 450.0,
+            "unit": "MPa"
+          },
+          "pb": {
+            "value": 94.996,
+            "unit": "mm"
+          },
+          "pfo": {
+            "value": 50.0,
+            "unit": "mm"
+          },
+          "pfi": {
+            "value": 50.0,
+            "unit": "mm"
+          },
+          "de": {
+            "value": 60.0,
+            "unit": "mm"
+          },
+          "tbf": {
+            "value": 17.3,
+            "unit": "mm"
+          },
+          "db": {
+            "value": 28.575,
+            "unit": "mm"
+          },
+          "dh": {
+            "value": 31.75,
+            "unit": "mm"
+          }
+        },
+        "intermediates": {
+          "lc_1_pb_minus_dh": 63.245999999999995,
+          "lc_2_pfo_plus_pfi_plus_tbf_minus_dh": 85.55,
+          "lc_rule_selector": 1.0,
+          "dh": 31.75,
+          "db": 28.575,
+          "db_in": 1.125,
+          "hole_add_in": 0.125,
+          "vu2p": 64.37668700787403,
+          "nominal_strength": 867.4821359999999,
+          "design_strength": 780.7339223999998
+        },
+        "design_factors": {
+          "phi": 0.9
+        },
+        "equation": "Vu2p = Vh/nb; phiVn2p = phi * 1.2 * lc * tp * Fup (AISC 360-22 J3.11a)",
+        "units_trace": {
+          "vu2p": "kN",
+          "phi_vn2p": "kN"
+        },
+        "final_capacity": {
+          "value": 780.7339223999998,
+          "unit": "kN"
+        }
+      },
+      "notes": null
+    },
+    {
+      "name": "bseep_8es Step 7.3.2 end-plate hole bearing",
+      "rule_id": "AISC358.06.7.bseep_8es.step7_3_2_end_plate_hole_bearing",
+      "clause": "Chapter 6 / Section 7.3.2 + AISC 360-22 J3.11(a)",
+      "source_document": "AISC 360-22",
+      "demand": {
+        "value": 64.37668700787403,
+        "unit": "kN"
+      },
+      "capacity": {
+        "value": 744.98454,
+        "unit": "kN"
+      },
+      "dcr": 0.08641345363740571,
+      "status": "PASS",
+      "calculation_memory": {
+        "inputs": {
+          "vh": {
+            "value": 515.0134960629922,
+            "unit": "kN"
+          },
+          "vh_source": "step4_computed_vh",
+          "vh_computed": {
+            "value": 515.0134960629922,
+            "unit": "kN"
+          },
+          "nb": 8,
+          "lc": {
+            "value": 63.245999999999995,
+            "unit": "mm"
+          },
+          "tp": {
+            "value": 25.4,
+            "unit": "mm"
+          },
+          "fup": {
+            "value": 450.0,
+            "unit": "MPa"
+          },
+          "db": {
+            "value": 28.575,
+            "unit": "mm"
+          },
+          "db_plus_1p6mm": {
+            "value": 30.175,
+            "unit": "mm"
+          },
+          "dh": {
+            "value": 31.75,
+            "unit": "mm"
+          }
+        },
+        "intermediates": {
+          "lc_1_pb_minus_dh": 63.245999999999995,
+          "lc_2_pfo_plus_pfi_plus_tbf_minus_dh": 85.55,
+          "lc_rule_selector": 1.0,
+          "dh": 31.75,
+          "db": 28.575,
+          "db_in": 1.125,
+          "hole_add_in": 0.125,
+          "vu2p": 64.37668700787403,
+          "nominal_strength": 827.7606,
+          "design_strength": 744.98454,
+          "db_plus_1p6mm": 30.175
+        },
+        "design_factors": {
+          "phi": 0.9
+        },
+        "equation": "Vu2p = Vh/nb; phiVn2p = phi * 2.4 * (db + 1.6 mm) * tp * Fup (AISC 360-22 J3.11a)",
+        "units_trace": {
+          "vu2p": "kN",
+          "phi_vn2p": "kN"
+        },
+        "final_capacity": {
+          "value": 744.98454,
+          "unit": "kN"
+        }
+      },
+      "notes": null
+    },
+    {
       "name": "bseep_8es Step 8.1.1 stiffener weld tension rupture",
       "rule_id": "AISC358.06.7.bseep_8es.step8_1_1_stiffener_weld_tension_rupture",
       "clause": "Chapter 6 / Section 6.7.1 Step 8.1.1 + AISC 360-22 J2.4",
@@ -2680,11 +2957,83 @@
         }
       },
       "notes": null
+    },
+    {
+      "name": "bseep_8es Step 10.1.1 beam shear yielding",
+      "rule_id": "AISC358.06.7.bseep_8es.step10_1_1_beam_shear_yielding",
+      "clause": "Chapter 6 / Section 6.7.1 Step 10.1.1 + AISC 360-22 G2.1",
+      "source_document": "AISC 360-22",
+      "demand": {
+        "value": 515.0134960629922,
+        "unit": "kN"
+      },
+      "capacity": {
+        "value": 1407.2687999999998,
+        "unit": "kN"
+      },
+      "dcr": 0.3659666838794353,
+      "status": "PASS",
+      "calculation_memory": {
+        "inputs": {
+          "vh": {
+            "value": 515.0134960629922,
+            "unit": "kN"
+          },
+          "vh_source": "step4_computed_vh",
+          "vh_computed": {
+            "value": 515.0134960629922,
+            "unit": "kN"
+          },
+          "fybm": {
+            "value": 345.0,
+            "unit": "MPa"
+          },
+          "tw_bm": {
+            "value": 11.2,
+            "unit": "mm"
+          },
+          "d": {
+            "value": 607.0,
+            "unit": "mm"
+          },
+          "kdes": {
+            "value": 30.0,
+            "unit": "mm"
+          },
+          "elastic_modulus": {
+            "value": 200000.0,
+            "unit": "MPa"
+          },
+          "cv1": 1.0
+        },
+        "intermediates": {
+          "h_clear": 547.0,
+          "h_over_tw": 48.839285714285715,
+          "kv": 5.34,
+          "lambda_r": 61.20244382730794,
+          "cv1": 1.0,
+          "nominal_shear": 1407.2687999999998,
+          "design_shear": 1407.2687999999998
+        },
+        "design_factors": {
+          "phi": 1.0
+        },
+        "equation": "Vubm = Vh; phiVnbm = phi * 0.6 * Fybm * tw,bm * d * Cv1 (AISC 360-22 G2.1, Eq. G2-3/G2-4; kv=5.34 for webs without transverse stiffeners)",
+        "units_trace": {
+          "vubm": "kN",
+          "phi_vnbm": "kN"
+        },
+        "final_capacity": {
+          "value": 1407.2687999999998,
+          "unit": "kN"
+        }
+      },
+      "notes": null
     }
   ],
   "errors": [],
   "summary": {
-    "pass_count": 12,
+    "pass_count": 15,
     "fail_count": 0,
     "error_count": 0,
     "not_implemented_count": 0,

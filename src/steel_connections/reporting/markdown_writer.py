@@ -157,6 +157,7 @@ def _collect_step_6_1_bolt_tension(result: DetailedRunResult) -> dict | None:
             "capacity": check.capacity.model_dump(),
             "inputs": check.calculation_memory.inputs,
             "intermediates": check.calculation_memory.intermediates,
+            "design_factors": check.calculation_memory.design_factors,
             "equation": check.calculation_memory.equation,
             "dcr": check.dcr,
         }
@@ -175,6 +176,7 @@ def _collect_step_6_2_bolt_shear(result: DetailedRunResult) -> dict | None:
             "capacity": check.capacity.model_dump(),
             "inputs": check.calculation_memory.inputs,
             "intermediates": check.calculation_memory.intermediates,
+            "design_factors": check.calculation_memory.design_factors,
             "equation": check.calculation_memory.equation,
             "dcr": check.dcr,
         }
@@ -193,6 +195,7 @@ def _collect_step_7_1_1_end_plate_flexural(result: DetailedRunResult) -> dict | 
             "capacity": check.capacity.model_dump(),
             "inputs": check.calculation_memory.inputs,
             "intermediates": check.calculation_memory.intermediates,
+            "design_factors": check.calculation_memory.design_factors,
             "equation": check.calculation_memory.equation,
             "dcr": check.dcr,
         }
@@ -211,6 +214,7 @@ def _collect_step_7_2_1_end_plate_shear_yielding(result: DetailedRunResult) -> d
             "capacity": check.capacity.model_dump(),
             "inputs": check.calculation_memory.inputs,
             "intermediates": check.calculation_memory.intermediates,
+            "design_factors": check.calculation_memory.design_factors,
             "equation": check.calculation_memory.equation,
             "dcr": check.dcr,
         }
@@ -229,6 +233,45 @@ def _collect_step_7_2_2_end_plate_shear_rupture(result: DetailedRunResult) -> di
             "capacity": check.capacity.model_dump(),
             "inputs": check.calculation_memory.inputs,
             "intermediates": check.calculation_memory.intermediates,
+            "design_factors": check.calculation_memory.design_factors,
+            "equation": check.calculation_memory.equation,
+            "dcr": check.dcr,
+        }
+    return None
+
+
+def _collect_step_7_3_1_end_plate_hole_tearout(result: DetailedRunResult) -> dict | None:
+    for check in result.checks:
+        if ".step7_3_1_end_plate_hole_tearout" not in check.rule_id:
+            continue
+        return {
+            "rule_id": check.rule_id,
+            "clause": check.clause,
+            "status": check.status.value,
+            "demand": check.demand.model_dump(),
+            "capacity": check.capacity.model_dump(),
+            "inputs": check.calculation_memory.inputs,
+            "intermediates": check.calculation_memory.intermediates,
+            "design_factors": check.calculation_memory.design_factors,
+            "equation": check.calculation_memory.equation,
+            "dcr": check.dcr,
+        }
+    return None
+
+
+def _collect_step_7_3_2_end_plate_hole_bearing(result: DetailedRunResult) -> dict | None:
+    for check in result.checks:
+        if ".step7_3_2_end_plate_hole_bearing" not in check.rule_id:
+            continue
+        return {
+            "rule_id": check.rule_id,
+            "clause": check.clause,
+            "status": check.status.value,
+            "demand": check.demand.model_dump(),
+            "capacity": check.capacity.model_dump(),
+            "inputs": check.calculation_memory.inputs,
+            "intermediates": check.calculation_memory.intermediates,
+            "design_factors": check.calculation_memory.design_factors,
             "equation": check.calculation_memory.equation,
             "dcr": check.dcr,
         }
@@ -247,6 +290,7 @@ def _collect_step_8_1_1_stiffener_weld_tension_rupture(result: DetailedRunResult
             "capacity": check.capacity.model_dump(),
             "inputs": check.calculation_memory.inputs,
             "intermediates": check.calculation_memory.intermediates,
+            "design_factors": check.calculation_memory.design_factors,
             "equation": check.calculation_memory.equation,
             "dcr": check.dcr,
         }
@@ -265,6 +309,26 @@ def _collect_step_9_1_1_stiffener_beam_weld_shear_rupture(result: DetailedRunRes
             "capacity": check.capacity.model_dump(),
             "inputs": check.calculation_memory.inputs,
             "intermediates": check.calculation_memory.intermediates,
+            "design_factors": check.calculation_memory.design_factors,
+            "equation": check.calculation_memory.equation,
+            "dcr": check.dcr,
+        }
+    return None
+
+
+def _collect_step_10_1_1_beam_shear_yielding(result: DetailedRunResult) -> dict | None:
+    for check in result.checks:
+        if ".step10_1_1_beam_shear_yielding" not in check.rule_id:
+            continue
+        return {
+            "rule_id": check.rule_id,
+            "clause": check.clause,
+            "status": check.status.value,
+            "demand": check.demand.model_dump(),
+            "capacity": check.capacity.model_dump(),
+            "inputs": check.calculation_memory.inputs,
+            "intermediates": check.calculation_memory.intermediates,
+            "design_factors": check.calculation_memory.design_factors,
             "equation": check.calculation_memory.equation,
             "dcr": check.dcr,
         }
@@ -431,6 +495,7 @@ def _render_step_6_bolts(step_6_1: dict | None, step_6_2: dict | None) -> str:
     ]
     if step_6_1 is not None:
         inputs = step_6_1.get("inputs", {})
+        design_factors = step_6_1.get("design_factors", {})
         lines.extend(
             [
                 "### 6.1 Revision de capacidad a traccion",
@@ -439,6 +504,7 @@ def _render_step_6_bolts(step_6_1: dict | None, step_6_2: dict | None) -> str:
                 "",
                 f"- Clausula: `{_format_text(step_6_1.get('clause'))}`",
                 f"- Ecuacion: `{_format_text(step_6_1.get('equation'))}`",
+                f"- phi usado: `{_format_text(design_factors.get('phi'))}`",
                 f"- h1: `{_format_quantity(inputs.get('h1'))}`",
                 f"- h2: `{_format_quantity(inputs.get('h2'))}`",
                 f"- h3: `{_format_quantity(inputs.get('h3'))}`",
@@ -452,6 +518,7 @@ def _render_step_6_bolts(step_6_1: dict | None, step_6_2: dict | None) -> str:
         )
     if step_6_2 is not None:
         inputs = step_6_2.get("inputs", {})
+        design_factors = step_6_2.get("design_factors", {})
         lines.extend(
             [
                 "### 6.2 Revision de capacidad a cortante",
@@ -460,6 +527,7 @@ def _render_step_6_bolts(step_6_1: dict | None, step_6_2: dict | None) -> str:
                 "",
                 f"- Clausula: `{_format_text(step_6_2.get('clause'))}`",
                 f"- Ecuacion: `{_format_text(step_6_2.get('equation'))}`",
+                f"- phi usado: `{_format_text(design_factors.get('phi'))}`",
                 f"- Vh: `{_format_quantity(inputs.get('vh'))}`",
                 f"- nb: `{_format_text(inputs.get('nb'))}`",
                 f"- Vub: `{_format_quantity(step_6_2.get('demand'))}`",
@@ -472,7 +540,13 @@ def _render_step_6_bolts(step_6_1: dict | None, step_6_2: dict | None) -> str:
     return "\n".join(lines)
 
 
-def _render_step_7_end_plate(step_7_1_1: dict | None, step_7_2_1: dict | None, step_7_2_2: dict | None) -> str:
+def _render_step_7_end_plate(
+    step_7_1_1: dict | None,
+    step_7_2_1: dict | None,
+    step_7_2_2: dict | None,
+    step_7_3_1: dict | None,
+    step_7_3_2: dict | None,
+) -> str:
     lines = [
         "## Paso 7 - Revision de resistencia end plate",
         "",
@@ -480,6 +554,7 @@ def _render_step_7_end_plate(step_7_1_1: dict | None, step_7_2_1: dict | None, s
     if step_7_1_1 is not None:
         inputs = step_7_1_1.get("inputs", {})
         inter = step_7_1_1.get("intermediates", {})
+        design_factors = step_7_1_1.get("design_factors", {})
         lines.extend(
             [
                 "### 7.1. Revision de capacidad a flexion",
@@ -488,9 +563,10 @@ def _render_step_7_end_plate(step_7_1_1: dict | None, step_7_2_1: dict | None, s
                 "",
                 f"- Clausula: `{_format_text(step_7_1_1.get('clause'))}`",
                 f"- Ecuacion: `{_format_text(step_7_1_1.get('equation'))}`",
+                f"- phi usado: `{_format_text(design_factors.get('phi'))}`",
                 f"- Mup: `{_format_quantity(step_7_1_1.get('demand'))}`",
                 f"- phiMnb: `{_format_quantity(step_7_1_1.get('capacity'))}`",
-                f"- DCEpm: `{_format_text(step_7_1_1.get('dcr'))}`",
+                f"- DCRpm: `{_format_text(step_7_1_1.get('dcr'))}`",
                 f"- Yp calculado: `{_format_quantity(inputs.get('yp'))}`",
                 f"- Tabla Yp aplicada: `{_format_text(inputs.get('yp_table'))}`",
                 f"- Caso Yp: `{_format_text(inputs.get('yp_case'))}`",
@@ -503,17 +579,19 @@ def _render_step_7_end_plate(step_7_1_1: dict | None, step_7_2_1: dict | None, s
         )
     if step_7_2_1 is not None:
         inputs = step_7_2_1.get("inputs", {})
+        design_factors = step_7_2_1.get("design_factors", {})
         lines.extend(
             [
-                "### 7.2. Revision de capacidad a cortante",
+                "### 7.2. Revision de capacidad a cortante perpendicular al plano de la platina",
                 "",
                 "#### 7.2.1. Eje #1: Fluencia por cortante (AISC 358-22 G7-10)",
                 "",
                 f"- Clausula: `{_format_text(step_7_2_1.get('clause'))}`",
                 f"- Ecuacion: `{_format_text(step_7_2_1.get('equation'))}`",
+                f"- phi usado: `{_format_text(design_factors.get('phi'))}`",
                 f"- Vup: `{_format_quantity(step_7_2_1.get('demand'))}`",
-                f"- phiVnb: `{_format_quantity(step_7_2_1.get('capacity'))}`",
-                f"- DCEpv: `{_format_text(step_7_2_1.get('dcr'))}`",
+                f"- phiVn1p: `{_format_quantity(step_7_2_1.get('capacity'))}`",
+                f"- DCRpv: `{_format_text(step_7_2_1.get('dcr'))}`",
                 f"- d (altura viga): `{_format_quantity(inputs.get('d'))}`",
                 f"- Resultado: `{_format_text(step_7_2_1.get('status'))}`",
                 "",
@@ -521,18 +599,67 @@ def _render_step_7_end_plate(step_7_1_1: dict | None, step_7_2_1: dict | None, s
         )
     if step_7_2_2 is not None:
         inputs = step_7_2_2.get("inputs", {})
+        design_factors = step_7_2_2.get("design_factors", {})
         lines.extend(
             [
                 "#### 7.2.2. Eje #2: Rotura por cortante (AISC 358-22 G7-12)",
                 "",
                 f"- Clausula: `{_format_text(step_7_2_2.get('clause'))}`",
                 f"- Ecuacion: `{_format_text(step_7_2_2.get('equation'))}`",
+                f"- phi usado: `{_format_text(design_factors.get('phi'))}`",
                 f"- Vup: `{_format_quantity(step_7_2_2.get('demand'))}`",
                 f"- phiVnb: `{_format_quantity(step_7_2_2.get('capacity'))}`",
-                f"- DCEpv: `{_format_text(step_7_2_2.get('dcr'))}`",
+                f"- DCRpv: `{_format_text(step_7_2_2.get('dcr'))}`",
                 f"- dh (diametro agujero estandar): `{_format_quantity(inputs.get('dh'))}`",
                 f"- d (altura viga): `{_format_quantity(inputs.get('d'))}`",
                 f"- Resultado: `{_format_text(step_7_2_2.get('status'))}`",
+                "",
+            ]
+        )
+    if step_7_3_1 is not None or step_7_3_2 is not None:
+        lines.extend(
+            [
+                "### 7.3. Revision de capacidad a cortante paralelo al plano de la platina",
+                "",
+            ]
+        )
+    if step_7_3_1 is not None:
+        inputs = step_7_3_1.get("inputs", {})
+        design_factors = step_7_3_1.get("design_factors", {})
+        lines.extend(
+            [
+                "#### 7.3.1. ELR #1: Desgarramiento en la perforacion del perno (AISC 360-22 J3.11a)",
+                "",
+                f"- Clausula: `{_format_text(step_7_3_1.get('clause'))}`",
+                f"- Ecuacion: `{_format_text(step_7_3_1.get('equation'))}`",
+                f"- phi usado: `{_format_text(design_factors.get('phi'))}`",
+                f"- Vu2p: `{_format_quantity(step_7_3_1.get('demand'))}`",
+                f"- phiVn2p: `{_format_quantity(step_7_3_1.get('capacity'))}`",
+                f"- DCRpn2: `{_format_text(step_7_3_1.get('dcr'))}`",
+                f"- lc: `{_format_quantity(inputs.get('lc'))}`",
+                f"- dh: `{_format_quantity(inputs.get('dh'))}`",
+                f"- db: `{_format_quantity(inputs.get('db'))}`",
+                f"- Resultado: `{_format_text(step_7_3_1.get('status'))}`",
+                "",
+            ]
+        )
+    if step_7_3_2 is not None:
+        inputs = step_7_3_2.get("inputs", {})
+        design_factors = step_7_3_2.get("design_factors", {})
+        lines.extend(
+            [
+                "#### 7.3.2. ELR #2: Aplastamiento en la perforacion del perno (AISC 360-22 J3.11a)",
+                "",
+                f"- Clausula: `{_format_text(step_7_3_2.get('clause'))}`",
+                f"- Ecuacion: `{_format_text(step_7_3_2.get('equation'))}`",
+                f"- phi usado: `{_format_text(design_factors.get('phi'))}`",
+                f"- Vu2p: `{_format_quantity(step_7_3_2.get('demand'))}`",
+                f"- phiVn2p: `{_format_quantity(step_7_3_2.get('capacity'))}`",
+                f"- DCRpn2: `{_format_text(step_7_3_2.get('dcr'))}`",
+                f"- lc: `{_format_quantity(inputs.get('lc'))}`",
+                f"- dh: `{_format_quantity(inputs.get('dh'))}`",
+                f"- db: `{_format_quantity(inputs.get('db'))}`",
+                f"- Resultado: `{_format_text(step_7_3_2.get('status'))}`",
                 "",
             ]
         )
@@ -543,6 +670,7 @@ def _render_step_8_stiffener_weld(step_8_1_1: dict | None) -> str:
     if step_8_1_1 is None:
         return ""
     inputs = step_8_1_1.get("inputs", {})
+    design_factors = step_8_1_1.get("design_factors", {})
     weld_type = _format_text(inputs.get("weld_type_normalized"))
     lines = [
         "## Paso 8 - Revision de Resistencia soldadura #1",
@@ -554,6 +682,7 @@ def _render_step_8_stiffener_weld(step_8_1_1: dict | None) -> str:
         "",
         f"- Clausula: `{_format_text(step_8_1_1.get('clause'))}`",
         f"- Ecuacion: `{_format_text(step_8_1_1.get('equation'))}`",
+        f"- phi usado: `{_format_text(design_factors.get('phi'))}`",
         f"- Tipo soldadura rigidizador: `{weld_type}`",
     ]
     if weld_type == "cjp":
@@ -584,6 +713,7 @@ def _render_step_9_stiffener_beam_weld(step_9_1_1: dict | None) -> str:
     if step_9_1_1 is None:
         return ""
     inputs = step_9_1_1.get("inputs", {})
+    design_factors = step_9_1_1.get("design_factors", {})
     weld_type = _format_text(inputs.get("weld_type_normalized"))
     lines = [
         "## Paso 9 - Revision de resistencia soldadura #2",
@@ -595,6 +725,7 @@ def _render_step_9_stiffener_beam_weld(step_9_1_1: dict | None) -> str:
         "",
         f"- Clausula: `{_format_text(step_9_1_1.get('clause'))}`",
         f"- Ecuacion: `{_format_text(step_9_1_1.get('equation'))}`",
+        f"- phi usado: `{_format_text(design_factors.get('phi'))}`",
         f"- Tipo soldadura viga-rigidizador: `{weld_type}`",
     ]
     if weld_type == "cjp":
@@ -618,6 +749,35 @@ def _render_step_9_stiffener_beam_weld(step_9_1_1: dict | None) -> str:
             "",
         ]
     )
+    return "\n".join(lines)
+
+
+def _render_step_10_beam_shear(step_10_1_1: dict | None) -> str:
+    if step_10_1_1 is None:
+        return ""
+    inputs = step_10_1_1.get("inputs", {})
+    inter = step_10_1_1.get("intermediates", {})
+    design_factors = step_10_1_1.get("design_factors", {})
+    lines = [
+        "## Paso 10 - Revision de resistencia de la viga",
+        "",
+        "### 10.1. Revision de capacidad a cortante",
+        "",
+        "#### 10.1.1. ELR #1: Fluencia por cortante (AISC 360-22 G2.1)",
+        "",
+        f"- Clausula: `{_format_text(step_10_1_1.get('clause'))}`",
+        f"- Ecuacion: `{_format_text(step_10_1_1.get('equation'))}`",
+        f"- phi usado: `{_format_text(design_factors.get('phi'))}`",
+        f"- Vubm: `{_format_quantity(step_10_1_1.get('demand'))}`",
+        f"- phiVnbm: `{_format_quantity(step_10_1_1.get('capacity'))}`",
+        f"- DCRbm,v: `{_format_text(step_10_1_1.get('dcr'))}`",
+        f"- Cv1: `{_format_text(inputs.get('cv1'))}`",
+        f"- kv: `{_format_text(inter.get('kv'))}`",
+        f"- h/tw: `{_format_text(inter.get('h_over_tw'))}`",
+        f"- h: `{_format_text(inter.get('h_clear'))}`",
+        f"- Resultado: `{_format_text(step_10_1_1.get('status'))}`",
+        "",
+    ]
     return "\n".join(lines)
 
 
@@ -708,8 +868,11 @@ def render_memory_markdown(result: DetailedRunResult) -> str:
     step_7_1_1 = _collect_step_7_1_1_end_plate_flexural(result)
     step_7_2_1 = _collect_step_7_2_1_end_plate_shear_yielding(result)
     step_7_2_2 = _collect_step_7_2_2_end_plate_shear_rupture(result)
+    step_7_3_1 = _collect_step_7_3_1_end_plate_hole_tearout(result)
+    step_7_3_2 = _collect_step_7_3_2_end_plate_hole_bearing(result)
     step_8_1_1 = _collect_step_8_1_1_stiffener_weld_tension_rupture(result)
     step_9_1_1 = _collect_step_9_1_1_stiffener_beam_weld_shear_rupture(result)
+    step_10_1_1 = _collect_step_10_1_1_beam_shear_yielding(result)
     content = [
         "# Memoria de Calculo",
         "",
@@ -740,12 +903,20 @@ def render_memory_markdown(result: DetailedRunResult) -> str:
         content.append(_render_step_5_mf(step_5))
     if step_6_1 is not None or step_6_2 is not None:
         content.append(_render_step_6_bolts(step_6_1, step_6_2))
-    if step_7_1_1 is not None or step_7_2_1 is not None or step_7_2_2 is not None:
-        content.append(_render_step_7_end_plate(step_7_1_1, step_7_2_1, step_7_2_2))
+    if (
+        step_7_1_1 is not None
+        or step_7_2_1 is not None
+        or step_7_2_2 is not None
+        or step_7_3_1 is not None
+        or step_7_3_2 is not None
+    ):
+        content.append(_render_step_7_end_plate(step_7_1_1, step_7_2_1, step_7_2_2, step_7_3_1, step_7_3_2))
     if step_8_1_1 is not None:
         content.append(_render_step_8_stiffener_weld(step_8_1_1))
     if step_9_1_1 is not None:
         content.append(_render_step_9_stiffener_beam_weld(step_9_1_1))
+    if step_10_1_1 is not None:
+        content.append(_render_step_10_beam_shear(step_10_1_1))
     content.append("")
     return "\n".join(content)
 

@@ -61,10 +61,19 @@ def test_example_results_folder_and_geometry_artifact() -> None:
     assert "#### 7.1.1. ELR #1: Fluencia (AISC 358-22 .7-8)" in memory
     assert "#### 7.2.1. Eje #1: Fluencia por cortante (AISC 358-22 G7-10)" in memory
     assert "#### 7.2.2. Eje #2: Rotura por cortante (AISC 358-22 G7-12)" in memory
+    assert "### 7.3. Revision de capacidad a cortante paralelo al plano de la platina" in memory
+    assert "#### 7.3.1. ELR #1: Desgarramiento en la perforacion del perno (AISC 360-22 J3.11a)" in memory
+    assert "#### 7.3.2. ELR #2: Aplastamiento en la perforacion del perno (AISC 360-22 J3.11a)" in memory
+    assert "phiVn2p" in memory
+    assert "lc:" in memory
     assert "## Paso 8 - Revision de Resistencia soldadura #1" in memory
     assert "#### 8.1.1. ELR #1: Rotura de la soldadura (AISC 360-22 J2.4)" in memory
     assert "## Paso 9 - Revision de resistencia soldadura #2" in memory
     assert "#### 9.1.1. ELR #1: Rotura de la soldadura (AISC 360-22 J2.4)" in memory
+    assert "## Paso 10 - Revision de resistencia de la viga" in memory
+    assert "#### 10.1.1. ELR #1: Fluencia por cortante (AISC 360-22 G2.1)" in memory
+    assert "DCRbm,v" in memory
+    assert "Cv1" in memory
     assert "dh (diametro agujero estandar)" in memory
     assert "`bp`" in memory
 

@@ -1021,6 +1021,140 @@ def run_step7_2_2_end_plate_shear_rupture(case: AISC358MomentCase, rule_binding:
     )
 
 
+def _compute_step7_3_lc(case: AISC358MomentCase, rule_binding: object) -> tuple[Quantity, dict[str, float]]:
+    pb = _require(case, "geometry.pb", rule_binding)
+    pfo = _require(case, "geometry.pfo", rule_binding)
+    pfi = _require(case, "geometry.pfi", rule_binding)
+    beam_profile = _beam_profile(case)
+    tbf = beam_profile["tf"]
+    db = _require(case, "geometry.bolt_diameter", rule_binding)
+    dh, dh_inter = _compute_standard_hole_diameter(bolt_diameter=db, unit_system=case.units_system)
+
+    lc_1 = pb.value - dh.value
+    lc_2 = pfo.value + pfi.value + tbf.value - dh.value
+    if case.connection_type == "bseep_8es":
+        lc_value = min(lc_1, lc_2)
+        lc_rule = 1.0  # 1 => min(pb-dh, pfo+pfi+tbf-dh)
+    else:
+        lc_value = lc_2
+        lc_rule = 2.0  # 2 => pfo+pfi+tbf-dh
+    if lc_value <= 0.0:
+        raise ValueError("Computed lc must be positive for Step 7.3 checks.")
+
+    lc = Quantity(value=lc_value, unit=pb.unit)
+    return lc, {
+        "lc_1_pb_minus_dh": lc_1,
+        "lc_2_pfo_plus_pfi_plus_tbf_minus_dh": lc_2,
+        "lc_rule_selector": lc_rule,
+        "dh": dh.value,
+        "db": db.value,
+        **dh_inter,
+    }
+
+
+def run_step7_3_1_end_plate_hole_tearout(case: AISC358MomentCase, rule_binding: object) -> CheckResult:
+    vh_computed, _ = _compute_vh(case, rule_binding)
+    vh_stated = case.loads.shear_plastic_hinge
+    vh = vh_stated if vh_stated is not None else vh_computed
+    vh_source = "loads.shear_plastic_hinge" if vh_stated is not None else "step4_computed_vh"
+    nb = _compression_bolt_count(case)
+    vu2p = Quantity(value=vh.value / float(nb), unit=vh.unit)
+
+    lc, lc_inter = _compute_step7_3_lc(case, rule_binding)
+    tp = _require(case, "geometry.end_plate_thickness", rule_binding)
+    fup = _require(case, "materials.end_plate_fu", rule_binding)
+    phi = 0.9
+
+    nominal_strength = 1.2 * lc.value * tp.value * fup.value
+    design_strength = phi * nominal_strength
+    if case.units_system == UnitSystem.SI:
+        nominal_strength /= 1000.0
+        design_strength /= 1000.0
+    phi_vn2p = Quantity(value=design_strength, unit=vu2p.unit)
+
+    return _build_result(
+        rule_binding=rule_binding,
+        demand=vu2p,
+        capacity=phi_vn2p,
+        equation="Vu2p = Vh/nb; phiVn2p = phi * 1.2 * lc * tp * Fup (AISC 360-22 J3.11a)",
+        inputs={
+            "vh": vh.model_dump(),
+            "vh_source": vh_source,
+            "vh_computed": vh_computed.model_dump(),
+            "nb": nb,
+            "lc": lc.model_dump(),
+            "tp": tp.model_dump(),
+            "fup": fup.model_dump(),
+            "pb": _require(case, "geometry.pb", rule_binding).model_dump(),
+            "pfo": _require(case, "geometry.pfo", rule_binding).model_dump(),
+            "pfi": _require(case, "geometry.pfi", rule_binding).model_dump(),
+            "de": _require(case, "geometry.de", rule_binding).model_dump(),
+            "tbf": _beam_profile(case)["tf"].model_dump(),
+            "db": _require(case, "geometry.bolt_diameter", rule_binding).model_dump(),
+            "dh": Quantity(value=lc_inter["dh"], unit=lc.unit).model_dump(),
+        },
+        intermediates={
+            **lc_inter,
+            "vu2p": vu2p.value,
+            "nominal_strength": nominal_strength,
+            "design_strength": design_strength,
+        },
+        design_factors={"phi": phi},
+        units_trace={"vu2p": vu2p.unit, "phi_vn2p": phi_vn2p.unit},
+    )
+
+
+def run_step7_3_2_end_plate_hole_bearing(case: AISC358MomentCase, rule_binding: object) -> CheckResult:
+    vh_computed, _ = _compute_vh(case, rule_binding)
+    vh_stated = case.loads.shear_plastic_hinge
+    vh = vh_stated if vh_stated is not None else vh_computed
+    vh_source = "loads.shear_plastic_hinge" if vh_stated is not None else "step4_computed_vh"
+    nb = _compression_bolt_count(case)
+    vu2p = Quantity(value=vh.value / float(nb), unit=vh.unit)
+
+    lc, lc_inter = _compute_step7_3_lc(case, rule_binding)
+    tp = _require(case, "geometry.end_plate_thickness", rule_binding)
+    fup = _require(case, "materials.end_plate_fu", rule_binding)
+    db = _require(case, "geometry.bolt_diameter", rule_binding)
+    phi = 0.9
+
+    db_plus_1p6mm = db.value + (1.6 if case.units_system == UnitSystem.SI else 1.6 / 25.4)
+    nominal_strength = 2.4 * db_plus_1p6mm * tp.value * fup.value
+    design_strength = phi * nominal_strength
+    if case.units_system == UnitSystem.SI:
+        nominal_strength /= 1000.0
+        design_strength /= 1000.0
+    phi_vn2p = Quantity(value=design_strength, unit=vu2p.unit)
+
+    return _build_result(
+        rule_binding=rule_binding,
+        demand=vu2p,
+        capacity=phi_vn2p,
+        equation="Vu2p = Vh/nb; phiVn2p = phi * 2.4 * (db + 1.6 mm) * tp * Fup (AISC 360-22 J3.11a)",
+        inputs={
+            "vh": vh.model_dump(),
+            "vh_source": vh_source,
+            "vh_computed": vh_computed.model_dump(),
+            "nb": nb,
+            "lc": lc.model_dump(),
+            "tp": tp.model_dump(),
+            "fup": fup.model_dump(),
+            "db": db.model_dump(),
+            "db_plus_1p6mm": {"value": db_plus_1p6mm, "unit": db.unit},
+            "dh": Quantity(value=lc_inter["dh"], unit=lc.unit).model_dump(),
+        },
+        intermediates={
+            **lc_inter,
+            "vu2p": vu2p.value,
+            "nominal_strength": nominal_strength,
+            "design_strength": design_strength,
+            "db_plus_1p6mm": db_plus_1p6mm,
+        },
+        design_factors={"phi": phi},
+        units_trace={"vu2p": vu2p.unit, "phi_vn2p": phi_vn2p.unit},
+    )
+
+
 def run_step8_1_1_stiffener_weld_tension_rupture(case: AISC358MomentCase, rule_binding: object) -> CheckResult:
     weld_type_raw = case.geometry.end_plate_stiffener_weld_type
     weld_type = _normalize_end_plate_stiffener_weld_type(weld_type_raw)
@@ -1259,6 +1393,70 @@ def run_step9_1_1_stiffener_beam_weld_shear_rupture(case: AISC358MomentCase, rul
     )
 
 
+def run_step10_1_1_beam_shear_yielding(case: AISC358MomentCase, rule_binding: object) -> CheckResult:
+    beam_profile = _beam_profile(case)
+    d = beam_profile["d"]
+    tw = beam_profile["tw"]
+    kdes = _profile_kdes(beam_profile, role="beam", rule_binding=rule_binding)
+    fybm = _require(case, "materials.beam_fy", rule_binding)
+    elastic_modulus = _require(case, "materials.elastic_modulus", rule_binding)
+    vh_computed, _ = _compute_vh(case, rule_binding)
+    vh_stated = case.loads.shear_plastic_hinge
+    vh_source = "loads.shear_plastic_hinge" if vh_stated is not None else "step4_computed_vh"
+    vubm = vh_stated if vh_stated is not None else vh_computed
+
+    h_over_tw, web_intermediate = compute_web_slenderness_ratio(
+        section_depth=d,
+        k_design=kdes,
+        web_thickness=tw,
+        unit_system=case.units_system,
+    )
+    h_clear = web_intermediate["clear_web_depth"]
+    kv = 5.34
+    lambda_r = 1.10 * math.sqrt(kv * elastic_modulus.value / fybm.value)
+    cv1 = 1.0 if h_over_tw <= lambda_r + 1e-9 else lambda_r / h_over_tw
+    phi = 1.0
+
+    nominal_shear = 0.6 * fybm.value * tw.value * d.value * cv1
+    design_shear = phi * nominal_shear
+    if case.units_system == UnitSystem.SI:
+        nominal_shear /= 1000.0
+        design_shear /= 1000.0
+    phi_vnbm = Quantity(value=design_shear, unit=vubm.unit)
+
+    return _build_result(
+        rule_binding=rule_binding,
+        demand=vubm,
+        capacity=phi_vnbm,
+        equation=(
+            "Vubm = Vh; phiVnbm = phi * 0.6 * Fybm * tw,bm * d * Cv1 "
+            "(AISC 360-22 G2.1, Eq. G2-3/G2-4; kv=5.34 for webs without transverse stiffeners)"
+        ),
+        inputs={
+            "vh": vubm.model_dump(),
+            "vh_source": vh_source,
+            "vh_computed": vh_computed.model_dump(),
+            "fybm": fybm.model_dump(),
+            "tw_bm": tw.model_dump(),
+            "d": d.model_dump(),
+            "kdes": kdes.model_dump(),
+            "elastic_modulus": elastic_modulus.model_dump(),
+            "cv1": cv1,
+        },
+        intermediates={
+            "h_clear": h_clear,
+            "h_over_tw": h_over_tw,
+            "kv": kv,
+            "lambda_r": lambda_r,
+            "cv1": cv1,
+            "nominal_shear": nominal_shear,
+            "design_shear": design_shear,
+        },
+        design_factors={"phi": phi},
+        units_trace={"vubm": vubm.unit, "phi_vnbm": phi_vnbm.unit},
+    )
+
+
 def run_step5_preliminary_geometry_selection(case: AISC358MomentCase, rule_binding: object) -> CheckResult:
     g = _require(case, "geometry.bolt_gage", rule_binding)
     db = _require(case, "geometry.bolt_diameter", rule_binding)
@@ -1309,6 +1507,7 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
         rule_binding,
     )
     slab_connection_condition = _require(case, "geometry.column_slab_connection_condition", rule_binding)
+    stc = _require(case, "geometry.column_end_distance_to_beam_flange", rule_binding)
     beam_profile = _beam_profile(case)
     column_profile = _column_profile(case)
     bf = beam_profile["bf"]
@@ -1949,6 +2148,24 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
     )
 
     active_table_61 = table_61_limits[case.connection_type]
+    stc_margin = Quantity(
+        value=(12.5 / 25.4) if case.units_system == UnitSystem.US else 12.5,
+        unit="in" if case.units_system == UnitSystem.US else "mm",
+    )
+    if case.connection_type == "bseep_8es":
+        stc_min = Quantity(value=pfo.value + pb.value + de.value + stc_margin.value, unit=stc.unit)
+        stc_formula = "Stc >= pfo + pb + de + 12.5 mm"
+    else:
+        stc_min = Quantity(value=pfo.value + de.value + stc_margin.value, unit=stc.unit)
+        stc_formula = "Stc >= pfo + de + 12.5 mm"
+    s_threshold = Quantity(value=0.5 * math.sqrt(bcf.value * g.value), unit=bcf.unit)
+    if case.connection_type == "bseep_8es":
+        sc = Quantity(value=stc.value - pfo.value - pb.value, unit=stc.unit)
+        sc_formula = "Sc = Stc - pfo - pb"
+    else:
+        sc = Quantity(value=stc.value - pfo.value, unit=stc.unit)
+        sc_formula = "Sc = Stc - pfo"
+    sc_pass = sc.value > s_threshold.value
 
     beam_limits = [
         _step1_shape_family_limit(
@@ -1993,6 +2210,19 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
             calculated=shear_connector_free_length,
             limit=Quantity(value=1.5 * beam_depth.value, unit=beam_depth.unit),
             comparison="ge",
+        ),
+        _step1_compound_limit(
+            check_id="section_6_3_1.beam_sc_greater_than_s_threshold",
+            scope="beam",
+            clause="Section 6.3.1 (beam clearance criterion)",
+            description="Beam clearance criterion using Sc and S threshold",
+            calculated_symbol="Sc",
+            verification_text=(
+                f"{sc_formula}; S = 0.5*sqrt(bcf*g); "
+                f"Sc > S => {sc.value:.3f} {sc.unit} > {s_threshold.value:.3f} {s_threshold.unit}"
+            ),
+            passes=sc_pass,
+            calculated=sc,
         ),
         _step1_limit(
             check_id="section_2_3_4.clear_span_to_depth_ratio",
@@ -2075,6 +2305,17 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
             limit_symbol="isolated",
             calculated_text=str(slab_connection_condition),
             expected_text="isolated",
+        ),
+        _step1_limit(
+            check_id="section_6_3_1.column_stc_minimum_requirement",
+            scope="column",
+            clause="Section 6.3.1 (column top clearance criterion)",
+            description=stc_formula,
+            calculated_symbol="Stc",
+            limit_symbol="Stc_min",
+            calculated=stc,
+            limit=stc_min,
+            comparison="ge",
         ),
         _step1_limit(
             check_id="section_2_3_4.column_flange_width_to_thickness",
@@ -2479,6 +2720,10 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
                 "beam_clear_span_length": beam_clear_span_length.model_dump(),
                 "beam_shear_connector_free_length_from_column_face": shear_connector_free_length.model_dump(),
                 "column_slab_connection_condition": slab_connection_condition,
+                "column_end_distance_to_beam_flange_stc": stc.model_dump(),
+                "column_stc_min": stc_min.model_dump(),
+                "beam_sc": sc.model_dump(),
+                "beam_s_threshold": s_threshold.model_dump(),
                 "beam_ductility_demand": beam_ductility,
                 "column_ductility_demand": column_ductility,
                 "pu_viga": pu_beam.model_dump(),

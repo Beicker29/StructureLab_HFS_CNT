@@ -11,7 +11,7 @@ from steel_connections.models.units import UnitSystem
 def test_bueep_rule_set_runs_without_errors(bueep_4e_payload: dict) -> None:
     result = run_case_payload(bueep_4e_payload)
     assert result.global_status == GlobalStatus.PASS
-    assert len(result.checks) == 10
+    assert len(result.checks) == 12
     assert all(check.status == CheckStatus.PASS for check in result.checks)
 
 def test_bueep_missing_de_fails_hard(bueep_4e_payload: dict) -> None:
@@ -53,7 +53,7 @@ def test_bueep_prequalification_limits_are_reported(bueep_4e_payload: dict) -> N
     assert prequal.status == CheckStatus.PASS
     assert prequal.dcr is None
     limits = prequal.calculation_memory.intermediates["step_1_limits"]
-    assert len(limits) == 29
+    assert len(limits) == 31
     assert {"beam", "column", "end_plate", "end_plate_stiffener", "welds", "continuity_plate", "bolts", "table_6_1"} == {
         item["scope"] for item in limits
     }
@@ -133,6 +133,13 @@ def test_bueep_prequalification_limits_are_reported(bueep_4e_payload: dict) -> N
     compactness_web = next(item for item in limits if item["id"] == "section_2_3_4.beam_web_width_to_thickness")
     assert compactness_web["comparison"] == "le"
     assert compactness_web["result"] == "OK"
+    sc_clearance = next(item for item in limits if item["id"] == "section_6_3_1.beam_sc_greater_than_s_threshold")
+    assert sc_clearance["scope"] == "beam"
+    assert sc_clearance["comparison"] == "compound"
+    assert "Sc > S" in sc_clearance["verification_text"]
+    stc_clearance = next(item for item in limits if item["id"] == "section_6_3_1.column_stc_minimum_requirement")
+    assert stc_clearance["scope"] == "column"
+    assert stc_clearance["comparison"] == "ge"
     tbf_range = next(item for item in limits if item["id"] == "table_6_1.tbf.range")
     assert tbf_range["comparison"] == "range"
     assert tbf_range["result"] == "OK"
@@ -220,12 +227,26 @@ def test_step7_end_plate_capacity_checks_are_reported_for_bseep_8es(bseep_8es_pa
         for check in result.checks
         if check.rule_id == "AISC358.06.7.bseep_8es.step7_2_2_end_plate_shear_rupture"
     )
+    step7_3_1 = next(
+        check
+        for check in result.checks
+        if check.rule_id == "AISC358.06.7.bseep_8es.step7_3_1_end_plate_hole_tearout"
+    )
+    step7_3_2 = next(
+        check
+        for check in result.checks
+        if check.rule_id == "AISC358.06.7.bseep_8es.step7_3_2_end_plate_hole_bearing"
+    )
     assert step7_1.status == CheckStatus.PASS
     assert step7_2_1.status == CheckStatus.PASS
     assert step7_2_2.status == CheckStatus.PASS
+    assert step7_3_1.status == CheckStatus.PASS
+    assert step7_3_2.status == CheckStatus.PASS
     assert step7_1.dcr is not None and step7_1.dcr <= 1.0
     assert step7_2_1.dcr is not None and step7_2_1.dcr <= 1.0
     assert step7_2_2.dcr is not None and step7_2_2.dcr <= 1.0
+    assert step7_3_1.dcr is not None and step7_3_1.dcr <= 1.0
+    assert step7_3_2.dcr is not None and step7_3_2.dcr <= 1.0
 
 
 def test_step8_stiffener_weld_tension_rupture_is_reported_for_bseep_8es(bseep_8es_payload: dict) -> None:
@@ -250,6 +271,19 @@ def test_step9_stiffener_beam_weld_shear_rupture_is_reported_for_bseep_8es(bseep
     assert step9_1_1.status == CheckStatus.PASS
     assert step9_1_1.dcr is not None and step9_1_1.dcr <= 1.0
     assert step9_1_1.calculation_memory.inputs["weld_type_normalized"] == "cjp"
+
+
+def test_step10_beam_shear_yielding_is_reported_for_bseep_8es(bseep_8es_payload: dict) -> None:
+    result = run_case_payload(bseep_8es_payload)
+    step10_1_1 = next(
+        check
+        for check in result.checks
+        if check.rule_id == "AISC358.06.7.bseep_8es.step10_1_1_beam_shear_yielding"
+    )
+    assert step10_1_1.status == CheckStatus.PASS
+    assert step10_1_1.dcr is not None and step10_1_1.dcr <= 1.0
+    assert step10_1_1.calculation_memory.design_factors["phi"] == 1.0
+    assert step10_1_1.calculation_memory.inputs["cv1"] > 0.0
 
 
 def test_step7_yp_is_derived_from_tables_for_bseep_8es(bseep_8es_payload: dict) -> None:
@@ -530,4 +564,4 @@ def test_grouped_geometry_payload_is_supported(bueep_4e_payload: dict) -> None:
 
     result = run_case_payload(bueep_4e_payload)
     assert result.global_status == GlobalStatus.PASS
-    assert len(result.checks) == 10
+    assert len(result.checks) == 12
