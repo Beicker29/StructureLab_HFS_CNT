@@ -73,7 +73,7 @@ def _build_chapter6_detail_svg(case: AISC358MomentCase) -> str:
     h2 = Quantity(value=d.value - 0.5 * tf.value + pso.value, unit=d.unit)
     h3 = Quantity(value=d.value - 1.5 * tf.value - psi.value, unit=d.unit)
     h4 = Quantity(value=d.value - 1.5 * tf.value - psi.value - pb.value, unit=d.unit)
-    hp = Quantity(value=2.0 * (d.value / 2.0 + pso.value + pb.value + de.value), unit=d.unit)
+    hp = Quantity(value=d.value + 2.0 * pso.value + 2.0 * de.value, unit=d.unit)
 
     width = 920
     height = 1160

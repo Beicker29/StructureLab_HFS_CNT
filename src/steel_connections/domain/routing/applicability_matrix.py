@@ -56,6 +56,78 @@ def _chapter6_common_steps(connection_type: str) -> list[RuleBinding]:
             connection_type=connection_type,
             evaluator=chapter_06_end_plate.run_section63_prequalification_limits,
         ),
+        _bind(
+            rule_id=f"AISC358.06.7.{connection_type}.step2_probable_moment_plastic_hinge",
+            name=f"{connection_type} Step 2 probable maximum moment at plastic hinge",
+            clause="Chapter 6 / Section 6.7.1 Step 2 + Eq. (2.4-1) and Eq. (2.4-2)",
+            page="9.2-24",
+            connection_type=connection_type,
+            evaluator=chapter_06_end_plate.run_step1_probable_moment_plastic_hinge,
+        ),
+        _bind(
+            rule_id=f"AISC358.06.7.{connection_type}.step3_plastic_hinge_distance",
+            name=f"{connection_type} Step 3 plastic hinge distance from column face",
+            clause="Chapter 6 / Section 6.7.1 Step 3 + Eq. (6.7-1) and Eq. (6.7-2)",
+            page="9.2-24",
+            connection_type=connection_type,
+            evaluator=chapter_06_end_plate.run_step2_plastic_hinge_distance,
+        ),
+        _bind(
+            rule_id=f"AISC358.06.7.{connection_type}.step4_shear_at_plastic_hinge",
+            name=f"{connection_type} Step 4 shear force at plastic hinge",
+            clause="Chapter 6 / Section 6.7.1 Step 4 + Eq. (2.4-3)",
+            page="9.2-24",
+            connection_type=connection_type,
+            evaluator=chapter_06_end_plate.run_step3_shear_at_plastic_hinge,
+        ),
+        _bind(
+            rule_id=f"AISC358.06.7.{connection_type}.step5_probable_moment_face_column",
+            name=f"{connection_type} Step 5 probable maximum moment at face of column",
+            clause="Chapter 6 / Section 6.7.1 Step 5 + Eq. (2.4-4)",
+            page="9.2-24",
+            connection_type=connection_type,
+            evaluator=chapter_06_end_plate.run_step4_probable_moment_face_column,
+        ),
+        _bind(
+            rule_id=f"AISC358.06.7.{connection_type}.step6_1_bolt_tension_rupture",
+            name=f"{connection_type} Step 6.1 bolt tension rupture capacity",
+            clause="Chapter 6 / Section 6.7.1 Step 6.1 + AISC 360-22 J3.7",
+            page="9.2-24",
+            connection_type=connection_type,
+            evaluator=chapter_06_end_plate.run_step6_1_bolt_tension_rupture,
+        ),
+        _bind(
+            rule_id=f"AISC358.06.7.{connection_type}.step6_2_bolt_shear_rupture",
+            name=f"{connection_type} Step 6.2 bolt shear rupture capacity",
+            clause="Chapter 6 / Section 6.7.1 Step 6.2 + AISC 360-22 J3.7",
+            page="9.2-24",
+            connection_type=connection_type,
+            evaluator=chapter_06_end_plate.run_step6_2_bolt_shear_rupture,
+        ),
+        _bind(
+            rule_id=f"AISC358.06.7.{connection_type}.step7_1_1_end_plate_flexural_yielding",
+            name=f"{connection_type} Step 7.1.1 end-plate flexural yielding",
+            clause="Chapter 6 / Section 6.7.1 Step 7.1.1 + Eq. (6.7-8)",
+            page="9.2-24",
+            connection_type=connection_type,
+            evaluator=chapter_06_end_plate.run_step7_1_1_end_plate_flexural_yielding,
+        ),
+        _bind(
+            rule_id=f"AISC358.06.7.{connection_type}.step7_2_1_end_plate_shear_yielding",
+            name=f"{connection_type} Step 7.2.1 end-plate shear yielding",
+            clause="Chapter 6 / Section 6.7.1 Step 7.2.1 + Eq. (6.7-10)",
+            page="9.2-24",
+            connection_type=connection_type,
+            evaluator=chapter_06_end_plate.run_step7_2_1_end_plate_shear_yielding,
+        ),
+        _bind(
+            rule_id=f"AISC358.06.7.{connection_type}.step7_2_2_end_plate_shear_rupture",
+            name=f"{connection_type} Step 7.2.2 end-plate shear rupture",
+            clause="Chapter 6 / Section 6.7.1 Step 7.2.2 + Eq. (6.7-12)",
+            page="9.2-24",
+            connection_type=connection_type,
+            evaluator=chapter_06_end_plate.run_step7_2_2_end_plate_shear_rupture,
+        ),
     ]
 
 
@@ -64,7 +136,24 @@ def _chapter6_4e_specific_steps() -> list[RuleBinding]:
 
 
 def _chapter6_stiffened_specific_steps(connection_type: str) -> list[RuleBinding]:
-    return []
+    return [
+        _bind(
+            rule_id=f"AISC358.06.7.{connection_type}.step8_1_1_stiffener_weld_tension_rupture",
+            name=f"{connection_type} Step 8.1.1 stiffener weld tension rupture",
+            clause="Chapter 6 / Section 6.7.1 Step 8.1.1 + AISC 360-22 J2.4",
+            page="9.2-24",
+            connection_type=connection_type,
+            evaluator=chapter_06_end_plate.run_step8_1_1_stiffener_weld_tension_rupture,
+        ),
+        _bind(
+            rule_id=f"AISC358.06.7.{connection_type}.step9_1_1_stiffener_beam_weld_shear_rupture",
+            name=f"{connection_type} Step 9.1.1 stiffener-beam weld shear rupture",
+            clause="Chapter 6 / Section 6.7.1 Step 9.1.1 + AISC 360-22 J2.4",
+            page="9.2-24",
+            connection_type=connection_type,
+            evaluator=chapter_06_end_plate.run_step9_1_1_stiffener_beam_weld_shear_rupture,
+        ),
+    ]
 
 
 APPLICABILITY_MATRIX: list[RuleBinding] = [

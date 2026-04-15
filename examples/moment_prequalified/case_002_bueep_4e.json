@@ -149,28 +149,11 @@
   "design_factors": {
     "phi_d": 0.9,
     "phi_n": 0.9,
-    "ry": 1.1,
     "member_ductility_demand_beam": "high",
     "member_ductility_demand_column": "high",
     "column_beam_moment_ratio_minimum": 1.0
   },
   "procedure": {
-    "beam_plastic_section_modulus_ze": {
-      "value": 1310965.12,
-      "unit": "mm3"
-    },
-    "beam_span_between_plastic_hinges_lh": {
-      "value": 6096.0,
-      "unit": "mm"
-    },
-    "yield_line_parameter_yp": {
-      "value": 177.8,
-      "unit": "mm"
-    },
-    "column_yield_line_parameter_yc_unstiffened": {
-      "value": 6350.0,
-      "unit": "mm"
-    },
     "tension_bolt_line_distances": [
       {
         "value": 203.2,

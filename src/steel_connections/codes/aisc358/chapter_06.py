@@ -143,7 +143,7 @@ def compute_vh(
     vgravity_between_hinges: Quantity,
     unit_system: UnitSystem,
 ) -> tuple[Quantity, dict[str, float]]:
-    validate_quantity_unit(lh, "length", unit_system, "procedure.beam_span_between_plastic_hinges_lh")
+    validate_quantity_unit(lh, "length", unit_system, "geometry.beam_clear_span_length")
     validate_quantity_unit(vgravity_between_hinges, "force", unit_system, "loads.beam_gravity_shear_between_hinges")
     base_shear = (2.0 * mpr.value) / lh.value
     vh_value = base_shear + vgravity_between_hinges.value

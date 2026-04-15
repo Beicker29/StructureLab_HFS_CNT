@@ -80,6 +80,14 @@ def _normalize_moment_geometry_payload(payload: dict[str, Any]) -> dict[str, Any
             "end_plate_beam_web_weld_type",
             "end_plate_beam_web_weld_length_lwe",
             "end_plate_beam_web_weld_thickness_twe",
+            "end_plate_stiffener_weld_type",
+            "end_plate_stiffener_weld_length_lst",
+            "end_plate_stiffener_weld_size_wst",
+            "end_plate_stiffener_weld_lines_nl",
+            "beam_stiffener_weld_type",
+            "beam_stiffener_weld_length_lstw2",
+            "beam_stiffener_weld_size_wst2",
+            "beam_stiffener_weld_lines_nl_w2",
         ),
     }
     for group_name, field_names in mapping.items():
@@ -143,6 +151,78 @@ def _normalize_moment_geometry_payload(payload: dict[str, Any]) -> dict[str, Any
                 flat_geometry["end_plate_beam_web_weld_thickness_twe"] = block["end_plate_beam_web_weld_thickness_twe"]
             if "twe" in block and "end_plate_beam_web_weld_thickness_twe" not in flat_geometry:
                 flat_geometry["end_plate_beam_web_weld_thickness_twe"] = block["twe"]
+            if "end_plate_stiffener_weld_type" in block and "end_plate_stiffener_weld_type" not in flat_geometry:
+                flat_geometry["end_plate_stiffener_weld_type"] = block["end_plate_stiffener_weld_type"]
+            if "stiffener_weld_type" in block and "end_plate_stiffener_weld_type" not in flat_geometry:
+                flat_geometry["end_plate_stiffener_weld_type"] = block["stiffener_weld_type"]
+            if (
+                "tipo_soldadura_rigidizador" in block
+                and "end_plate_stiffener_weld_type" not in flat_geometry
+            ):
+                flat_geometry["end_plate_stiffener_weld_type"] = block["tipo_soldadura_rigidizador"]
+            if (
+                "end_plate_stiffener_weld_length_lst" in block
+                and "end_plate_stiffener_weld_length_lst" not in flat_geometry
+            ):
+                flat_geometry["end_plate_stiffener_weld_length_lst"] = block["end_plate_stiffener_weld_length_lst"]
+            if "stiffener_weld_length_lst" in block and "end_plate_stiffener_weld_length_lst" not in flat_geometry:
+                flat_geometry["end_plate_stiffener_weld_length_lst"] = block["stiffener_weld_length_lst"]
+            if "l_st" in block and "end_plate_stiffener_weld_length_lst" not in flat_geometry:
+                flat_geometry["end_plate_stiffener_weld_length_lst"] = block["l_st"]
+            if (
+                "end_plate_stiffener_weld_size_wst" in block
+                and "end_plate_stiffener_weld_size_wst" not in flat_geometry
+            ):
+                flat_geometry["end_plate_stiffener_weld_size_wst"] = block["end_plate_stiffener_weld_size_wst"]
+            if "stiffener_weld_size_wst" in block and "end_plate_stiffener_weld_size_wst" not in flat_geometry:
+                flat_geometry["end_plate_stiffener_weld_size_wst"] = block["stiffener_weld_size_wst"]
+            if "w_st" in block and "end_plate_stiffener_weld_size_wst" not in flat_geometry:
+                flat_geometry["end_plate_stiffener_weld_size_wst"] = block["w_st"]
+            if (
+                "end_plate_stiffener_weld_lines_nl" in block
+                and "end_plate_stiffener_weld_lines_nl" not in flat_geometry
+            ):
+                flat_geometry["end_plate_stiffener_weld_lines_nl"] = block["end_plate_stiffener_weld_lines_nl"]
+            if "stiffener_weld_lines_nl" in block and "end_plate_stiffener_weld_lines_nl" not in flat_geometry:
+                flat_geometry["end_plate_stiffener_weld_lines_nl"] = block["stiffener_weld_lines_nl"]
+            if "n_l" in block and "end_plate_stiffener_weld_lines_nl" not in flat_geometry:
+                flat_geometry["end_plate_stiffener_weld_lines_nl"] = block["n_l"]
+            if "beam_stiffener_weld_type" in block and "beam_stiffener_weld_type" not in flat_geometry:
+                flat_geometry["beam_stiffener_weld_type"] = block["beam_stiffener_weld_type"]
+            if "stiffener_beam_weld_type" in block and "beam_stiffener_weld_type" not in flat_geometry:
+                flat_geometry["beam_stiffener_weld_type"] = block["stiffener_beam_weld_type"]
+            if (
+                "tipo_soldadura_viga_rigidizador" in block
+                and "beam_stiffener_weld_type" not in flat_geometry
+            ):
+                flat_geometry["beam_stiffener_weld_type"] = block["tipo_soldadura_viga_rigidizador"]
+            if (
+                "beam_stiffener_weld_length_lstw2" in block
+                and "beam_stiffener_weld_length_lstw2" not in flat_geometry
+            ):
+                flat_geometry["beam_stiffener_weld_length_lstw2"] = block["beam_stiffener_weld_length_lstw2"]
+            if "stiffener_beam_weld_length_lstw2" in block and "beam_stiffener_weld_length_lstw2" not in flat_geometry:
+                flat_geometry["beam_stiffener_weld_length_lstw2"] = block["stiffener_beam_weld_length_lstw2"]
+            if "l_st_w2" in block and "beam_stiffener_weld_length_lstw2" not in flat_geometry:
+                flat_geometry["beam_stiffener_weld_length_lstw2"] = block["l_st_w2"]
+            if (
+                "beam_stiffener_weld_size_wst2" in block
+                and "beam_stiffener_weld_size_wst2" not in flat_geometry
+            ):
+                flat_geometry["beam_stiffener_weld_size_wst2"] = block["beam_stiffener_weld_size_wst2"]
+            if "stiffener_beam_weld_size_wst2" in block and "beam_stiffener_weld_size_wst2" not in flat_geometry:
+                flat_geometry["beam_stiffener_weld_size_wst2"] = block["stiffener_beam_weld_size_wst2"]
+            if "w_st_2" in block and "beam_stiffener_weld_size_wst2" not in flat_geometry:
+                flat_geometry["beam_stiffener_weld_size_wst2"] = block["w_st_2"]
+            if (
+                "beam_stiffener_weld_lines_nl_w2" in block
+                and "beam_stiffener_weld_lines_nl_w2" not in flat_geometry
+            ):
+                flat_geometry["beam_stiffener_weld_lines_nl_w2"] = block["beam_stiffener_weld_lines_nl_w2"]
+            if "stiffener_beam_weld_lines_nl_w2" in block and "beam_stiffener_weld_lines_nl_w2" not in flat_geometry:
+                flat_geometry["beam_stiffener_weld_lines_nl_w2"] = block["stiffener_beam_weld_lines_nl_w2"]
+            if "n_l_w2" in block and "beam_stiffener_weld_lines_nl_w2" not in flat_geometry:
+                flat_geometry["beam_stiffener_weld_lines_nl_w2"] = block["n_l_w2"]
         if group_name == "bolts":
             if "tightening_type" in block and "bolt_tightening_type" not in flat_geometry:
                 flat_geometry["bolt_tightening_type"] = block["tightening_type"]
@@ -210,13 +290,81 @@ def _resolve_catalog_driven_properties(case: AISC358MomentCase) -> None:
     # Profiles: Fy/Fu are always sourced from materials.xlsx/HRS.
     profile_type = _require_text(case.materials.profile_steel_type, "materials.profile_steel_type", "data/materials.xlsx")
     profile_props = get_hrs_steel_properties(steel_type=profile_type, unit_system=case.units_system)
+    if case.design_factors.ry is not None:
+        _raise_validation_error(
+            message=(
+                "Input 'design_factors.ry' is no longer allowed. "
+                "Ry is now derived automatically from data/materials.xlsx (sheet HRS) "
+                "using materials.profile_steel_type."
+            ),
+            missing_fields=["design_factors.ry"],
+            source_document="data/materials.xlsx",
+        )
     case.materials.beam_fy = profile_props["fy"]  # type: ignore[assignment]
     case.materials.beam_fu = profile_props["fu"]  # type: ignore[assignment]
     case.materials.column_fy = profile_props["fy"]  # type: ignore[assignment]
     case.materials.column_fu = profile_props["fu"]  # type: ignore[assignment]
+    ry_catalog = float(profile_props["ry"])  # type: ignore[arg-type]
+    if ry_catalog < 1.0:
+        _raise_validation_error(
+            message=(
+                f"Invalid Ry='{ry_catalog}' from data/materials.xlsx (sheet HRS) for "
+                f"materials.profile_steel_type='{profile_type}'. Expected Ry >= 1.0."
+            ),
+            missing_fields=["materials.profile_steel_type"],
+            source_document="data/materials.xlsx",
+        )
+    case.design_factors.ry = ry_catalog
 
     if case.connection_type not in {"bueep_4e", "bseep_4es", "bseep_8es"}:
         return
+
+    # Procedure fields now derived internally from catalog/geometry and are not accepted as input.
+    if case.procedure is not None:
+        if case.procedure.beam_plastic_section_modulus_ze is not None:
+            _raise_validation_error(
+                message=(
+                    "Input 'procedure.beam_plastic_section_modulus_ze' is no longer allowed. "
+                    "Ze is derived automatically from beam catalog property Zx (sections.xlsx)."
+                ),
+                missing_fields=["procedure.beam_plastic_section_modulus_ze"],
+                source_document="data/sections.xlsx",
+            )
+        if case.procedure.beam_span_between_plastic_hinges_lh is not None:
+            _raise_validation_error(
+                message=(
+                    "Input 'procedure.beam_span_between_plastic_hinges_lh' is no longer allowed. "
+                    "Lh is derived automatically from geometry.beam_clear_span_length."
+                ),
+                missing_fields=["procedure.beam_span_between_plastic_hinges_lh"],
+                source_document="AISC 358-22",
+            )
+        if case.procedure.yield_line_parameter_yp is not None:
+            _raise_validation_error(
+                message=(
+                    "Input 'procedure.yield_line_parameter_yp' is no longer allowed."
+                ),
+                missing_fields=["procedure.yield_line_parameter_yp"],
+                source_document="AISC 358-22",
+            )
+        if case.procedure.column_yield_line_parameter_yc_unstiffened is not None:
+            _raise_validation_error(
+                message=(
+                    "Input 'procedure.column_yield_line_parameter_yc_unstiffened' is no longer allowed. "
+                    "Yc will be derived internally from AISC 358-22 tables in a later implementation."
+                ),
+                missing_fields=["procedure.column_yield_line_parameter_yc_unstiffened"],
+                source_document="AISC 358-22",
+            )
+        if case.procedure.column_yield_line_parameter_yc_stiffened is not None:
+            _raise_validation_error(
+                message=(
+                    "Input 'procedure.column_yield_line_parameter_yc_stiffened' is no longer allowed. "
+                    "Yc will be derived internally from AISC 358-22 tables in a later implementation."
+                ),
+                missing_fields=["procedure.column_yield_line_parameter_yc_stiffened"],
+                source_document="AISC 358-22",
+            )
 
     # Geometry parameters used in detailed audit diagram and Chapter 6 bolt layout traceability.
     _require_quantity(case.geometry.de, "geometry.de", "AISC 358-22 Section 6.7")

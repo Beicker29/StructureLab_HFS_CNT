@@ -65,10 +65,19 @@ El archivo debe tener estos bloques:
 - `geometry.end_plate.pb`: `pb`, paso vertical entre líneas de pernos.
 - `geometry.end_plate.pfo`: `pso` (linea de pernos 2), distancia libre entre la placa de continuidad superior y el eje de la linea de pernos inmediatamente arriba de la aleta superior de la viga.
 - `geometry.end_plate.pfi`: `pfi`, distancia libre base para la zona de la linea de pernos 3.
+- `hp` (altura de platina) se calcula como `hp = d + 2*pfo + 2*de`, donde `d` proviene del catalogo de la viga.
 - `geometry.continuity_plate.continuity_plate_thickness`: `tcp`, espesor de la placa de continuidad.
 - `geometry.welds.end_plate_beam_web_weld_type`: tipo de soldadura entre end plate y alma de viga (`CJP`, `double_sided_fillet`, `single_sided_fillet`).
 - `geometry.welds.end_plate_beam_web_weld_length_lwe`: longitud de soldadura `Lwe`.
 - `geometry.welds.end_plate_beam_web_weld_thickness_twe`: espesor de soldadura `twe` (requerido si el tipo es `double_sided_fillet` o `single_sided_fillet`).
+- `geometry.welds.end_plate_stiffener_weld_type`: tipo de soldadura rigidizador-end plate para Paso 8 (`CJP` o `fillet`).
+- `geometry.welds.end_plate_stiffener_weld_length_lst`: longitud de soldadura `l_st` para el Paso 8 (si no se provee, el motor usa `Lst` derivado).
+- `geometry.welds.end_plate_stiffener_weld_size_wst`: espesor/tamano de filete `w_st` para el Paso 8 (si no se provee, el motor usa `w`).
+- `geometry.welds.end_plate_stiffener_weld_lines_nl`: numero de lineas efectivas de soldadura `n_l` para el Paso 8 (default interno `2`).
+- `geometry.welds.beam_stiffener_weld_type`: tipo de soldadura viga-rigidizador para Paso 9 (`CJP` o `fillet`; si no se provee, usa el tipo del Paso 8).
+- `geometry.welds.beam_stiffener_weld_length_lstw2`: longitud de soldadura `l_st,w2` para Paso 9 (fallback: `end_plate_stiffener_weld_length_lst`, luego `Lst` derivado).
+- `geometry.welds.beam_stiffener_weld_size_wst2`: espesor/tamano de filete `w_st,2` para Paso 9 (fallback: `end_plate_stiffener_weld_size_wst`, luego `w`).
+- `geometry.welds.beam_stiffener_weld_lines_nl_w2`: numero de lineas `n_l,w2` para Paso 9 (fallback: `end_plate_stiffener_weld_lines_nl`, default interno `2`).
 - `psi` (linea de pernos 3 efectiva) se calcula como `psi = pfi + tfb - tcp`, donde `tfb` viene del catalogo de la viga.
 - `geometry.bolts.bolt_tightening_type`: tipo de apriete de pernos (`pretensioned` o `snug_tight`; tambien acepta `pretensionado` y `apriete_justo`).
 - `geometry.bolts.clear_distance_end_plate`: `lc_ep`, distancia libre para bearing/tearout en placa extremo (distancia horizontal en direccion de carga desde borde del agujero al borde libre de la platina).
@@ -96,7 +105,6 @@ El archivo debe tener estos bloques:
 
 - `design_factors.phi_d`: factor de resistencia para chequeos tipo `phi_d`.
 - `design_factors.phi_n`: factor de resistencia para chequeos tipo `phi_n`.
-- `design_factors.ry`: factor `Ry` del acero.
 - `design_factors.member_ductility_demand_beam`: demanda de ductilidad para compacidad de viga (`high` o `moderate`).
 - `design_factors.member_ductility_demand_column`: demanda de ductilidad para compacidad de columna (`high` o `moderate`).
 - `design_factors.column_beam_moment_ratio_minimum`: relación mínima columna-viga.
@@ -105,17 +113,12 @@ Nota de compactacion:
 - `Ca` ya no se ingresa como input.
 - El motor calcula `Ca = Pu / (Ry * Ag * Fy)` para viga y columna usando:
   - `Pu` desde `loads.pu_viga` / `loads.pu_columna`
-  - `Ry` desde `design_factors.ry`
+  - `Ry` derivado automáticamente desde `data/materials.xlsx` (hoja `HRS`) según `materials.profile_steel_type`
   - `Ag` desde `data/sections.xlsx`
   - `Fy` desde `data/materials.xlsx` (hoja `HRS`)
 
 ## 7) Parámetros de procedimiento (`procedure`)
 
-- `procedure.beam_plastic_section_modulus_ze`: `Ze` de procedimiento (para BSEEP, Step 1 usa `Zx` de catálogo y deja trazabilidad).
-- `procedure.beam_span_between_plastic_hinges_lh`: `Lh`.
-- `procedure.yield_line_parameter_yp`: `Yp`.
-- `procedure.column_yield_line_parameter_yc_unstiffened`: `Yc` para BUEEP.
-- `procedure.column_yield_line_parameter_yc_stiffened`: `Yc` para BSEEP.
 - `procedure.tension_bolt_line_distances`: distancias `h_i` de líneas de pernos a la línea de compresión.
 - `procedure.beam_available_shear_strength`: capacidad disponible de cortante de viga.
 - `procedure.flange_weld_available_strength`: capacidad disponible de soldadura en aleta.
@@ -123,6 +126,12 @@ Nota de compactacion:
 - `procedure.continuity_plate_available_strength`: capacidad disponible de placa de continuidad.
 - `procedure.panel_zone_capacity`: capacidad de panel zone.
 - `procedure.column_beam_moment_ratio`: relación columna-viga del caso.
+
+Campos derivados automáticamente (ya no se aceptan en input):
+- `Ze` se deriva de `Zx` del catálogo (`sections.xlsx`) según `sections.beam_shape`.
+- `Lh` se deriva de `geometry.beam_clear_span_length`.
+- `Yp` no se recibe por input en esta etapa.
+- `Yc` no se recibe por input en esta etapa.
 
 ## Reglas importantes
 

@@ -112,16 +112,11 @@ BUEEP_4E_CASE_PAYLOAD = {
     "design_factors": {
         "phi_d": 0.9,
         "phi_n": 0.9,
-        "ry": 1.1,
         "member_ductility_demand_beam": "moderate",
         "member_ductility_demand_column": "moderate",
         "column_beam_moment_ratio_minimum": 1.0
     },
     "procedure": {
-        "beam_plastic_section_modulus_ze": {"value": 80.0, "unit": "in3"},
-        "beam_span_between_plastic_hinges_lh": {"value": 240.0, "unit": "in"},
-        "yield_line_parameter_yp": {"value": 7.0, "unit": "in"},
-        "column_yield_line_parameter_yc_unstiffened": {"value": 250.0, "unit": "in"},
         "tension_bolt_line_distances": [
             {"value": 8.0, "unit": "in"},
             {"value": 10.0, "unit": "in"}
@@ -178,6 +173,14 @@ BSEEP_8ES_CASE_PAYLOAD = {
         "end_plate_beam_web_weld_type": "CJP",
         "end_plate_beam_web_weld_length_lwe": {"value": 12.0, "unit": "in"},
         "end_plate_beam_web_weld_thickness_twe": {"value": 0.25, "unit": "in"},
+        "end_plate_stiffener_weld_type": "CJP",
+        "end_plate_stiffener_weld_length_lst": {"value": 7.5, "unit": "in"},
+        "end_plate_stiffener_weld_size_wst": {"value": 0.5, "unit": "in"},
+        "end_plate_stiffener_weld_lines_nl": 2,
+        "beam_stiffener_weld_type": "CJP",
+        "beam_stiffener_weld_length_lstw2": {"value": 7.5, "unit": "in"},
+        "beam_stiffener_weld_size_wst2": {"value": 0.5, "unit": "in"},
+        "beam_stiffener_weld_lines_nl_w2": 2,
         "stiffener_thickness": {"value": 0.5, "unit": "in"},
     },
     "loads": {
@@ -193,17 +196,11 @@ BSEEP_8ES_CASE_PAYLOAD = {
     "design_factors": {
         "phi_d": 0.9,
         "phi_n": 0.9,
-        "ry": 1.1,
         "member_ductility_demand_beam": "moderate",
         "member_ductility_demand_column": "moderate",
         "column_beam_moment_ratio_minimum": 1.0
     },
     "procedure": {
-        "beam_plastic_section_modulus_ze": {"value": 80.0, "unit": "in3"},
-        "beam_span_between_plastic_hinges_lh": {"value": 240.0, "unit": "in"},
-        "yield_line_parameter_yp": {"value": 7.0, "unit": "in"},
-        "column_yield_line_parameter_yc_unstiffened": {"value": 250.0, "unit": "in"},
-        "column_yield_line_parameter_yc_stiffened": {"value": 275.0, "unit": "in"},
         "tension_bolt_line_distances": [
             {"value": 8.0, "unit": "in"},
             {"value": 10.0, "unit": "in"},

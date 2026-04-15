@@ -50,6 +50,22 @@ def test_example_results_folder_and_geometry_artifact() -> None:
         assert token in svg
     memory = memory_path.read_text(encoding="utf-8")
     assert "## Paso 1 - PREQUALIFICATION LIMITS" in memory
+    assert "## Paso 2 - Probable Maximum Moment At Plastic Hinge (Mpr)" in memory
+    assert "## Paso 3 - Distancia De Rotula Plastica Desde La Cara De Columna (Sh)" in memory
+    assert "## Paso 4 - Cortante Probable En Rotula Plastica (Vh)" in memory
+    assert "## Paso 5 - Momento Probable Maximo En Cara De Columna (Mf)" in memory
+    assert "## Paso 6 - Revision De Resistencia Pernos" in memory
+    assert "### 6.1 Revision de capacidad a traccion" in memory
+    assert "### 6.2 Revision de capacidad a cortante" in memory
+    assert "## Paso 7 - Revision de resistencia end plate" in memory
+    assert "#### 7.1.1. ELR #1: Fluencia (AISC 358-22 .7-8)" in memory
+    assert "#### 7.2.1. Eje #1: Fluencia por cortante (AISC 358-22 G7-10)" in memory
+    assert "#### 7.2.2. Eje #2: Rotura por cortante (AISC 358-22 G7-12)" in memory
+    assert "## Paso 8 - Revision de Resistencia soldadura #1" in memory
+    assert "#### 8.1.1. ELR #1: Rotura de la soldadura (AISC 360-22 J2.4)" in memory
+    assert "## Paso 9 - Revision de resistencia soldadura #2" in memory
+    assert "#### 9.1.1. ELR #1: Rotura de la soldadura (AISC 360-22 J2.4)" in memory
+    assert "dh (diametro agujero estandar)" in memory
     assert "`bp`" in memory
 
     if out_root.exists():

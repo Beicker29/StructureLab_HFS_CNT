@@ -11,7 +11,7 @@ from steel_connections.models.units import UnitSystem
 def test_bueep_rule_set_runs_without_errors(bueep_4e_payload: dict) -> None:
     result = run_case_payload(bueep_4e_payload)
     assert result.global_status == GlobalStatus.PASS
-    assert len(result.checks) == 1
+    assert len(result.checks) == 10
     assert all(check.status == CheckStatus.PASS for check in result.checks)
 
 def test_bueep_missing_de_fails_hard(bueep_4e_payload: dict) -> None:
@@ -160,6 +160,181 @@ def test_bueep_prequalification_limits_are_reported(bueep_4e_payload: dict) -> N
     assert "psi = pfi + tfb - tcp" in pfi_compound["verification_text"]
 
 
+def test_step2_mpr_uses_beam_catalog_zx_for_bueep(bueep_4e_payload: dict) -> None:
+    result = run_case_payload(bueep_4e_payload)
+    step2 = next(
+        check
+        for check in result.checks
+        if check.rule_id == "AISC358.06.7.bueep_4e.step2_probable_moment_plastic_hinge"
+    )
+    assert step2.status == CheckStatus.PASS
+    assert step2.calculation_memory.inputs["ze_source"] == "sections_catalog_zx"
+    assert step2.calculation_memory.inputs["ze"] is not None
+
+
+def test_step3_sh_is_reported_for_bseep_8es(bseep_8es_payload: dict) -> None:
+    result = run_case_payload(bseep_8es_payload)
+    step3 = next(
+        check
+        for check in result.checks
+        if check.rule_id == "AISC358.06.7.bseep_8es.step3_plastic_hinge_distance"
+    )
+    assert step3.status == CheckStatus.PASS
+    assert step3.calculation_memory.inputs["connection_type"] == "bseep_8es"
+    assert step3.demand.unit in {"in", "mm"}
+    assert step3.demand.value > 0.0
+
+
+def test_step6_bolt_capacity_checks_are_reported_for_bseep_8es(bseep_8es_payload: dict) -> None:
+    result = run_case_payload(bseep_8es_payload)
+    step6_1 = next(
+        check
+        for check in result.checks
+        if check.rule_id == "AISC358.06.7.bseep_8es.step6_1_bolt_tension_rupture"
+    )
+    step6_2 = next(
+        check
+        for check in result.checks
+        if check.rule_id == "AISC358.06.7.bseep_8es.step6_2_bolt_shear_rupture"
+    )
+    assert step6_1.status == CheckStatus.PASS
+    assert step6_2.status == CheckStatus.PASS
+    assert step6_1.dcr is not None and step6_1.dcr <= 1.0
+    assert step6_2.dcr is not None and step6_2.dcr <= 1.0
+
+
+def test_step7_end_plate_capacity_checks_are_reported_for_bseep_8es(bseep_8es_payload: dict) -> None:
+    result = run_case_payload(bseep_8es_payload)
+    step7_1 = next(
+        check
+        for check in result.checks
+        if check.rule_id == "AISC358.06.7.bseep_8es.step7_1_1_end_plate_flexural_yielding"
+    )
+    step7_2_1 = next(
+        check
+        for check in result.checks
+        if check.rule_id == "AISC358.06.7.bseep_8es.step7_2_1_end_plate_shear_yielding"
+    )
+    step7_2_2 = next(
+        check
+        for check in result.checks
+        if check.rule_id == "AISC358.06.7.bseep_8es.step7_2_2_end_plate_shear_rupture"
+    )
+    assert step7_1.status == CheckStatus.PASS
+    assert step7_2_1.status == CheckStatus.PASS
+    assert step7_2_2.status == CheckStatus.PASS
+    assert step7_1.dcr is not None and step7_1.dcr <= 1.0
+    assert step7_2_1.dcr is not None and step7_2_1.dcr <= 1.0
+    assert step7_2_2.dcr is not None and step7_2_2.dcr <= 1.0
+
+
+def test_step8_stiffener_weld_tension_rupture_is_reported_for_bseep_8es(bseep_8es_payload: dict) -> None:
+    result = run_case_payload(bseep_8es_payload)
+    step8_1_1 = next(
+        check
+        for check in result.checks
+        if check.rule_id == "AISC358.06.7.bseep_8es.step8_1_1_stiffener_weld_tension_rupture"
+    )
+    assert step8_1_1.status == CheckStatus.PASS
+    assert step8_1_1.dcr is not None and step8_1_1.dcr <= 1.0
+    assert step8_1_1.calculation_memory.inputs["weld_type_normalized"] == "cjp"
+
+
+def test_step9_stiffener_beam_weld_shear_rupture_is_reported_for_bseep_8es(bseep_8es_payload: dict) -> None:
+    result = run_case_payload(bseep_8es_payload)
+    step9_1_1 = next(
+        check
+        for check in result.checks
+        if check.rule_id == "AISC358.06.7.bseep_8es.step9_1_1_stiffener_beam_weld_shear_rupture"
+    )
+    assert step9_1_1.status == CheckStatus.PASS
+    assert step9_1_1.dcr is not None and step9_1_1.dcr <= 1.0
+    assert step9_1_1.calculation_memory.inputs["weld_type_normalized"] == "cjp"
+
+
+def test_step7_yp_is_derived_from_tables_for_bseep_8es(bseep_8es_payload: dict) -> None:
+    result = run_case_payload(bseep_8es_payload)
+    step7_1 = next(
+        check
+        for check in result.checks
+        if check.rule_id == "AISC358.06.7.bseep_8es.step7_1_1_end_plate_flexural_yielding"
+    )
+    assert step7_1.calculation_memory.inputs["yp_source"] == "derived_from_aisc358_tables_6_2_6_3_6_4"
+    assert step7_1.calculation_memory.inputs["yp_table"] == "AISC 358-22 Table 6.4"
+    assert step7_1.calculation_memory.inputs["yp_case"] in {"Case 1 (de <= s)", "Case 2 (de > s)"}
+    assert step7_1.calculation_memory.inputs["yp"]["value"] > 0.0
+
+
+def test_ry_input_is_forbidden_and_derived_from_catalog(bueep_4e_payload: dict) -> None:
+    bueep_4e_payload["design_factors"]["ry"] = 1.1
+    try:
+        parse_and_validate_payload(bueep_4e_payload)
+    except StructuredEngineException as exc:
+        assert exc.error.missing_fields == ["design_factors.ry"]
+    else:
+        raise AssertionError("Expected validation error because design_factors.ry is no longer an allowed input.")
+
+
+def test_ze_input_is_forbidden(bueep_4e_payload: dict) -> None:
+    bueep_4e_payload["procedure"]["beam_plastic_section_modulus_ze"] = {"value": 80.0, "unit": "in3"}
+    try:
+        parse_and_validate_payload(bueep_4e_payload)
+    except StructuredEngineException as exc:
+        assert exc.error.missing_fields == ["procedure.beam_plastic_section_modulus_ze"]
+    else:
+        raise AssertionError(
+            "Expected validation error because procedure.beam_plastic_section_modulus_ze is no longer an allowed input."
+        )
+
+
+def test_lh_input_is_forbidden(bueep_4e_payload: dict) -> None:
+    bueep_4e_payload["procedure"]["beam_span_between_plastic_hinges_lh"] = {"value": 240.0, "unit": "in"}
+    try:
+        parse_and_validate_payload(bueep_4e_payload)
+    except StructuredEngineException as exc:
+        assert exc.error.missing_fields == ["procedure.beam_span_between_plastic_hinges_lh"]
+    else:
+        raise AssertionError(
+            "Expected validation error because procedure.beam_span_between_plastic_hinges_lh is no longer an allowed input."
+        )
+
+
+def test_yp_input_is_forbidden(bueep_4e_payload: dict) -> None:
+    bueep_4e_payload["procedure"]["yield_line_parameter_yp"] = {"value": 7.0, "unit": "in"}
+    try:
+        parse_and_validate_payload(bueep_4e_payload)
+    except StructuredEngineException as exc:
+        assert exc.error.missing_fields == ["procedure.yield_line_parameter_yp"]
+    else:
+        raise AssertionError(
+            "Expected validation error because procedure.yield_line_parameter_yp is no longer an allowed input."
+        )
+
+
+def test_yc_unstiffened_input_is_forbidden(bueep_4e_payload: dict) -> None:
+    bueep_4e_payload["procedure"]["column_yield_line_parameter_yc_unstiffened"] = {"value": 250.0, "unit": "in"}
+    try:
+        parse_and_validate_payload(bueep_4e_payload)
+    except StructuredEngineException as exc:
+        assert exc.error.missing_fields == ["procedure.column_yield_line_parameter_yc_unstiffened"]
+    else:
+        raise AssertionError(
+            "Expected validation error because procedure.column_yield_line_parameter_yc_unstiffened is no longer an allowed input."
+        )
+
+
+def test_yc_stiffened_input_is_forbidden(bseep_8es_payload: dict) -> None:
+    bseep_8es_payload["procedure"]["column_yield_line_parameter_yc_stiffened"] = {"value": 275.0, "unit": "in"}
+    try:
+        parse_and_validate_payload(bseep_8es_payload)
+    except StructuredEngineException as exc:
+        assert exc.error.missing_fields == ["procedure.column_yield_line_parameter_yc_stiffened"]
+    else:
+        raise AssertionError(
+            "Expected validation error because procedure.column_yield_line_parameter_yc_stiffened is no longer an allowed input."
+        )
+
+
 def test_bseep_prequalification_limits_fail_when_pitch_is_below_3db(bseep_8es_payload: dict) -> None:
     bseep_8es_payload["geometry"]["pb"]["value"] = 2.0
     result = run_case_payload(bseep_8es_payload)
@@ -173,6 +348,25 @@ def test_bseep_prequalification_limits_fail_when_pitch_is_below_3db(bseep_8es_pa
     )
     assert pitch_check["result"] == "NO_OK"
     assert pitch_check["comparison"] == "compound"
+
+
+def test_bseep_prequalification_includes_stiffener_strength_checks(bseep_8es_payload: dict) -> None:
+    result = run_case_payload(bseep_8es_payload)
+    prequal = next(check for check in result.checks if check.rule_id == "AISC358.06.3.bseep_8es.prequalification_limits")
+    assert prequal.status == CheckStatus.PASS
+    limits = prequal.calculation_memory.intermediates["step_1_limits"]
+    stiffener_ts = next(
+        item for item in limits if item["id"] == "section_6_7_1.stiffener_thickness_minimum"
+    )
+    stiffener_buckling = next(
+        item for item in limits if item["id"] == "section_6_7_1.stiffener_local_buckling_limit"
+    )
+    assert stiffener_ts["scope"] == "end_plate_stiffener"
+    assert stiffener_ts["comparison"] == "ge"
+    assert stiffener_ts["result"] == "OK"
+    assert stiffener_buckling["scope"] == "end_plate_stiffener"
+    assert stiffener_buckling["comparison"] == "le"
+    assert stiffener_buckling["result"] == "OK"
 
 
 def test_bseep8es_prequalification_limits_fail_when_pb_is_outside_89_95mm_range(bseep_8es_payload: dict) -> None:
@@ -336,4 +530,4 @@ def test_grouped_geometry_payload_is_supported(bueep_4e_payload: dict) -> None:
 
     result = run_case_payload(bueep_4e_payload)
     assert result.global_status == GlobalStatus.PASS
-    assert len(result.checks) == 1
+    assert len(result.checks) == 10

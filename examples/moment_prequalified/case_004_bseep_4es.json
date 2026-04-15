@@ -59,7 +59,7 @@
         "unit": "mm"
       },
       "pb": {
-        "value": 95.0,
+        "value": 94.996,
         "unit": "mm"
       },
       "pfo": {
@@ -107,15 +107,35 @@
         "value": 300.0,
         "unit": "mm"
       },
-      "end_plate_beam_web_weld_thickness_twe": {
-        "value": 8.0,
-        "unit": "mm"
-      },
-      "weld_leg_size_w": {
-        "value": 9.525,
-        "unit": "mm"
+        "end_plate_beam_web_weld_thickness_twe": {
+          "value": 8.0,
+          "unit": "mm"
+        },
+        "weld_leg_size_w": {
+          "value": 9.525,
+          "unit": "mm"
+        },
+        "end_plate_stiffener_weld_type": "CJP",
+        "end_plate_stiffener_weld_length_lst": {
+          "value": 190.0,
+          "unit": "mm"
+        },
+        "end_plate_stiffener_weld_size_wst": {
+          "value": 9.525,
+          "unit": "mm"
+        },
+        "end_plate_stiffener_weld_lines_nl": 2,
+        "beam_stiffener_weld_type": "CJP",
+        "beam_stiffener_weld_length_lstw2": {
+          "value": 190.0,
+          "unit": "mm"
+        },
+        "beam_stiffener_weld_size_wst2": {
+          "value": 9.525,
+          "unit": "mm"
+        },
+        "beam_stiffener_weld_lines_nl_w2": 2
       }
-    }
   },
   "loads": {
     "pu_viga": {
@@ -154,32 +174,11 @@
   "design_factors": {
     "phi_d": 0.9,
     "phi_n": 0.9,
-    "ry": 1.1,
     "member_ductility_demand_beam": "high",
     "member_ductility_demand_column": "high",
     "column_beam_moment_ratio_minimum": 1.0
   },
   "procedure": {
-    "beam_plastic_section_modulus_ze": {
-      "value": 1310965.12,
-      "unit": "mm3"
-    },
-    "beam_span_between_plastic_hinges_lh": {
-      "value": 6096.0,
-      "unit": "mm"
-    },
-    "yield_line_parameter_yp": {
-      "value": 177.8,
-      "unit": "mm"
-    },
-    "column_yield_line_parameter_yc_unstiffened": {
-      "value": 6350.0,
-      "unit": "mm"
-    },
-    "column_yield_line_parameter_yc_stiffened": {
-      "value": 6985.0,
-      "unit": "mm"
-    },
     "tension_bolt_line_distances": [
       {
         "value": 203.2,

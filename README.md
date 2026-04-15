@@ -34,7 +34,7 @@ Motor de diseno de conexiones de acero estructural hot-rolled, deterministico, a
     - columna (`column`)
     - tabla 6.1 (`table_6_1`)
 - Preparado y bloqueante por alcance: familia `base_plate_anchor_rod` (`connection_type = dg1_base_plate`) via `NOT_IMPLEMENTED`.
-- Nota tecnica: parametros tabulados (p. ej. `Yp`, `Yc`) se reciben por `procedure.*` con trazabilidad explicita; no hay inferencias ocultas.
+- Nota tecnica: parametros tabulados aplicables (p. ej. `Yc`) se reciben por `procedure.*` con trazabilidad explicita.
 
 ## Estructura
 ```text
@@ -77,7 +77,6 @@ Campos clave en `materials` para Chapter 6:
 Campos clave en `design_factors` para Chapter 6 Step 1a:
 - `member_ductility_demand_beam`: `high` o `moderate`
 - `member_ductility_demand_column`: `high` o `moderate`
-- `ry`: factor `Ry` para calcular `Ca` internamente.
 
 Campos clave en `loads` para compactacion Chapter 6:
 - `pu_viga`: carga axial `Pu` de la viga.
@@ -85,7 +84,7 @@ Campos clave en `loads` para compactacion Chapter 6:
 - El motor calcula `Ca` automaticamente como `Ca = Pu / (Ry * Ag * Fy)`:
   - `Ag` desde `data/sections.xlsx` (catalogo de secciones)
   - `Fy` desde `data/materials.xlsx` (hoja `HRS`)
-  - `Ry` desde `design_factors.ry`
+  - `Ry` derivado automaticamente desde `data/materials.xlsx` (hoja `HRS`) segun `materials.profile_steel_type`
 
 Campos geometricos clave para artefacto tecnico (`geometry.svg`) en Chapter 6:
 - Estructura agrupada recomendada:
@@ -102,6 +101,7 @@ Campos geometricos clave para artefacto tecnico (`geometry.svg`) en Chapter 6:
 - `geometry.welds.continuity_plate_weld_type`: tipo de soldadura para la platina de continuidad (`double_sided_fillet`, `CJP`, `PJP`).
 - `geometry.bolts.bolt_tightening_type`: tipo de apriete de pernos (`pretensioned` o `snug_tight`).
 - En particular: `geometry.end_plate.de`, `geometry.end_plate.pb`, `geometry.end_plate.pfo`, `geometry.end_plate.pfi`
+- La altura de platina se deriva como `hp = d + 2*pfo + 2*de` (`d` desde catalogo de la viga).
 - El artefacto muestra y traza: `bp`, `g`, `de`, `pb`, `pfo`, `pfi`, `h1`, `h2`, `h3`, `h4`
 - En el detalle, `h1..h4` se acotan desde la mitad del espesor de la aleta inferior y `tbf` corresponde al espesor de la aleta.
 

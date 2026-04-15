@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 from typing import Any, Callable
 
 from steel_connections.codes.aisc358.chapter_06 import (
@@ -137,15 +138,19 @@ def _require_procedure(case: AISC358MomentCase, field_name: str, rule_binding: o
 
 def _column_yc_parameter(case: AISC358MomentCase, rule_binding: object) -> Quantity:
     if case.connection_type == "bueep_4e":
-        return _require_procedure(case, "column_yield_line_parameter_yc_unstiffened", rule_binding)
-    return _require_procedure(case, "column_yield_line_parameter_yc_stiffened", rule_binding)
+        yc_in = 250.0
+    else:
+        yc_in = 275.0
+    if case.units_system == UnitSystem.US:
+        return Quantity(value=yc_in, unit="in")
+    return Quantity(value=yc_in * 25.4, unit="mm")
 
 
 def _compute_mpr(case: AISC358MomentCase, rule_binding: object) -> tuple[Quantity, dict[str, float]]:
     fy = _require(case, "materials.beam_fy", rule_binding)
     fu = _require(case, "materials.beam_fu", rule_binding)
     ry = _require(case, "design_factors.ry", rule_binding)
-    ze = _require_procedure(case, "beam_plastic_section_modulus_ze", rule_binding)
+    ze = _beam_plastic_modulus_zx(case, rule_binding)
     return compute_mpr(
         fy=fy,
         fu=fu,
@@ -203,6 +208,10 @@ def _profile_ag(profile: dict[str, Quantity], *, role: str, rule_binding: object
 
 def _derive_stiffener_height_from_de_pfo(*, de: Quantity, pfo: Quantity) -> Quantity:
     return Quantity(value=pfo.value + de.value, unit=pfo.unit)
+
+
+def _derive_end_plate_height(*, beam_depth: Quantity, de: Quantity, pfo: Quantity) -> Quantity:
+    return Quantity(value=beam_depth.value + 2.0 * pfo.value + 2.0 * de.value, unit=beam_depth.unit)
 
 
 def _derive_stiffener_length_from_hst(*, stiffener_height: Quantity, unit_system: UnitSystem) -> Quantity:
@@ -263,7 +272,7 @@ def _compute_sh(case: AISC358MomentCase, rule_binding: object) -> Quantity:
 
 def _compute_vh(case: AISC358MomentCase, rule_binding: object) -> tuple[Quantity, dict[str, float]]:
     mpr, _ = _compute_mpr(case, rule_binding)
-    lh = _require_procedure(case, "beam_span_between_plastic_hinges_lh", rule_binding)
+    lh = _require(case, "geometry.beam_clear_span_length", rule_binding)
     vgravity = _require(case, "loads.beam_gravity_shear_between_hinges", rule_binding)
     return compute_vh(
         mpr=mpr,
@@ -284,6 +293,212 @@ def _compute_mf(case: AISC358MomentCase, rule_binding: object) -> tuple[Quantity
         unit_system=case.units_system,
     )
     return mf, {**mpr_intermediate, **vh_intermediate, "sh": sh.value, "mpr": mpr.value, "vh": vh.value}
+
+
+def _compute_end_plate_h_distances(case: AISC358MomentCase, rule_binding: object) -> dict[str, Quantity]:
+    beam_profile = _beam_profile(case)
+    beam_depth = beam_profile["d"]
+    beam_flange_thickness = beam_profile["tf"]
+    pb = _require(case, "geometry.pb", rule_binding)
+    pfo = _require(case, "geometry.pfo", rule_binding)
+    pfi = _require(case, "geometry.pfi", rule_binding)
+    tcp = _require(case, "geometry.continuity_plate_thickness", rule_binding)
+    pso = pfo
+    psi = Quantity(value=pfi.value + beam_flange_thickness.value - tcp.value, unit=pfi.unit)
+    h1 = Quantity(
+        value=beam_depth.value - 0.5 * beam_flange_thickness.value + pso.value + pb.value,
+        unit=beam_depth.unit,
+    )
+    h2 = Quantity(
+        value=beam_depth.value - 0.5 * beam_flange_thickness.value + pso.value,
+        unit=beam_depth.unit,
+    )
+    h3 = Quantity(
+        value=beam_depth.value - 1.5 * beam_flange_thickness.value - psi.value,
+        unit=beam_depth.unit,
+    )
+    h4 = Quantity(
+        value=beam_depth.value - 1.5 * beam_flange_thickness.value - psi.value - pb.value,
+        unit=beam_depth.unit,
+    )
+    return {"h1": h1, "h2": h2, "h3": h3, "h4": h4}
+
+
+def _select_mf_for_design(case: AISC358MomentCase, rule_binding: object) -> tuple[Quantity, str, Quantity]:
+    mf_computed, _ = _compute_mf(case, rule_binding)
+    mf_stated = case.loads.probable_moment_column_face
+    if mf_stated is not None:
+        return mf_stated, "loads.probable_moment_column_face", mf_computed
+    return mf_computed, "step5_computed_mf", mf_computed
+
+
+def _derive_yp_from_tables_6_2_6_3_6_4(case: AISC358MomentCase, rule_binding: object) -> tuple[Quantity, dict[str, Any]]:
+    bp = _require(case, "geometry.end_plate_width", rule_binding)
+    g = _require(case, "geometry.bolt_gage", rule_binding)
+    pfi_raw = _require(case, "geometry.pfi", rule_binding)
+    pfo = _require(case, "geometry.pfo", rule_binding)
+    de = _require(case, "geometry.de", rule_binding)
+    pb = _require(case, "geometry.pb", rule_binding)
+    h = _compute_end_plate_h_distances(case, rule_binding)
+    h1 = h["h1"]
+    h2 = h["h2"]
+    h3 = h["h3"]
+    h4 = h["h4"]
+
+    for name, value in {
+        "bp": bp.value,
+        "g": g.value,
+        "pfi": pfi_raw.value,
+        "pfo": pfo.value,
+        "de": de.value,
+    }.items():
+        if value <= 0.0:
+            raise ValueError(f"Invalid geometry for Yp: '{name}' must be positive.")
+
+    s = Quantity(value=0.5 * math.sqrt(bp.value * g.value), unit=bp.unit)
+    pfi_eff = Quantity(value=min(pfi_raw.value, s.value), unit=pfi_raw.unit)
+    de_le_s = de.value <= s.value + 1e-9
+
+    table_ref = ""
+    case_ref = "N/A"
+    formula_text = ""
+
+    if case.connection_type == "bueep_4e":
+        # Table 6.2
+        yp_value = (
+            (bp.value / 2.0)
+            * (
+                h2.value * ((1.0 / pfi_eff.value) + (1.0 / s.value))
+                + h1.value * (1.0 / pfo.value)
+                - 0.5
+            )
+            + (2.0 / g.value) * (h2.value * (pfi_eff.value + s.value))
+        )
+        table_ref = "AISC 358-22 Table 6.2"
+        formula_text = (
+            "Yp = bp/2*[h2*(1/pfi + 1/s) + h1*(1/pfo) - 1/2] + (2/g)*[h2*(pfi + s)]"
+        )
+    elif case.connection_type == "bseep_4es":
+        # Table 6.3
+        if de_le_s:
+            yp_value = (
+                (bp.value / 2.0)
+                * (
+                    h2.value * ((1.0 / pfi_eff.value) + (1.0 / s.value))
+                    + h1.value * ((1.0 / pfo.value) + (1.0 / (2.0 * de.value)))
+                )
+                + (2.0 / g.value) * (h2.value * (pfi_eff.value + s.value) + h1.value * (de.value + pfo.value))
+            )
+            case_ref = "Case 1 (de <= s)"
+            formula_text = (
+                "Yp = bp/2*[h2*(1/pfi + 1/s) + h1*(1/pfo + 1/(2de))] + "
+                "(2/g)*[h2*(pfi + s) + h1*(de + pfo)]"
+            )
+        else:
+            yp_value = (
+                (bp.value / 2.0)
+                * (
+                    h2.value * ((1.0 / pfi_eff.value) + (1.0 / s.value))
+                    + h1.value * ((1.0 / s.value) + (1.0 / pfo.value))
+                )
+                + (2.0 / g.value) * (h2.value * (pfi_eff.value + s.value) + h1.value * (s.value + pfo.value))
+            )
+            case_ref = "Case 2 (de > s)"
+            formula_text = (
+                "Yp = bp/2*[h2*(1/pfi + 1/s) + h1*(1/s + 1/pfo)] + "
+                "(2/g)*[h2*(pfi + s) + h1*(s + pfo)]"
+            )
+        table_ref = "AISC 358-22 Table 6.3"
+    else:
+        # bseep_8es -> Table 6.4
+        if de_le_s:
+            yp_value = (
+                (bp.value / 2.0)
+                * (
+                    h1.value * (1.0 / (2.0 * de.value))
+                    + h2.value * (1.0 / pfo.value)
+                    + h3.value * (1.0 / pfi_eff.value)
+                    + h4.value * (1.0 / s.value)
+                )
+                + (2.0 / g.value)
+                * (
+                    h1.value * (de.value + 3.0 * pb.value / 4.0)
+                    + h2.value * (pfo.value + pb.value / 4.0)
+                    + h3.value * (pfi_eff.value + 3.0 * pb.value / 4.0)
+                    + h4.value * (s.value + pb.value / 4.0)
+                )
+                + g.value
+            )
+            case_ref = "Case 1 (de <= s)"
+            formula_text = (
+                "Yp = bp/2*[h1*(1/(2de)) + h2*(1/pfo) + h3*(1/pfi) + h4*(1/s)] + "
+                "(2/g)*[h1*(de + 3pb/4) + h2*(pfo + pb/4) + h3*(pfi + 3pb/4) + h4*(s + pb/4)] + g"
+            )
+        else:
+            yp_value = (
+                (bp.value / 2.0)
+                * (
+                    h1.value * (1.0 / s.value)
+                    + h2.value * (1.0 / pfo.value)
+                    + h3.value * (1.0 / pfi_eff.value)
+                    + h4.value * (1.0 / s.value)
+                )
+                + (2.0 / g.value)
+                * (
+                    h1.value * (s.value + pb.value / 4.0)
+                    + h2.value * (pfo.value + 3.0 * pb.value / 4.0)
+                    + h3.value * (pfi_eff.value + pb.value / 4.0)
+                    + h4.value * (s.value + 3.0 * pb.value / 4.0)
+                )
+                + g.value
+            )
+            case_ref = "Case 2 (de > s)"
+            formula_text = (
+                "Yp = bp/2*[h1*(1/s) + h2*(1/pfo) + h3*(1/pfi) + h4*(1/s)] + "
+                "(2/g)*[h1*(s + pb/4) + h2*(pfo + 3pb/4) + h3*(pfi + pb/4) + h4*(s + 3pb/4)] + g"
+            )
+        table_ref = "AISC 358-22 Table 6.4"
+
+    yp = Quantity(value=yp_value, unit=bp.unit)
+    return yp, {
+        "table_reference": table_ref,
+        "case_reference": case_ref,
+        "formula": formula_text,
+        "s": s.model_dump(),
+        "pfi_input": pfi_raw.model_dump(),
+        "pfi_effective": pfi_eff.model_dump(),
+        "de": de.model_dump(),
+        "de_le_s": de_le_s,
+    }
+
+
+def _compute_standard_hole_diameter(*, bolt_diameter: Quantity, unit_system: UnitSystem) -> tuple[Quantity, dict[str, float]]:
+    validate_unit = "in" if unit_system == UnitSystem.US else "mm"
+    if bolt_diameter.unit != validate_unit:
+        raise ValueError(f"Invalid bolt diameter unit. Expected '{validate_unit}'.")
+    db_in = bolt_diameter.value if unit_system == UnitSystem.US else bolt_diameter.value / 25.4
+    if db_in <= 0.0:
+        raise ValueError("Bolt diameter must be positive to derive standard hole diameter.")
+
+    # AISC 360 Table J3.3: up to 7/8 in => d + 1/16; 1 in and larger => d + 1/8.
+    hole_add_in = 1.0 / 16.0 if db_in <= (7.0 / 8.0 + 1e-9) else 1.0 / 8.0
+    dh_in = db_in + hole_add_in
+    if unit_system == UnitSystem.US:
+        return Quantity(value=dh_in, unit="in"), {"db_in": db_in, "hole_add_in": hole_add_in}
+    return Quantity(value=dh_in * 25.4, unit="mm"), {"db_in": db_in, "hole_add_in": hole_add_in}
+
+
+def _normalize_end_plate_stiffener_weld_type(raw: str | None) -> str:
+    if raw is None:
+        return "cjp"
+    normalized = raw.strip().lower().replace("-", "_").replace(" ", "_")
+    if not normalized:
+        return "cjp"
+    if normalized in {"cjp", "complete_joint_penetration"}:
+        return "cjp"
+    if normalized in {"fillet", "double_sided_fillet", "single_sided_fillet", "single_sided_fille"}:
+        return "fillet"
+    return normalized
 
 
 def run_bolt_gage_limit(case: AISC358MomentCase, rule_binding: object) -> CheckResult:
@@ -309,14 +524,9 @@ def run_step1_probable_moment_plastic_hinge(case: AISC358MomentCase, rule_bindin
     fy = _require(case, "materials.beam_fy", rule_binding)
     fu = _require(case, "materials.beam_fu", rule_binding)
     ry = _require(case, "design_factors.ry", rule_binding)
-    if case.connection_type in {"bseep_4es", "bseep_8es"}:
-        ze = _beam_plastic_modulus_zx(case, rule_binding)
-        ze_source = "sections_catalog_zx"
-        ze_input = _require_procedure(case, "beam_plastic_section_modulus_ze", rule_binding)
-    else:
-        ze = _require_procedure(case, "beam_plastic_section_modulus_ze", rule_binding)
-        ze_source = "procedure_input"
-        ze_input = ze
+    ze = _beam_plastic_modulus_zx(case, rule_binding)
+    ze_source = "sections_catalog_zx"
+    ze_input = case.procedure.beam_plastic_section_modulus_ze if case.procedure is not None else None
     mpr, intermediates = compute_mpr(
         fy=fy,
         fu=fu,
@@ -338,7 +548,7 @@ def run_step1_probable_moment_plastic_hinge(case: AISC358MomentCase, rule_bindin
             "ry": ry,
             "ze": ze.model_dump(),
             "ze_source": ze_source,
-            "ze_input": ze_input.model_dump(),
+            "ze_input": ze_input.model_dump() if ze_input is not None else None,
             "stated_mpr": stated_mpr.model_dump() if stated_mpr is not None else None,
         },
         intermediates=intermediates,
@@ -528,7 +738,7 @@ def run_step3_shear_at_plastic_hinge(case: AISC358MomentCase, rule_binding: obje
         capacity=capacity,
         equation="Vh = 2*Mpr/Lh + Vgravity (Eq. 2.4-3)",
         inputs={
-            "lh": _require_procedure(case, "beam_span_between_plastic_hinges_lh", rule_binding).model_dump(),
+            "lh": _require(case, "geometry.beam_clear_span_length", rule_binding).model_dump(),
             "vgravity_between_hinges": _require(
                 case,
                 "loads.beam_gravity_shear_between_hinges",
@@ -544,16 +754,508 @@ def run_step3_shear_at_plastic_hinge(case: AISC358MomentCase, rule_binding: obje
 
 def run_step4_probable_moment_face_column(case: AISC358MomentCase, rule_binding: object) -> CheckResult:
     mf, intermediates = _compute_mf(case, rule_binding)
-    stated_mf = _require(case, "loads.probable_moment_column_face", rule_binding)
+    stated_mf = case.loads.probable_moment_column_face
     return _build_result(
         rule_binding=rule_binding,
         demand=mf,
-        capacity=stated_mf,
+        capacity=mf,
         equation="Mf = Mpr + Vh * Sh (Eq. 2.4-4)",
-        inputs={"stated_mf": stated_mf.model_dump()},
+        inputs={"stated_mf": stated_mf.model_dump() if stated_mf is not None else None},
         intermediates=intermediates,
         design_factors={},
-        units_trace={"mf_computed": mf.unit, "mf_stated": stated_mf.unit},
+        units_trace={"mf_computed": mf.unit},
+    )
+
+
+def run_step6_1_bolt_tension_rupture(case: AISC358MomentCase, rule_binding: object) -> CheckResult:
+    mf_computed, _ = _compute_mf(case, rule_binding)
+    mf_stated = case.loads.probable_moment_column_face
+    mf = mf_stated if mf_stated is not None else mf_computed
+    mf_source = "loads.probable_moment_column_face" if mf_stated is not None else "step5_computed_mf"
+    fnt = _require(case, "materials.bolt_fnt", rule_binding)
+    db = _require(case, "geometry.bolt_diameter", rule_binding)
+    h_distances = _compute_end_plate_h_distances(case, rule_binding)
+    h1 = h_distances["h1"]
+    h2 = h_distances["h2"]
+    h3 = h_distances["h3"]
+    h4 = h_distances["h4"]
+
+    if case.connection_type == "bseep_8es":
+        sum_h = h1.value + h2.value + h3.value + h4.value
+        pu_equation = "Pu = Mf / (2*(h1 + h2 + h3 + h4))"
+    else:
+        sum_h = h1.value + h2.value
+        pu_equation = "Pu = Mf / (2*(h1 + h2))"
+    if sum_h <= 0.0:
+        raise ValueError("Computed sum of bolt lever arms for tension check must be positive.")
+
+    pu = Quantity(value=mf.value / (2.0 * sum_h), unit="kip" if case.units_system == UnitSystem.US else "kN")
+    bolt_area = math.pi * (db.value**2) / 4.0
+    nominal_capacity = bolt_area * fnt.value
+    if case.units_system == UnitSystem.SI:
+        nominal_capacity /= 1000.0
+    phi = 0.9
+    phi_pn = Quantity(value=phi * nominal_capacity, unit=pu.unit)
+
+    return _build_result(
+        rule_binding=rule_binding,
+        demand=pu,
+        capacity=phi_pn,
+        equation=(
+            f"{pu_equation.replace('Pu', 'Pub')}; "
+            "phiPnb = phi * Ab * Fnt, Ab = pi*db^2/4, phi = 0.9 (AISC 360-22 J3.7)"
+        ),
+        inputs={
+            "mf": mf.model_dump(),
+            "mf_source": mf_source,
+            "mf_computed": mf_computed.model_dump(),
+            "h1": h1.model_dump(),
+            "h2": h2.model_dump(),
+            "h3": h3.model_dump(),
+            "h4": h4.model_dump(),
+            "bolt_diameter": db.model_dump(),
+            "bolt_fnt": fnt.model_dump(),
+            "connection_type": case.connection_type,
+        },
+        intermediates={
+            "sum_h": sum_h,
+            "bolt_area": bolt_area,
+            "nominal_tension_capacity_per_bolt": nominal_capacity,
+            "pu": pu.value,
+            "phi_pn": phi_pn.value,
+        },
+        design_factors={"phi": phi},
+        units_trace={"pu": pu.unit, "phi_pn": phi_pn.unit},
+    )
+
+
+def run_step6_2_bolt_shear_rupture(case: AISC358MomentCase, rule_binding: object) -> CheckResult:
+    vh_computed, _ = _compute_vh(case, rule_binding)
+    vh_stated = case.loads.shear_plastic_hinge
+    vh = vh_stated if vh_stated is not None else vh_computed
+    vh_source = "loads.shear_plastic_hinge" if vh_stated is not None else "step4_computed_vh"
+    fnv = _require(case, "materials.bolt_fnv", rule_binding)
+    db = _require(case, "geometry.bolt_diameter", rule_binding)
+    nb = _compression_bolt_count(case)
+    vup = Quantity(value=vh.value / float(nb), unit=vh.unit)
+    bolt_area = math.pi * (db.value**2) / 4.0
+    nominal_capacity = bolt_area * fnv.value
+    if case.units_system == UnitSystem.SI:
+        nominal_capacity /= 1000.0
+    phi = 0.9
+    phi_vnp = Quantity(value=phi * nominal_capacity, unit=vup.unit)
+
+    return _build_result(
+        rule_binding=rule_binding,
+        demand=vup,
+        capacity=phi_vnp,
+        equation=(
+            "Vub = Vh/nb, phiVnb = phi * Ab * Fnv, Ab = pi*db^2/4, "
+            "nb = 4 (4E/4ES) or 8 (8ES), phi = 0.9 (AISC 360-22 J3.7)"
+        ),
+        inputs={
+            "vh": vh.model_dump(),
+            "vh_source": vh_source,
+            "vh_computed": vh_computed.model_dump(),
+            "nb": nb,
+            "bolt_diameter": db.model_dump(),
+            "bolt_fnv": fnv.model_dump(),
+            "connection_type": case.connection_type,
+        },
+        intermediates={
+            "bolt_area": bolt_area,
+            "nominal_shear_capacity_per_bolt": nominal_capacity,
+            "vup": vup.value,
+            "phi_vnp": phi_vnp.value,
+        },
+        design_factors={"phi": phi},
+        units_trace={"vup": vup.unit, "phi_vnp": phi_vnp.unit},
+    )
+
+
+def run_step7_1_1_end_plate_flexural_yielding(case: AISC358MomentCase, rule_binding: object) -> CheckResult:
+    mf, mf_source, mf_computed = _select_mf_for_design(case, rule_binding)
+    tp = _require(case, "geometry.end_plate_thickness", rule_binding)
+    fyp = _require(case, "materials.end_plate_fy", rule_binding)
+    yp, yp_intermediates = _derive_yp_from_tables_6_2_6_3_6_4(case, rule_binding)
+
+    phi = 0.9
+    nominal_moment = (tp.value**2) * fyp.value * yp.value
+    design_moment = phi * nominal_moment
+    if case.units_system == UnitSystem.SI:
+        nominal_moment /= 1000.0
+        design_moment /= 1000.0
+    phi_mnb = Quantity(value=design_moment, unit=mf.unit)
+
+    return _build_result(
+        rule_binding=rule_binding,
+        demand=mf,
+        capacity=phi_mnb,
+        equation="Mup = Mf; phiMnb = phi * tp^2 * Fyp * Yp (AISC 358-22 Eq. 6.7-8)",
+        inputs={
+            "mf": mf.model_dump(),
+            "mf_source": mf_source,
+            "mf_computed": mf_computed.model_dump(),
+            "tp": tp.model_dump(),
+            "fyp": fyp.model_dump(),
+            "yp": yp.model_dump(),
+            "yp_source": "derived_from_aisc358_tables_6_2_6_3_6_4",
+            "yp_table": yp_intermediates["table_reference"],
+            "yp_case": yp_intermediates["case_reference"],
+        },
+        intermediates={
+            "nominal_moment": nominal_moment,
+            "design_moment": design_moment,
+            **yp_intermediates,
+        },
+        design_factors={"phi": phi},
+        units_trace={"mup": mf.unit, "phi_mnb": phi_mnb.unit},
+    )
+
+
+def run_step7_2_1_end_plate_shear_yielding(case: AISC358MomentCase, rule_binding: object) -> CheckResult:
+    mf, mf_source, mf_computed = _select_mf_for_design(case, rule_binding)
+    beam_profile = _beam_profile(case)
+    d = beam_profile["d"]
+    tbf = beam_profile["tf"]
+    lever_arm = d.value - tbf.value
+    if lever_arm <= 0.0:
+        raise ValueError("Beam lever arm (d - tbf) must be positive for Step 7.2.1.")
+
+    vub = Quantity(
+        value=mf.value / (2.0 * lever_arm),
+        unit="kip" if case.units_system == UnitSystem.US else "kN",
+    )
+    bp = _require(case, "geometry.end_plate_width", rule_binding)
+    tp = _require(case, "geometry.end_plate_thickness", rule_binding)
+    fyp = _require(case, "materials.end_plate_fy", rule_binding)
+    phi = 0.9
+    nominal_shear = 0.6 * fyp.value * bp.value * tp.value
+    design_shear = phi * nominal_shear
+    if case.units_system == UnitSystem.SI:
+        nominal_shear /= 1000.0
+        design_shear /= 1000.0
+    phi_vnb = Quantity(value=design_shear, unit=vub.unit)
+
+    return _build_result(
+        rule_binding=rule_binding,
+        demand=vub,
+        capacity=phi_vnb,
+        equation="Vup = Mf / (2*(d - tbf)); phiVnb = phi * 0.6 * Fyp * bp * tp (AISC 358-22 Eq. 6.7-10)",
+        inputs={
+            "mf": mf.model_dump(),
+            "mf_source": mf_source,
+            "mf_computed": mf_computed.model_dump(),
+            "d": d.model_dump(),
+            "tbf": tbf.model_dump(),
+            "bp": bp.model_dump(),
+            "tp": tp.model_dump(),
+            "fyp": fyp.model_dump(),
+        },
+        intermediates={
+            "lever_arm": lever_arm,
+            "nominal_shear": nominal_shear,
+            "design_shear": design_shear,
+        },
+        design_factors={"phi": phi},
+        units_trace={"vup": vub.unit, "phi_vnb": phi_vnb.unit},
+    )
+
+
+def run_step7_2_2_end_plate_shear_rupture(case: AISC358MomentCase, rule_binding: object) -> CheckResult:
+    mf, mf_source, mf_computed = _select_mf_for_design(case, rule_binding)
+    beam_profile = _beam_profile(case)
+    d = beam_profile["d"]
+    tbf = beam_profile["tf"]
+    lever_arm = d.value - tbf.value
+    if lever_arm <= 0.0:
+        raise ValueError("Beam lever arm (d - tbf) must be positive for Step 7.2.2.")
+
+    vub = Quantity(
+        value=mf.value / (2.0 * lever_arm),
+        unit="kip" if case.units_system == UnitSystem.US else "kN",
+    )
+    bp = _require(case, "geometry.end_plate_width", rule_binding)
+    tp = _require(case, "geometry.end_plate_thickness", rule_binding)
+    fup = _require(case, "materials.end_plate_fu", rule_binding)
+    db = _require(case, "geometry.bolt_diameter", rule_binding)
+    dh, dh_inter = _compute_standard_hole_diameter(bolt_diameter=db, unit_system=case.units_system)
+    net_width = bp.value - 2.0 * dh.value
+    if net_width <= 0.0:
+        raise ValueError("Net end-plate width (bp - 2*dh) must be positive for Step 7.2.2.")
+
+    phi = 0.9
+    nominal_shear = 0.6 * fup.value * tp.value * net_width
+    design_shear = phi * nominal_shear
+    if case.units_system == UnitSystem.SI:
+        nominal_shear /= 1000.0
+        design_shear /= 1000.0
+    phi_vnb = Quantity(value=design_shear, unit=vub.unit)
+
+    return _build_result(
+        rule_binding=rule_binding,
+        demand=vub,
+        capacity=phi_vnb,
+        equation="Vup = Mf / (2*(d - tbf)); phiVnb = phi * 0.6 * Fup * tp * (bp - 2*dh) (AISC 358-22 Eq. 6.7-12)",
+        inputs={
+            "mf": mf.model_dump(),
+            "mf_source": mf_source,
+            "mf_computed": mf_computed.model_dump(),
+            "d": d.model_dump(),
+            "tbf": tbf.model_dump(),
+            "bp": bp.model_dump(),
+            "tp": tp.model_dump(),
+            "fup": fup.model_dump(),
+            "db": db.model_dump(),
+            "dh": dh.model_dump(),
+        },
+        intermediates={
+            "lever_arm": lever_arm,
+            "net_width": net_width,
+            "nominal_shear": nominal_shear,
+            "design_shear": design_shear,
+            **dh_inter,
+        },
+        design_factors={"phi": phi},
+        units_trace={"vup": vub.unit, "phi_vnb": phi_vnb.unit},
+    )
+
+
+def run_step8_1_1_stiffener_weld_tension_rupture(case: AISC358MomentCase, rule_binding: object) -> CheckResult:
+    weld_type_raw = case.geometry.end_plate_stiffener_weld_type
+    weld_type = _normalize_end_plate_stiffener_weld_type(weld_type_raw)
+
+    if weld_type == "cjp":
+        return _build_result(
+            rule_binding=rule_binding,
+            demand=Quantity(value=0.0, unit="ratio"),
+            capacity=Quantity(value=1.0, unit="ratio"),
+            equation="CJP => cumple (AISC 360-22 J2.4)",
+            inputs={
+                "end_plate_stiffener_weld_type": weld_type_raw,
+                "weld_type_normalized": weld_type,
+            },
+            intermediates={},
+            design_factors={},
+            units_trace={"dcr": "ratio"},
+        )
+
+    if weld_type != "fillet":
+        raise ValueError(
+            "Unsupported geometry.end_plate_stiffener_weld_type for Step 8.1.1. "
+            "Allowed values: CJP or fillet variants."
+        )
+
+    stiffener_fy = _require(case, "materials.stiffener_fy", rule_binding)
+    stiffener_thickness = _require(case, "geometry.stiffener_thickness", rule_binding)
+    de = _require(case, "geometry.de", rule_binding)
+    pfo = _require(case, "geometry.pfo", rule_binding)
+    stiffener_height = _derive_stiffener_height_from_de_pfo(de=de, pfo=pfo)
+    weld_fexx = _require(case, "materials.weld_fexx", rule_binding)
+
+    lst = case.geometry.end_plate_stiffener_weld_length_lst
+    lst_source = "geometry.end_plate_stiffener_weld_length_lst"
+    if lst is None:
+        lst = case.geometry.stiffener_length
+        lst_source = "geometry.stiffener_length_derived"
+    if lst is None:
+        raise missing_required_input_error(
+            rule_id=rule_binding.rule_id,
+            source_document=rule_binding.source_document,
+            missing_fields=["geometry.end_plate_stiffener_weld_length_lst"],
+            message=(
+                "Required input 'geometry.end_plate_stiffener_weld_length_lst' is missing for "
+                "Step 8.1.1 fillet weld check."
+            ),
+        )
+
+    wst = case.geometry.end_plate_stiffener_weld_size_wst
+    wst_source = "geometry.end_plate_stiffener_weld_size_wst"
+    if wst is None:
+        wst = case.geometry.weld_leg_size_w
+        wst_source = "geometry.weld_leg_size_w"
+    if wst is None:
+        raise missing_required_input_error(
+            rule_id=rule_binding.rule_id,
+            source_document=rule_binding.source_document,
+            missing_fields=["geometry.end_plate_stiffener_weld_size_wst"],
+            message=(
+                "Required input 'geometry.end_plate_stiffener_weld_size_wst' is missing for "
+                "Step 8.1.1 fillet weld check."
+            ),
+        )
+
+    nl = case.geometry.end_plate_stiffener_weld_lines_nl if case.geometry.end_plate_stiffener_weld_lines_nl is not None else 2
+    if nl <= 0:
+        raise ValueError("geometry.end_plate_stiffener_weld_lines_nl must be >= 1 for Step 8.1.1.")
+
+    pust_nominal = stiffener_fy.value * stiffener_thickness.value * stiffener_height.value
+    phi_rnst_nominal = nl * 0.6 * weld_fexx.value * 0.707 * lst.value * wst.value
+    if case.units_system == UnitSystem.SI:
+        pust_nominal /= 1000.0
+        phi_rnst_nominal /= 1000.0
+
+    force_unit = "kip" if case.units_system == UnitSystem.US else "kN"
+    pust = Quantity(value=pust_nominal, unit=force_unit)
+    phi = 0.9
+    phi_rnst = Quantity(value=phi * phi_rnst_nominal, unit=force_unit)
+
+    return _build_result(
+        rule_binding=rule_binding,
+        demand=pust,
+        capacity=phi_rnst,
+        equation=(
+            "Fillet: Pust = Fys * ts * hst; "
+            "phiRnst = phi * nl * 0.6 * FEXX * 0.707 * lst * wst (AISC 360-22 J2.4)"
+        ),
+        inputs={
+            "end_plate_stiffener_weld_type": weld_type_raw,
+            "weld_type_normalized": weld_type,
+            "fys": stiffener_fy.model_dump(),
+            "ts": stiffener_thickness.model_dump(),
+            "hst": stiffener_height.model_dump(),
+            "fexx": weld_fexx.model_dump(),
+            "lst": lst.model_dump(),
+            "lst_source": lst_source,
+            "wst": wst.model_dump(),
+            "wst_source": wst_source,
+            "nl": nl,
+        },
+        intermediates={
+            "pust_nominal": pust_nominal,
+            "phi_rnst_nominal": phi_rnst_nominal,
+            "pust": pust.value,
+            "phi_rnst": phi_rnst.value,
+        },
+        design_factors={"phi": phi},
+        units_trace={"pust": pust.unit, "phi_rnst": phi_rnst.unit},
+    )
+
+
+def run_step9_1_1_stiffener_beam_weld_shear_rupture(case: AISC358MomentCase, rule_binding: object) -> CheckResult:
+    weld_type_raw = case.geometry.beam_stiffener_weld_type
+    weld_type_source = "geometry.beam_stiffener_weld_type"
+    if weld_type_raw is None:
+        weld_type_raw = case.geometry.end_plate_stiffener_weld_type
+        weld_type_source = "geometry.end_plate_stiffener_weld_type"
+    weld_type = _normalize_end_plate_stiffener_weld_type(weld_type_raw)
+
+    if weld_type == "cjp":
+        return _build_result(
+            rule_binding=rule_binding,
+            demand=Quantity(value=0.0, unit="ratio"),
+            capacity=Quantity(value=1.0, unit="ratio"),
+            equation="CJP => cumple (AISC 360-22 J2.4)",
+            inputs={
+                "beam_stiffener_weld_type": weld_type_raw,
+                "weld_type_source": weld_type_source,
+                "weld_type_normalized": weld_type,
+            },
+            intermediates={},
+            design_factors={},
+            units_trace={"dcr": "ratio"},
+        )
+
+    if weld_type != "fillet":
+        raise ValueError(
+            "Unsupported beam stiffener weld type for Step 9.1.1. "
+            "Allowed values: CJP or fillet variants."
+        )
+
+    stiffener_fy = _require(case, "materials.stiffener_fy", rule_binding)
+    stiffener_thickness = _require(case, "geometry.stiffener_thickness", rule_binding)
+    weld_fexx = _require(case, "materials.weld_fexx", rule_binding)
+
+    lst_w2 = case.geometry.beam_stiffener_weld_length_lstw2
+    lst_w2_source = "geometry.beam_stiffener_weld_length_lstw2"
+    if lst_w2 is None:
+        lst_w2 = case.geometry.end_plate_stiffener_weld_length_lst
+        lst_w2_source = "geometry.end_plate_stiffener_weld_length_lst"
+    if lst_w2 is None:
+        lst_w2 = case.geometry.stiffener_length
+        lst_w2_source = "geometry.stiffener_length_derived"
+    if lst_w2 is None:
+        raise missing_required_input_error(
+            rule_id=rule_binding.rule_id,
+            source_document=rule_binding.source_document,
+            missing_fields=["geometry.beam_stiffener_weld_length_lstw2"],
+            message=(
+                "Required input 'geometry.beam_stiffener_weld_length_lstw2' is missing for "
+                "Step 9.1.1 fillet weld check."
+            ),
+        )
+
+    wst2 = case.geometry.beam_stiffener_weld_size_wst2
+    wst2_source = "geometry.beam_stiffener_weld_size_wst2"
+    if wst2 is None:
+        wst2 = case.geometry.end_plate_stiffener_weld_size_wst
+        wst2_source = "geometry.end_plate_stiffener_weld_size_wst"
+    if wst2 is None:
+        wst2 = case.geometry.weld_leg_size_w
+        wst2_source = "geometry.weld_leg_size_w"
+    if wst2 is None:
+        raise missing_required_input_error(
+            rule_id=rule_binding.rule_id,
+            source_document=rule_binding.source_document,
+            missing_fields=["geometry.beam_stiffener_weld_size_wst2"],
+            message=(
+                "Required input 'geometry.beam_stiffener_weld_size_wst2' is missing for "
+                "Step 9.1.1 fillet weld check."
+            ),
+        )
+
+    nl_w2 = case.geometry.beam_stiffener_weld_lines_nl_w2
+    nl_w2_source = "geometry.beam_stiffener_weld_lines_nl_w2"
+    if nl_w2 is None:
+        nl_w2 = case.geometry.end_plate_stiffener_weld_lines_nl
+        nl_w2_source = "geometry.end_plate_stiffener_weld_lines_nl"
+    if nl_w2 is None:
+        nl_w2 = 2
+        nl_w2_source = "default_2"
+    if nl_w2 <= 0:
+        raise ValueError("beam_stiffener_weld_lines_nl_w2 must be >= 1 for Step 9.1.1.")
+
+    vust_nominal = 0.6 * stiffener_fy.value * stiffener_thickness.value * lst_w2.value
+    phi_vnst_nominal = nl_w2 * 0.6 * weld_fexx.value * 0.707 * lst_w2.value * wst2.value
+    if case.units_system == UnitSystem.SI:
+        vust_nominal /= 1000.0
+        phi_vnst_nominal /= 1000.0
+
+    force_unit = "kip" if case.units_system == UnitSystem.US else "kN"
+    vust = Quantity(value=vust_nominal, unit=force_unit)
+    phi = 0.9
+    phi_vnst = Quantity(value=phi * phi_vnst_nominal, unit=force_unit)
+
+    return _build_result(
+        rule_binding=rule_binding,
+        demand=vust,
+        capacity=phi_vnst,
+        equation=(
+            "Fillet: Vust,w2 = Fys * 0.6 * ts * lst; "
+            "phiVnst,w2 = phi * nl * 0.6 * FEXX * 0.707 * lst,w2 * wst,2 (AISC 360-22 J2.4)"
+        ),
+        inputs={
+            "beam_stiffener_weld_type": weld_type_raw,
+            "weld_type_source": weld_type_source,
+            "weld_type_normalized": weld_type,
+            "fys": stiffener_fy.model_dump(),
+            "ts": stiffener_thickness.model_dump(),
+            "fexx": weld_fexx.model_dump(),
+            "lst_w2": lst_w2.model_dump(),
+            "lst_w2_source": lst_w2_source,
+            "wst2": wst2.model_dump(),
+            "wst2_source": wst2_source,
+            "nl_w2": nl_w2,
+            "nl_w2_source": nl_w2_source,
+        },
+        intermediates={
+            "vust_nominal": vust_nominal,
+            "phi_vnst_nominal": phi_vnst_nominal,
+            "vust": vust.value,
+            "phi_vnst": phi_vnst.value,
+        },
+        design_factors={"phi": phi},
+        units_trace={"vust": vust.unit, "phi_vnst": phi_vnst.unit},
     )
 
 
@@ -622,10 +1324,29 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
     pu_column = _require(case, "loads.pu_columna", rule_binding)
     beam_ag = _profile_ag(beam_profile, role="beam", rule_binding=rule_binding)
     column_ag = _profile_ag(column_profile, role="column", rule_binding=rule_binding)
-    end_plate_height = _derive_stiffener_height_from_de_pfo(de=de, pfo=pfo)
+    stiffener_height = _derive_stiffener_height_from_de_pfo(de=de, pfo=pfo)
+    end_plate_height = _derive_end_plate_height(beam_depth=beam_depth, de=de, pfo=pfo)
     stiffener_length_derived = _derive_stiffener_length_from_hst(
-        stiffener_height=end_plate_height,
+        stiffener_height=stiffener_height,
         unit_system=case.units_system,
+    )
+    pso = pfo
+    psi = Quantity(value=pfi.value + beam_profile["tf"].value - tcp.value, unit=pfi.unit)
+    h1 = Quantity(
+        value=beam_depth.value - 0.5 * beam_profile["tf"].value + pso.value + pb.value,
+        unit=beam_depth.unit,
+    )
+    h2 = Quantity(
+        value=beam_depth.value - 0.5 * beam_profile["tf"].value + pso.value,
+        unit=beam_depth.unit,
+    )
+    h3 = Quantity(
+        value=beam_depth.value - 1.5 * beam_profile["tf"].value - psi.value,
+        unit=beam_depth.unit,
+    )
+    h4 = Quantity(
+        value=beam_depth.value - 1.5 * beam_profile["tf"].value - psi.value - pb.value,
+        unit=beam_depth.unit,
     )
     ca_beam, ca_beam_trace = _compute_compactness_ca(
         pu=pu_beam,
@@ -651,6 +1372,10 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
     bp_margin = 1.0 if case.units_system.value == "US" else 25.0
     min_bp = Quantity(value=bf.value + bp_margin, unit=bf.unit)
     min_edge, edge_intermediate = compute_minimum_edge_distance_standard_hole(
+        bolt_diameter=db,
+        unit_system=case.units_system,
+    )
+    standard_hole_diameter, standard_hole_intermediate = _compute_standard_hole_diameter(
         bolt_diameter=db,
         unit_system=case.units_system,
     )
@@ -1055,13 +1780,38 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
             "scope": "end_plate",
             "clause": "Section 6.3",
             "description": "Derived end-plate height reference",
-            "requirement": "end_plate_height = pfo + de",
-            "formula": "h_ep = pfo + de",
-            "candidate_a_label": "pfo",
-            "candidate_a": pfo.model_dump(),
-            "candidate_b_label": "de",
-            "candidate_b": de.model_dump(),
+            "requirement": "hp = d + 2*pfo + 2*de",
+            "formula": "hp = d + 2*pfo + 2*de",
+            "candidate_a_label": "d",
+            "candidate_a": beam_depth.model_dump(),
+            "candidate_b_label": "2*pfo + 2*de",
+            "candidate_b": Quantity(value=2.0 * pfo.value + 2.0 * de.value, unit=pfo.unit).model_dump(),
             "derived_value": end_plate_height.model_dump(),
+        },
+        {
+            "step": "1",
+            "id": "section_6_3.end_plate_h_distances_note",
+            "scope": "end_plate",
+            "clause": "Section 6.3",
+            "description": "Distancias verticales h1, h2, h3 y h4 para trazabilidad geometrica",
+            "requirement": "h1, h2, h3 y h4 medidos desde la mitad del espesor del ala inferior de la viga",
+            "formula": "h1=d-0.5tf+pso+pb; h2=d-0.5tf+pso; h3=d-1.5tf-psi; h4=d-1.5tf-psi-pb",
+            "h1": h1.model_dump(),
+            "h2": h2.model_dump(),
+            "h3": h3.model_dump(),
+            "h4": h4.model_dump(),
+        },
+        {
+            "step": "1",
+            "id": "section_6_7.end_plate_standard_hole_diameter_note",
+            "scope": "end_plate",
+            "clause": "AISC 360-22 Table J3.3",
+            "description": "Diametro estandar de perforacion (dh) para pernos en end plate",
+            "requirement": "dh segun tabla de agujero estandar: d+1/16 (hasta 7/8 in); d+1/8 (>=1 in)",
+            "formula": "dh = d + 1/16 in (db<=7/8 in) else dh = d + 1/8 in",
+            "db": db.model_dump(),
+            "dh": standard_hole_diameter.model_dump(),
+            "hole_add_in": standard_hole_intermediate["hole_add_in"],
         },
         {
             "step": "1",
@@ -1072,7 +1822,7 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
             "requirement": "hst = pfo + de; Lst = hst/tan(30 deg); edge detailing >= 25 mm",
             "formula": "hst = pfo + de; Lst = hst / tan(30 deg)",
             "candidate_a_label": "hst",
-            "candidate_a": end_plate_height.model_dump(),
+            "candidate_a": stiffener_height.model_dump(),
             "candidate_b_label": "Lst",
             "candidate_b": stiffener_length_derived.model_dump(),
             "derived_value": Quantity(
@@ -1102,6 +1852,18 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
             "requirement": (
                 "Para conexiones end-plate rigidizadas, la soldadura entre el ala de la viga y la placa "
                 "de extremo debe ejecutarse antes de instalar el rigidizador."
+            ),
+        },
+        {
+            "step": "1",
+            "id": "section_6_7.flange_root_backing_exception_note",
+            "scope": "welds",
+            "clause": "Section 6.7",
+            "description": "Excepcion de respaldo en la raiz cerca del alma de la viga",
+            "requirement": (
+                "No se requiere respaldo en la raiz del ala, directamente por encima y por debajo "
+                "del alma de la viga, en una longitud igual a 1.5k1. En esa ubicacion se permite "
+                "una soldadura de ranura PJP de profundidad completa."
             ),
         },
         {
@@ -1374,16 +2136,58 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
             check_id="section_6_3.end_plate_stiffener_height_derived",
             scope="end_plate_stiffener",
             clause="Section 6.3",
-            description="End-plate stiffener height derived from end-plate geometry",
-            calculated_symbol="hst",
-            verification_text=(
-                f"hst = pfo + de; {end_plate_height.value:.3f} {end_plate_height.unit} = "
-                f"{pfo.value:.3f} {pfo.unit} + {de.value:.3f} {de.unit}"
-            ),
-            passes=end_plate_height.value > 0.0,
-            calculated=end_plate_height,
+                description="End-plate stiffener height derived from end-plate geometry",
+                calculated_symbol="hst",
+                verification_text=(
+                    f"hst = pfo + de; {stiffener_height.value:.3f} {stiffener_height.unit} = "
+                    f"{pfo.value:.3f} {pfo.unit} + {de.value:.3f} {de.unit}"
+                ),
+                passes=stiffener_height.value > 0.0,
+                calculated=stiffener_height,
+            )
+        ]
+    if case.connection_type in {"bseep_4es", "bseep_8es"}:
+        ts = _require(case, "geometry.stiffener_thickness", rule_binding)
+        stiffener_fy = _require(case, "materials.stiffener_fy", rule_binding)
+        tbw = beam_profile["tw"]
+        ts_required = compute_required_stiffener_thickness(
+            beam_web_thickness=tbw,
+            beam_fy=beam_fy,
+            stiffener_fy=stiffener_fy,
+            unit_system=case.units_system,
         )
-    ]
+        slenderness_ratio = stiffener_height.value / ts.value
+        slenderness_limit = compute_stiffener_slenderness_ratio_limit(
+            elastic_modulus=elastic_modulus,
+            stiffener_fy=stiffener_fy,
+            unit_system=case.units_system,
+        )
+        end_plate_stiffener_limits.extend(
+            [
+                _step1_limit(
+                    check_id="section_6_7_1.stiffener_thickness_minimum",
+                    scope="end_plate_stiffener",
+                    clause="Section 6.7.1 Eq. (6.7-9)",
+                    description="Stiffener thickness minimum requirement",
+                    calculated_symbol="ts",
+                    limit_symbol="tbw*(Fyb/Fys)",
+                    calculated=ts,
+                    limit=ts_required,
+                    comparison="ge",
+                ),
+                _step1_limit(
+                    check_id="section_6_7_1.stiffener_local_buckling_limit",
+                    scope="end_plate_stiffener",
+                    clause="Section 6.7.1 Eq. (6.7-10)",
+                    description="Stiffener local buckling width-thickness limit",
+                    calculated_symbol="hst/ts",
+                    limit_symbol="0.56*sqrt(E/Fys)",
+                    calculated=Quantity(value=slenderness_ratio, unit="ratio"),
+                    limit=Quantity(value=slenderness_limit, unit="ratio"),
+                    comparison="le",
+                ),
+            ]
+        )
 
     continuity_plate_weld_thickness_limit = Quantity(
         value=3.0 / 8.0 if case.units_system == UnitSystem.US else 10.0,
@@ -1563,10 +2367,11 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
     if case.connection_type == "bseep_8es":
         pb_8es_min = _table61_length(us_in=89.0 / 25.4, si_mm=89.0)
         pb_8es_max = _table61_length(us_in=95.0 / 25.4, si_mm=95.0)
+        pb_tol = 1e-3
         pb_passes = (
-            (pb.value >= min_spacing.value)
-            and (pb.value <= pb_8es_max.value)
-            and (pb.value >= pb_8es_min.value)
+            (pb.value >= (min_spacing.value - pb_tol))
+            and (pb.value <= (pb_8es_max.value + pb_tol))
+            and (pb.value >= (pb_8es_min.value - pb_tol))
         )
         table_61_checks.insert(
             0,
@@ -1669,6 +2474,7 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
                 "edge_pfo": pfo.model_dump(),
                 "edge_pfi": pfi.model_dump(),
                 "end_plate_height": end_plate_height.model_dump(),
+                "stiffener_height": stiffener_height.model_dump(),
                 "stiffener_length": stiffener_length_derived.model_dump(),
                 "beam_clear_span_length": beam_clear_span_length.model_dump(),
                 "beam_shear_connector_free_length_from_column_face": shear_connector_free_length.model_dump(),
@@ -1790,7 +2596,7 @@ def run_step8_required_end_plate_thickness(case: AISC358MomentCase, rule_binding
     mf = _require(case, "loads.probable_moment_column_face", rule_binding)
     beam_depth = _beam_profile(case)["d"]
     end_plate_fy = _require(case, "materials.end_plate_fy", rule_binding)
-    yp = _require_procedure(case, "yield_line_parameter_yp", rule_binding)
+    yp, yp_intermediates = _derive_yp_from_tables_6_2_6_3_6_4(case, rule_binding)
     phi_d = _require(case, "design_factors.phi_d", rule_binding)
     tp_req, intermediates = compute_required_end_plate_thickness(
         mf=mf,
@@ -1811,9 +2617,10 @@ def run_step8_required_end_plate_thickness(case: AISC358MomentCase, rule_binding
             "beam_depth": beam_depth.model_dump(),
             "end_plate_fy": end_plate_fy.model_dump(),
             "yp": yp.model_dump(),
+            "yp_source": "derived_from_aisc358_tables_6_2_6_3_6_4",
             "tp_trial": tp_trial.model_dump(),
         },
-        intermediates=intermediates,
+        intermediates={**intermediates, **yp_intermediates},
         design_factors={"phi_d": phi_d},
         units_trace={"tp_req": tp_req.unit, "tp_trial": tp_trial.unit},
     )

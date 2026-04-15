@@ -109,6 +109,14 @@ class AISC358MomentGeometry(StrictModel):
     end_plate_beam_web_weld_type: str | None = None
     end_plate_beam_web_weld_length_lwe: Quantity | None = None
     end_plate_beam_web_weld_thickness_twe: Quantity | None = None
+    end_plate_stiffener_weld_type: str | None = None
+    end_plate_stiffener_weld_length_lst: Quantity | None = None
+    end_plate_stiffener_weld_size_wst: Quantity | None = None
+    end_plate_stiffener_weld_lines_nl: int | None = None
+    beam_stiffener_weld_type: str | None = None
+    beam_stiffener_weld_length_lstw2: Quantity | None = None
+    beam_stiffener_weld_size_wst2: Quantity | None = None
+    beam_stiffener_weld_lines_nl_w2: int | None = None
     stiffener_height: Quantity | None = None
     stiffener_thickness: Quantity | None = None
     stiffener_length: Quantity | None = None
@@ -128,7 +136,12 @@ class AISC358MomentGeometry(StrictModel):
             "'isolated' or 'not_isolated' (also accepts 'aislada'/'no_aislada')."
         )
 
-    @field_validator("continuity_plate_weld_type", "end_plate_beam_web_weld_type")
+    @field_validator(
+        "continuity_plate_weld_type",
+        "end_plate_beam_web_weld_type",
+        "end_plate_stiffener_weld_type",
+        "beam_stiffener_weld_type",
+    )
     @classmethod
     def normalize_weld_type_fields(cls, value: str | None) -> str | None:
         if value is None:
@@ -137,6 +150,24 @@ class AISC358MomentGeometry(StrictModel):
         if not normalized:
             return None
         return normalized
+
+    @field_validator("end_plate_stiffener_weld_lines_nl")
+    @classmethod
+    def validate_end_plate_stiffener_weld_lines_nl(cls, value: int | None) -> int | None:
+        if value is None:
+            return None
+        if value <= 0:
+            raise ValueError("geometry.end_plate_stiffener_weld_lines_nl must be >= 1.")
+        return value
+
+    @field_validator("beam_stiffener_weld_lines_nl_w2")
+    @classmethod
+    def validate_beam_stiffener_weld_lines_nl_w2(cls, value: int | None) -> int | None:
+        if value is None:
+            return None
+        if value <= 0:
+            raise ValueError("geometry.beam_stiffener_weld_lines_nl_w2 must be >= 1.")
+        return value
 
     @field_validator("bolt_tightening_type")
     @classmethod
@@ -356,6 +387,10 @@ class AISC358MomentCase(CaseBase):
             "weld_leg_size_w",
             "end_plate_beam_web_weld_length_lwe",
             "end_plate_beam_web_weld_thickness_twe",
+            "end_plate_stiffener_weld_length_lst",
+            "end_plate_stiffener_weld_size_wst",
+            "beam_stiffener_weld_length_lstw2",
+            "beam_stiffener_weld_size_wst2",
             "stiffener_height",
             "stiffener_thickness",
             "stiffener_length",
