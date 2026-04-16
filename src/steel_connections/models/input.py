@@ -109,9 +109,7 @@ class AISC358MomentGeometry(StrictModel):
     clear_distance_end_plate: Quantity | None = None
     clear_distance_column_flange: Quantity | None = None
     column_end_distance_to_beam_flange: Quantity | None = None
-    weld_leg_size_w: Quantity | None = None
     end_plate_beam_web_weld_type: str | None = None
-    end_plate_beam_web_weld_length_lwe: Quantity | None = None
     end_plate_beam_web_weld_thickness_twe: Quantity | None = None
     end_plate_stiffener_weld_type: str | None = None
     end_plate_stiffener_weld_length_lst: Quantity | None = None
@@ -219,6 +217,7 @@ class AISC358MomentDesignFactors(StrictModel):
     member_ductility_demand_beam: str | None = None
     member_ductility_demand_column: str | None = None
     column_beam_moment_ratio_minimum: float | None = None
+    column_beam_moment_ratio: float | None = None
 
     @field_validator(
         "phi_flange_tension",
@@ -268,13 +267,13 @@ class AISC358MomentDesignFactors(StrictModel):
             raise ValueError("member_ductility_demand_* must be 'high' or 'moderate'.")
         return normalized
 
-    @field_validator("column_beam_moment_ratio_minimum")
+    @field_validator("column_beam_moment_ratio_minimum", "column_beam_moment_ratio")
     @classmethod
     def validate_moment_ratio_minimum(cls, value: float | None) -> float | None:
         if value is None:
             return value
         if value <= 0.0:
-            raise ValueError("column_beam_moment_ratio_minimum must be > 0.")
+            raise ValueError("column_beam_moment_ratio_* must be > 0.")
         return value
 
 
@@ -284,13 +283,10 @@ class AISC358MomentProcedure(StrictModel):
     yield_line_parameter_yp: Quantity | None = None
     column_yield_line_parameter_yc_unstiffened: Quantity | None = None
     column_yield_line_parameter_yc_stiffened: Quantity | None = None
-    tension_bolt_line_distances: list[Quantity] | None = None
-    beam_available_shear_strength: Quantity | None = None
     flange_weld_available_strength: Quantity | None = None
     web_weld_available_strength: Quantity | None = None
     continuity_plate_available_strength: Quantity | None = None
     panel_zone_capacity: Quantity | None = None
-    column_beam_moment_ratio: float | None = None
 
 
 class DG1Materials(StrictModel):
@@ -414,8 +410,6 @@ class AISC358MomentCase(CaseBase):
             "clear_distance_end_plate",
             "clear_distance_column_flange",
             "column_end_distance_to_beam_flange",
-            "weld_leg_size_w",
-            "end_plate_beam_web_weld_length_lwe",
             "end_plate_beam_web_weld_thickness_twe",
             "end_plate_stiffener_weld_length_lst",
             "end_plate_stiffener_weld_size_wst",
@@ -494,16 +488,7 @@ class AISC358MomentCase(CaseBase):
                         self.units_system,
                         f"procedure.{field_name}",
                     )
-            if self.procedure.tension_bolt_line_distances is not None:
-                for idx, value in enumerate(self.procedure.tension_bolt_line_distances):
-                    validate_quantity_unit(
-                        value,
-                        "length",
-                        self.units_system,
-                        f"procedure.tension_bolt_line_distances[{idx}]",
-                    )
             for field_name in (
-                "beam_available_shear_strength",
                 "flange_weld_available_strength",
                 "web_weld_available_strength",
                 "continuity_plate_available_strength",
@@ -517,11 +502,6 @@ class AISC358MomentCase(CaseBase):
                         self.units_system,
                         f"procedure.{field_name}",
                     )
-            if (
-                self.procedure.column_beam_moment_ratio is not None
-                and self.procedure.column_beam_moment_ratio <= 0.0
-            ):
-                raise ValueError("procedure.column_beam_moment_ratio must be > 0.")
         return self
 
 

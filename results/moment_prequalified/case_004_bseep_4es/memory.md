@@ -124,196 +124,203 @@ Comparacion directa de valor calculado contra limite normativo (sin formato DCR)
 - Clausula: `Section 2.3.4 (2)`
 - Resultado: 🟢 Cumple
 
-### Chequeo 1.5 - Clear span-to-depth ratio by frame system (`Lclear/d`)
+### Chequeo 1.5 - Beam clearance criterion using Sc and S threshold (`Sc`)
+
+- Ambito: `BEAM`
+- Verificacion: `Sc = Stc - pfo; S = 0.5*sqrt(bcf*g); Sc > S => 712.000 mm > 105.114 mm`
+- Clausula: `Section 6.3.1 (beam clearance criterion)`
+- Resultado: 🟢 Cumple
+
+### Chequeo 1.6 - Clear span-to-depth ratio by frame system (`Lclear/d`)
 
 - Ambito: `BEAM`
 - Verificacion: `Lclear/d >= 7 (SMF); 10.04 ratio >= 7 ratio`
 - Clausula: `Section 2.3.4 (5)`
 - Resultado: 🟢 Cumple
 
-### Chequeo 1.6 - Beam flange width-to-thickness compactness (`lambda_f_beam`)
+### Chequeo 1.7 - Beam flange width-to-thickness compactness (`lambda_f_beam`)
 
 - Ambito: `BEAM`
 - Verificacion: `lambda_f_beam <= lambda_f_limit; 6.59 ratio <= 6.89 ratio`
 - Clausula: `Section 2.3.4 (6) + AISC Seismic Provisions`
 - Resultado: 🟢 Cumple
 
-### Chequeo 1.7 - Beam web width-to-thickness compactness (`lambda_w_beam`)
+### Chequeo 1.8 - Beam web width-to-thickness compactness (`lambda_w_beam`)
 
 - Ambito: `BEAM`
 - Verificacion: `lambda_w_beam <= lambda_w_limit; 48.84 ratio <= 56.24 ratio`
 - Clausula: `Section 2.3.4 (6) + AISC Seismic Provisions`
 - Resultado: 🟢 Cumple
 
-### Chequeo 1.8 - Column profile family allowed for prequalification (`shape_col`)
+### Chequeo 1.9 - Column profile family allowed for prequalification (`shape_col`)
 
 - Ambito: `COLUMN`
 - Verificacion: `shape_col in {W, HEA, HEB, IPE}; 'W18X175' in {W, HEA, HEB, IPE}`
 - Clausula: `Section 2.3.4`
 - Resultado: 🟢 Cumple
 
-### Chequeo 1.9 - Column profile depth maximum (W36/W920) (`d_col`)
+### Chequeo 1.10 - Column profile depth maximum (W36/W920) (`d_col`)
 
 - Ambito: `COLUMN`
 - Verificacion: `d_col <= W36/W920; 508 mm <= 920 mm`
 - Clausula: `Section 6.3 (3)`
 - Resultado: 🟢 Cumple
 
-### Chequeo 1.10 - End-plate fit within column flange width (`bp`)
+### Chequeo 1.11 - End-plate fit within column flange width (`bp`)
 
 - Ambito: `COLUMN`
 - Verificacion: `bp <= bcf; 253 mm <= 290 mm`
 - Clausula: `Section 6.3 / Table 6.1`
 - Resultado: 🟢 Cumple
 
-### Chequeo 1.11 - Column-slab connection condition (`col_losa`)
+### Chequeo 1.12 - Column-slab connection condition (`col_losa`)
 
 - Ambito: `COLUMN`
 - Verificacion: `col_losa == isolated; 'isolated' == 'isolated'`
 - Clausula: `Section 2.3.4 (3)`
 - Resultado: 🟢 Cumple
 
-### Chequeo 1.12 - Column flange width-to-thickness compactness (`lambda_f_col`)
+### Chequeo 1.13 - Stc >= pfo + de + 12.5 mm (`Stc`)
+
+- Ambito: `COLUMN`
+- Verificacion: `Stc >= Stc_min; 762 mm >= 122.5 mm`
+- Clausula: `Section 6.3.1 (column top clearance criterion)`
+- Resultado: 🟢 Cumple
+
+### Chequeo 1.14 - Column flange width-to-thickness compactness (`lambda_f_col`)
 
 - Ambito: `COLUMN`
 - Verificacion: `lambda_f_col <= lambda_f_limit; 3.59 ratio <= 6.89 ratio`
 - Clausula: `Section 2.3.4 (6) + AISC Seismic Provisions`
 - Resultado: 🟢 Cumple
 
-### Chequeo 1.13 - Column web width-to-thickness compactness (`lambda_w_col`)
+### Chequeo 1.15 - Column web width-to-thickness compactness (`lambda_w_col`)
 
 - Ambito: `COLUMN`
 - Verificacion: `lambda_w_col <= lambda_w_limit; 18.01 ratio <= 56.24 ratio`
 - Clausula: `Section 2.3.4 (6) + AISC Seismic Provisions`
 - Resultado: 🟢 Cumple
 
-### Chequeo 1.14 - End-plate width explicit dual inequalities (`bp`)
+### Chequeo 1.16 - End-plate width explicit dual inequalities (`bp`)
 
 - Ambito: `END_PLATE`
 - Verificacion: `bp <= bbf + 25 mm; bp <= bcf; [min,max] = [177.8 mm, 253 mm]`
 - Clausula: `Section 6.3 / Table 6.1`
 - Resultado: 🟢 Cumple
 
-### Chequeo 1.15 - End-plate stiffener height derived from end-plate geometry (`hst`)
+### Chequeo 1.17 - End-plate stiffener height derived from end-plate geometry (`hst`)
 
 - Ambito: `END_PLATE_STIFFENER`
 - Verificacion: `hst = pfo + de; 110.000 mm = 50.000 mm + 60.000 mm`
 - Clausula: `Section 6.3`
 - Resultado: 🟢 Cumple
 
-### Chequeo 1.16 - Stiffener thickness minimum requirement (`ts`)
+### Chequeo 1.18 - Stiffener thickness minimum requirement (`ts`)
 
 - Ambito: `END_PLATE_STIFFENER`
 - Verificacion: `ts >= tbw*(Fyb/Fys); 12.7 mm >= 11.2 mm`
 - Clausula: `Section 6.7.1 Eq. (6.7-9)`
 - Resultado: 🟢 Cumple
 
-### Chequeo 1.17 - Stiffener local buckling width-thickness limit (`hst/ts`)
+### Chequeo 1.19 - Stiffener local buckling width-thickness limit (`hst/ts`)
 
 - Ambito: `END_PLATE_STIFFENER`
 - Verificacion: `hst/ts <= 0.56*sqrt(E/Fys); 8.66 ratio <= 13.48 ratio`
 - Clausula: `Section 6.7.1 Eq. (6.7-10)`
 - Resultado: 🟢 Cumple
 
-### Chequeo 1.18 - End-plate to beam-web weld type shall be an allowed category (`weld_ep_web`)
+### Chequeo 1.20 - Bolt gage clearance with stiffener thickness (`g`)
+
+- Ambito: `END_PLATE_STIFFENER`
+- Verificacion: `g >= 2emin + ts; 152.4 mm >= 88.9 mm`
+- Clausula: `Section 6.3 (stiffened) + AISC 360 Table J3.4`
+- Resultado: 🟢 Cumple
+
+### Chequeo 1.21 - End-plate to beam-web weld type shall be an allowed category (`weld_ep_web`)
 
 - Ambito: `WELDS`
 - Verificacion: `weld_ep_web in {cjp, double_sided_fillet, single_sided_fillet}; 'cjp' in {cjp, double_sided_fillet, single_sided_fillet}`
 - Clausula: `Section 6.7`
 - Resultado: 🟢 Cumple
 
-### Chequeo 1.19 - Continuity-plate weld type shall be explicitly declared with an allowed weld category (`weld_cp`)
-
-- Ambito: `CONTINUITY_PLATE`
-- Verificacion: `weld_cp in {double_sided_fillet, cjp, pjp}; 'cjp' in {double_sided_fillet, cjp, pjp}`
-- Clausula: `Section 6.3 (continuity plate weld detail)`
-- Resultado: 🟢 Cumple
-
-### Chequeo 1.20 - Continuity-plate weld type when plate thickness is less than or equal to 3/8 in (10 mm) (`weld_cp`)
-
-- Ambito: `CONTINUITY_PLATE`
-- Verificacion: `weld_cp in {cjp, pjp} => cumple siempre; tcp=15.9 mm; weld_cp='cjp'`
-- Clausula: `Section 6.3 (continuity plate weld detail)`
-- Resultado: 🟢 Cumple
-
-### Chequeo 1.21 - Bolt tightening type must be one recognized category (`tight_bolt`)
+### Chequeo 1.22 - Bolt tightening type must be one recognized category (`tight_bolt`)
 
 - Ambito: `BOLTS`
 - Verificacion: `tight_bolt in {pretensioned, snug_tight}; 'pretensioned' in {pretensioned, snug_tight}`
 - Clausula: `Section 4.1 FASTENER ASSEMBLIES`
 - Resultado: 🟢 Cumple
 
-### Chequeo 1.22 - Bolts shall be pretensioned unless a specific connection permits otherwise (`tight_bolt`)
+### Chequeo 1.23 - Bolts shall be pretensioned unless a specific connection permits otherwise (`tight_bolt`)
 
 - Ambito: `BOLTS`
 - Verificacion: `tight_bolt == pretensioned; 'pretensioned' == 'pretensioned'`
 - Clausula: `Section 4.1 FASTENER ASSEMBLIES`
 - Resultado: 🟢 Cumple
 
-### Chequeo 1.23 - Bolt fabrication standard must be an allowed high-strength ASTM designation (`std_bolt`)
+### Chequeo 1.24 - Bolt fabrication standard must be an allowed high-strength ASTM designation (`std_bolt`)
 
 - Ambito: `BOLTS`
 - Verificacion: `std_bolt in {ASTM F3125/F3125M, ASTM A325, ASTM A325M, ASTM A490, ASTM A490M, ASTM F1852, ASTM F2280}; 'ASTM A490' in {ASTM F3125/F3125M, ASTM A325, ASTM A325M, ASTM A490, ASTM A490M, ASTM F1852, ASTM F2280}`
 - Clausula: `Section 4.1 FASTENER ASSEMBLIES`
 - Resultado: 🟢 Cumple
 
-### Chequeo 1.24 - Vertical pitch minimum spacing (`pb`)
+### Chequeo 1.25 - Vertical pitch minimum spacing (`pb`)
 
 - Ambito: `TABLE_6_1`
 - Verificacion: `pb >= 3db; 95 mm >= 85.72 mm`
 - Clausula: `Table 6.1`
 - Resultado: 🟢 Cumple
 
-### Chequeo 1.25 - Edge distance at de (`de`)
+### Chequeo 1.26 - Edge distance at de (`de`)
 
 - Ambito: `TABLE_6_1`
 - Verificacion: `de >= emin; 60 mm >= 38.1 mm`
 - Clausula: `Table 6.1 + AISC 360 Table J3.4`
 - Resultado: 🟢 Cumple
 
-### Chequeo 1.26 - Outside bolt-row distance limits (`pfo - pso`)
+### Chequeo 1.27 - Outside bolt-row distance limits (`pfo - pso`)
 
 - Ambito: `TABLE_6_1`
 - Verificacion: `pso (=pfo) >= emin; pfo <= 140 mm; pfo >= 44 mm; [min,max] = [44.45 mm, 139.7 mm]`
 - Clausula: `Table 6.1 + AISC 360 Table J3.4`
 - Resultado: 🟢 Cumple
 
-### Chequeo 1.27 - Inside bolt-row distance limits (`pfi - psi`)
+### Chequeo 1.28 - Inside bolt-row distance limits (`pfi - psi`)
 
 - Ambito: `TABLE_6_1`
 - Verificacion: `pfi >= emin; pfi <= 140 mm; pfi >= 44 mm; psi = pfi + tfb - tcp; psi > 0; [min,max] = [44.45 mm, 139.7 mm]`
 - Clausula: `Table 6.1 + AISC 360 Table J3.4`
 - Resultado: 🟢 Cumple
 
-### Chequeo 1.28 - Beam flange thickness limits (`tbf`)
+### Chequeo 1.29 - Beam flange thickness limits (`tbf`)
 
 - Ambito: `TABLE_6_1`
 - Verificacion: `tbf in [tbf_min, tbf_max]; 9.52 mm <= 17.3 mm <= 19.05 mm`
 - Clausula: `Table 6.1`
 - Resultado: 🟢 Cumple
 
-### Chequeo 1.29 - Beam flange width limits (`bbf`)
+### Chequeo 1.30 - Beam flange width limits (`bbf`)
 
 - Ambito: `TABLE_6_1`
 - Verificacion: `bbf in [bbf_min, bbf_max]; 152.4 mm <= 228 mm <= 228.6 mm`
 - Clausula: `Table 6.1`
 - Resultado: 🟢 Cumple
 
-### Chequeo 1.30 - Connecting beam depth limits (`d`)
+### Chequeo 1.31 - Connecting beam depth limits (`d`)
 
 - Ambito: `TABLE_6_1`
 - Verificacion: `d in [d_min, d_max]; 349.25 mm <= 607 mm <= 609.6 mm`
 - Clausula: `Table 6.1`
 - Resultado: 🟢 Cumple
 
-### Chequeo 1.31 - End-plate thickness limits (`tp`)
+### Chequeo 1.32 - End-plate thickness limits (`tp`)
 
 - Ambito: `TABLE_6_1`
 - Verificacion: `tp in [tp_min, tp_max]; 12.7 mm <= 25.4 mm <= 38.1 mm`
 - Clausula: `Table 6.1`
 - Resultado: 🟢 Cumple
 
-### Chequeo 1.32 - Horizontal bolt spacing limits (`g`)
+### Chequeo 1.33 - Horizontal bolt spacing limits (`g`)
 
 - Ambito: `TABLE_6_1`
 - Verificacion: `g in [g_min, g_max]; 82.55 mm <= 152.4 mm <= 152.4 mm`
@@ -348,28 +355,40 @@ Para 4E: `Sh = min(d/2, 3bf)`. Para 4ES/8ES: `Sh = Lst + tp`.
 - Sh calculado: `215.93 mm`
 - Resultado: `PASS`
 
-## Paso 4 - Cortante Probable En Rotula Plastica (Vh)
+## Paso 4 - Cortante Probable En Rotula Plastica (Vhmax, Vhmin)
 
-Calculo de `Vh` segun Eq. (2.4-3): `Vh = 2*Mpr/Lh + Vgravity`.
+Calculo por lado segun Eq. (2.4-3): `Vhmax = 2*Mpr/Lh + Vgravity` y `Vhmin = 2*Mpr/Lh - Vgravity`.
 
 - Clausula: `Chapter 6 / Section 6.7.1 Step 4 + Eq. (2.4-3)`
-- Ecuacion: `Vh = 2*Mpr/Lh + Vgravity (Eq. 2.4-3)`
-- Lh: `6096 mm`
-- Vgravity: `44.48 kN`
-- 2*Mpr/Lh: `470.53`
-- Vh calculado: `515.01 kN`
+- Ecuacion: `Vhmax = 2*Mpr/Lh + Vgravity; Vhmin = 2*Mpr/Lh - Vgravity (Eq. 2.4-3, side-specific der/izq)`
+- Configuracion de vigas: `right_only`
+- Lado gobernante Vhmax: `der`
+- Fuente Vhmax seleccionado: `step4_computed_vhmax_der (governing_side=der)`
+- Mpr: `1434180`
+- Lh.der: `6096 mm`
+- Beam_right_Vgravity: `44.48 kN`
+- 2*Mpr/Lh.der: `470.53`
+- Vh.dermax: `515.01`
+- Vh.dermin: `426.05`
+- Vhmax gobernante: `515.01 kN`
 - Resultado: `PASS`
 
-## Paso 5 - Momento Probable Maximo En Cara De Columna (Mf)
+## Paso 5 - Momento Probable En Cara De Columna (Mfmax, Mfmin)
 
-Calculo de `Mf` segun Eq. (2.4-4): `Mf = Mpr + Vh*Sh`.
+Calculo por lado segun Eq. (2.4-4): `Mfmax = Mpr + Vhmax*Sh` y `Mfmin = Mpr + Vhmin*Sh`.
 
 - Clausula: `Chapter 6 / Section 6.7.1 Step 5 + Eq. (2.4-4)`
-- Ecuacion: `Mf = Mpr + Vh * Sh (Eq. 2.4-4)`
+- Ecuacion: `Mfmax = Mpr + Vhmax*Sh; Mfmin = Mpr + Vhmin*Sh (Eq. 2.4-4, side-specific der/izq)`
+- Configuracion de vigas: `right_only`
+- Lado gobernante Mfmax: `der`
+- Fuente Mfmax seleccionado: `loads.probable_moment_column_face (legacy)`
 - Mpr (intermedio): `1434180`
-- Vh (intermedio): `515.01`
 - Sh (intermedio): `215.93`
-- Mf calculado: `1545.38 kN-m`
+- Vh.dermax (intermedio): `515.01`
+- Vh.dermin (intermedio): `426.05`
+- Mf.dermax: `1545384.59`
+- Mf.dermin: `1526174.99`
+- Mfmax gobernante: `1545.38 kN-m`
 - Resultado: `PASS`
 
 ## Paso 6 - Revision De Resistencia Pernos
@@ -395,9 +414,9 @@ Calculo de `Mf` segun Eq. (2.4-4): `Mf = Mpr + Vh*Sh`.
 #### 6.2.1 ELR #1: Rotura por cortante en el perno
 
 - Clausula: `Chapter 6 / Section 6.7.1 Step 6.2 + AISC 360-22 J3.7`
-- Ecuacion: `Vub = Vh/nb, phiVnb = phi * Ab * Fnv, Ab = pi*db^2/4, nb = 4 (4E/4ES) or 8 (8ES), phi = 0.9 (AISC 360-22 J3.7)`
+- Ecuacion: `Vub = Vhmax/nb, phiVnb = phi * Ab * Fnv, Ab = pi*db^2/4, nb = 4 (4E/4ES) or 8 (8ES), phi = 0.9 (AISC 360-22 J3.7)`
 - phi usado: `0.9`
-- Vh: `515.01 kN`
+- Vhmax: `515.01 kN`
 - nb: `4`
 - Vub: `128.75 kN`
 - phiVnb: `271.27 kN`
@@ -454,7 +473,7 @@ Calculo de `Mf` segun Eq. (2.4-4): `Mf = Mpr + Vh*Sh`.
 #### 7.3.1. ELR #1: Desgarramiento en la perforacion del perno (AISC 360-22 J3.11a)
 
 - Clausula: `Chapter 6 / Section 7.3.1 + AISC 360-22 J3.11(a)`
-- Ecuacion: `Vu2p = Vh/nb; phiVn2p = phi * 1.2 * lc * tp * Fup (AISC 360-22 J3.11a)`
+- Ecuacion: `Vu2p = Vhmax/nb; phiVn2p = phi * 1.2 * lc * tp * Fup (AISC 360-22 J3.11a)`
 - phi usado: `0.9`
 - Vu2p: `128.75 kN`
 - phiVn2p: `1056.06 kN`
@@ -467,7 +486,7 @@ Calculo de `Mf` segun Eq. (2.4-4): `Mf = Mpr + Vh*Sh`.
 #### 7.3.2. ELR #2: Aplastamiento en la perforacion del perno (AISC 360-22 J3.11a)
 
 - Clausula: `Chapter 6 / Section 7.3.2 + AISC 360-22 J3.11(a)`
-- Ecuacion: `Vu2p = Vh/nb; phiVn2p = phi * 2.4 * (db + 1.6 mm) * tp * Fup (AISC 360-22 J3.11a)`
+- Ecuacion: `Vu2p = Vhmax/nb; phiVn2p = phi * 2.4 * (db + 1.6 mm) * tp * Fup (AISC 360-22 J3.11a)`
 - phi usado: `0.9`
 - Vu2p: `128.75 kN`
 - phiVn2p: `744.98 kN`
@@ -512,7 +531,7 @@ Calculo de `Mf` segun Eq. (2.4-4): `Mf = Mpr + Vh*Sh`.
 #### 10.1.1. ELR #1: Fluencia por cortante (AISC 360-22 G2.1)
 
 - Clausula: `Chapter 6 / Section 6.7.1 Step 10.1.1 + AISC 360-22 G2.1`
-- Ecuacion: `Vubm = Vh; phiVnbm = phi * 0.6 * Fybm * tw,bm * d * Cv1 (AISC 360-22 G2.1, Eq. G2-3/G2-4; kv=5.34 for webs without transverse stiffeners)`
+- Ecuacion: `Vubm = Vhmax; phiVnbm = phi * 0.6 * Fybm * tw,bm * d * Cv1 (AISC 360-22 G2.1, Eq. G2-3/G2-4; kv=5.34 for webs without transverse stiffeners)`
 - phi usado: `1`
 - Vubm: `515.01 kN`
 - phiVnbm: `1407.27 kN`
@@ -522,3 +541,37 @@ Calculo de `Mf` segun Eq. (2.4-4): `Mf = Mpr + Vh*Sh`.
 - h/tw: `48.84`
 - h: `547`
 - Resultado: `PASS`
+
+## Paso 11 - Revision de resistencia de soldadura viga-alma a end plate
+
+### 11.1 Revision capacidad a traccion
+
+#### 11.1.1 ELR #1: Rotura de soldadura
+
+- Fuente de input: `geometry.welds.weld_3`
+- Soldadura #3: `viga (alma) con end plate`
+- Tipo de soldadura: `CJP`
+- Longitud de soldadura (Lwe): `300 mm`
+- Espesor/tamano de soldadura (twe = ww3): `8 mm`
+- CJP -> `Cumple`
+- Fillet:
+  `Puww3 = Fybm * tw * hwef`
+  `hwef = Pfi + Pb + 150 mm`
+  `phiPnww3 = phi * nl * 0.6 * Fexx * 0.707 * hwef * ww3`
+
+- con:
+  `phi = 0.9`
+  `nl = 2 (numero de cordones)`
+  `ww3 = espesor/tamano de soldadura (input)`
+  `Fexx = resistencia efectiva de soldadura [MPa]`
+
+- verificacion:
+  `DCRww3p = Puww3 / phiPnww3`
+  `si DCRww3p <= 1 -> Cumple`
+  `si DCRww3p > 1 -> No cumple`
+
+- hwef: `295 mm`
+- Puww3: `n/a (CJP)`
+- phiPnww3: `n/a (CJP)`
+- DCRww3p: `n/a (CJP)`
+- Resultado: `Cumple`

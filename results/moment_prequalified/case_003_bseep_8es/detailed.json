@@ -43,10 +43,6 @@
           },
           "continuity_plate_weld_type": "CJP",
           "end_plate_beam_web_weld_type": "CJP",
-          "end_plate_beam_web_weld_length_lwe": {
-            "value": 300.0,
-            "unit": "mm"
-          },
           "weld_fexx": {
             "value": 490.0,
             "unit": "MPa"
@@ -832,6 +828,31 @@
               "margin": {
                 "value": 4.8217982227715055,
                 "unit": "ratio"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "section_6_3_1.stiffener_bolt_gage_clearance",
+              "scope": "end_plate_stiffener",
+              "clause": "Section 6.3 (stiffened) + AISC 360 Table J3.4",
+              "description": "Bolt gage clearance with stiffener thickness",
+              "calculated_symbol": "g",
+              "limit_symbol": "2emin + ts",
+              "calculated": {
+                "value": 140.0,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 88.89999999999999,
+                "unit": "mm"
+              },
+              "comparison": "ge",
+              "comparison_text": ">=",
+              "margin": {
+                "value": 51.10000000000001,
+                "unit": "mm"
               },
               "status": "PASS",
               "result": "OK"
@@ -1691,6 +1712,31 @@
               "margin": {
                 "value": 4.8217982227715055,
                 "unit": "ratio"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "section_6_3_1.stiffener_bolt_gage_clearance",
+              "scope": "end_plate_stiffener",
+              "clause": "Section 6.3 (stiffened) + AISC 360 Table J3.4",
+              "description": "Bolt gage clearance with stiffener thickness",
+              "calculated_symbol": "g",
+              "limit_symbol": "2emin + ts",
+              "calculated": {
+                "value": 140.0,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 88.89999999999999,
+                "unit": "mm"
+              },
+              "comparison": "ge",
+              "comparison_text": ">=",
+              "margin": {
+                "value": 51.10000000000001,
+                "unit": "mm"
               },
               "status": "PASS",
               "result": "OK"

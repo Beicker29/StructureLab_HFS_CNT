@@ -67,23 +67,27 @@ El archivo debe tener estos bloques:
 - `geometry.end_plate.pfi`: `pfi`, distancia libre base para la zona de la linea de pernos 3.
 - `hp` (altura de platina) se calcula como `hp = d + 2*pfo + 2*de`, donde `d` proviene del catalogo de la viga.
 - `geometry.continuity_plate.continuity_plate_thickness`: `tcp`, espesor de la placa de continuidad.
-- `geometry.welds.end_plate_beam_web_weld_type`: tipo de soldadura entre end plate y alma de viga (`CJP`, `double_sided_fillet`, `single_sided_fillet`).
-- `geometry.welds.end_plate_beam_web_weld_length_lwe`: longitud de soldadura `Lwe`.
-- `geometry.welds.end_plate_beam_web_weld_thickness_twe`: espesor de soldadura `twe` (requerido si el tipo es `double_sided_fillet` o `single_sided_fillet`).
-- `geometry.welds.end_plate_stiffener_weld_type`: tipo de soldadura rigidizador-end plate para Paso 8 (`CJP` o `fillet`).
-- `geometry.welds.end_plate_stiffener_weld_length_lst`: longitud de soldadura `l_st` para el Paso 8 (si no se provee, el motor usa `Lst` derivado).
-- `geometry.welds.end_plate_stiffener_weld_size_wst`: espesor/tamano de filete `w_st` para el Paso 8 (si no se provee, el motor usa `w`).
-- `geometry.welds.end_plate_stiffener_weld_lines_nl`: numero de lineas efectivas de soldadura `n_l` para el Paso 8 (default interno `2`).
-- `geometry.welds.beam_stiffener_weld_type`: tipo de soldadura viga-rigidizador para Paso 9 (`CJP` o `fillet`; si no se provee, usa el tipo del Paso 8).
-- `geometry.welds.beam_stiffener_weld_length_lstw2`: longitud de soldadura `l_st,w2` para Paso 9 (fallback: `end_plate_stiffener_weld_length_lst`, luego `Lst` derivado).
-- `geometry.welds.beam_stiffener_weld_size_wst2`: espesor/tamano de filete `w_st,2` para Paso 9 (fallback: `end_plate_stiffener_weld_size_wst`, luego `w`).
-- `geometry.welds.beam_stiffener_weld_lines_nl_w2`: numero de lineas `n_l,w2` para Paso 9 (fallback: `end_plate_stiffener_weld_lines_nl`, default interno `2`).
+- `geometry.welds.weld_4`: soldadura #4 (rigidizador con aleta de columna).
+- `geometry.welds.weld_4.weld_type`: tipo de soldadura de platina de continuidad (`CJP`, `PJP`, `double_sided_fillet` condicionado por espesor).
+- `geometry.welds.weld_1`: soldadura #1 (rigidizador con end plate).
+- `geometry.welds.weld_1.weld_type`: tipo (`CJP` o `fillet`).
+- `geometry.welds.weld_1.length`: longitud `l_st` para Paso 8.
+- `geometry.welds.weld_1.size`: tamano/espesor `w_st` para Paso 8.
+- `geometry.welds.weld_1.nl`: numero de lineas efectivas `n_l` para Paso 8 (default interno `2`).
+- `geometry.welds.weld_2`: soldadura #2 (viga con rigidizador).
+- `geometry.welds.weld_2.weld_type`: tipo (`CJP` o `fillet`; fallback al tipo de `weld_1`).
+- `geometry.welds.weld_2.length`: longitud `l_st,w2` para Paso 9 (fallback a `weld_1`, luego `Lst` derivado).
+- `geometry.welds.weld_2.size`: tamano/espesor `w_st,2` para Paso 9 (fallback a `weld_1`, luego `w`).
+- `geometry.welds.weld_2.nl`: numero de lineas `n_l,w2` para Paso 9 (fallback a `weld_1`, default interno `2`).
+- `geometry.welds.weld_3`: soldadura #3 (alma de viga con end plate).
+- `geometry.welds.weld_3.weld_type`: tipo (`CJP`, `double_sided_fillet`, `single_sided_fillet`).
+- `geometry.welds.weld_3.thickness`: espesor `twe` (requerido si `weld_type` es `double_sided_fillet` o `single_sided_fillet`).
+- En el chequeo de capacidad de soldadura #3 no se usa `Lwe` como input; se usa `hwef = pfi + pb + 150 mm`.
 - `psi` (linea de pernos 3 efectiva) se calcula como `psi = pfi + tfb - tcp`, donde `tfb` viene del catalogo de la viga.
 - `geometry.bolts.bolt_tightening_type`: tipo de apriete de pernos (`pretensioned` o `snug_tight`; tambien acepta `pretensionado` y `apriete_justo`).
 - `geometry.bolts.clear_distance_end_plate`: `lc_ep`, distancia libre para bearing/tearout en placa extremo (distancia horizontal en direccion de carga desde borde del agujero al borde libre de la platina).
 - `geometry.bolts.clear_distance_column_flange`: `lc_cf`, distancia libre para bearing/tearout en ala de columna (distancia horizontal desde borde del agujero al borde libre del ala de la columna).
 - `geometry.column.column_end_distance_to_beam_flange`: `a_col_end`, distancia vertical desde la aleta de la viga hasta el extremo de la columna para evaluar web crippling.
-- `geometry.welds.weld_leg_size_w`: tamaño de filete de soldadura `w`.
 - `geometry.stiffener.stiffener_thickness`: `ts` (solo conexiones `bseep_*`).
 - `hst` ya no se ingresa como input: el motor lo deriva como `hst = pfo + de`.
 - `Lst` ya no se ingresa como input: el motor lo deriva como `Lst = hst / tan(30 deg)`.
@@ -112,6 +116,7 @@ El archivo debe tener estos bloques:
 - `design_factors.member_ductility_demand_beam`: demanda de ductilidad para compacidad de viga (`high` o `moderate`).
 - `design_factors.member_ductility_demand_column`: demanda de ductilidad para compacidad de columna (`high` o `moderate`).
 - `design_factors.column_beam_moment_ratio_minimum`: relación mínima columna-viga.
+- `design_factors.column_beam_moment_ratio`: relación columna-viga del caso.
 
 Nota de compactacion:
 - `Ca` ya no se ingresa como input.
@@ -121,23 +126,7 @@ Nota de compactacion:
   - `Ag` desde `data/sections.xlsx`
   - `Fy` desde `data/materials.xlsx` (hoja `HRS`)
 
-## 7) Parámetros de procedimiento (`procedure`)
-
-- `procedure.tension_bolt_line_distances`: distancias `h_i` de líneas de pernos a la línea de compresión.
-- `procedure.beam_available_shear_strength`: capacidad disponible de cortante de viga.
-- `procedure.flange_weld_available_strength`: capacidad disponible de soldadura en aleta.
-- `procedure.web_weld_available_strength`: capacidad disponible de soldadura en alma.
-- `procedure.continuity_plate_available_strength`: capacidad disponible de placa de continuidad.
-- `procedure.panel_zone_capacity`: capacidad de panel zone.
-- `procedure.column_beam_moment_ratio`: relación columna-viga del caso.
-
-Campos derivados automáticamente (ya no se aceptan en input):
-- `Ze` se deriva de `Zx` del catálogo (`sections.xlsx`) según `sections.beam_shape`.
-- `Lh` se deriva de `geometry.beam_clear_span_length`.
-- `Yp` no se recibe por input en esta etapa.
-- `Yc` no se recibe por input en esta etapa.
-
-## Reglas importantes
+## 7) Parametros derivados`r`n`r`n- El bloque `procedure` ya no se usa como input.`r`n- `Ze` se deriva de `Zx` del catalogo (`sections.xlsx`) segun `sections.beam_shape`.`r`n- `Lh` se deriva de `geometry.beam_clear_span_length`.`r`n- `h1..h4` se derivan de la geometria del end plate (`pfo`, `pfi`, `pb`, `tcp`, `d`, `tf`).`r`n- `beam_available_shear_strength` se calcula internamente en el motor.`r`n`r`n## Reglas importantes
 
 - No usar defaults ocultos: si falta un dato aplicable, el motor falla con error estructurado.
 - `Fy/Fu` de perfiles/platinas y `Fnt/Fnv`/diámetro de perno se derivan de catálogos, no se ingresan manualmente.
@@ -147,4 +136,5 @@ Campos derivados automáticamente (ya no se aceptan en input):
 ```json
 { "value": 0.0, "unit": "mm" }
 ```
+
 

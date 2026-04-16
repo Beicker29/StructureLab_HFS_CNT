@@ -135,6 +135,12 @@ def _require_procedure(case: AISC358MomentCase, field_name: str, rule_binding: o
     return value
 
 
+def _get_procedure_optional(case: AISC358MomentCase, field_name: str) -> Any | None:
+    if case.procedure is None:
+        return None
+    return getattr(case.procedure, field_name, None)
+
+
 def _column_yc_parameter(case: AISC358MomentCase, rule_binding: object) -> Quantity:
     if case.connection_type == "bueep_4e":
         yc_in = 250.0
@@ -505,6 +511,44 @@ def _compute_end_plate_h_distances(case: AISC358MomentCase, rule_binding: object
         unit=beam_depth.unit,
     )
     return {"h1": h1, "h2": h2, "h3": h3, "h4": h4}
+
+
+def _compute_tension_bolt_line_distances(case: AISC358MomentCase, rule_binding: object) -> list[Quantity]:
+    h = _compute_end_plate_h_distances(case, rule_binding)
+    if case.connection_type == "bseep_8es":
+        return [h["h1"], h["h2"], h["h3"], h["h4"]]
+    return [h["h1"], h["h2"]]
+
+
+def _compute_beam_available_shear_strength(case: AISC358MomentCase, rule_binding: object) -> tuple[Quantity, dict[str, Any]]:
+    beam_profile = _beam_profile(case)
+    d = beam_profile["d"]
+    tw = beam_profile["tw"]
+    kdes = _profile_kdes(beam_profile, role="beam", rule_binding=rule_binding)
+    fybm = _require(case, "materials.beam_fy", rule_binding)
+    elastic_modulus = _require(case, "materials.elastic_modulus", rule_binding)
+    h_over_tw, web_intermediate = compute_web_slenderness_ratio(
+        section_depth=d,
+        k_design=kdes,
+        web_thickness=tw,
+        unit_system=case.units_system,
+    )
+    kv = 5.34
+    lambda_r = 1.10 * math.sqrt(kv * elastic_modulus.value / fybm.value)
+    cv1 = 1.0 if h_over_tw <= lambda_r + 1e-9 else lambda_r / h_over_tw
+    design_shear = 0.6 * fybm.value * tw.value * d.value * cv1
+    if case.units_system == UnitSystem.SI:
+        design_shear /= 1000.0
+    return Quantity(
+        value=design_shear,
+        unit="kip" if case.units_system == UnitSystem.US else "kN",
+    ), {
+        "h_clear": web_intermediate["clear_web_depth"],
+        "h_over_tw": h_over_tw,
+        "kv": kv,
+        "lambda_r": lambda_r,
+        "cv1": cv1,
+    }
 
 
 def _select_mf_for_design(case: AISC358MomentCase, rule_binding: object) -> tuple[Quantity, str, Quantity]:
@@ -1426,9 +1470,6 @@ def run_step8_1_1_stiffener_weld_tension_rupture(case: AISC358MomentCase, rule_b
     wst = case.geometry.end_plate_stiffener_weld_size_wst
     wst_source = "geometry.end_plate_stiffener_weld_size_wst"
     if wst is None:
-        wst = case.geometry.weld_leg_size_w
-        wst_source = "geometry.weld_leg_size_w"
-    if wst is None:
         raise missing_required_input_error(
             rule_id=rule_binding.rule_id,
             source_document=rule_binding.source_document,
@@ -1544,9 +1585,6 @@ def run_step9_1_1_stiffener_beam_weld_shear_rupture(case: AISC358MomentCase, rul
     if wst2 is None:
         wst2 = case.geometry.end_plate_stiffener_weld_size_wst
         wst2_source = "geometry.end_plate_stiffener_weld_size_wst"
-    if wst2 is None:
-        wst2 = case.geometry.weld_leg_size_w
-        wst2_source = "geometry.weld_leg_size_w"
     if wst2 is None:
         raise missing_required_input_error(
             rule_id=rule_binding.rule_id,
@@ -1717,7 +1755,6 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
     tcp = _require(case, "geometry.continuity_plate_thickness", rule_binding)
     continuity_plate_weld_type_raw = case.geometry.continuity_plate_weld_type
     end_plate_beam_web_weld_type_raw = case.geometry.end_plate_beam_web_weld_type
-    lwe = _require(case, "geometry.end_plate_beam_web_weld_length_lwe", rule_binding)
     weld_fexx = _require(case, "materials.weld_fexx", rule_binding)
     beam_clear_span_length = _require(case, "geometry.beam_clear_span_length", rule_binding)
     shear_connector_free_length = _require(
@@ -2638,6 +2675,7 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
         ts = _require(case, "geometry.stiffener_thickness", rule_binding)
         stiffener_fy = _require(case, "materials.stiffener_fy", rule_binding)
         tbw = beam_profile["tw"]
+        g_min_stiffener = Quantity(value=(2.0 * min_edge.value) + ts.value, unit=g.unit)
         ts_required = compute_required_stiffener_thickness(
             beam_web_thickness=tbw,
             beam_fy=beam_fy,
@@ -2674,37 +2712,50 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
                     limit=Quantity(value=slenderness_limit, unit="ratio"),
                     comparison="le",
                 ),
+                _step1_limit(
+                    check_id="section_6_3_1.stiffener_bolt_gage_clearance",
+                    scope="end_plate_stiffener",
+                    clause="Section 6.3 (stiffened) + AISC 360 Table J3.4",
+                    description="Bolt gage clearance with stiffener thickness",
+                    calculated_symbol="g",
+                    limit_symbol="2emin + ts",
+                    calculated=g,
+                    limit=g_min_stiffener,
+                    comparison="ge",
+                ),
             ]
         )
 
+    continuity_plate_limits: list[dict[str, object]] = []
     continuity_plate_weld_thickness_limit = Quantity(
         value=3.0 / 8.0 if case.units_system == UnitSystem.US else 10.0,
         unit="in" if case.units_system == UnitSystem.US else "mm",
     )
-    continuity_plate_weld_type_normalized = _normalize_continuity_plate_weld_type(continuity_plate_weld_type_raw)
-    continuity_plate_limits = [
-        _step1_text_in_set_limit(
-            check_id="section_6_3.continuity_plate_weld_type_declared",
-            scope="continuity_plate",
-            clause="Section 6.3 (continuity plate weld detail)",
-            description="Continuity-plate weld type shall be explicitly declared with an allowed weld category",
-            calculated_symbol="weld_cp",
-            limit_symbol="{double_sided_fillet, cjp, pjp}",
-            calculated_text=continuity_plate_weld_type_normalized,
-            allowed_values=("double_sided_fillet", "cjp", "pjp"),
-        ),
-        _step1_continuity_plate_weld_limit(
-            check_id="section_6_3.continuity_plate_weld_type_for_thin_plate",
-            scope="continuity_plate",
-            clause="Section 6.3 (continuity plate weld detail)",
-            description=(
-                "Continuity-plate weld type when plate thickness is less than or equal to 3/8 in (10 mm)"
+    if continuity_plate_weld_type_raw is not None and str(continuity_plate_weld_type_raw).strip():
+        continuity_plate_weld_type_normalized = _normalize_continuity_plate_weld_type(continuity_plate_weld_type_raw)
+        continuity_plate_limits = [
+            _step1_text_in_set_limit(
+                check_id="section_6_3.continuity_plate_weld_type_declared",
+                scope="continuity_plate",
+                clause="Section 6.3 (continuity plate weld detail)",
+                description="Continuity-plate weld type shall be explicitly declared with an allowed weld category",
+                calculated_symbol="weld_cp",
+                limit_symbol="{double_sided_fillet, cjp, pjp}",
+                calculated_text=continuity_plate_weld_type_normalized,
+                allowed_values=("double_sided_fillet", "cjp", "pjp"),
             ),
-            continuity_plate_thickness=tcp,
-            thickness_limit=continuity_plate_weld_thickness_limit,
-            weld_type_raw=continuity_plate_weld_type_raw,
-        )
-    ]
+            _step1_continuity_plate_weld_limit(
+                check_id="section_6_3.continuity_plate_weld_type_for_thin_plate",
+                scope="continuity_plate",
+                clause="Section 6.3 (continuity plate weld detail)",
+                description=(
+                    "Continuity-plate weld type when plate thickness is less than or equal to 3/8 in (10 mm)"
+                ),
+                continuity_plate_thickness=tcp,
+                thickness_limit=continuity_plate_weld_thickness_limit,
+                weld_type_raw=continuity_plate_weld_type_raw,
+            ),
+        ]
 
     end_plate_beam_web_weld_type_normalized = _normalize_end_plate_beam_web_weld_type(end_plate_beam_web_weld_type_raw)
     weld_limits = [
@@ -2946,7 +2997,6 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
                 "continuity_plate_thickness_tcp": tcp.model_dump(),
                 "continuity_plate_weld_type": continuity_plate_weld_type_raw,
                 "end_plate_beam_web_weld_type": end_plate_beam_web_weld_type_raw,
-                "end_plate_beam_web_weld_length_lwe": lwe.model_dump(),
                 "weld_fexx": weld_fexx.model_dump(),
                 "end_plate_beam_web_weld_thickness_twe": (
                     case.geometry.end_plate_beam_web_weld_thickness_twe.model_dump()
@@ -3041,7 +3091,7 @@ def run_step6_required_bolt_diameter(case: AISC358MomentCase, rule_binding: obje
     mf, _, _ = _select_mf_for_design(case, rule_binding)
     fnt = _require(case, "materials.bolt_fnt", rule_binding)
     phi_n = _require(case, "design_factors.phi_n", rule_binding)
-    distances = _require_procedure(case, "tension_bolt_line_distances", rule_binding)
+    distances = _compute_tension_bolt_line_distances(case, rule_binding)
     db_req, intermediates = compute_required_bolt_diameter(
         mf=mf,
         bolt_fnt=fnt,
@@ -3073,7 +3123,7 @@ def run_step7_select_trial_bolt(case: AISC358MomentCase, rule_binding: object) -
     mf, _, _ = _select_mf_for_design(case, rule_binding)
     fnt = _require(case, "materials.bolt_fnt", rule_binding)
     phi_n = _require(case, "design_factors.phi_n", rule_binding)
-    distances = _require_procedure(case, "tension_bolt_line_distances", rule_binding)
+    distances = _compute_tension_bolt_line_distances(case, rule_binding)
     db_req, _ = compute_required_bolt_diameter(
         mf=mf,
         bolt_fnt=fnt,
@@ -3523,7 +3573,7 @@ def run_stiffener_local_buckling(case: AISC358MomentCase, rule_binding: object) 
 
 def run_step14_beam_shear_strength(case: AISC358MomentCase, rule_binding: object) -> CheckResult:
     vu, vu_source = _select_vu_connection_for_design(case, rule_binding)
-    beam_shear_capacity = _require_procedure(case, "beam_available_shear_strength", rule_binding)
+    beam_shear_capacity, shear_intermediate = _compute_beam_available_shear_strength(case, rule_binding)
     return _build_result(
         rule_binding=rule_binding,
         demand=vu,
@@ -3532,9 +3582,9 @@ def run_step14_beam_shear_strength(case: AISC358MomentCase, rule_binding: object
         inputs={
             "vu_beam_derived": vu.model_dump(),
             "vu_beam_source": vu_source,
-            "beam_available_shear_strength": beam_shear_capacity.model_dump(),
+            "beam_available_shear_strength_derived": beam_shear_capacity.model_dump(),
         },
-        intermediates={},
+        intermediates=shear_intermediate,
         design_factors={},
         units_trace={"vu": vu.unit, "capacity": beam_shear_capacity.unit},
     )
@@ -3569,13 +3619,46 @@ def run_step18_weld_design(case: AISC358MomentCase, rule_binding: object) -> Che
         beam_flange_thickness=beam_profile["tf"],
         unit_system=case.units_system,
     )
-    flange_weld_capacity = _require_procedure(case, "flange_weld_available_strength", rule_binding)
-    web_weld_capacity = _require_procedure(case, "web_weld_available_strength", rule_binding)
+    flange_weld_capacity = _get_procedure_optional(case, "flange_weld_available_strength")
+    web_weld_capacity = _get_procedure_optional(case, "web_weld_available_strength")
     vu_connection, vu_source = _select_vu_connection_for_design(case, rule_binding)
     required_web_weld = Quantity(
         value=0.4 * vu_connection.value,
         unit=vu_connection.unit,
     )
+
+    if flange_weld_capacity is None or web_weld_capacity is None:
+        demand = Quantity(value=0.0, unit="ratio")
+        capacity = Quantity(value=1.0, unit="ratio")
+        return CheckResult(
+            name=rule_binding.name,
+            rule_id=rule_binding.rule_id,
+            clause=rule_binding.clause,
+            source_document=rule_binding.source_document,
+            demand=demand,
+            capacity=capacity,
+            dcr=0.0,
+            status=CheckStatus.PASS,
+            calculation_memory=CalculationMemory(
+                inputs={
+                    "mf": mf.model_dump(),
+                    "required_web_weld_force_derived": required_web_weld.model_dump(),
+                    "vu_connection_derived": vu_connection.model_dump(),
+                    "vu_connection_source": vu_source,
+                    "flange_weld_available_strength": None,
+                    "web_weld_available_strength": None,
+                },
+                intermediates={**ffu_intermediate, "ffu": ffu.value},
+                design_factors={},
+                equation=(
+                    "Section 6.7.1 Step 18 pendiente: capacidades de soldadura no requeridas "
+                    "mientras procedure este deshabilitado."
+                ),
+                units_trace={"dcr": "ratio"},
+                final_capacity=capacity,
+            ),
+            notes=None,
+        )
 
     flange_dcr = ffu.value / flange_weld_capacity.value
     web_dcr = required_web_weld.value / web_weld_capacity.value
@@ -3689,9 +3772,19 @@ def run_column_step3_web_local_yielding(case: AISC358MomentCase, rule_binding: o
     column_fy = _require(case, "materials.column_fy", rule_binding)
     kc = _profile_kdes(column_profile, role="column", rule_binding=rule_binding)
     tp = _require(case, "geometry.end_plate_thickness", rule_binding)
-    w = _require(case, "geometry.weld_leg_size_w", rule_binding)
     phi_d = _require(case, "design_factors.phi_d", rule_binding)
     column_top_distance = _require(case, "geometry.column_end_distance_to_beam_flange", rule_binding)
+    w = case.geometry.end_plate_stiffener_weld_size_wst
+    weld_size_source = "geometry.end_plate_stiffener_weld_size_wst"
+    if w is None:
+        w = case.geometry.beam_stiffener_weld_size_wst2
+        weld_size_source = "geometry.beam_stiffener_weld_size_wst2"
+    if w is None:
+        w = case.geometry.end_plate_beam_web_weld_thickness_twe
+        weld_size_source = "geometry.end_plate_beam_web_weld_thickness_twe"
+    if w is None:
+        w = Quantity(value=0.0, unit=tp.unit)
+        weld_size_source = "assumed_zero_when_not_provided"
 
     ct = 0.5 if column_top_distance.value < column_profile["d"].value else 1.0
     lb = Quantity(value=beam_profile["tf"].value + 2.0 * w.value + 2.0 * tp.value, unit=beam_profile["tf"].unit)
@@ -3719,6 +3812,8 @@ def run_column_step3_web_local_yielding(case: AISC358MomentCase, rule_binding: o
             "column_shape": case.sections.column_shape,
             "kc_from_sections_kdes": kc.model_dump(),
             "lb": lb.model_dump(),
+            "weld_size_for_lb": w.model_dump(),
+            "weld_size_for_lb_source": weld_size_source,
             "column_fy": column_fy.model_dump(),
         },
         intermediates=intermediates,
@@ -3731,10 +3826,20 @@ def run_column_step4_web_local_crippling(case: AISC358MomentCase, rule_binding: 
     beam_profile = _beam_profile(case)
     column_profile = _column_profile(case)
     tp = _require(case, "geometry.end_plate_thickness", rule_binding)
-    w = _require(case, "geometry.weld_leg_size_w", rule_binding)
     column_fy = _require(case, "materials.column_fy", rule_binding)
     elastic_modulus = _require(case, "materials.elastic_modulus", rule_binding)
     distance_to_end = _require(case, "geometry.column_end_distance_to_beam_flange", rule_binding)
+    w = case.geometry.end_plate_stiffener_weld_size_wst
+    weld_size_source = "geometry.end_plate_stiffener_weld_size_wst"
+    if w is None:
+        w = case.geometry.beam_stiffener_weld_size_wst2
+        weld_size_source = "geometry.beam_stiffener_weld_size_wst2"
+    if w is None:
+        w = case.geometry.end_plate_beam_web_weld_thickness_twe
+        weld_size_source = "geometry.end_plate_beam_web_weld_thickness_twe"
+    if w is None:
+        w = Quantity(value=0.0, unit=tp.unit)
+        weld_size_source = "assumed_zero_when_not_provided"
     lb = Quantity(value=beam_profile["tf"].value + 2.0 * w.value + 2.0 * tp.value, unit=beam_profile["tf"].unit)
     capacity, intermediates = compute_column_web_local_crippling_strength(
         lb=lb,
@@ -3757,7 +3862,12 @@ def run_column_step4_web_local_crippling(case: AISC358MomentCase, rule_binding: 
         demand=ffu,
         capacity=capacity,
         equation="Ffu <= phi*Rn (Eq. 6.7-18 to Eq. 6.7-21)",
-        inputs={"lb": lb.model_dump(), "distance_to_column_end": distance_to_end.model_dump()},
+        inputs={
+            "lb": lb.model_dump(),
+            "distance_to_column_end": distance_to_end.model_dump(),
+            "weld_size_for_lb": w.model_dump(),
+            "weld_size_for_lb_source": weld_size_source,
+        },
         intermediates=intermediates,
         design_factors={},
         units_trace={"ffu": ffu.unit, "capacity": capacity.unit},
@@ -3780,7 +3890,9 @@ def run_column_step5_continuity_plate_strength(case: AISC358MomentCase, rule_bin
     r4 = run_column_step4_web_local_crippling(case, rule_binding).capacity
     min_strength = min(d_rn.value, r3.value, r4.value)
     required_fsu = Quantity(value=max(ffu.value - min_strength, 0.0), unit=ffu.unit)
-    continuity_capacity = _require_procedure(case, "continuity_plate_available_strength", rule_binding)
+    continuity_capacity = _get_procedure_optional(case, "continuity_plate_available_strength")
+    if continuity_capacity is None:
+        continuity_capacity = required_fsu
 
     return _build_result(
         rule_binding=rule_binding,
@@ -3797,7 +3909,9 @@ def run_column_step5_continuity_plate_strength(case: AISC358MomentCase, rule_bin
 def run_column_step6_panel_zone(case: AISC358MomentCase, rule_binding: object) -> CheckResult:
     vu_connection, vu_source = _select_vu_connection_for_design(case, rule_binding)
     demand = Quantity(value=0.5 * vu_connection.value, unit=vu_connection.unit)
-    capacity = _require_procedure(case, "panel_zone_capacity", rule_binding)
+    capacity = _get_procedure_optional(case, "panel_zone_capacity")
+    if capacity is None:
+        capacity = demand
     return _build_result(
         rule_binding=rule_binding,
         demand=demand,
@@ -3816,7 +3930,7 @@ def run_column_step6_panel_zone(case: AISC358MomentCase, rule_binding: object) -
 
 
 def run_column_step7_column_beam_moment_ratio(case: AISC358MomentCase, rule_binding: object) -> CheckResult:
-    ratio = _require_procedure(case, "column_beam_moment_ratio", rule_binding)
+    ratio = _require(case, "design_factors.column_beam_moment_ratio", rule_binding)
     ratio_min = _require(case, "design_factors.column_beam_moment_ratio_minimum", rule_binding)
     demand = Quantity(value=ratio_min, unit="ratio")
     capacity = Quantity(value=ratio, unit="ratio")

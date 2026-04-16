@@ -28,6 +28,53 @@
     }
   },
   "geometry": {
+    "column": {
+      "column_end_distance_to_beam_flange": {
+        "value": 762.0,
+        "unit": "mm"
+      },
+      "slab_connection_condition": "isolated"
+    },
+    "welds": {
+      "weld_4": {
+        "description": "Platina de continuidad con aleta de columna",
+        "weld_type": "CJP"
+      },
+      "weld_1": {
+        "description": "Rigidizador con end plate",
+        "weld_type": "Fillet",
+        "length": {
+          "value": 190.0,
+          "unit": "mm"
+        },
+        "size": {
+          "value": 9.525,
+          "unit": "mm"
+        },
+        "nl": 2
+      },
+      "weld_2": {
+        "description": "Viga con rigidizador",
+        "weld_type": "Fillet",
+        "length": {
+          "value": 190.0,
+          "unit": "mm"
+        },
+        "size": {
+          "value": 9.525,
+          "unit": "mm"
+        },
+        "nl": 2
+      },
+      "weld_3": {
+        "description": "Alma de viga con end plate",
+        "weld_type": "CJP",
+        "thickness": {
+          "value": 8.0,
+          "unit": "mm"
+        }
+      }
+    },
     "beam_right": {
       "clear_span_length": {
         "value": 6096.0,
@@ -47,13 +94,6 @@
         "value": 1000.0,
         "unit": "mm"
       }
-    },
-    "column": {
-      "column_end_distance_to_beam_flange": {
-        "value": 762.0,
-        "unit": "mm"
-      },
-      "slab_connection_condition": "isolated"
     },
     "end_plate": {
       "end_plate_width": {
@@ -109,59 +149,23 @@
       },
       "bolt_shape": "P1-1/8\"X1-3/4\"",
       "bolt_thread_condition": "N"
-    },
-    "welds": {
-      "continuity_plate_weld_type": "CJP",
-      "end_plate_beam_web_weld_type": "CJP",
-      "end_plate_beam_web_weld_length_lwe": {
-        "value": 300.0,
-        "unit": "mm"
-      },
-        "end_plate_beam_web_weld_thickness_twe": {
-          "value": 8.0,
-          "unit": "mm"
-        },
-        "weld_leg_size_w": {
-          "value": 9.525,
-          "unit": "mm"
-        },
-        "end_plate_stiffener_weld_type": "Fillet",
-        "end_plate_stiffener_weld_length_lst": {
-          "value": 190.0,
-          "unit": "mm"
-        },
-        "end_plate_stiffener_weld_size_wst": {
-          "value": 9.525,
-          "unit": "mm"
-        },
-        "end_plate_stiffener_weld_lines_nl": 2,
-        "beam_stiffener_weld_type": "Fillet",
-        "beam_stiffener_weld_length_lstw2": {
-          "value": 190.0,
-          "unit": "mm"
-        },
-        "beam_stiffener_weld_size_wst2": {
-          "value": 9.525,
-          "unit": "mm"
-        },
-        "beam_stiffener_weld_lines_nl_w2": 2
-      }
+    }
   },
   "loads": {
-    "pu_viga_right": {
-      "value": 0.0,
-      "unit": "kN"
-    },
-    "pu_viga_left": {
-      "value": 0.0,
-      "unit": "kN"
-    },
     "pu_columna": {
       "value": 696.654,
       "unit": "kN"
     },
+    "pu_viga_right": {
+      "value": 0.0,
+      "unit": "kN"
+    },
     "Beam_right_Vgravity": {
       "value": 44.482,
+      "unit": "kN"
+    },
+    "pu_viga_left": {
+      "value": 0.0,
       "unit": "kN"
     },
     "Beam_left_Vgravity": {
@@ -175,47 +179,7 @@
     "beam_connection_sides": "both_sides",
     "member_ductility_demand_beam": "high",
     "member_ductility_demand_column": "high",
-    "column_beam_moment_ratio_minimum": 1.0
-  },
-  "procedure": {
-    "tension_bolt_line_distances": [
-      {
-        "value": 203.2,
-        "unit": "mm"
-      },
-      {
-        "value": 254.0,
-        "unit": "mm"
-      },
-      {
-        "value": 304.8,
-        "unit": "mm"
-      },
-      {
-        "value": 355.6,
-        "unit": "mm"
-      }
-    ],
-    "beam_available_shear_strength": {
-      "value": 1156.537,
-      "unit": "kN"
-    },
-    "flange_weld_available_strength": {
-      "value": 1334.466,
-      "unit": "kN"
-    },
-    "web_weld_available_strength": {
-      "value": 889.644,
-      "unit": "kN"
-    },
-    "continuity_plate_available_strength": {
-      "value": 444.822,
-      "unit": "kN"
-    },
-    "panel_zone_capacity": {
-      "value": 667.233,
-      "unit": "kN"
-    },
+    "column_beam_moment_ratio_minimum": 1.0,
     "column_beam_moment_ratio": 1.2
   }
 }

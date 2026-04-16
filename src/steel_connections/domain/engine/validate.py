@@ -92,10 +92,8 @@ def _normalize_moment_geometry_payload(payload: dict[str, Any]) -> dict[str, Any
             "clear_distance_column_flange",
         ),
         "welds": (
-            "weld_leg_size_w",
             "weld_effective_area",
             "end_plate_beam_web_weld_type",
-            "end_plate_beam_web_weld_length_lwe",
             "end_plate_beam_web_weld_thickness_twe",
             "end_plate_stiffener_weld_type",
             "end_plate_stiffener_weld_length_lst",
@@ -238,6 +236,162 @@ def _normalize_moment_geometry_payload(payload: dict[str, Any]) -> dict[str, Any
             if "tipo_soldadura" in block and "continuity_plate_weld_type" not in flat_geometry:
                 flat_geometry["continuity_plate_weld_type"] = block["tipo_soldadura"]
         if group_name == "welds":
+            def _assign_from_aliases(target_key: str, source_block: dict[str, Any], aliases: tuple[str, ...]) -> None:
+                if target_key in flat_geometry:
+                    return
+                for alias in aliases:
+                    if alias in source_block:
+                        flat_geometry[target_key] = source_block[alias]
+                        return
+
+            def _get_nested_weld_block(*aliases: str) -> dict[str, Any]:
+                for alias in aliases:
+                    nested = block.get(alias)
+                    if isinstance(nested, dict):
+                        return nested
+                return {}
+
+            # New grouped weld input style:
+            # weld_1 = rigidizador con end plate
+            # weld_2 = viga con rigidizador
+            # weld_3 = viga (alma) con end plate
+            weld_1 = _get_nested_weld_block("weld_1", "weld1", "soldadura_1", "soldadura1")
+            weld_2 = _get_nested_weld_block("weld_2", "weld2", "soldadura_2", "soldadura2")
+            weld_3 = _get_nested_weld_block("weld_3", "weld3", "soldadura_3", "soldadura3")
+            weld_4 = _get_nested_weld_block("weld_4", "weld4", "soldadura_4", "soldadura4")
+
+            if weld_1:
+                _assign_from_aliases(
+                    "end_plate_stiffener_weld_type",
+                    weld_1,
+                    (
+                        "end_plate_stiffener_weld_type",
+                        "stiffener_weld_type",
+                        "weld_type",
+                        "tipo_soldadura_rigidizador",
+                        "tipo_soldadura",
+                        "type",
+                    ),
+                )
+                _assign_from_aliases(
+                    "end_plate_stiffener_weld_length_lst",
+                    weld_1,
+                    (
+                        "end_plate_stiffener_weld_length_lst",
+                        "stiffener_weld_length_lst",
+                        "l_st",
+                        "length",
+                        "l",
+                    ),
+                )
+                _assign_from_aliases(
+                    "end_plate_stiffener_weld_size_wst",
+                    weld_1,
+                    (
+                        "end_plate_stiffener_weld_size_wst",
+                        "stiffener_weld_size_wst",
+                        "w_st",
+                        "size",
+                        "w",
+                    ),
+                )
+                _assign_from_aliases(
+                    "end_plate_stiffener_weld_lines_nl",
+                    weld_1,
+                    (
+                        "end_plate_stiffener_weld_lines_nl",
+                        "stiffener_weld_lines_nl",
+                        "n_l",
+                        "nl",
+                        "lines",
+                    ),
+                )
+
+            if weld_2:
+                _assign_from_aliases(
+                    "beam_stiffener_weld_type",
+                    weld_2,
+                    (
+                        "beam_stiffener_weld_type",
+                        "stiffener_beam_weld_type",
+                        "weld_type",
+                        "tipo_soldadura_viga_rigidizador",
+                        "tipo_soldadura",
+                        "type",
+                    ),
+                )
+                _assign_from_aliases(
+                    "beam_stiffener_weld_length_lstw2",
+                    weld_2,
+                    (
+                        "beam_stiffener_weld_length_lstw2",
+                        "stiffener_beam_weld_length_lstw2",
+                        "l_st_w2",
+                        "length",
+                        "l",
+                    ),
+                )
+                _assign_from_aliases(
+                    "beam_stiffener_weld_size_wst2",
+                    weld_2,
+                    (
+                        "beam_stiffener_weld_size_wst2",
+                        "stiffener_beam_weld_size_wst2",
+                        "w_st_2",
+                        "size",
+                        "w",
+                    ),
+                )
+                _assign_from_aliases(
+                    "beam_stiffener_weld_lines_nl_w2",
+                    weld_2,
+                    (
+                        "beam_stiffener_weld_lines_nl_w2",
+                        "stiffener_beam_weld_lines_nl_w2",
+                        "n_l_w2",
+                        "nl",
+                        "lines",
+                    ),
+                )
+
+            if weld_3:
+                _assign_from_aliases(
+                    "end_plate_beam_web_weld_type",
+                    weld_3,
+                    (
+                        "end_plate_beam_web_weld_type",
+                        "weld_type_end_plate_beam_web",
+                        "tipo_soldadura_end_plate_beam_web",
+                        "weld_type",
+                        "tipo_soldadura",
+                        "type",
+                    ),
+                )
+                _assign_from_aliases(
+                    "end_plate_beam_web_weld_thickness_twe",
+                    weld_3,
+                    (
+                        "end_plate_beam_web_weld_thickness_twe",
+                        "twe",
+                        "thickness",
+                        "size",
+                        "w",
+                    ),
+                )
+
+            if weld_4:
+                _assign_from_aliases(
+                    "continuity_plate_weld_type",
+                    weld_4,
+                    (
+                        "continuity_plate_weld_type",
+                        "weld_type_continuity_plate",
+                        "weld_type",
+                        "tipo_soldadura",
+                        "type",
+                    ),
+                )
+
             if "continuity_plate_weld_type" in block and "continuity_plate_weld_type" not in flat_geometry:
                 flat_geometry["continuity_plate_weld_type"] = block["continuity_plate_weld_type"]
             if "weld_type_continuity_plate" in block and "continuity_plate_weld_type" not in flat_geometry:
@@ -251,13 +405,6 @@ def _normalize_moment_geometry_payload(payload: dict[str, Any]) -> dict[str, Any
                 and "end_plate_beam_web_weld_type" not in flat_geometry
             ):
                 flat_geometry["end_plate_beam_web_weld_type"] = block["tipo_soldadura_end_plate_beam_web"]
-            if (
-                "end_plate_beam_web_weld_length_lwe" in block
-                and "end_plate_beam_web_weld_length_lwe" not in flat_geometry
-            ):
-                flat_geometry["end_plate_beam_web_weld_length_lwe"] = block["end_plate_beam_web_weld_length_lwe"]
-            if "lwe" in block and "end_plate_beam_web_weld_length_lwe" not in flat_geometry:
-                flat_geometry["end_plate_beam_web_weld_length_lwe"] = block["lwe"]
             if (
                 "end_plate_beam_web_weld_thickness_twe" in block
                 and "end_plate_beam_web_weld_thickness_twe" not in flat_geometry
@@ -549,6 +696,42 @@ def _resolve_catalog_driven_properties(case: AISC358MomentCase) -> None:
                 missing_fields=["procedure.column_yield_line_parameter_yc_stiffened"],
                 source_document="AISC 358-22",
             )
+        if case.procedure.flange_weld_available_strength is not None:
+            _raise_validation_error(
+                message=(
+                    "Input 'procedure.flange_weld_available_strength' is no longer allowed. "
+                    "This check is currently not required as input."
+                ),
+                missing_fields=["procedure.flange_weld_available_strength"],
+                source_document="AISC 358-22",
+            )
+        if case.procedure.web_weld_available_strength is not None:
+            _raise_validation_error(
+                message=(
+                    "Input 'procedure.web_weld_available_strength' is no longer allowed. "
+                    "This check is currently not required as input."
+                ),
+                missing_fields=["procedure.web_weld_available_strength"],
+                source_document="AISC 358-22",
+            )
+        if case.procedure.continuity_plate_available_strength is not None:
+            _raise_validation_error(
+                message=(
+                    "Input 'procedure.continuity_plate_available_strength' is no longer allowed. "
+                    "This check is currently not required as input."
+                ),
+                missing_fields=["procedure.continuity_plate_available_strength"],
+                source_document="AISC 358-22",
+            )
+        if case.procedure.panel_zone_capacity is not None:
+            _raise_validation_error(
+                message=(
+                    "Input 'procedure.panel_zone_capacity' is no longer allowed. "
+                    "This check is currently not required as input."
+                ),
+                missing_fields=["procedure.panel_zone_capacity"],
+                source_document="AISC 358-22",
+            )
 
     beam_connection_sides = case.design_factors.beam_connection_sides or "right_only"
     case.design_factors.beam_connection_sides = beam_connection_sides
@@ -697,11 +880,6 @@ def _resolve_catalog_driven_properties(case: AISC358MomentCase) -> None:
     _require_text(
         case.geometry.end_plate_beam_web_weld_type,
         "geometry.end_plate_beam_web_weld_type",
-        "AISC 358-22 Section 6.7",
-    )
-    _require_quantity(
-        case.geometry.end_plate_beam_web_weld_length_lwe,
-        "geometry.end_plate_beam_web_weld_length_lwe",
         "AISC 358-22 Section 6.7",
     )
     weld_type_end_plate_web = (case.geometry.end_plate_beam_web_weld_type or "").strip().lower().replace("-", "_")

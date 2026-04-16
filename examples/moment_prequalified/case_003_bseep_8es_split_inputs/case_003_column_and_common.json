@@ -1,0 +1,60 @@
+{
+  "project_id": "proj_bseep_si_demo",
+  "case_id": "case_si_bseep_8es_w18x175_w24x76",
+  "design_code_context": {
+    "primary_document": "AISC 358-22",
+    "supporting_documents": []
+  },
+  "units_system": "SI",
+  "connection_family": "moment_prequalified",
+  "connection_type": "bseep_8es",
+  "load_state": "strength",
+  "sections": {
+    "beam_shape": "W24X76",
+    "column_shape": "W18X175"
+  },
+  "materials": {
+    "profile_steel_type": "ASTM A572 Gr 50",
+    "plate_steel_type": "ASTM A572 Gr 50",
+    "bolt_fabrication_standard": "ASTM A490",
+    "bolt_description": "Grupo 150",
+    "weld_fexx": {
+      "value": 490.0,
+      "unit": "MPa"
+    },
+    "elastic_modulus": {
+      "value": 200000,
+      "unit": "MPa"
+    }
+  },
+  "geometry": {
+    "column": {
+      "column_end_distance_to_beam_flange": {
+        "value": 762.0,
+        "unit": "mm"
+      },
+      "slab_connection_condition": "isolated"
+    },
+    "welds": {
+      "weld_4": {
+        "description": "Platina de continuidad con aleta de columna",
+        "weld_type": "CJP"
+      }
+    }
+  },
+  "loads": {
+    "pu_columna": {
+      "value": 696.654,
+      "unit": "kN"
+    }
+  },
+  "design_factors": {
+    "phi_d": 0.9,
+    "phi_n": 0.9,
+    "beam_connection_sides": "both_sides",
+    "member_ductility_demand_beam": "high",
+    "member_ductility_demand_column": "high",
+    "column_beam_moment_ratio_minimum": 1.0,
+    "column_beam_moment_ratio": 1.2
+  }
+}

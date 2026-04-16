@@ -94,9 +94,7 @@ BUEEP_4E_CASE_PAYLOAD = {
         "clear_distance_end_plate": {"value": 2.0, "unit": "in"},
         "clear_distance_column_flange": {"value": 2.0, "unit": "in"},
         "column_end_distance_to_beam_flange": {"value": 30.0, "unit": "in"},
-        "weld_leg_size_w": {"value": 0.5, "unit": "in"},
         "end_plate_beam_web_weld_type": "CJP",
-        "end_plate_beam_web_weld_length_lwe": {"value": 12.0, "unit": "in"},
         "end_plate_beam_web_weld_thickness_twe": {"value": 0.25, "unit": "in"},
     },
     "loads": {
@@ -110,20 +108,9 @@ BUEEP_4E_CASE_PAYLOAD = {
         "phi_n": 0.9,
         "member_ductility_demand_beam": "moderate",
         "member_ductility_demand_column": "moderate",
-        "column_beam_moment_ratio_minimum": 1.0
-    },
-    "procedure": {
-        "tension_bolt_line_distances": [
-            {"value": 8.0, "unit": "in"},
-            {"value": 10.0, "unit": "in"}
-        ],
-        "beam_available_shear_strength": {"value": 200.0, "unit": "kip"},
-        "flange_weld_available_strength": {"value": 300.0, "unit": "kip"},
-        "web_weld_available_strength": {"value": 200.0, "unit": "kip"},
-        "continuity_plate_available_strength": {"value": 100.0, "unit": "kip"},
-        "panel_zone_capacity": {"value": 150.0, "unit": "kip"},
+        "column_beam_moment_ratio_minimum": 1.0,
         "column_beam_moment_ratio": 1.2
-    }
+    },
 }
 
 BSEEP_8ES_CASE_PAYLOAD = {
@@ -165,9 +152,7 @@ BSEEP_8ES_CASE_PAYLOAD = {
         "bolt_tightening_type": "pretensioned",
         "clear_distance_column_flange": {"value": 2.0, "unit": "in"},
         "column_end_distance_to_beam_flange": {"value": 30.0, "unit": "in"},
-        "weld_leg_size_w": {"value": 0.5, "unit": "in"},
         "end_plate_beam_web_weld_type": "CJP",
-        "end_plate_beam_web_weld_length_lwe": {"value": 12.0, "unit": "in"},
         "end_plate_beam_web_weld_thickness_twe": {"value": 0.25, "unit": "in"},
         "end_plate_stiffener_weld_type": "CJP",
         "end_plate_stiffener_weld_length_lst": {"value": 7.5, "unit": "in"},
@@ -191,22 +176,9 @@ BSEEP_8ES_CASE_PAYLOAD = {
         "phi_n": 0.9,
         "member_ductility_demand_beam": "moderate",
         "member_ductility_demand_column": "moderate",
-        "column_beam_moment_ratio_minimum": 1.0
-    },
-    "procedure": {
-        "tension_bolt_line_distances": [
-            {"value": 8.0, "unit": "in"},
-            {"value": 10.0, "unit": "in"},
-            {"value": 12.0, "unit": "in"},
-            {"value": 14.0, "unit": "in"}
-        ],
-        "beam_available_shear_strength": {"value": 260.0, "unit": "kip"},
-        "flange_weld_available_strength": {"value": 300.0, "unit": "kip"},
-        "web_weld_available_strength": {"value": 200.0, "unit": "kip"},
-        "continuity_plate_available_strength": {"value": 100.0, "unit": "kip"},
-        "panel_zone_capacity": {"value": 150.0, "unit": "kip"},
+        "column_beam_moment_ratio_minimum": 1.0,
         "column_beam_moment_ratio": 1.2
-    }
+    },
 }
 
 BSEEP_4ES_CASE_PAYLOAD = deepcopy(BSEEP_8ES_CASE_PAYLOAD)

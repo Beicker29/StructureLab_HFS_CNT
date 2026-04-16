@@ -96,19 +96,17 @@
       "bolt_thread_condition": "N"
     },
     "welds": {
-      "continuity_plate_weld_type": "CJP",
-      "end_plate_beam_web_weld_type": "CJP",
-      "end_plate_beam_web_weld_length_lwe": {
-        "value": 300.0,
-        "unit": "mm"
+      "weld_3": {
+        "description": "Alma de viga con end plate",
+        "weld_type": "CJP",
+        "thickness": {
+          "value": 8.0,
+          "unit": "mm"
+        }
       },
-      "end_plate_beam_web_weld_thickness_twe": {
-        "value": 8.0,
-        "unit": "mm"
-      },
-      "weld_leg_size_w": {
-        "value": 9.525,
-        "unit": "mm"
+      "weld_4": {
+        "description": "Rigidizador con aleta de columna",
+        "weld_type": "CJP"
       }
     }
   },
@@ -136,39 +134,7 @@
     "beam_connection_sides": "right_only",
     "member_ductility_demand_beam": "high",
     "member_ductility_demand_column": "high",
-    "column_beam_moment_ratio_minimum": 1.0
-  },
-  "procedure": {
-    "tension_bolt_line_distances": [
-      {
-        "value": 203.2,
-        "unit": "mm"
-      },
-      {
-        "value": 254.0,
-        "unit": "mm"
-      }
-    ],
-    "beam_available_shear_strength": {
-      "value": 889.644,
-      "unit": "kN"
-    },
-    "flange_weld_available_strength": {
-      "value": 1334.466,
-      "unit": "kN"
-    },
-    "web_weld_available_strength": {
-      "value": 889.644,
-      "unit": "kN"
-    },
-    "continuity_plate_available_strength": {
-      "value": 444.822,
-      "unit": "kN"
-    },
-    "panel_zone_capacity": {
-      "value": 667.233,
-      "unit": "kN"
-    },
+    "column_beam_moment_ratio_minimum": 1.0,
     "column_beam_moment_ratio": 1.2
   }
 }

@@ -310,6 +310,7 @@ def test_ry_input_is_forbidden_and_derived_from_catalog(bueep_4e_payload: dict) 
 
 
 def test_ze_input_is_forbidden(bueep_4e_payload: dict) -> None:
+    bueep_4e_payload.setdefault("procedure", {})
     bueep_4e_payload["procedure"]["beam_plastic_section_modulus_ze"] = {"value": 80.0, "unit": "in3"}
     try:
         parse_and_validate_payload(bueep_4e_payload)
@@ -322,6 +323,7 @@ def test_ze_input_is_forbidden(bueep_4e_payload: dict) -> None:
 
 
 def test_lh_input_is_forbidden(bueep_4e_payload: dict) -> None:
+    bueep_4e_payload.setdefault("procedure", {})
     bueep_4e_payload["procedure"]["beam_span_between_plastic_hinges_lh"] = {"value": 240.0, "unit": "in"}
     try:
         parse_and_validate_payload(bueep_4e_payload)
@@ -334,6 +336,7 @@ def test_lh_input_is_forbidden(bueep_4e_payload: dict) -> None:
 
 
 def test_yp_input_is_forbidden(bueep_4e_payload: dict) -> None:
+    bueep_4e_payload.setdefault("procedure", {})
     bueep_4e_payload["procedure"]["yield_line_parameter_yp"] = {"value": 7.0, "unit": "in"}
     try:
         parse_and_validate_payload(bueep_4e_payload)
@@ -346,6 +349,7 @@ def test_yp_input_is_forbidden(bueep_4e_payload: dict) -> None:
 
 
 def test_yc_unstiffened_input_is_forbidden(bueep_4e_payload: dict) -> None:
+    bueep_4e_payload.setdefault("procedure", {})
     bueep_4e_payload["procedure"]["column_yield_line_parameter_yc_unstiffened"] = {"value": 250.0, "unit": "in"}
     try:
         parse_and_validate_payload(bueep_4e_payload)
@@ -358,6 +362,7 @@ def test_yc_unstiffened_input_is_forbidden(bueep_4e_payload: dict) -> None:
 
 
 def test_yc_stiffened_input_is_forbidden(bseep_8es_payload: dict) -> None:
+    bseep_8es_payload.setdefault("procedure", {})
     bseep_8es_payload["procedure"]["column_yield_line_parameter_yc_stiffened"] = {"value": 275.0, "unit": "in"}
     try:
         parse_and_validate_payload(bseep_8es_payload)
@@ -395,12 +400,18 @@ def test_bseep_prequalification_includes_stiffener_strength_checks(bseep_8es_pay
     stiffener_buckling = next(
         item for item in limits if item["id"] == "section_6_7_1.stiffener_local_buckling_limit"
     )
+    stiffener_gage = next(
+        item for item in limits if item["id"] == "section_6_3_1.stiffener_bolt_gage_clearance"
+    )
     assert stiffener_ts["scope"] == "end_plate_stiffener"
     assert stiffener_ts["comparison"] == "ge"
     assert stiffener_ts["result"] == "OK"
     assert stiffener_buckling["scope"] == "end_plate_stiffener"
     assert stiffener_buckling["comparison"] == "le"
     assert stiffener_buckling["result"] == "OK"
+    assert stiffener_gage["scope"] == "end_plate_stiffener"
+    assert stiffener_gage["comparison"] == "ge"
+    assert stiffener_gage["result"] == "OK"
 
 
 def test_bseep8es_prequalification_limits_fail_when_pb_is_outside_89_95mm_range(bseep_8es_payload: dict) -> None:
@@ -436,21 +447,18 @@ def test_bueep_prequalification_limits_fail_when_thin_continuity_plate_weld_type
     assert weld_type_check["comparison"] == "conditional_allowed_set"
 
 
-def test_bueep_prequalification_limits_fail_when_continuity_plate_weld_type_is_missing(
+def test_bueep_prequalification_limits_allow_missing_continuity_plate_weld_type(
     bueep_4e_payload: dict,
 ) -> None:
     del bueep_4e_payload["geometry"]["continuity_plate_weld_type"]
     result = run_case_payload(bueep_4e_payload)
-    assert result.global_status == GlobalStatus.FAIL
+    assert result.global_status == GlobalStatus.PASS
     prequal = next(check for check in result.checks if check.rule_id == "AISC358.06.3.bueep_4e.prequalification_limits")
-    assert prequal.status == CheckStatus.FAIL
-    weld_declared_check = next(
-        item
+    assert prequal.status == CheckStatus.PASS
+    assert all(
+        item["id"] != "section_6_3.continuity_plate_weld_type_declared"
         for item in prequal.calculation_memory.intermediates["step_1_limits"]
-        if item["id"] == "section_6_3.continuity_plate_weld_type_declared"
     )
-    assert weld_declared_check["result"] == "NO_OK"
-    assert weld_declared_check["comparison"] == "in_set"
 
 
 def test_bueep_prequalification_limits_fail_when_double_sided_fillet_with_thick_plate(
@@ -554,11 +562,13 @@ def test_grouped_geometry_payload_is_supported(bueep_4e_payload: dict) -> None:
             "bolt_thread_condition": bolt_thread,
         },
         "welds": {
-            "continuity_plate_weld_type": geo["continuity_plate_weld_type"],
-            "weld_leg_size_w": geo["weld_leg_size_w"],
-            "end_plate_beam_web_weld_type": geo["end_plate_beam_web_weld_type"],
-            "end_plate_beam_web_weld_length_lwe": geo["end_plate_beam_web_weld_length_lwe"],
-            "end_plate_beam_web_weld_thickness_twe": geo["end_plate_beam_web_weld_thickness_twe"],
+            "weld_4": {
+                "weld_type": geo["continuity_plate_weld_type"],
+            },
+            "weld_3": {
+                "weld_type": geo["end_plate_beam_web_weld_type"],
+                "thickness": geo["end_plate_beam_web_weld_thickness_twe"],
+            },
         },
     }
 

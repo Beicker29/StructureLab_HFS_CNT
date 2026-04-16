@@ -39,6 +39,61 @@ def _format_text(value: object) -> str:
     return text if text else "n/a"
 
 
+def _format_scalar_with_unit(value: object, unit: str) -> str:
+    if value is None:
+        return "n/a"
+    try:
+        numeric = float(value)
+    except (TypeError, ValueError):
+        return _format_text(value)
+    rendered_unit = unit
+    if rendered_unit == "kN-mm":
+        numeric = numeric / 1000.0
+        rendered_unit = "kN-m"
+    return f"{_format_decimal(numeric)} {rendered_unit}"
+
+
+def _quantity_to_mm(value: object) -> float | None:
+    if not isinstance(value, dict):
+        return None
+    raw = value.get("value")
+    unit = str(value.get("unit", "")).strip().lower()
+    try:
+        numeric = float(raw)
+    except (TypeError, ValueError):
+        return None
+    if unit == "mm":
+        return numeric
+    if unit == "in":
+        return numeric * 25.4
+    return None
+
+
+def _stress_to_mpa(value: object) -> float | None:
+    if not isinstance(value, dict):
+        return None
+    raw = value.get("value")
+    unit = str(value.get("unit", "")).strip().lower()
+    try:
+        numeric = float(raw)
+    except (TypeError, ValueError):
+        return None
+    if unit == "mpa":
+        return numeric
+    if unit == "ksi":
+        return numeric * 6.894757293168361
+    return None
+
+
+def _normalize_weld_type_step11(raw: object) -> str:
+    text = _format_text(raw).strip().lower()
+    if text in {"cjp", "complete_joint_penetration"}:
+        return "cjp"
+    if text in {"fillet", "double_sided_fillet", "single_sided_fillet"}:
+        return "fillet"
+    return text
+
+
 def _render_result_label(raw_result: object) -> str:
     value = _format_text(raw_result).strip().upper()
     if value in {"OK", "PASS"}:
@@ -143,6 +198,21 @@ def _collect_step_5_mf(result: DetailedRunResult) -> dict | None:
             "equation": check.calculation_memory.equation,
         }
     return None
+
+
+def _collect_step_11_web_weld_tension_context(result: DetailedRunResult) -> dict | None:
+    prequal_inputs: dict = {}
+    for check in result.checks:
+        if ".06.3." not in check.rule_id:
+            continue
+        if isinstance(check.calculation_memory.inputs, dict):
+            prequal_inputs = check.calculation_memory.inputs
+            break
+    if not prequal_inputs:
+        return None
+    return {
+        "inputs": prequal_inputs,
+    }
 
 
 def _collect_step_6_1_bolt_tension(result: DetailedRunResult) -> dict | None:
@@ -453,20 +523,19 @@ def _render_step_4_vh(step_4: dict) -> str:
     inputs = step_4.get("inputs", {})
     inter = step_4.get("intermediates", {})
     beam_connection_sides = _format_text(inputs.get("beam_connection_sides"))
+    # Memory report (presentation) is intentionally restricted to right-beam output.
     sides = ["der"]
-    if beam_connection_sides == "both_sides":
-        sides.append("izq")
     lines = [
         "## Paso 4 - Cortante Probable En Rotula Plastica (Vhmax, Vhmin)",
         "",
-        "Calculo por lado segun Eq. (2.4-3): `Vhmax = 2*Mpr/Lh + Vgravity` y `Vhmin = 2*Mpr/Lh - Vgravity`.",
+        "Calculo segun Eq. (2.4-3): `Vhmax = 2*Mpr/Lh + Vgravity` y `Vhmin = 2*Mpr/Lh - Vgravity` (se reporta lado derecho).",
         "",
         f"- Clausula: `{_format_text(step_4.get('clause'))}`",
-        f"- Ecuacion: `{_format_text(step_4.get('equation'))}`",
+        "- Ecuacion: `Vhmax.der = 2*Mpr/Lh.der + Vgravity.der; Vhmin.der = 2*Mpr/Lh.der - Vgravity.der`",
         f"- Configuracion de vigas: `{beam_connection_sides}`",
         f"- Lado gobernante Vhmax: `{_format_text(inputs.get('governing_side_vhmax'))}`",
         f"- Fuente Vhmax seleccionado: `{_format_text(inputs.get('selected_vhmax_source'))}`",
-        f"- Mpr: `{_format_text(inter.get('mpr'))}`",
+        f"- Mpr: `{_format_scalar_with_unit(inter.get('mpr'), 'kN-mm')}`",
     ]
     for side in sides:
         vgravity_label = "Beam_right_Vgravity" if side == "der" else "Beam_left_Vgravity"
@@ -474,9 +543,9 @@ def _render_step_4_vh(step_4: dict) -> str:
             [
                 f"- Lh.{side}: `{_format_quantity(inputs.get(f'lh_{side}'))}`",
                 f"- {vgravity_label}: `{_format_quantity(inputs.get(f'vgravity_between_hinges_{side}'))}`",
-                f"- 2*Mpr/Lh.{side}: `{_format_text(inter.get(f'2mpr_over_lh_{side}'))}`",
-                f"- Vh.{side}max: `{_format_text(inter.get(f'vh_{side}max'))}`",
-                f"- Vh.{side}min: `{_format_text(inter.get(f'vh_{side}min'))}`",
+                f"- 2*Mpr/Lh.{side}: `{_format_scalar_with_unit(inter.get(f'2mpr_over_lh_{side}'), 'kN')}`",
+                f"- Vh.{side}max: `{_format_scalar_with_unit(inter.get(f'vh_{side}max'), 'kN')}`",
+                f"- Vh.{side}min: `{_format_scalar_with_unit(inter.get(f'vh_{side}min'), 'kN')}`",
             ]
         )
     lines.extend(
@@ -493,29 +562,28 @@ def _render_step_5_mf(step_5: dict) -> str:
     inputs = step_5.get("inputs", {})
     inter = step_5.get("intermediates", {})
     beam_connection_sides = _format_text(inputs.get("beam_connection_sides"))
+    # Memory report (presentation) is intentionally restricted to right-beam output.
     sides = ["der"]
-    if beam_connection_sides == "both_sides":
-        sides.append("izq")
     lines = [
         "## Paso 5 - Momento Probable En Cara De Columna (Mfmax, Mfmin)",
         "",
-        "Calculo por lado segun Eq. (2.4-4): `Mfmax = Mpr + Vhmax*Sh` y `Mfmin = Mpr + Vhmin*Sh`.",
+        "Calculo segun Eq. (2.4-4): `Mfmax = Mpr + Vhmax*Sh` y `Mfmin = Mpr + Vhmin*Sh` (se reporta lado derecho).",
         "",
         f"- Clausula: `{_format_text(step_5.get('clause'))}`",
-        f"- Ecuacion: `{_format_text(step_5.get('equation'))}`",
+        "- Ecuacion: `Mfmax.der = Mpr + Vhmax.der*Sh; Mfmin.der = Mpr + Vhmin.der*Sh`",
         f"- Configuracion de vigas: `{beam_connection_sides}`",
         f"- Lado gobernante Mfmax: `{_format_text(inputs.get('governing_side_mfmax'))}`",
         f"- Fuente Mfmax seleccionado: `{_format_text(inputs.get('selected_mfmax_source'))}`",
-        f"- Mpr (intermedio): `{_format_text(inter.get('mpr'))}`",
-        f"- Sh (intermedio): `{_format_text(inter.get('sh'))}`",
+        f"- Mpr (intermedio): `{_format_scalar_with_unit(inter.get('mpr'), 'kN-mm')}`",
+        f"- Sh (intermedio): `{_format_scalar_with_unit(inter.get('sh'), 'mm')}`",
     ]
     for side in sides:
         lines.extend(
             [
-                f"- Vh.{side}max (intermedio): `{_format_text(inter.get(f'vh_{side}max'))}`",
-                f"- Vh.{side}min (intermedio): `{_format_text(inter.get(f'vh_{side}min'))}`",
-                f"- Mf.{side}max: `{_format_text(inter.get(f'mf_{side}max'))}`",
-                f"- Mf.{side}min: `{_format_text(inter.get(f'mf_{side}min'))}`",
+                f"- Vh.{side}max (intermedio): `{_format_scalar_with_unit(inter.get(f'vh_{side}max'), 'kN')}`",
+                f"- Vh.{side}min (intermedio): `{_format_scalar_with_unit(inter.get(f'vh_{side}min'), 'kN')}`",
+                f"- Mf.{side}max: `{_format_scalar_with_unit(inter.get(f'mf_{side}max'), 'kN-mm')}`",
+                f"- Mf.{side}min: `{_format_scalar_with_unit(inter.get(f'mf_{side}min'), 'kN-mm')}`",
             ]
         )
     lines.extend(
@@ -713,8 +781,7 @@ def _render_step_8_stiffener_weld(step_8_1_1: dict | None) -> str:
     design_factors = step_8_1_1.get("design_factors", {})
     weld_type = _format_text(inputs.get("weld_type_normalized"))
     lines = [
-        "## Paso 8 - Revision de Resistencia soldadura #1",
-        "(end plate con rigidizador)",
+        "## Paso 8 - Revision de Resistencia soldadura #1 (end plate con rigidizador)",
         "",
         "### 8.1. Revision de capacidad a traccion",
         "",
@@ -756,8 +823,7 @@ def _render_step_9_stiffener_beam_weld(step_9_1_1: dict | None) -> str:
     design_factors = step_9_1_1.get("design_factors", {})
     weld_type = _format_text(inputs.get("weld_type_normalized"))
     lines = [
-        "## Paso 9 - Revision de resistencia soldadura #2",
-        "(viga con rigidizador)",
+        "## Paso 9 - Revision de resistencia soldadura #2 (viga con rigidizador)",
         "",
         "### 9.1. Revision de capacidad a cortante",
         "",
@@ -814,10 +880,102 @@ def _render_step_10_beam_shear(step_10_1_1: dict | None) -> str:
         f"- Cv1: `{_format_text(inputs.get('cv1'))}`",
         f"- kv: `{_format_text(inter.get('kv'))}`",
         f"- h/tw: `{_format_text(inter.get('h_over_tw'))}`",
-        f"- h: `{_format_text(inter.get('h_clear'))}`",
+        f"- h: `{_format_scalar_with_unit(inter.get('h_clear'), 'mm')}`",
         f"- Resultado: `{_format_text(step_10_1_1.get('status'))}`",
         "",
     ]
+    return "\n".join(lines)
+
+
+def _render_step_11_end_plate_beam_web_weld_tension(step_11_ctx: dict | None, step_10_1_1: dict | None) -> str:
+    if step_11_ctx is None:
+        return ""
+    step_11_inputs = step_11_ctx.get("inputs", {})
+    step_10_inputs = step_10_1_1.get("inputs", {}) if step_10_1_1 is not None else {}
+
+    weld_type_raw = step_11_inputs.get("end_plate_beam_web_weld_type")
+    weld_thickness_twe = step_11_inputs.get("end_plate_beam_web_weld_thickness_twe")
+    weld_type = _normalize_weld_type_step11(weld_type_raw)
+    pfi_mm = _quantity_to_mm(step_11_inputs.get("edge_pfi"))
+    pb_mm = _quantity_to_mm(step_11_inputs.get("pitch_pb"))
+    twe_mm = _quantity_to_mm(weld_thickness_twe)
+    fybm_mpa = _stress_to_mpa(step_10_inputs.get("fybm"))
+    tw_bm_mm = _quantity_to_mm(step_10_inputs.get("tw_bm"))
+    fexx_mpa = _stress_to_mpa(step_11_inputs.get("weld_fexx"))
+    nl_raw = step_11_inputs.get("end_plate_beam_web_weld_lines_nl")
+    try:
+        nl = int(nl_raw) if nl_raw is not None else 2
+    except (TypeError, ValueError):
+        nl = 2
+    if nl < 1:
+        nl = 1
+    phi = 0.9
+
+    hwef_mm = None
+    puww3_kn = None
+    phi_pnww3_kn = None
+    dcr_ww3p = None
+    if pfi_mm is not None and pb_mm is not None:
+        hwef_mm = pfi_mm + pb_mm + 150.0
+    if hwef_mm is not None and fybm_mpa is not None and tw_bm_mm is not None:
+        puww3_kn = fybm_mpa * tw_bm_mm * hwef_mm / 1000.0
+    if hwef_mm is not None and fexx_mpa is not None and twe_mm is not None:
+        phi_pnww3_kn = phi * nl * 0.6 * fexx_mpa * 0.707 * hwef_mm * twe_mm / 1000.0
+    if puww3_kn is not None and phi_pnww3_kn is not None and phi_pnww3_kn > 0.0:
+        dcr_ww3p = puww3_kn / phi_pnww3_kn
+
+    hwef_text = f"{_format_decimal(hwef_mm)} mm" if hwef_mm is not None else "n/a"
+    puww3_text = f"{_format_decimal(puww3_kn)} kN" if puww3_kn is not None else "n/a"
+    phi_pnww3_text = f"{_format_decimal(phi_pnww3_kn)} kN" if phi_pnww3_kn is not None else "n/a"
+    dcr_text = _format_decimal(dcr_ww3p) if dcr_ww3p is not None else "n/a"
+    twe_text = _format_quantity(weld_thickness_twe)
+
+    if weld_type == "cjp":
+        result_line = "Cumple"
+        puww3_text = "n/a (CJP)"
+        phi_pnww3_text = "n/a (CJP)"
+        dcr_text = "n/a (CJP)"
+    elif weld_type == "fillet" and dcr_ww3p is not None:
+        result_line = "Cumple" if dcr_ww3p <= 1.0 else "No cumple"
+    else:
+        result_line = "No cumple"
+
+    lines = [
+        "## Paso 11 - Revision de resistencia de soldadura viga-alma a end plate",
+        "",
+        "### 11.1 Revision capacidad a traccion",
+        "",
+        "#### 11.1.1 ELR #1: Rotura de soldadura",
+        "",
+        "- Clausula: `Section 6.7 + AISC 360-22 J2.4`",
+        "- Ecuacion: `Fillet: Puww3 = Fybm*tw*hwef; hwef = Pfi + Pb + 150 mm; phiPnww3 = phi*nl*0.6*Fexx*0.707*hwef*ww3; DCRww3p = Puww3/phiPnww3`",
+        f"- phi usado: `{_format_decimal(phi)}`",
+        "- Fuente de input: `geometry.welds.weld_3`",
+        "- Soldadura #3: `viga (alma) con end plate`",
+        f"- Tipo de soldadura viga-end_plate: `{_format_text(weld_type_raw)}`",
+    ]
+    if weld_type == "cjp":
+        lines.extend(
+            [
+                "- CJP: `Cumple`",
+                f"- Resultado: `{result_line}`",
+                "",
+            ]
+        )
+        return "\n".join(lines)
+    lines.extend(
+        [
+            "- Longitud de soldadura: `no se usa como input en este chequeo`",
+            f"- Espesor/tamano de soldadura (twe = ww3): `{twe_text}`",
+            f"- nl (numero de cordones): `{_format_text(nl)}`",
+            f"- hwef: `{hwef_text}`",
+            f"- Puww3: `{puww3_text}`",
+            f"- phiPnww3: `{phi_pnww3_text}`",
+            f"- DCRww3p: `{dcr_text}`",
+            f"- Resultado: `{result_line}`",
+            "",
+        ]
+    )
     return "\n".join(lines)
 
 
@@ -913,6 +1071,7 @@ def render_memory_markdown(result: DetailedRunResult) -> str:
     step_8_1_1 = _collect_step_8_1_1_stiffener_weld_tension_rupture(result)
     step_9_1_1 = _collect_step_9_1_1_stiffener_beam_weld_shear_rupture(result)
     step_10_1_1 = _collect_step_10_1_1_beam_shear_yielding(result)
+    step_11_ctx = _collect_step_11_web_weld_tension_context(result)
     content = [
         "# Memoria de Calculo",
         "",
@@ -921,6 +1080,8 @@ def render_memory_markdown(result: DetailedRunResult) -> str:
         f"- Familia: `{result.connection_family}`",
         f"- Tipo: `{result.connection_type}`",
         f"- Estado global: `{result.global_status.value}`",
+        "",
+        "## Revision conexion viga a derecha de columna",
         "",
         "## Paso 1 - PREQUALIFICATION LIMITS",
         "",
@@ -957,6 +1118,8 @@ def render_memory_markdown(result: DetailedRunResult) -> str:
         content.append(_render_step_9_stiffener_beam_weld(step_9_1_1))
     if step_10_1_1 is not None:
         content.append(_render_step_10_beam_shear(step_10_1_1))
+    if step_11_ctx is not None:
+        content.append(_render_step_11_end_plate_beam_web_weld_tension(step_11_ctx, step_10_1_1))
     content.append("")
     return "\n".join(content)
 

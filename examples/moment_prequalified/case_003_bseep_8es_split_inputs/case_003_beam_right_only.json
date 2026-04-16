@@ -1,34 +1,6 @@
 {
-  "project_id": "proj_bseep_si_demo",
-  "case_id": "case_si_bseep_4es_w18x175_w24x76",
-  "design_code_context": {
-    "primary_document": "AISC 358-22",
-    "supporting_documents": []
-  },
-  "units_system": "SI",
-  "connection_family": "moment_prequalified",
-  "connection_type": "bseep_4es",
-  "load_state": "strength",
-  "sections": {
-    "beam_shape": "W24X76",
-    "column_shape": "W18X175"
-  },
-  "materials": {
-    "profile_steel_type": "ASTM A572 Gr 50",
-    "plate_steel_type": "ASTM A572 Gr 50",
-    "bolt_fabrication_standard": "ASTM A490",
-    "bolt_description": "Grupo 150",
-    "weld_fexx": {
-      "value": 490.0,
-      "unit": "MPa"
-    },
-    "elastic_modulus": {
-      "value": 199947.965,
-      "unit": "MPa"
-    }
-  },
   "geometry": {
-    "beam": {
+    "beam_right": {
       "clear_span_length": {
         "value": 6096.0,
         "unit": "mm"
@@ -37,13 +9,6 @@
         "value": 1000.0,
         "unit": "mm"
       }
-    },
-    "column": {
-      "column_end_distance_to_beam_flange": {
-        "value": 762.0,
-        "unit": "mm"
-      },
-      "slab_connection_condition": "isolated"
     },
     "end_plate": {
       "end_plate_width": {
@@ -85,7 +50,7 @@
     },
     "bolts": {
       "bolt_gage": {
-        "value": 152.4,
+        "value": 140,
         "unit": "mm"
       },
       "bolt_tightening_type": "pretensioned",
@@ -103,7 +68,7 @@
     "welds": {
       "weld_1": {
         "description": "Rigidizador con end plate",
-        "weld_type": "CJP",
+        "weld_type": "Fillet",
         "length": {
           "value": 190.0,
           "unit": "mm"
@@ -116,7 +81,7 @@
       },
       "weld_2": {
         "description": "Viga con rigidizador",
-        "weld_type": "CJP",
+        "weld_type": "Fillet",
         "length": {
           "value": 190.0,
           "unit": "mm"
@@ -134,10 +99,6 @@
           "value": 8.0,
           "unit": "mm"
         }
-      },
-      "weld_4": {
-        "description": "Rigidizador con aleta de columna",
-        "weld_type": "CJP"
       }
     }
   },
@@ -146,26 +107,9 @@
       "value": 0.0,
       "unit": "kN"
     },
-    "pu_columna": {
-      "value": 0.0,
-      "unit": "kN"
-    },
-    "probable_moment_column_face": {
-      "value": 677908.974,
-      "unit": "kN-mm"
-    },
     "Beam_right_Vgravity": {
       "value": 44.482,
       "unit": "kN"
     }
-  },
-  "design_factors": {
-    "phi_d": 0.9,
-    "phi_n": 0.9,
-    "beam_connection_sides": "right_only",
-    "member_ductility_demand_beam": "high",
-    "member_ductility_demand_column": "high",
-    "column_beam_moment_ratio_minimum": 1.0,
-    "column_beam_moment_ratio": 1.2
   }
 }

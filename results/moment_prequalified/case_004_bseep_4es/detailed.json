@@ -41,7 +41,7 @@
             "value": 15.9,
             "unit": "mm"
           },
-          "continuity_plate_weld_type": "CJP",
+          "continuity_plate_weld_type": null,
           "end_plate_beam_web_weld_type": "CJP",
           "end_plate_beam_web_weld_length_lwe": {
             "value": 300.0,
@@ -93,6 +93,17 @@
             "value": 190.52558883257652,
             "unit": "mm"
           },
+          "beam_connection_sides": "right_only",
+          "beam_clear_span_length_der": {
+            "value": 6096.0,
+            "unit": "mm"
+          },
+          "beam_shear_connector_free_length_from_column_face_der": {
+            "value": 1000.0,
+            "unit": "mm"
+          },
+          "beam_clear_span_length_izq": null,
+          "beam_shear_connector_free_length_from_column_face_izq": null,
           "beam_clear_span_length": {
             "value": 6096.0,
             "unit": "mm"
@@ -102,6 +113,22 @@
             "unit": "mm"
           },
           "column_slab_connection_condition": "isolated",
+          "column_end_distance_to_beam_flange_stc": {
+            "value": 762.0,
+            "unit": "mm"
+          },
+          "column_stc_min": {
+            "value": 122.5,
+            "unit": "mm"
+          },
+          "beam_sc": {
+            "value": 712.0,
+            "unit": "mm"
+          },
+          "beam_s_threshold": {
+            "value": 105.11422358558332,
+            "unit": "mm"
+          },
           "beam_ductility_demand": "high",
           "column_ductility_demand": "high",
           "pu_viga": {
@@ -458,6 +485,24 @@
             },
             {
               "step": "1",
+              "id": "section_6_3_1.beam_sc_greater_than_s_threshold",
+              "scope": "beam",
+              "clause": "Section 6.3.1 (beam clearance criterion)",
+              "description": "Beam clearance criterion using Sc and S threshold",
+              "calculated_symbol": "Sc",
+              "limit_symbol": "compound",
+              "comparison": "compound",
+              "comparison_text": "compound",
+              "verification_text": "Sc = Stc - pfo; S = 0.5*sqrt(bcf*g); Sc > S => 712.000 mm > 105.114 mm",
+              "calculated": {
+                "value": 712.0,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
               "id": "section_2_3_4.clear_span_to_depth_ratio",
               "scope": "beam",
               "clause": "Section 2.3.4 (5)",
@@ -618,6 +663,31 @@
             },
             {
               "step": "1",
+              "id": "section_6_3_1.column_stc_minimum_requirement",
+              "scope": "column",
+              "clause": "Section 6.3.1 (column top clearance criterion)",
+              "description": "Stc >= pfo + de + 12.5 mm",
+              "calculated_symbol": "Stc",
+              "limit_symbol": "Stc_min",
+              "calculated": {
+                "value": 762.0,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 122.5,
+                "unit": "mm"
+              },
+              "comparison": "ge",
+              "comparison_text": ">=",
+              "margin": {
+                "value": 639.5,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
               "id": "section_2_3_4.column_flange_width_to_thickness",
               "scope": "column",
               "clause": "Section 2.3.4 (6) + AISC Seismic Provisions",
@@ -762,6 +832,31 @@
             },
             {
               "step": "1",
+              "id": "section_6_3_1.stiffener_bolt_gage_clearance",
+              "scope": "end_plate_stiffener",
+              "clause": "Section 6.3 (stiffened) + AISC 360 Table J3.4",
+              "description": "Bolt gage clearance with stiffener thickness",
+              "calculated_symbol": "g",
+              "limit_symbol": "2emin + ts",
+              "calculated": {
+                "value": 152.4,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 88.89999999999999,
+                "unit": "mm"
+              },
+              "comparison": "ge",
+              "comparison_text": ">=",
+              "margin": {
+                "value": 63.500000000000014,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
               "id": "section_6_7.end_plate_beam_web_weld_type_allowed",
               "scope": "welds",
               "clause": "Section 6.7",
@@ -775,54 +870,6 @@
                 "cjp",
                 "double_sided_fillet",
                 "single_sided_fillet"
-              ],
-              "status": "PASS",
-              "result": "OK"
-            },
-            {
-              "step": "1",
-              "id": "section_6_3.continuity_plate_weld_type_declared",
-              "scope": "continuity_plate",
-              "clause": "Section 6.3 (continuity plate weld detail)",
-              "description": "Continuity-plate weld type shall be explicitly declared with an allowed weld category",
-              "calculated_symbol": "weld_cp",
-              "limit_symbol": "{double_sided_fillet, cjp, pjp}",
-              "comparison": "in_set",
-              "comparison_text": "in",
-              "calculated_text": "cjp",
-              "allowed_values": [
-                "double_sided_fillet",
-                "cjp",
-                "pjp"
-              ],
-              "status": "PASS",
-              "result": "OK"
-            },
-            {
-              "step": "1",
-              "id": "section_6_3.continuity_plate_weld_type_for_thin_plate",
-              "scope": "continuity_plate",
-              "clause": "Section 6.3 (continuity plate weld detail)",
-              "description": "Continuity-plate weld type when plate thickness is less than or equal to 3/8 in (10 mm)",
-              "calculated_symbol": "weld_cp",
-              "limit_symbol": "{double_sided_fillet, cjp, pjp} if tcp<=tcp_limit",
-              "comparison": "conditional_allowed_set",
-              "comparison_text": "in_if",
-              "thickness": {
-                "value": 15.9,
-                "unit": "mm"
-              },
-              "thickness_limit": {
-                "value": 10.0,
-                "unit": "mm"
-              },
-              "condition_applies": false,
-              "governing_condition": "cjp_or_pjp_always_permitted",
-              "calculated_text": "cjp",
-              "allowed_values": [
-                "double_sided_fillet",
-                "cjp",
-                "pjp"
               ],
               "status": "PASS",
               "result": "OK"
@@ -1269,6 +1316,24 @@
             },
             {
               "step": "1",
+              "id": "section_6_3_1.beam_sc_greater_than_s_threshold",
+              "scope": "beam",
+              "clause": "Section 6.3.1 (beam clearance criterion)",
+              "description": "Beam clearance criterion using Sc and S threshold",
+              "calculated_symbol": "Sc",
+              "limit_symbol": "compound",
+              "comparison": "compound",
+              "comparison_text": "compound",
+              "verification_text": "Sc = Stc - pfo; S = 0.5*sqrt(bcf*g); Sc > S => 712.000 mm > 105.114 mm",
+              "calculated": {
+                "value": 712.0,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
               "id": "section_2_3_4.clear_span_to_depth_ratio",
               "scope": "beam",
               "clause": "Section 2.3.4 (5)",
@@ -1429,6 +1494,31 @@
             },
             {
               "step": "1",
+              "id": "section_6_3_1.column_stc_minimum_requirement",
+              "scope": "column",
+              "clause": "Section 6.3.1 (column top clearance criterion)",
+              "description": "Stc >= pfo + de + 12.5 mm",
+              "calculated_symbol": "Stc",
+              "limit_symbol": "Stc_min",
+              "calculated": {
+                "value": 762.0,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 122.5,
+                "unit": "mm"
+              },
+              "comparison": "ge",
+              "comparison_text": ">=",
+              "margin": {
+                "value": 639.5,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
               "id": "section_2_3_4.column_flange_width_to_thickness",
               "scope": "column",
               "clause": "Section 2.3.4 (6) + AISC Seismic Provisions",
@@ -1573,6 +1663,31 @@
             },
             {
               "step": "1",
+              "id": "section_6_3_1.stiffener_bolt_gage_clearance",
+              "scope": "end_plate_stiffener",
+              "clause": "Section 6.3 (stiffened) + AISC 360 Table J3.4",
+              "description": "Bolt gage clearance with stiffener thickness",
+              "calculated_symbol": "g",
+              "limit_symbol": "2emin + ts",
+              "calculated": {
+                "value": 152.4,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 88.89999999999999,
+                "unit": "mm"
+              },
+              "comparison": "ge",
+              "comparison_text": ">=",
+              "margin": {
+                "value": 63.500000000000014,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
               "id": "section_6_7.end_plate_beam_web_weld_type_allowed",
               "scope": "welds",
               "clause": "Section 6.7",
@@ -1586,54 +1701,6 @@
                 "cjp",
                 "double_sided_fillet",
                 "single_sided_fillet"
-              ],
-              "status": "PASS",
-              "result": "OK"
-            },
-            {
-              "step": "1",
-              "id": "section_6_3.continuity_plate_weld_type_declared",
-              "scope": "continuity_plate",
-              "clause": "Section 6.3 (continuity plate weld detail)",
-              "description": "Continuity-plate weld type shall be explicitly declared with an allowed weld category",
-              "calculated_symbol": "weld_cp",
-              "limit_symbol": "{double_sided_fillet, cjp, pjp}",
-              "comparison": "in_set",
-              "comparison_text": "in",
-              "calculated_text": "cjp",
-              "allowed_values": [
-                "double_sided_fillet",
-                "cjp",
-                "pjp"
-              ],
-              "status": "PASS",
-              "result": "OK"
-            },
-            {
-              "step": "1",
-              "id": "section_6_3.continuity_plate_weld_type_for_thin_plate",
-              "scope": "continuity_plate",
-              "clause": "Section 6.3 (continuity plate weld detail)",
-              "description": "Continuity-plate weld type when plate thickness is less than or equal to 3/8 in (10 mm)",
-              "calculated_symbol": "weld_cp",
-              "limit_symbol": "{double_sided_fillet, cjp, pjp} if tcp<=tcp_limit",
-              "comparison": "conditional_allowed_set",
-              "comparison_text": "in_if",
-              "thickness": {
-                "value": 15.9,
-                "unit": "mm"
-              },
-              "thickness_limit": {
-                "value": 10.0,
-                "unit": "mm"
-              },
-              "condition_applies": false,
-              "governing_condition": "cjp_or_pjp_always_permitted",
-              "calculated_text": "cjp",
-              "allowed_values": [
-                "double_sided_fillet",
-                "cjp",
-                "pjp"
               ],
               "status": "PASS",
               "result": "OK"
@@ -2110,24 +2177,32 @@
       "status": "PASS",
       "calculation_memory": {
         "inputs": {
-          "lh": {
+          "beam_connection_sides": "right_only",
+          "governing_side_vhmax": "der",
+          "selected_vhmax_source": "step4_computed_vhmax_der (governing_side=der)",
+          "lh_der": {
             "value": 6096.0,
             "unit": "mm"
           },
-          "vgravity_between_hinges": {
+          "lh_der_source": "geometry.beam_clear_span_length_der",
+          "vgravity_between_hinges_der": {
             "value": 44.482,
             "unit": "kN"
           },
-          "stated_vh": null
+          "vgravity_between_hinges_der_source": "loads.beam_right_vgravity",
+          "stated_vh_dermax": null
         },
         "intermediates": {
-          "2mpr_over_lh": 470.5314960629922
+          "mpr": 1434180.0000000002,
+          "2mpr_over_lh_der": 470.5314960629922,
+          "vh_dermax": 515.0134960629922,
+          "vh_dermin": 426.04949606299215
         },
         "design_factors": {},
-        "equation": "Vh = 2*Mpr/Lh + Vgravity (Eq. 2.4-3)",
+        "equation": "Vhmax = 2*Mpr/Lh + Vgravity; Vhmin = 2*Mpr/Lh - Vgravity (Eq. 2.4-3, side-specific der/izq)",
         "units_trace": {
-          "vh_computed": "kN",
-          "vh_stated": "kN"
+          "vhmax_governing": "kN",
+          "vhmax_selected": "kN"
         },
         "final_capacity": {
           "value": 515.0134960629922,
@@ -2153,24 +2228,27 @@
       "status": "PASS",
       "calculation_memory": {
         "inputs": {
-          "stated_mf": {
+          "beam_connection_sides": "right_only",
+          "governing_side_mfmax": "der",
+          "selected_mfmax_source": "loads.probable_moment_column_face (legacy)",
+          "stated_mf_dermax": {
             "value": 677908.974,
             "unit": "kN-mm"
           }
         },
         "intermediates": {
-          "cpr": 1.1521739130434783,
-          "ry": 1.1,
-          "nmm_to_knmm": 0.001,
-          "2mpr_over_lh": 470.5314960629922,
-          "sh": 215.92558883257652,
           "mpr": 1434180.0000000002,
-          "vh": 515.0134960629922
+          "sh": 215.92558883257652,
+          "mf_dermax": 1545384.5923941256,
+          "mf_dermin": 1526174.9883092244,
+          "vh_dermax": 515.0134960629922,
+          "vh_dermin": 426.04949606299215
         },
         "design_factors": {},
-        "equation": "Mf = Mpr + Vh * Sh (Eq. 2.4-4)",
+        "equation": "Mfmax = Mpr + Vhmax*Sh; Mfmin = Mpr + Vhmin*Sh (Eq. 2.4-4, side-specific der/izq)",
         "units_trace": {
-          "mf_computed": "kN-mm"
+          "mfmax_governing": "kN-mm",
+          "mfmax_selected": "kN-mm"
         },
         "final_capacity": {
           "value": 1545384.5923941256,
@@ -2200,7 +2278,7 @@
             "value": 677908.974,
             "unit": "kN-mm"
           },
-          "mf_source": "loads.probable_moment_column_face",
+          "mf_source": "loads.probable_moment_column_face (legacy)",
           "mf_computed": {
             "value": 1545384.5923941256,
             "unit": "kN-mm"
@@ -2270,12 +2348,12 @@
       "status": "PASS",
       "calculation_memory": {
         "inputs": {
-          "vh": {
+          "vhmax": {
             "value": 515.0134960629922,
             "unit": "kN"
           },
-          "vh_source": "step4_computed_vh",
-          "vh_computed": {
+          "vhmax_source": "step4_computed_vhmax_der (governing_side=der)",
+          "vhmax_computed": {
             "value": 515.0134960629922,
             "unit": "kN"
           },
@@ -2299,7 +2377,7 @@
         "design_factors": {
           "phi": 0.9
         },
-        "equation": "Vub = Vh/nb, phiVnb = phi * Ab * Fnv, Ab = pi*db^2/4, nb = 4 (4E/4ES) or 8 (8ES), phi = 0.9 (AISC 360-22 J3.7)",
+        "equation": "Vub = Vhmax/nb, phiVnb = phi * Ab * Fnv, Ab = pi*db^2/4, nb = 4 (4E/4ES) or 8 (8ES), phi = 0.9 (AISC 360-22 J3.7)",
         "units_trace": {
           "vup": "kN",
           "phi_vnp": "kN"
@@ -2332,7 +2410,7 @@
             "value": 677908.974,
             "unit": "kN-mm"
           },
-          "mf_source": "loads.probable_moment_column_face",
+          "mf_source": "loads.probable_moment_column_face (legacy)",
           "mf_computed": {
             "value": 1545384.5923941256,
             "unit": "kN-mm"
@@ -2413,7 +2491,7 @@
             "value": 677908.974,
             "unit": "kN-mm"
           },
-          "mf_source": "loads.probable_moment_column_face",
+          "mf_source": "loads.probable_moment_column_face (legacy)",
           "mf_computed": {
             "value": 1545384.5923941256,
             "unit": "kN-mm"
@@ -2480,7 +2558,7 @@
             "value": 677908.974,
             "unit": "kN-mm"
           },
-          "mf_source": "loads.probable_moment_column_face",
+          "mf_source": "loads.probable_moment_column_face (legacy)",
           "mf_computed": {
             "value": 1545384.5923941256,
             "unit": "kN-mm"
@@ -2554,12 +2632,12 @@
       "status": "PASS",
       "calculation_memory": {
         "inputs": {
-          "vh": {
+          "vhmax": {
             "value": 515.0134960629922,
             "unit": "kN"
           },
-          "vh_source": "step4_computed_vh",
-          "vh_computed": {
+          "vhmax_source": "step4_computed_vhmax_der (governing_side=der)",
+          "vhmax_computed": {
             "value": 515.0134960629922,
             "unit": "kN"
           },
@@ -2620,7 +2698,7 @@
         "design_factors": {
           "phi": 0.9
         },
-        "equation": "Vu2p = Vh/nb; phiVn2p = phi * 1.2 * lc * tp * Fup (AISC 360-22 J3.11a)",
+        "equation": "Vu2p = Vhmax/nb; phiVn2p = phi * 1.2 * lc * tp * Fup (AISC 360-22 J3.11a)",
         "units_trace": {
           "vu2p": "kN",
           "phi_vn2p": "kN"
@@ -2649,12 +2727,12 @@
       "status": "PASS",
       "calculation_memory": {
         "inputs": {
-          "vh": {
+          "vhmax": {
             "value": 515.0134960629922,
             "unit": "kN"
           },
-          "vh_source": "step4_computed_vh",
-          "vh_computed": {
+          "vhmax_source": "step4_computed_vhmax_der (governing_side=der)",
+          "vhmax_computed": {
             "value": 515.0134960629922,
             "unit": "kN"
           },
@@ -2700,7 +2778,7 @@
         "design_factors": {
           "phi": 0.9
         },
-        "equation": "Vu2p = Vh/nb; phiVn2p = phi * 2.4 * (db + 1.6 mm) * tp * Fup (AISC 360-22 J3.11a)",
+        "equation": "Vu2p = Vhmax/nb; phiVn2p = phi * 2.4 * (db + 1.6 mm) * tp * Fup (AISC 360-22 J3.11a)",
         "units_trace": {
           "vu2p": "kN",
           "phi_vn2p": "kN"
@@ -2796,12 +2874,12 @@
       "status": "PASS",
       "calculation_memory": {
         "inputs": {
-          "vh": {
+          "vhmax": {
             "value": 515.0134960629922,
             "unit": "kN"
           },
-          "vh_source": "step4_computed_vh",
-          "vh_computed": {
+          "vhmax_source": "step4_computed_vhmax_der (governing_side=der)",
+          "vhmax_computed": {
             "value": 515.0134960629922,
             "unit": "kN"
           },
@@ -2839,7 +2917,7 @@
         "design_factors": {
           "phi": 1.0
         },
-        "equation": "Vubm = Vh; phiVnbm = phi * 0.6 * Fybm * tw,bm * d * Cv1 (AISC 360-22 G2.1, Eq. G2-3/G2-4; kv=5.34 for webs without transverse stiffeners)",
+        "equation": "Vubm = Vhmax; phiVnbm = phi * 0.6 * Fybm * tw,bm * d * Cv1 (AISC 360-22 G2.1, Eq. G2-3/G2-4; kv=5.34 for webs without transverse stiffeners)",
         "units_trace": {
           "vubm": "kN",
           "phi_vnbm": "kN"

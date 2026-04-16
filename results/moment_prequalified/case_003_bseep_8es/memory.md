@@ -6,6 +6,8 @@
 - Tipo: `bseep_8es`
 - Estado global: `FAIL`
 
+## Revision conexion viga a derecha de columna
+
 ## Paso 1 - PREQUALIFICATION LIMITS
 
 Comparacion directa de valor calculado contra limite normativo (sin formato DCR).
@@ -229,105 +231,112 @@ Comparacion directa de valor calculado contra limite normativo (sin formato DCR)
 - Clausula: `Section 6.7.1 Eq. (6.7-10)`
 - Resultado: 🟢 Cumple
 
-### Chequeo 1.20 - End-plate to beam-web weld type shall be an allowed category (`weld_ep_web`)
+### Chequeo 1.20 - Bolt gage clearance with stiffener thickness (`g`)
+
+- Ambito: `END_PLATE_STIFFENER`
+- Verificacion: `g >= 2emin + ts; 140 mm >= 88.9 mm`
+- Clausula: `Section 6.3 (stiffened) + AISC 360 Table J3.4`
+- Resultado: 🟢 Cumple
+
+### Chequeo 1.21 - End-plate to beam-web weld type shall be an allowed category (`weld_ep_web`)
 
 - Ambito: `WELDS`
 - Verificacion: `weld_ep_web in {cjp, double_sided_fillet, single_sided_fillet}; 'cjp' in {cjp, double_sided_fillet, single_sided_fillet}`
 - Clausula: `Section 6.7`
 - Resultado: 🟢 Cumple
 
-### Chequeo 1.21 - Continuity-plate weld type shall be explicitly declared with an allowed weld category (`weld_cp`)
+### Chequeo 1.22 - Continuity-plate weld type shall be explicitly declared with an allowed weld category (`weld_cp`)
 
 - Ambito: `CONTINUITY_PLATE`
 - Verificacion: `weld_cp in {double_sided_fillet, cjp, pjp}; 'cjp' in {double_sided_fillet, cjp, pjp}`
 - Clausula: `Section 6.3 (continuity plate weld detail)`
 - Resultado: 🟢 Cumple
 
-### Chequeo 1.22 - Continuity-plate weld type when plate thickness is less than or equal to 3/8 in (10 mm) (`weld_cp`)
+### Chequeo 1.23 - Continuity-plate weld type when plate thickness is less than or equal to 3/8 in (10 mm) (`weld_cp`)
 
 - Ambito: `CONTINUITY_PLATE`
 - Verificacion: `weld_cp in {cjp, pjp} => cumple siempre; tcp=15.9 mm; weld_cp='cjp'`
 - Clausula: `Section 6.3 (continuity plate weld detail)`
 - Resultado: 🟢 Cumple
 
-### Chequeo 1.23 - Bolt tightening type must be one recognized category (`tight_bolt`)
+### Chequeo 1.24 - Bolt tightening type must be one recognized category (`tight_bolt`)
 
 - Ambito: `BOLTS`
 - Verificacion: `tight_bolt in {pretensioned, snug_tight}; 'pretensioned' in {pretensioned, snug_tight}`
 - Clausula: `Section 4.1 FASTENER ASSEMBLIES`
 - Resultado: 🟢 Cumple
 
-### Chequeo 1.24 - Bolts shall be pretensioned unless a specific connection permits otherwise (`tight_bolt`)
+### Chequeo 1.25 - Bolts shall be pretensioned unless a specific connection permits otherwise (`tight_bolt`)
 
 - Ambito: `BOLTS`
 - Verificacion: `tight_bolt == pretensioned; 'pretensioned' == 'pretensioned'`
 - Clausula: `Section 4.1 FASTENER ASSEMBLIES`
 - Resultado: 🟢 Cumple
 
-### Chequeo 1.25 - Bolt fabrication standard must be an allowed high-strength ASTM designation (`std_bolt`)
+### Chequeo 1.26 - Bolt fabrication standard must be an allowed high-strength ASTM designation (`std_bolt`)
 
 - Ambito: `BOLTS`
 - Verificacion: `std_bolt in {ASTM F3125/F3125M, ASTM A325, ASTM A325M, ASTM A490, ASTM A490M, ASTM F1852, ASTM F2280}; 'ASTM A490' in {ASTM F3125/F3125M, ASTM A325, ASTM A325M, ASTM A490, ASTM A490M, ASTM F1852, ASTM F2280}`
 - Clausula: `Section 4.1 FASTENER ASSEMBLIES`
 - Resultado: 🟢 Cumple
 
-### Chequeo 1.26 - Vertical pitch minimum spacing (`pb`)
+### Chequeo 1.27 - Vertical pitch minimum spacing (`pb`)
 
 - Ambito: `TABLE_6_1`
 - Verificacion: `pb >= 3db; pb <= 95.000 mm; pb >= 89 mm; [min,max] = [89 mm, 95 mm]`
 - Clausula: `Table 6.1 (BSEEP-8ES)`
 - Resultado: 🟢 Cumple
 
-### Chequeo 1.27 - Edge distance at de (`de`)
+### Chequeo 1.28 - Edge distance at de (`de`)
 
 - Ambito: `TABLE_6_1`
 - Verificacion: `de >= emin; 60 mm >= 38.1 mm`
 - Clausula: `Table 6.1 + AISC 360 Table J3.4`
 - Resultado: 🟢 Cumple
 
-### Chequeo 1.28 - Outside bolt-row distance limits (`pfo - pso`)
+### Chequeo 1.29 - Outside bolt-row distance limits (`pfo - pso`)
 
 - Ambito: `TABLE_6_1`
 - Verificacion: `pso (=pfo) >= emin; pfo <= 51 mm; pfo >= 41 mm; [min,max] = [41.27 mm, 50.8 mm]`
 - Clausula: `Table 6.1 + AISC 360 Table J3.4`
 - Resultado: 🟢 Cumple
 
-### Chequeo 1.29 - Inside bolt-row distance limits (`pfi - psi`)
+### Chequeo 1.30 - Inside bolt-row distance limits (`pfi - psi`)
 
 - Ambito: `TABLE_6_1`
 - Verificacion: `pfi >= emin; pfi <= 51 mm; pfi >= 41 mm; psi = pfi + tfb - tcp; psi > 0; [min,max] = [41.27 mm, 50.8 mm]`
 - Clausula: `Table 6.1 + AISC 360 Table J3.4`
 - Resultado: 🟢 Cumple
 
-### Chequeo 1.30 - Beam flange thickness limits (`tbf`)
+### Chequeo 1.31 - Beam flange thickness limits (`tbf`)
 
 - Ambito: `TABLE_6_1`
 - Verificacion: `tbf in [tbf_min, tbf_max]; 14.29 mm <= 17.3 mm <= 25.4 mm`
 - Clausula: `Table 6.1`
 - Resultado: 🟢 Cumple
 
-### Chequeo 1.31 - Beam flange width limits (`bbf`)
+### Chequeo 1.32 - Beam flange width limits (`bbf`)
 
 - Ambito: `TABLE_6_1`
 - Verificacion: `bbf in [bbf_min, bbf_max]; 190.5 mm <= 228 mm <= 311.15 mm`
 - Clausula: `Table 6.1`
 - Resultado: 🟢 Cumple
 
-### Chequeo 1.32 - Connecting beam depth limits (`d`)
+### Chequeo 1.33 - Connecting beam depth limits (`d`)
 
 - Ambito: `TABLE_6_1`
 - Verificacion: `d in [d_min, d_max]; 457.2 mm <= 607 mm <= 914.4 mm`
 - Clausula: `Table 6.1`
 - Resultado: 🟢 Cumple
 
-### Chequeo 1.33 - End-plate thickness limits (`tp`)
+### Chequeo 1.34 - End-plate thickness limits (`tp`)
 
 - Ambito: `TABLE_6_1`
 - Verificacion: `tp in [tp_min, tp_max]; 19.05 mm <= 25.4 mm <= 63.5 mm`
 - Clausula: `Table 6.1`
 - Resultado: 🟢 Cumple
 
-### Chequeo 1.34 - Horizontal bolt spacing limits (`g`)
+### Chequeo 1.35 - Horizontal bolt spacing limits (`g`)
 
 - Ambito: `TABLE_6_1`
 - Verificacion: `g in [g_min, g_max]; 127 mm <= 140 mm <= 152.4 mm`
@@ -364,46 +373,37 @@ Para 4E: `Sh = min(d/2, 3bf)`. Para 4ES/8ES: `Sh = Lst + tp`.
 
 ## Paso 4 - Cortante Probable En Rotula Plastica (Vhmax, Vhmin)
 
-Calculo por lado segun Eq. (2.4-3): `Vhmax = 2*Mpr/Lh + Vgravity` y `Vhmin = 2*Mpr/Lh - Vgravity`.
+Calculo segun Eq. (2.4-3): `Vhmax = 2*Mpr/Lh + Vgravity` y `Vhmin = 2*Mpr/Lh - Vgravity` (se reporta lado derecho).
 
 - Clausula: `Chapter 6 / Section 6.7.1 Step 4 + Eq. (2.4-3)`
-- Ecuacion: `Vhmax = 2*Mpr/Lh + Vgravity; Vhmin = 2*Mpr/Lh - Vgravity (Eq. 2.4-3, side-specific der/izq)`
+- Ecuacion: `Vhmax.der = 2*Mpr/Lh.der + Vgravity.der; Vhmin.der = 2*Mpr/Lh.der - Vgravity.der`
 - Configuracion de vigas: `both_sides`
 - Lado gobernante Vhmax: `der`
 - Fuente Vhmax seleccionado: `step4_computed_vhmax_der (governing_side=der)`
-- Mpr: `1434180`
+- Mpr: `1434.18 kN-m`
 - Lh.der: `6096 mm`
 - Beam_right_Vgravity: `44.48 kN`
-- 2*Mpr/Lh.der: `470.53`
-- Vh.dermax: `515.01`
-- Vh.dermin: `426.05`
-- Lh.izq: `6096 mm`
-- Beam_left_Vgravity: `44.48 kN`
-- 2*Mpr/Lh.izq: `470.53`
-- Vh.izqmax: `515.01`
-- Vh.izqmin: `426.05`
+- 2*Mpr/Lh.der: `470.53 kN`
+- Vh.dermax: `515.01 kN`
+- Vh.dermin: `426.05 kN`
 - Vhmax gobernante: `515.01 kN`
 - Resultado: `PASS`
 
 ## Paso 5 - Momento Probable En Cara De Columna (Mfmax, Mfmin)
 
-Calculo por lado segun Eq. (2.4-4): `Mfmax = Mpr + Vhmax*Sh` y `Mfmin = Mpr + Vhmin*Sh`.
+Calculo segun Eq. (2.4-4): `Mfmax = Mpr + Vhmax*Sh` y `Mfmin = Mpr + Vhmin*Sh` (se reporta lado derecho).
 
 - Clausula: `Chapter 6 / Section 6.7.1 Step 5 + Eq. (2.4-4)`
-- Ecuacion: `Mfmax = Mpr + Vhmax*Sh; Mfmin = Mpr + Vhmin*Sh (Eq. 2.4-4, side-specific der/izq)`
+- Ecuacion: `Mfmax.der = Mpr + Vhmax.der*Sh; Mfmin.der = Mpr + Vhmin.der*Sh`
 - Configuracion de vigas: `both_sides`
 - Lado gobernante Mfmax: `der`
 - Fuente Mfmax seleccionado: `step5_computed_mf_dermax (governing_side=der)`
-- Mpr (intermedio): `1434180`
-- Sh (intermedio): `215.93`
-- Vh.dermax (intermedio): `515.01`
-- Vh.dermin (intermedio): `426.05`
-- Mf.dermax: `1545384.59`
-- Mf.dermin: `1526174.99`
-- Vh.izqmax (intermedio): `515.01`
-- Vh.izqmin (intermedio): `426.05`
-- Mf.izqmax: `1545384.59`
-- Mf.izqmin: `1526174.99`
+- Mpr (intermedio): `1434.18 kN-m`
+- Sh (intermedio): `215.93 mm`
+- Vh.dermax (intermedio): `515.01 kN`
+- Vh.dermin (intermedio): `426.05 kN`
+- Mf.dermax: `1545.38 kN-m`
+- Mf.dermin: `1526.17 kN-m`
 - Mfmax gobernante: `1545.38 kN-m`
 - Resultado: `PASS`
 
@@ -512,8 +512,7 @@ Calculo por lado segun Eq. (2.4-4): `Mfmax = Mpr + Vhmax*Sh` y `Mfmin = Mpr + Vh
 - db: `28.57 mm`
 - Resultado: `PASS`
 
-## Paso 8 - Revision de Resistencia soldadura #1
-(end plate con rigidizador)
+## Paso 8 - Revision de Resistencia soldadura #1 (end plate con rigidizador)
 
 ### 8.1. Revision de capacidad a traccion
 
@@ -531,8 +530,7 @@ Calculo por lado segun Eq. (2.4-4): `Mfmax = Mpr + Vhmax*Sh` y `Mfmin = Mpr + Vh
 - n_l (lineas soldadura): `2`
 - Resultado: `PASS`
 
-## Paso 9 - Revision de resistencia soldadura #2
-(viga con rigidizador)
+## Paso 9 - Revision de resistencia soldadura #2 (viga con rigidizador)
 
 ### 9.1. Revision de capacidad a cortante
 
@@ -565,5 +563,20 @@ Calculo por lado segun Eq. (2.4-4): `Mfmax = Mpr + Vhmax*Sh` y `Mfmin = Mpr + Vh
 - Cv1: `1`
 - kv: `5.34`
 - h/tw: `48.84`
-- h: `547`
+- h: `547 mm`
 - Resultado: `PASS`
+
+## Paso 11 - Revision de resistencia de soldadura viga-alma a end plate
+
+### 11.1 Revision capacidad a traccion
+
+#### 11.1.1 ELR #1: Rotura de soldadura
+
+- Clausula: `Section 6.7 + AISC 360-22 J2.4`
+- Ecuacion: `Fillet: Puww3 = Fybm*tw*hwef; hwef = Pfi + Pb + 150 mm; phiPnww3 = phi*nl*0.6*Fexx*0.707*hwef*ww3; DCRww3p = Puww3/phiPnww3`
+- phi usado: `0.9`
+- Fuente de input: `geometry.welds.weld_3`
+- Soldadura #3: `viga (alma) con end plate`
+- Tipo de soldadura viga-end_plate: `CJP`
+- CJP: `Cumple`
+- Resultado: `Cumple`
