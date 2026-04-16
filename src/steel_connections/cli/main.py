@@ -28,8 +28,8 @@ def _build_parser() -> argparse.ArgumentParser:
     run_parser.add_argument(
         "--out",
         required=False,
-        default="results/moment_prequalified",
-        help="Output root for detailed JSON results (default: results/moment_prequalified).",
+        default="results",
+        help="Output root for detailed JSON results (default: results).",
     )
     return parser
 
@@ -40,9 +40,18 @@ def _run_validate(input_path: str) -> int:
     return 0
 
 
+def _derive_example_id(input_path: Path) -> str:
+    parts = list(input_path.parts)
+    for idx, part in enumerate(parts):
+        if part.lower() == "examples":
+            rel = Path(*parts[idx + 1 :]).with_suffix("")
+            return rel.as_posix()
+    return input_path.stem
+
+
 def _run_case(input_path: str, out_root: str) -> int:
     result = run_case_file(input_path)
-    example_id = Path(input_path).stem
+    example_id = _derive_example_id(Path(input_path))
     output_path = write_detailed_result(result, out_root, example_id=example_id)
     memory_path = write_memory_markdown(result, output_path.parent)
     try:

@@ -118,7 +118,7 @@ Cada magnitud numerica usa objeto:
 
 ## Salida
 - Consola: resumen compacto de estado global, conteos y pasos de verificacion legibles (`calculado` vs `limite`) con simbolos tecnicos (`bp`, `bf`, `db`, etc.).
-- Carpeta por example (default): `results/moment_prequalified/<example_json_sin_extension>/`.
+- Carpeta por example (default): `results/<ruta_relativa_en_examples_sin_extension>/`.
 - Archivo detallado: `detailed.json`.
 - Memoria de presentacion: `memory.md`.
 - Artefacto grafico: `geometry.svg` (esquema de geometria de la conexion para auditoria tecnica).
@@ -137,11 +137,12 @@ Cada magnitud numerica usa objeto:
 python -m src.steel_connections.run examples/moment_prequalified/case_002_bueep_4e.json
 python -m src.steel_connections.run examples/moment_prequalified/case_004_bseep_4es.json
 python -m src.steel_connections.run examples/moment_prequalified/case_003_bseep_8es.json
+python -m src.steel_connections.run "examples/Fully Restrained Moment/case_001_bbmb_splice.json"
 ```
 
 Salida por defecto:
 ```bash
-results/moment_prequalified/<example_json_sin_extension>/detailed.json
+results/<ruta_relativa_en_examples_sin_extension>/detailed.json
 ```
 
 Opcionalmente puedes indicar carpeta de salida como segundo argumento:

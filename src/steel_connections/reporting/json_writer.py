@@ -13,7 +13,7 @@ def build_case_results_dir(
 ) -> Path:
     root = Path(out_root)
     if example_id:
-        target_dir = root / example_id
+        target_dir = root / Path(example_id)
     else:
         target_dir = root / result.connection_family / result.case_id
     target_dir.mkdir(parents=True, exist_ok=True)

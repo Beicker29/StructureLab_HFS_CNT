@@ -107,6 +107,7 @@ def _load_sections_index() -> dict[str, dict[str, float]]:
                 continue
 
             header_map: dict[str, int] = {}
+            header_map_exact: dict[str, int] = {}
             for cell in row_elements[0].findall(f"{{{XLSX_NS}}}c"):
                 cell_ref = cell.attrib.get("r", "")
                 col_ref = "".join(char for char in cell_ref if char.isalpha())
@@ -115,9 +116,12 @@ def _load_sections_index() -> dict[str, dict[str, float]]:
                 raw_header = _cell_value(cell, shared_strings)
                 if raw_header is None:
                     continue
-                header = str(raw_header).strip().lower()
-                if header:
-                    header_map[header] = _col_ref_to_index(col_ref)
+                header_exact = str(raw_header).strip()
+                if not header_exact:
+                    continue
+                header = header_exact.lower()
+                header_map[header] = _col_ref_to_index(col_ref)
+                header_map_exact[header_exact] = _col_ref_to_index(col_ref)
 
             if not required_headers.issubset(header_map.keys()):
                 continue
@@ -128,8 +132,10 @@ def _load_sections_index() -> dict[str, dict[str, float]]:
             idx_tf = header_map["tf"]
             idx_tw = header_map["tw"]
             idx_kdes = header_map.get("kdes")
+            idx_k1 = header_map.get("k1")
             idx_zx = header_map.get("zx")
             idx_a = header_map.get("a") or header_map.get("ag")
+            idx_t_cap = header_map_exact.get("T")
 
             for row in row_elements[1:]:
                 row_values: dict[int, str | float | None] = {}
@@ -164,6 +170,14 @@ def _load_sections_index() -> dict[str, dict[str, float]]:
                     except (TypeError, ValueError):
                         kdes_mm = None
 
+                k1_mm: float | None = None
+                if idx_k1 is not None:
+                    k1_raw = row_values.get(idx_k1)
+                    try:
+                        k1_mm = float(k1_raw) if k1_raw is not None else None
+                    except (TypeError, ValueError):
+                        k1_mm = None
+
                 zx_cm3: float | None = None
                 if idx_zx is not None:
                     zx_raw = row_values.get(idx_zx)
@@ -180,6 +194,14 @@ def _load_sections_index() -> dict[str, dict[str, float]]:
                     except (TypeError, ValueError):
                         ag_mm2 = None
 
+                t_cap_mm: float | None = None
+                if idx_t_cap is not None:
+                    t_cap_raw = row_values.get(idx_t_cap)
+                    try:
+                        t_cap_mm = float(t_cap_raw) if t_cap_raw is not None else None
+                    except (TypeError, ValueError):
+                        t_cap_mm = None
+
                 if shape not in shapes:
                     record = {
                         "d_mm": d_mm,
@@ -189,10 +211,14 @@ def _load_sections_index() -> dict[str, dict[str, float]]:
                     }
                     if kdes_mm is not None:
                         record["kdes_mm"] = kdes_mm
+                    if k1_mm is not None:
+                        record["k1_mm"] = k1_mm
                     if zx_cm3 is not None:
                         record["zx_cm3"] = zx_cm3
                     if ag_mm2 is not None:
                         record["ag_mm2"] = ag_mm2
+                    if t_cap_mm is not None:
+                        record["t_cap_mm"] = t_cap_mm
                     shapes[shape] = record
     finally:
         archive.close()
@@ -260,12 +286,18 @@ def get_shape_profile_properties(*, shape: str, unit_system: UnitSystem) -> dict
     kdes_mm = shape_data.get("kdes_mm")
     if kdes_mm is not None:
         output["kdes"] = _mm_to_length_unit(float(kdes_mm), unit_system)
+    k1_mm = shape_data.get("k1_mm")
+    if k1_mm is not None:
+        output["k1"] = _mm_to_length_unit(float(k1_mm), unit_system)
     zx_cm3 = shape_data.get("zx_cm3")
     if zx_cm3 is not None:
         output["zx"] = _cm3_to_section_modulus_unit(float(zx_cm3), unit_system)
     ag_mm2 = shape_data.get("ag_mm2")
     if ag_mm2 is not None:
         output["ag"] = _mm2_to_area_unit(float(ag_mm2), unit_system)
+    t_cap_mm = shape_data.get("t_cap_mm")
+    if t_cap_mm is not None:
+        output["T"] = _mm_to_length_unit(float(t_cap_mm), unit_system)
     return output
 
 

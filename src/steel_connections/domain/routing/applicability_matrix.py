@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import Callable
 
 from steel_connections.domain.rules.aisc358 import beam_flange_tension, chapter_06_end_plate, flange_weld_strength
+from steel_connections.domain.rules.aisc360 import bbmb_splice_detailing
 from steel_connections.domain.rules.dg1 import base_plate_anchor
 from steel_connections.models.output import CheckResult
 
@@ -214,6 +215,18 @@ APPLICABILITY_MATRIX: list[RuleBinding] = [
     *_chapter6_stiffened_specific_steps("bseep_4es"),
     *_chapter6_common_steps("bseep_8es"),
     *_chapter6_stiffened_specific_steps("bseep_8es"),
+    RuleBinding(
+        rule_id="AISC360.J3.bbmb_splice.step1_detailing_viga",
+        name="bbmb_splice Step 1 revision geometrica de detalle - viga",
+        source_document="AISC 360-22",
+        clause="AISC 360-22 J3.3 / Tabla J3.4 + criterio constructivo definido por usuario",
+        chapter="J3",
+        page="16.1-112 to 16.1-113",
+        connection_family="Fully_Restrained_Moment",
+        connection_type="bbmb_splice",
+        load_state="strength",
+        evaluator=bbmb_splice_detailing.run_step1_viga_detailing,
+    ),
     RuleBinding(
         rule_id="DG1.01.1.1.base_plate_anchor_strength",
         name="Base plate and anchor rod design",

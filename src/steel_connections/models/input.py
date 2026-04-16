@@ -505,6 +505,275 @@ class AISC358MomentCase(CaseBase):
         return self
 
 
+class BeamBeamMomentBoltedSections(StrictModel):
+    beam_left_shape: str
+    beam_right_shape: str
+
+    @field_validator("beam_left_shape", "beam_right_shape")
+    @classmethod
+    def normalize_shape(cls, value: str) -> str:
+        normalized = value.strip().upper()
+        if not normalized:
+            raise ValueError("sections.beam_left_shape/beam_right_shape cannot be empty.")
+        return normalized
+
+
+class BeamBeamMomentBoltedMaterials(StrictModel):
+    beam_left_steel_type: str
+    beam_right_steel_type: str
+    plate_steel_type: str
+    bolt_fabrication_standard: str
+    bolt_fabrication_standard_web: str | None = None
+    bolt_fabrication_standard_flange: str | None = None
+    bolt_description: str
+    bolt_shape: str
+    bolt_shape_web: str | None = None
+    bolt_shape_flange: str | None = None
+    bolt_thread_condition: str
+    weld_fexx: Quantity | None = None
+
+    @field_validator(
+        "beam_left_steel_type",
+        "beam_right_steel_type",
+        "plate_steel_type",
+        "bolt_fabrication_standard",
+        "bolt_fabrication_standard_web",
+        "bolt_fabrication_standard_flange",
+        "bolt_description",
+        "bolt_shape",
+        "bolt_shape_web",
+        "bolt_shape_flange",
+    )
+    @classmethod
+    def normalize_text_fields(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        normalized = value.strip()
+        if not normalized:
+            raise ValueError("Text material fields cannot be empty.")
+        return normalized
+
+    @field_validator("bolt_thread_condition")
+    @classmethod
+    def validate_bolt_thread_condition(cls, value: str) -> str:
+        normalized = value.strip().upper()
+        if normalized not in {"N", "X"}:
+            raise ValueError("materials.bolt_thread_condition must be 'N' or 'X'.")
+        return normalized
+
+
+class BeamBeamMomentBoltedGeometry(StrictModel):
+    splice_gap: Quantity
+    flange_plate_top_thickness: Quantity
+    flange_plate_top_width: Quantity
+    flange_plate_top_length: Quantity
+    flange_plate_bottom_thickness: Quantity
+    flange_plate_bottom_width: Quantity
+    flange_plate_bottom_length: Quantity
+    web_plate_thickness: Quantity
+    web_plate_height: Quantity
+    web_plate_length: Quantity
+    flange_bolt_gage: Quantity
+    flange_bolt_pitch: Quantity
+    flange_bolt_pitch_secondary: Quantity | None = None
+    flange_bolt_edge_distance_longitudinal: Quantity
+    flange_bolt_edge_distance_transverse: Quantity
+    flange_bolt_rows_per_side: int
+    flange_bolt_lines: int
+    web_bolt_gage: Quantity
+    web_bolt_pitch: Quantity
+    web_bolt_edge_distance: Quantity
+    web_bolt_edge_distance_x1: Quantity | None = None
+    web_bolt_edge_distance_x2: Quantity | None = None
+    web_bolt_edge_distance_y1: Quantity | None = None
+    web_bolt_edge_distance_y2: Quantity | None = None
+    flange_bolt_edge_distance_x1: Quantity | None = None
+    flange_bolt_edge_distance_x2: Quantity | None = None
+    flange_bolt_edge_distance_z1: Quantity | None = None
+    flange_bolt_edge_distance_z2: Quantity | None = None
+    web_bolt_rows_per_side: int
+    web_bolt_lines: int
+    web_bolt_tightening_type: str | None = None
+    flange_bolt_tightening_type: str | None = None
+    beam_surface_condition: str | None = None
+    beam_atmospheric_condition: str | None = None
+    web_plate_surface_condition: str | None = None
+    web_plate_atmospheric_condition: str | None = None
+    flange_plate_surface_condition: str | None = None
+    flange_plate_atmospheric_condition: str | None = None
+
+    @field_validator("flange_bolt_lines", "web_bolt_rows_per_side", "web_bolt_lines")
+    @classmethod
+    def validate_positive_counts(cls, value: int) -> int:
+        if value <= 0:
+            raise ValueError("Bolt layout integer fields must be >= 1.")
+        return value
+
+    @field_validator("flange_bolt_rows_per_side")
+    @classmethod
+    def validate_flange_rows_per_side(cls, value: int) -> int:
+        if value < 2:
+            raise ValueError("geometry.flange_bolt_rows_per_side must be >= 2.")
+        if value % 2 != 0:
+            raise ValueError("geometry.flange_bolt_rows_per_side must be an even number (2, 4, 6, ...).")
+        return value
+
+    @field_validator(
+        "beam_surface_condition",
+        "web_plate_surface_condition",
+        "flange_plate_surface_condition",
+    )
+    @classmethod
+    def normalize_surface_condition(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        normalized = value.strip().lower().replace("-", "_").replace(" ", "_")
+        if normalized in {"painted", "pintada"}:
+            return "painted"
+        if normalized in {"unpainted", "not_painted", "no_pintada", "sin_pintura"}:
+            return "unpainted"
+        raise ValueError("Surface condition must be 'painted'/'pintada' or 'unpainted'/'no pintada'.")
+
+    @field_validator(
+        "beam_atmospheric_condition",
+        "web_plate_atmospheric_condition",
+        "flange_plate_atmospheric_condition",
+    )
+    @classmethod
+    def normalize_atmospheric_condition(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        normalized = value.strip().lower().replace("-", "_").replace(" ", "_")
+        if normalized in {"corrosive", "corrosiva"}:
+            return "corrosive"
+        if normalized in {"non_corrosive", "not_corrosive", "no_corrosiva"}:
+            return "non_corrosive"
+        raise ValueError(
+            "Atmospheric condition must be 'corrosive'/'corrosiva' or 'non_corrosive'/'no corrosiva'."
+        )
+
+    @field_validator("web_bolt_tightening_type", "flange_bolt_tightening_type")
+    @classmethod
+    def normalize_bolt_tightening_type(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        normalized = value.strip().lower().replace("-", "_").replace(" ", "_")
+        if normalized in {"slip_critical", "slipcritical", "deslizamiento_critico"}:
+            return "slip_critical"
+        if normalized in {"pretensioned", "pretensionado", "pretensado", "apriete_pretensionado"}:
+            return "pretensioned"
+        if normalized in {"snug_tight", "snugtight", "apriete_justo"}:
+            return "snug_tight"
+        raise ValueError("Bolt tightening type must be 'pretensioned', 'snug_tight', or 'slip_critical'.")
+
+
+class BeamBeamMomentBoltedLoads(StrictModel):
+    moment_right_end: Quantity
+    moment_left_end: Quantity
+    shear_right_end: Quantity
+    shear_left_end: Quantity
+    axial_right_end: Quantity
+    axial_left_end: Quantity
+
+
+class BeamBeamMomentBoltedDesignFactors(StrictModel):
+    phi_bolt_tension: float
+    phi_bolt_shear: float
+    phi_plate_yielding: float
+    phi_plate_rupture: float
+    phi_block_shear: float
+    phi_slip_critical: float | None = None
+
+    @field_validator(
+        "phi_bolt_tension",
+        "phi_bolt_shear",
+        "phi_plate_yielding",
+        "phi_plate_rupture",
+        "phi_block_shear",
+        "phi_slip_critical",
+    )
+    @classmethod
+    def validate_phi_range(cls, value: float | None) -> float | None:
+        if value is None:
+            return value
+        if not (0.0 < value <= 1.0):
+            raise ValueError("Resistance factor phi must be in (0, 1].")
+        return value
+
+
+class BeamBeamMomentBoltedCase(CaseBase):
+    connection_family: Literal["Fully_Restrained_Moment"]
+    connection_type: Literal["bbmb_splice"]
+    sections: BeamBeamMomentBoltedSections
+    materials: BeamBeamMomentBoltedMaterials
+    geometry: BeamBeamMomentBoltedGeometry
+    loads: BeamBeamMomentBoltedLoads
+    design_factors: BeamBeamMomentBoltedDesignFactors
+
+    @model_validator(mode="after")
+    def validate_units(self) -> "BeamBeamMomentBoltedCase":
+        if self.materials.weld_fexx is not None:
+            validate_quantity_unit(
+                self.materials.weld_fexx,
+                "stress",
+                self.units_system,
+                "materials.weld_fexx",
+            )
+        for field_name in (
+            "splice_gap",
+            "flange_plate_top_thickness",
+            "flange_plate_top_width",
+            "flange_plate_top_length",
+            "flange_plate_bottom_thickness",
+            "flange_plate_bottom_width",
+            "flange_plate_bottom_length",
+            "web_plate_thickness",
+            "web_plate_height",
+            "web_plate_length",
+            "flange_bolt_gage",
+            "flange_bolt_pitch",
+            "flange_bolt_pitch_secondary",
+            "flange_bolt_edge_distance_longitudinal",
+            "flange_bolt_edge_distance_transverse",
+            "flange_bolt_edge_distance_x1",
+            "flange_bolt_edge_distance_x2",
+            "flange_bolt_edge_distance_z1",
+            "flange_bolt_edge_distance_z2",
+            "web_bolt_gage",
+            "web_bolt_pitch",
+            "web_bolt_edge_distance",
+            "web_bolt_edge_distance_x1",
+            "web_bolt_edge_distance_x2",
+            "web_bolt_edge_distance_y1",
+            "web_bolt_edge_distance_y2",
+        ):
+            value = getattr(self.geometry, field_name)
+            if value is not None:
+                validate_quantity_unit(
+                    value,
+                    "length",
+                    self.units_system,
+                    f"geometry.{field_name}",
+                )
+        for field_name in ("shear_right_end", "shear_left_end", "axial_right_end", "axial_left_end"):
+            value = getattr(self.loads, field_name)
+            validate_quantity_unit(
+                value,
+                "force",
+                self.units_system,
+                f"loads.{field_name}",
+            )
+        expected_moment_unit = "kip-in" if self.units_system == UnitSystem.US else "kN-mm"
+        for field_name in ("moment_right_end", "moment_left_end"):
+            value = getattr(self.loads, field_name)
+            if value.unit != expected_moment_unit:
+                raise ValueError(
+                    f"Invalid unit at 'loads.{field_name}'. "
+                    f"Expected '{expected_moment_unit}' for {self.units_system.value}."
+                )
+        return self
+
+
 class DG1BasePlateCase(CaseBase):
     connection_family: Literal["base_plate_anchor_rod"]
     connection_type: Literal["dg1_base_plate"]
@@ -544,7 +813,7 @@ class DG1BasePlateCase(CaseBase):
 
 
 InputCase = Annotated[
-    Union[AISC358MomentCase, DG1BasePlateCase],
+    Union[AISC358MomentCase, BeamBeamMomentBoltedCase, DG1BasePlateCase],
     Field(discriminator="connection_family"),
 ]
 INPUT_CASE_ADAPTER = TypeAdapter(InputCase)

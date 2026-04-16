@@ -27,10 +27,19 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "out",
         nargs="?",
-        default="results/moment_prequalified",
-        help="Output root directory. Defaults to 'results/moment_prequalified'.",
+        default="results",
+        help="Output root directory. Defaults to 'results'.",
     )
     return parser
+
+
+def _derive_example_id(input_path: Path) -> str:
+    parts = list(input_path.parts)
+    for idx, part in enumerate(parts):
+        if part.lower() == "examples":
+            rel = Path(*parts[idx + 1 :]).with_suffix("")
+            return rel.as_posix()
+    return input_path.stem
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -38,7 +47,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     input_path = Path(args.input)
-    example_id = input_path.stem
+    example_id = _derive_example_id(input_path)
 
     result = run_case_file(str(input_path))
     output_path = write_detailed_result(result, args.out, example_id=example_id)

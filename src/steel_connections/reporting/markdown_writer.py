@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 from pathlib import Path
 
@@ -123,6 +123,33 @@ def _collect_step_1_notes(result: DetailedRunResult) -> list[dict]:
     notes: list[dict] = []
     for check in result.checks:
         if ".06.3." not in check.rule_id:
+            continue
+        details = check.calculation_memory.intermediates.get("step_1_notes")
+        if not isinstance(details, list):
+            continue
+        for item in details:
+            if isinstance(item, dict):
+                notes.append(item)
+    return notes
+
+def _collect_splice_step_1_rows(result: DetailedRunResult) -> list[dict]:
+    rows: list[dict] = []
+    for check in result.checks:
+        if ".bbmb_splice.step1_detailing_viga" not in check.rule_id:
+            continue
+        details = check.calculation_memory.intermediates.get("step_1_limits")
+        if not isinstance(details, list):
+            continue
+        for item in details:
+            if isinstance(item, dict):
+                rows.append(item)
+    return rows
+
+
+def _collect_splice_step_1_notes(result: DetailedRunResult) -> list[dict]:
+    notes: list[dict] = []
+    for check in result.checks:
+        if ".bbmb_splice.step1_detailing_viga" not in check.rule_id:
             continue
         details = check.calculation_memory.intermediates.get("step_1_notes")
         if not isinstance(details, list):
@@ -979,6 +1006,83 @@ def _render_step_11_end_plate_beam_web_weld_tension(step_11_ctx: dict | None, st
     return "\n".join(lines)
 
 
+def _render_splice_step_1_notes(notes: list[dict]) -> str:
+    lines: list[str] = []
+    for item in notes:
+        note_id = _format_text(item.get("id"))
+        if note_id == "bbmb_splice.step1.geometry_formulas_common_note":
+            lines.extend(
+                [
+                    "### Nota tecnica - Formulas geometricas (dato comun)",
+                    "",
+                    "- Ambito: `VIGA`",
+                    f"- Clausula: `{_format_text(item.get('clause'))}`",
+                    f"- alpha = sep: `{_format_quantity(item.get('alpha'))}`",
+                    "",
+                ]
+            )
+            continue
+        if note_id == "bbmb_splice.step1.geometry_formulas_plt1_note":
+            lines.extend(
+                [
+                    "### Nota tecnica - Formulas geometricas (Platina 1)",
+                    "",
+                    "- Ambito: `PLATINA_1`",
+                    f"- Clausula: `{_format_text(item.get('clause'))}`",
+                    f"- Formula hp1: `{_format_text(item.get('hp1_formula'))}`",
+                    f"- hp1 calculado: `{_format_quantity(item.get('hp1_calc'))}`",
+                    f"- Formula bp1: `{_format_text(item.get('bp1_formula'))}`",
+                    f"- bp1 calculado: `{_format_quantity(item.get('bp1_calc'))}`",
+                    "",
+                ]
+            )
+            continue
+        if note_id == "bbmb_splice.step1.geometry_formulas_plt2_note":
+            lines.extend(
+                [
+                    "### Nota tecnica - Formulas geometricas (Platina 2)",
+                    "",
+                    "- Ambito: `PLATINA_2`",
+                    f"- Clausula: `{_format_text(item.get('clause'))}`",
+                    f"- Formula bp2: `{_format_text(item.get('bp2_formula'))}`",
+                    f"- bp2 calculado: `{_format_quantity(item.get('bp2_calc'))}`",
+                    f"- Formula lp2: `{_format_text(item.get('lp2_formula'))}`",
+                    f"- lp2 calculado: `{_format_quantity(item.get('lp2_calc'))}`",
+                    "",
+                ]
+            )
+    return "\n".join(lines)
+
+
+def _render_fully_restrained_splice_outline(rows_viga: list[dict], notes_viga: list[dict]) -> str:
+    lines = [
+        "## Revision conexion: Viga",
+        "",
+        "### Punto 1 - Revision geometrica de detalle (detailing checks)",
+        "",
+    ]
+    if rows_viga:
+        lines.append(_render_step_1_list_grouped_by_scope(rows_viga))
+    else:
+        lines.append("No hay subchequeos de detailing disponibles para este caso.")
+    rendered_notes = _render_splice_step_1_notes(notes_viga)
+    if rendered_notes:
+        lines.append(rendered_notes)
+    lines.extend(
+        [
+            "",
+            "## Revision conexion: Platina 1",
+            "",
+            "## Revision conexion: Pernos 1",
+            "",
+            "## Revision conexion: Platina 2",
+            "",
+            "## Revision conexion: Pernos 2",
+            "",
+        ]
+    )
+    return "\n".join(lines)
+
 def _render_step_1_list(rows: list[dict]) -> str:
     lines: list[str] = []
     for idx, item in enumerate(rows, start=1):
@@ -1045,7 +1149,6 @@ def _render_step_1_list(rows: list[dict]) -> str:
             verification = f"{calculated_symbol} {comparison} {limit_symbol}; {calculated} {comparison} {limit}"
 
         lines.append(f"### Chequeo 1.{idx} - {description} (`{calculated_symbol}`)")
-        lines.append("")
         lines.append(f"- Ambito: `{scope}`")
         lines.append(f"- Verificacion: `{verification}`")
         lines.append(f"- Clausula: `{clause}`")
@@ -1054,9 +1157,94 @@ def _render_step_1_list(rows: list[dict]) -> str:
     return "\n".join(lines)
 
 
+def _render_step_1_list_grouped_by_scope(rows: list[dict]) -> str:
+    grouped: dict[str, list[dict]] = {}
+    for item in rows:
+        scope = str(item.get("scope", "n/a")).upper()
+        grouped.setdefault(scope, []).append(item)
+
+    lines: list[str] = []
+    idx = 1
+    for scope in sorted(grouped.keys()):
+        lines.append(f"#### Ambito: `{scope}`")
+        lines.append("")
+        for item in grouped[scope]:
+            description = str(item.get("description", "n/a"))
+            calculated_symbol = str(item.get("calculated_symbol", "calc"))
+            limit_symbol = str(item.get("limit_symbol", "lim"))
+            calculated = _format_quantity(item.get("calculated"))
+            result_text = _render_result_label(item.get("result", item.get("status", "UNKNOWN")))
+            clause = str(item.get("clause", "n/a"))
+            comparison_mode = str(item.get("comparison", ""))
+
+            if comparison_mode == "range":
+                minimum = _format_quantity(item.get("minimum"))
+                maximum = _format_quantity(item.get("maximum"))
+                verification = (
+                    f"{calculated_symbol} in {limit_symbol}; {minimum} <= {calculated} <= {maximum}"
+                )
+            elif comparison_mode == "equals":
+                calculated_text = _format_text(item.get("calculated_text"))
+                expected_text = _format_text(item.get("expected_text"))
+                verification = f"{calculated_symbol} == {limit_symbol}; '{calculated_text}' == '{expected_text}'"
+            elif comparison_mode == "family_in":
+                calculated_text = _format_text(item.get("calculated_text"))
+                families = item.get("allowed_families")
+                allowed = ", ".join(str(v) for v in families) if isinstance(families, list) else limit_symbol
+                verification = f"{calculated_symbol} in {limit_symbol}; '{calculated_text}' in {{{allowed}}}"
+            elif comparison_mode == "in_set":
+                calculated_text = _format_text(item.get("calculated_text"))
+                allowed_values = item.get("allowed_values")
+                allowed = ", ".join(str(v) for v in allowed_values) if isinstance(allowed_values, list) else limit_symbol
+                verification = f"{calculated_symbol} in {limit_symbol}; '{calculated_text}' in {{{allowed}}}"
+            elif comparison_mode == "conditional_allowed_set":
+                thickness = _format_quantity(item.get("thickness"))
+                thickness_limit = _format_quantity(item.get("thickness_limit"))
+                calculated_text = _format_text(item.get("calculated_text"))
+                allowed_values = item.get("allowed_values")
+                allowed = ", ".join(str(v) for v in allowed_values) if isinstance(allowed_values, list) else limit_symbol
+                governing = _format_text(item.get("governing_condition"))
+                if governing == "cjp_or_pjp_always_permitted":
+                    verification = (
+                        f"weld_cp in {{cjp, pjp}} => cumple siempre; "
+                        f"tcp={thickness}; weld_cp='{calculated_text}'"
+                    )
+                elif governing == "double_sided_fillet_requires_tcp_le_limit":
+                    verification = (
+                        f"if weld_cp='double_sided_fillet': tcp <= {thickness_limit}; "
+                        f"tcp={thickness}; weld_cp='{calculated_text}'"
+                    )
+                else:
+                    verification = (
+                        f"weld_cp in {{{allowed}}} y regla de espesor para double_sided_fillet; "
+                        f"tcp={thickness}; weld_cp='{calculated_text}'"
+                    )
+            elif comparison_mode == "compound":
+                verification = _format_text(item.get("verification_text"))
+                minimum = _format_quantity(item.get("minimum"))
+                maximum = _format_quantity(item.get("maximum"))
+                if minimum != "n/a" and maximum != "n/a":
+                    verification = f"{verification}; [min,max] = [{minimum}, {maximum}]"
+            else:
+                comparison = str(item.get("comparison_text", "vs"))
+                limit = _format_quantity(item.get("limit"))
+                verification = f"{calculated_symbol} {comparison} {limit_symbol}; {calculated} {comparison} {limit}"
+
+            lines.append(f"### Chequeo 1.{idx} - {description} (`{calculated_symbol}`)")
+            lines.append(f"- Ambito: `{scope}`")
+            lines.append(f"- Verificacion: `{verification}`")
+            lines.append(f"- Clausula: `{clause}`")
+            lines.append(f"- Resultado: {result_text}")
+            lines.append("")
+            idx += 1
+    return "\n".join(lines)
+
+
 def render_memory_markdown(result: DetailedRunResult) -> str:
     rows = _collect_step_1_rows(result)
     notes = _collect_step_1_notes(result)
+    splice_rows_viga = _collect_splice_step_1_rows(result)
+    splice_notes_viga = _collect_splice_step_1_notes(result)
     step_2 = _collect_step_2_mpr(result)
     step_3 = _collect_step_3_sh(result)
     step_4 = _collect_step_4_vh(result)
@@ -1081,19 +1269,27 @@ def render_memory_markdown(result: DetailedRunResult) -> str:
         f"- Tipo: `{result.connection_type}`",
         f"- Estado global: `{result.global_status.value}`",
         "",
-        "## Revision conexion viga a derecha de columna",
-        "",
-        "## Paso 1 - PREQUALIFICATION LIMITS",
-        "",
-        "Comparacion directa de valor calculado contra limite normativo (sin formato DCR).",
-        "",
     ]
-    if notes:
-        content.append(_render_step_1_notes(notes))
-    if rows:
-        content.append(_render_step_1_list(rows))
-    else:
-        content.append("No hay subchequeos de prequalification disponibles para este caso.")
+    connection_family_normalized = str(result.connection_family).strip().lower()
+    if connection_family_normalized == "moment_prequalified":
+        content.extend(
+            [
+                "## Revision conexion viga a derecha de columna",
+                "",
+                "## Paso 1 - PREQUALIFICATION LIMITS",
+                "",
+                "Comparacion directa de valor calculado contra limite normativo (sin formato DCR).",
+                "",
+            ]
+        )
+        if notes:
+            content.append(_render_step_1_notes(notes))
+        if rows:
+            content.append(_render_step_1_list(rows))
+        else:
+            content.append("No hay subchequeos de prequalification disponibles para este caso.")
+    elif connection_family_normalized == "fully_restrained_moment":
+        content.append(_render_fully_restrained_splice_outline(splice_rows_viga, splice_notes_viga))
     if step_2 is not None:
         content.append(_render_step_2_mpr(step_2))
     if step_3 is not None:
@@ -1131,3 +1327,4 @@ def write_memory_markdown(result: DetailedRunResult, target_dir: str | Path) -> 
     rendered = render_memory_markdown(result).rstrip("\n") + "\n"
     target.write_text(rendered, encoding="utf-8")
     return target
+

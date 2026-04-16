@@ -1,0 +1,699 @@
+{
+  "project_id": "proj_bbmb_demo",
+  "case_id": "case_001_bbmb_splice_si",
+  "connection_family": "Fully_Restrained_Moment",
+  "connection_type": "bbmb_splice",
+  "load_state": "strength",
+  "global_status": "FAIL",
+  "checks": [
+    {
+      "name": "bbmb_splice Step 1 revision geometrica de detalle - viga",
+      "rule_id": "AISC360.J3.bbmb_splice.step1_detailing_viga",
+      "clause": "AISC 360-22 J3.3 / Tabla J3.4 + criterio constructivo definido por usuario",
+      "source_document": "AISC 360-22",
+      "demand": null,
+      "capacity": null,
+      "dcr": null,
+      "status": "FAIL",
+      "calculation_memory": {
+        "inputs": {
+          "beam_shape": "W18X35",
+          "db_web": {
+            "value": 15.875,
+            "unit": "mm"
+          },
+          "db_flange": {
+            "value": 19.049999999999997,
+            "unit": "mm"
+          },
+          "s1_x": {
+            "value": 60.0,
+            "unit": "mm"
+          },
+          "s1_y": {
+            "value": 60.0,
+            "unit": "mm"
+          },
+          "s2_x": {
+            "value": 60.0,
+            "unit": "mm"
+          },
+          "s2_z1": {
+            "value": 40.0,
+            "unit": "mm"
+          },
+          "s2_z2": {
+            "value": 90.0,
+            "unit": "mm"
+          },
+          "le1_x1": {
+            "value": 35.0,
+            "unit": "mm"
+          },
+          "le1_x2": {
+            "value": 35.0,
+            "unit": "mm"
+          },
+          "le1_y1": {
+            "value": 25.0,
+            "unit": "mm"
+          },
+          "le1_y2": {
+            "value": 25.0,
+            "unit": "mm"
+          },
+          "le2_x1": {
+            "value": 50.0,
+            "unit": "mm"
+          },
+          "le2_x2": {
+            "value": 50.0,
+            "unit": "mm"
+          },
+          "le2_z1": {
+            "value": 30.0,
+            "unit": "mm"
+          },
+          "le2_z2": {
+            "value": 40.0,
+            "unit": "mm"
+          },
+          "k1_catalog": {
+            "value": 19.1,
+            "unit": "mm"
+          },
+          "hp1": {
+            "value": 350.0,
+            "unit": "mm"
+          },
+          "T_catalog": {
+            "value": 394.0,
+            "unit": "mm"
+          },
+          "bp2": {
+            "value": 110.0,
+            "unit": "mm"
+          },
+          "bf_catalog": {
+            "value": 152.0,
+            "unit": "mm"
+          },
+          "web_plate_surface_condition": "painted",
+          "web_plate_atmospheric_condition": "non_corrosive",
+          "flange_plate_surface_condition": "painted",
+          "flange_plate_atmospheric_condition": "non_corrosive"
+        },
+        "intermediates": {
+          "step_1_limits": [
+            {
+              "scope": "pernos_1",
+              "description": "Separacion minima entre pernos del alma en direccion X",
+              "calculated_symbol": "S1_x",
+              "limit_symbol": "Smin",
+              "comparison": "simple",
+              "comparison_text": ">=",
+              "calculated": {
+                "value": 60.0,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 47.625,
+                "unit": "mm"
+              },
+              "clause": "AISC 360-22 J3.3",
+              "result": "PASS"
+            },
+            {
+              "scope": "pernos_1",
+              "description": "Separacion maxima entre pernos del alma en direccion X",
+              "calculated_symbol": "S1_x",
+              "limit_symbol": "Smax",
+              "comparison": "simple",
+              "comparison_text": "<=",
+              "calculated": {
+                "value": 60.0,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 182.88,
+                "unit": "mm"
+              },
+              "clause": "AISC 360-22 J3.6",
+              "result": "PASS"
+            },
+            {
+              "scope": "pernos_1",
+              "description": "Separacion minima entre pernos del alma en direccion Y",
+              "calculated_symbol": "S1_y",
+              "limit_symbol": "Smin",
+              "comparison": "simple",
+              "comparison_text": ">=",
+              "calculated": {
+                "value": 60.0,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 47.625,
+                "unit": "mm"
+              },
+              "clause": "AISC 360-22 J3.3",
+              "result": "PASS"
+            },
+            {
+              "scope": "pernos_1",
+              "description": "Separacion maxima entre pernos del alma en direccion Y",
+              "calculated_symbol": "S1_y",
+              "limit_symbol": "Smax",
+              "comparison": "simple",
+              "comparison_text": "<=",
+              "calculated": {
+                "value": 60.0,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 182.88,
+                "unit": "mm"
+              },
+              "clause": "AISC 360-22 J3.6",
+              "result": "PASS"
+            },
+            {
+              "scope": "pernos_2",
+              "description": "Separacion minima entre pernos del ala en direccion X",
+              "calculated_symbol": "S2_x",
+              "limit_symbol": "Smin",
+              "comparison": "simple",
+              "comparison_text": ">=",
+              "calculated": {
+                "value": 60.0,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 57.14999999999999,
+                "unit": "mm"
+              },
+              "clause": "AISC 360-22 J3.3",
+              "result": "PASS"
+            },
+            {
+              "scope": "pernos_2",
+              "description": "Separacion maxima entre pernos del ala en direccion X",
+              "calculated_symbol": "S2_x",
+              "limit_symbol": "Smax",
+              "comparison": "simple",
+              "comparison_text": "<=",
+              "calculated": {
+                "value": 60.0,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 259.20000000000005,
+                "unit": "mm"
+              },
+              "clause": "AISC 360-22 J3.6",
+              "result": "PASS"
+            },
+            {
+              "scope": "pernos_2",
+              "description": "Separacion minima entre pernos del ala en direccion Z (S2_z1)",
+              "calculated_symbol": "S2_z1",
+              "limit_symbol": "Smin",
+              "comparison": "simple",
+              "comparison_text": ">=",
+              "calculated": {
+                "value": 40.0,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 57.14999999999999,
+                "unit": "mm"
+              },
+              "clause": "AISC 360-22 J3.3",
+              "result": "FAIL"
+            },
+            {
+              "scope": "pernos_2",
+              "description": "Separacion maxima entre pernos del ala en direccion Z (S2_z1)",
+              "calculated_symbol": "S2_z1",
+              "limit_symbol": "Smax",
+              "comparison": "simple",
+              "comparison_text": "<=",
+              "calculated": {
+                "value": 40.0,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 259.20000000000005,
+                "unit": "mm"
+              },
+              "clause": "AISC 360-22 J3.6",
+              "result": "PASS"
+            },
+            {
+              "scope": "pernos_1",
+              "description": "Distancia minima a borde Le1_x1 para agujero estandar",
+              "calculated_symbol": "Le1_x1",
+              "limit_symbol": "Le_min",
+              "comparison": "simple",
+              "comparison_text": ">=",
+              "calculated": {
+                "value": 35.0,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 22.224999999999998,
+                "unit": "mm"
+              },
+              "clause": "AISC 360-22 Tabla J3.4",
+              "result": "PASS"
+            },
+            {
+              "scope": "pernos_1",
+              "description": "Distancia maxima a borde Le1_x1",
+              "calculated_symbol": "Le1_x1",
+              "limit_symbol": "Le_max",
+              "comparison": "simple",
+              "comparison_text": "<=",
+              "calculated": {
+                "value": 35.0,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 91.44,
+                "unit": "mm"
+              },
+              "clause": "AISC 360-22 J3.6",
+              "result": "PASS"
+            },
+            {
+              "scope": "pernos_1",
+              "description": "Distancia minima a borde Le1_x2 para agujero estandar",
+              "calculated_symbol": "Le1_x2",
+              "limit_symbol": "Le_min",
+              "comparison": "simple",
+              "comparison_text": ">=",
+              "calculated": {
+                "value": 35.0,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 22.224999999999998,
+                "unit": "mm"
+              },
+              "clause": "AISC 360-22 Tabla J3.4",
+              "result": "PASS"
+            },
+            {
+              "scope": "pernos_1",
+              "description": "Distancia maxima a borde Le1_x2",
+              "calculated_symbol": "Le1_x2",
+              "limit_symbol": "Le_max",
+              "comparison": "simple",
+              "comparison_text": "<=",
+              "calculated": {
+                "value": 35.0,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 91.44,
+                "unit": "mm"
+              },
+              "clause": "AISC 360-22 J3.6",
+              "result": "PASS"
+            },
+            {
+              "scope": "pernos_1",
+              "description": "Distancia minima a borde Le1_y1 para agujero estandar",
+              "calculated_symbol": "Le1_y1",
+              "limit_symbol": "Le_min",
+              "comparison": "simple",
+              "comparison_text": ">=",
+              "calculated": {
+                "value": 25.0,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 22.224999999999998,
+                "unit": "mm"
+              },
+              "clause": "AISC 360-22 Tabla J3.4",
+              "result": "PASS"
+            },
+            {
+              "scope": "pernos_1",
+              "description": "Distancia maxima a borde Le1_y1",
+              "calculated_symbol": "Le1_y1",
+              "limit_symbol": "Le_max",
+              "comparison": "simple",
+              "comparison_text": "<=",
+              "calculated": {
+                "value": 25.0,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 91.44,
+                "unit": "mm"
+              },
+              "clause": "AISC 360-22 J3.6",
+              "result": "PASS"
+            },
+            {
+              "scope": "pernos_1",
+              "description": "Distancia minima a borde Le1_y2 para agujero estandar",
+              "calculated_symbol": "Le1_y2",
+              "limit_symbol": "Le_min",
+              "comparison": "simple",
+              "comparison_text": ">=",
+              "calculated": {
+                "value": 25.0,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 22.224999999999998,
+                "unit": "mm"
+              },
+              "clause": "AISC 360-22 Tabla J3.4",
+              "result": "PASS"
+            },
+            {
+              "scope": "pernos_1",
+              "description": "Distancia maxima a borde Le1_y2",
+              "calculated_symbol": "Le1_y2",
+              "limit_symbol": "Le_max",
+              "comparison": "simple",
+              "comparison_text": "<=",
+              "calculated": {
+                "value": 25.0,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 91.44,
+                "unit": "mm"
+              },
+              "clause": "AISC 360-22 J3.6",
+              "result": "PASS"
+            },
+            {
+              "scope": "pernos_2",
+              "description": "Distancia minima a borde Le2_x1 para agujero estandar",
+              "calculated_symbol": "Le2_x1",
+              "limit_symbol": "Le_min",
+              "comparison": "simple",
+              "comparison_text": ">=",
+              "calculated": {
+                "value": 50.0,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 25.4,
+                "unit": "mm"
+              },
+              "clause": "AISC 360-22 Tabla J3.4",
+              "result": "PASS"
+            },
+            {
+              "scope": "pernos_2",
+              "description": "Distancia maxima a borde Le2_x1",
+              "calculated_symbol": "Le2_x1",
+              "limit_symbol": "Le_max",
+              "comparison": "simple",
+              "comparison_text": "<=",
+              "calculated": {
+                "value": 50.0,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 129.60000000000002,
+                "unit": "mm"
+              },
+              "clause": "AISC 360-22 J3.6",
+              "result": "PASS"
+            },
+            {
+              "scope": "pernos_2",
+              "description": "Distancia minima a borde Le2_x2 para agujero estandar",
+              "calculated_symbol": "Le2_x2",
+              "limit_symbol": "Le_min",
+              "comparison": "simple",
+              "comparison_text": ">=",
+              "calculated": {
+                "value": 50.0,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 25.4,
+                "unit": "mm"
+              },
+              "clause": "AISC 360-22 Tabla J3.4",
+              "result": "PASS"
+            },
+            {
+              "scope": "pernos_2",
+              "description": "Distancia maxima a borde Le2_x2",
+              "calculated_symbol": "Le2_x2",
+              "limit_symbol": "Le_max",
+              "comparison": "simple",
+              "comparison_text": "<=",
+              "calculated": {
+                "value": 50.0,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 129.60000000000002,
+                "unit": "mm"
+              },
+              "clause": "AISC 360-22 J3.6",
+              "result": "PASS"
+            },
+            {
+              "scope": "pernos_2",
+              "description": "Distancia minima a borde Le2_z1 para agujero estandar",
+              "calculated_symbol": "Le2_z1",
+              "limit_symbol": "Le_min",
+              "comparison": "simple",
+              "comparison_text": ">=",
+              "calculated": {
+                "value": 30.0,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 25.4,
+                "unit": "mm"
+              },
+              "clause": "AISC 360-22 Tabla J3.4",
+              "result": "PASS"
+            },
+            {
+              "scope": "pernos_2",
+              "description": "Distancia maxima a borde Le2_z1",
+              "calculated_symbol": "Le2_z1",
+              "limit_symbol": "Le_max",
+              "comparison": "simple",
+              "comparison_text": "<=",
+              "calculated": {
+                "value": 30.0,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 129.60000000000002,
+                "unit": "mm"
+              },
+              "clause": "AISC 360-22 J3.6",
+              "result": "PASS"
+            },
+            {
+              "scope": "pernos_2",
+              "description": "Distancia minima a borde Le2_z2 para agujero estandar",
+              "calculated_symbol": "Le2_z2",
+              "limit_symbol": "Le_min",
+              "comparison": "simple",
+              "comparison_text": ">=",
+              "calculated": {
+                "value": 40.0,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 25.4,
+                "unit": "mm"
+              },
+              "clause": "AISC 360-22 Tabla J3.4",
+              "result": "PASS"
+            },
+            {
+              "scope": "pernos_2",
+              "description": "Distancia maxima a borde Le2_z2",
+              "calculated_symbol": "Le2_z2",
+              "limit_symbol": "Le_max",
+              "comparison": "simple",
+              "comparison_text": "<=",
+              "calculated": {
+                "value": 40.0,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 129.60000000000002,
+                "unit": "mm"
+              },
+              "clause": "AISC 360-22 J3.6",
+              "result": "PASS"
+            },
+            {
+              "scope": "viga",
+              "description": "Altura de platina 1 no supera T del catalogo del perfil",
+              "calculated_symbol": "hp1",
+              "limit_symbol": "T",
+              "comparison": "simple",
+              "comparison_text": "<=",
+              "calculated": {
+                "value": 350.0,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 394.0,
+                "unit": "mm"
+              },
+              "clause": "Indicacion de diseno del usuario (constructivo) + catalogo de secciones",
+              "result": "PASS"
+            },
+            {
+              "scope": "platina_2",
+              "description": "Ancho de platina 2 no supera bf del catalogo del perfil",
+              "calculated_symbol": "bp2",
+              "limit_symbol": "bf",
+              "comparison": "simple",
+              "comparison_text": "<=",
+              "calculated": {
+                "value": 110.0,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 152.0,
+                "unit": "mm"
+              },
+              "clause": "Indicacion de diseno del usuario (constructivo) + catalogo de secciones",
+              "result": "PASS"
+            },
+            {
+              "scope": "pernos_1",
+              "description": "Nota tecnica J3.1 - Fuerza minima de pretension por perno (grupo 1)",
+              "calculated_symbol": "Tb,min,1",
+              "limit_symbol": "Tabla J3.1",
+              "comparison": "simple",
+              "comparison_text": "=",
+              "calculated": {
+                "value": 84.51621068994949,
+                "unit": "kN"
+              },
+              "limit": {
+                "value": 84.51621068994949,
+                "unit": "kN"
+              },
+              "clause": "AISC 360-22 Tabla J3.1",
+              "result": "PASS"
+            },
+            {
+              "scope": "pernos_2",
+              "description": "Nota tecnica J3.1 - Fuerza minima de pretension por perno (grupo 2)",
+              "calculated_symbol": "Tb,min,2",
+              "limit_symbol": "Tabla J3.1",
+              "comparison": "simple",
+              "comparison_text": "=",
+              "calculated": {
+                "value": 124.55020522729399,
+                "unit": "kN"
+              },
+              "limit": {
+                "value": 124.55020522729399,
+                "unit": "kN"
+              },
+              "clause": "AISC 360-22 Tabla J3.1",
+              "result": "PASS"
+            }
+          ],
+          "step_1_notes": [
+            {
+              "id": "bbmb_splice.step1.geometry_formulas_common_note",
+              "scope": "viga",
+              "description": "Parametro comun de formulas geometricas",
+              "clause": "Criterio solicitado por usuario",
+              "alpha_symbol": "sep",
+              "alpha": {
+                "value": 10.0,
+                "unit": "mm"
+              }
+            },
+            {
+              "id": "bbmb_splice.step1.geometry_formulas_plt1_note",
+              "scope": "platina_1",
+              "description": "Formulas geometricas de platina 1",
+              "clause": "Criterio solicitado por usuario",
+              "hp1_formula": "hp1 = Le1.y1 + Le1.y2 + (nb1.y - 1) * S1.y",
+              "hp1_calc": {
+                "value": 350.0,
+                "unit": "mm"
+              },
+              "bp1_formula": "bp1 = Le1.x1 + Le1.x2 + alpha + 2 * (nb1.x - 1) * S1.x",
+              "bp1_calc": {
+                "value": 200.0,
+                "unit": "mm"
+              }
+            },
+            {
+              "id": "bbmb_splice.step1.geometry_formulas_plt2_note",
+              "scope": "platina_2",
+              "description": "Formulas geometricas de platina 2",
+              "clause": "Criterio solicitado por usuario",
+              "bp2_formula": "bp2 = Le2.z2 + Le2.z1 + S2.z2 + (nb2.z - 2) * S2.z1",
+              "bp2_calc": {
+                "value": 160.0,
+                "unit": "mm"
+              },
+              "lp2_formula": "lp2 = 2 * (Le2.x1 + Le2.x2) + alpha + 2 * (nb2.x - 1) * S2.x + alpha",
+              "lp2_calc": {
+                "value": 580.0,
+                "unit": "mm"
+              }
+            }
+          ],
+          "edge_distance_table_row_web": "db=0.625 in",
+          "edge_distance_table_row_flange": "db=0.75 in",
+          "j3_6_t_web_governing": 7.62,
+          "j3_6_t_flange_governing": 10.8
+        },
+        "design_factors": {},
+        "equation": "Step 1 Detailing: S>=3db (J3.3), Le>=Tabla J3.4, hp1<=T_catalog, bp2<=bf_catalog",
+        "units_trace": {
+          "db_web": "mm",
+          "db_flange": "mm",
+          "s1_x": "mm",
+          "s1_y": "mm",
+          "s2_x": "mm",
+          "s2_z1": "mm",
+          "s2_z2": "mm",
+          "le1_x1": "mm",
+          "le1_x2": "mm",
+          "le1_y1": "mm",
+          "le1_y2": "mm",
+          "le2_x1": "mm",
+          "le2_x2": "mm",
+          "le2_z1": "mm",
+          "le2_z2": "mm",
+          "k1_catalog": "mm",
+          "hp1": "mm",
+          "T_catalog": "mm",
+          "bf_catalog": "mm"
+        },
+        "final_capacity": null
+      },
+      "notes": null
+    }
+  ],
+  "errors": [],
+  "summary": {
+    "pass_count": 0,
+    "fail_count": 1,
+    "error_count": 0,
+    "not_implemented_count": 0,
+    "worst_dcr": null
+  }
+}
