@@ -24,7 +24,7 @@ def _assert_equal(right_value: Any, left_value: Any, label: str) -> None:
     if right_value != left_value:
         raise ValueError(
             f"Mismatch between right and left beam inputs for '{label}'. "
-            "Both sides must define the same geometry values."
+            "Both sides must define the same values."
         )
 
 
@@ -38,6 +38,27 @@ def main() -> None:
     merged = _read_json(base_path)
     right_payload = _read_json(beam_right_path)
     left_payload = _read_json(beam_left_path)
+
+    merged_sections = _require_dict(merged, "sections", "case_003_column_and_common.json")
+    right_sections = _require_dict(right_payload, "sections", "case_003_beam_right_only.json")
+    left_sections = _require_dict(left_payload, "sections", "case_003_beam_left_only.json")
+    right_beam_shape = right_sections.get("beam_shape")
+    left_beam_shape = left_sections.get("beam_shape")
+    if not isinstance(right_beam_shape, str) or not right_beam_shape.strip():
+        raise ValueError("Missing text field 'sections.beam_shape' in case_003_beam_right_only.json.")
+    if not isinstance(left_beam_shape, str) or not left_beam_shape.strip():
+        raise ValueError("Missing text field 'sections.beam_shape' in case_003_beam_left_only.json.")
+    _assert_equal(right_beam_shape, left_beam_shape, "sections.beam_shape")
+    merged_sections["beam_shape"] = right_beam_shape
+
+    merged_materials = _require_dict(merged, "materials", "case_003_column_and_common.json")
+    right_materials = _require_dict(right_payload, "materials", "case_003_beam_right_only.json")
+    left_materials = _require_dict(left_payload, "materials", "case_003_beam_left_only.json")
+    _assert_equal(right_materials, left_materials, "materials")
+    for key, merged_value in merged_materials.items():
+        if key in right_materials:
+            _assert_equal(right_materials[key], merged_value, f"materials.{key}")
+    merged_materials.update(right_materials)
 
     merged_geometry = _require_dict(merged, "geometry", "case_003_column_and_common.json")
     right_geometry = _require_dict(right_payload, "geometry", "case_003_beam_right_only.json")

@@ -24,6 +24,17 @@ Objetivo:
   - datos generales del caso (`project_id`, `materials`, `sections`, etc.).
 - Si hay diferencias entre la geometria de viga derecha e izquierda, el ensamblador falla intencionalmente.
 
+## Regla de sections y materials
+
+- `sections.beam_shape` se define en ambos archivos de viga (derecha e izquierda), y el ensamblador exige que coincidan.
+- En `case_003_column_and_common.json`, `sections` solo conserva `column_shape`.
+- En `case_003_column_and_common.json`, `materials` mantiene solo:
+  - `profile_steel_type`
+  - `weld_fexx`
+  - `elastic_modulus`
+- En ambos archivos de viga se define el bloque `materials` completo (incluyendo los tres campos anteriores y los demas como `plate_steel_type`, `bolt_fabrication_standard`, `bolt_description`).
+- El ensamblador valida que `materials` de viga derecha e izquierda sean iguales y usa ese bloque para el caso consolidado.
+
 ## Ensamblar caso completo
 
 Desde la raiz del repo:

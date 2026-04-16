@@ -10,14 +10,10 @@
   "connection_type": "bseep_8es",
   "load_state": "strength",
   "sections": {
-    "beam_shape": "W24X76",
     "column_shape": "W18X175"
   },
   "materials": {
     "profile_steel_type": "ASTM A572 Gr 50",
-    "plate_steel_type": "ASTM A572 Gr 50",
-    "bolt_fabrication_standard": "ASTM A490",
-    "bolt_description": "Grupo 150",
     "weld_fexx": {
       "value": 490.0,
       "unit": "MPa"
