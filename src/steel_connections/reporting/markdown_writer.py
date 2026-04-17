@@ -931,11 +931,11 @@ def _render_step_11_end_plate_beam_web_weld_tension(step_11_ctx: dict | None, st
     fexx_mpa = _stress_to_mpa(step_11_inputs.get("weld_fexx"))
     nl_raw = step_11_inputs.get("end_plate_beam_web_weld_lines_nl")
     try:
-        nl = int(nl_raw) if nl_raw is not None else 2
+        nl = int(nl_raw) if nl_raw is not None else None
     except (TypeError, ValueError):
-        nl = 2
-    if nl < 1:
-        nl = 1
+        nl = None
+    if nl is not None and nl < 1:
+        nl = None
     phi = 0.9
 
     hwef_mm = None
@@ -946,7 +946,7 @@ def _render_step_11_end_plate_beam_web_weld_tension(step_11_ctx: dict | None, st
         hwef_mm = pfi_mm + pb_mm + 150.0
     if hwef_mm is not None and fybm_mpa is not None and tw_bm_mm is not None:
         puww3_kn = fybm_mpa * tw_bm_mm * hwef_mm / 1000.0
-    if hwef_mm is not None and fexx_mpa is not None and twe_mm is not None:
+    if hwef_mm is not None and fexx_mpa is not None and twe_mm is not None and nl is not None:
         phi_pnww3_kn = phi * nl * 0.6 * fexx_mpa * 0.707 * hwef_mm * twe_mm / 1000.0
     if puww3_kn is not None and phi_pnww3_kn is not None and phi_pnww3_kn > 0.0:
         dcr_ww3p = puww3_kn / phi_pnww3_kn
@@ -994,7 +994,7 @@ def _render_step_11_end_plate_beam_web_weld_tension(step_11_ctx: dict | None, st
         [
             "- Longitud de soldadura: `no se usa como input en este chequeo`",
             f"- Espesor/tamano de soldadura (twe = ww3): `{twe_text}`",
-            f"- nl (numero de cordones): `{_format_text(nl)}`",
+            f"- nl (numero de cordones): `{_format_text(nl) if nl is not None else 'n/a (input requerido)'}`",
             f"- hwef: `{hwef_text}`",
             f"- Puww3: `{puww3_text}`",
             f"- phiPnww3: `{phi_pnww3_text}`",
@@ -1149,6 +1149,7 @@ def _render_step_1_list(rows: list[dict]) -> str:
             verification = f"{calculated_symbol} {comparison} {limit_symbol}; {calculated} {comparison} {limit}"
 
         lines.append(f"### Chequeo 1.{idx} - {description} (`{calculated_symbol}`)")
+        lines.append("")
         lines.append(f"- Ambito: `{scope}`")
         lines.append(f"- Verificacion: `{verification}`")
         lines.append(f"- Clausula: `{clause}`")
@@ -1231,6 +1232,7 @@ def _render_step_1_list_grouped_by_scope(rows: list[dict]) -> str:
                 verification = f"{calculated_symbol} {comparison} {limit_symbol}; {calculated} {comparison} {limit}"
 
             lines.append(f"### Chequeo 1.{idx} - {description} (`{calculated_symbol}`)")
+            lines.append("")
             lines.append(f"- Ambito: `{scope}`")
             lines.append(f"- Verificacion: `{verification}`")
             lines.append(f"- Clausula: `{clause}`")

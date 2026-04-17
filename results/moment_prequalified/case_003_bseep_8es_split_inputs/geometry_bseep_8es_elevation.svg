@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="760" viewBox="0 0 980 760">
+  <rect x="0" y="0" width="980" height="760" fill="#f7f7f7" />
+  <text x="32" y="44" font-family="Arial, sans-serif" font-size="28" font-weight="700" fill="#111111">
+    BSEEP 8ES - Elevation Audit View
+  </text>
+  <text x="32" y="88" font-family="Arial, sans-serif" font-size="16" fill="#111111">de = 60.0 mm</text><text x="32" y="114" font-family="Arial, sans-serif" font-size="16" fill="#111111">pb = 95.0 mm</text><text x="32" y="140" font-family="Arial, sans-serif" font-size="16" fill="#111111">pso (geometry.pfo) = 50.0 mm</text><text x="32" y="166" font-family="Arial, sans-serif" font-size="16" fill="#111111">pfi = 50.0 mm</text><text x="32" y="192" font-family="Arial, sans-serif" font-size="16" fill="#111111">tcp = 15.9 mm</text><text x="32" y="218" font-family="Arial, sans-serif" font-size="16" fill="#111111">psi = pfi + tfb - tcp = 51.4 mm</text><text x="32" y="244" font-family="Arial, sans-serif" font-size="16" fill="#111111">hst = 110.0 mm</text><text x="32" y="270" font-family="Arial, sans-serif" font-size="16" fill="#111111">Lst = 190.5 mm</text><text x="32" y="296" font-family="Arial, sans-serif" font-size="16" fill="#111111">tfb = 17.3 mm</text><text x="32" y="322" font-family="Arial, sans-serif" font-size="16" fill="#111111">d = 607.0 mm</text>
+
+  <rect x="320" y="120" width="26" height="560" fill="#d4d4d4" stroke="#232323" stroke-width="1.8" />
+  <rect x="400" y="120" width="18" height="560" fill="#d4d4d4" stroke="#232323" stroke-width="1.8" />
+  <rect x="418" y="120" width="350" height="560" fill="#eeeeee" stroke="#232323" stroke-width="1.8" />
+  <line x1="418" y1="400" x2="768" y2="400" stroke="#555555" stroke-width="1.3" stroke-dasharray="6 5" />
+
+  <circle cx="456" cy="196" r="6.5" fill="#111111" />
+  <circle cx="456" cy="248" r="6.5" fill="#111111" />
+  <circle cx="456" cy="552" r="6.5" fill="#111111" />
+  <circle cx="456" cy="604" r="6.5" fill="#111111" />
+
+  <line x1="792.0" y1="120.0" x2="792.0" y2="680.0" stroke="#111111" stroke-width="1.6" /><line x1="785.0" y1="120.0" x2="799.0" y2="120.0" stroke="#111111" stroke-width="1.4" /><line x1="785.0" y1="680.0" x2="799.0" y2="680.0" stroke="#111111" stroke-width="1.4" /><text x="802.0" y="405.0" font-family="Arial, sans-serif" font-size="20" fill="#111111">d = 607.0 mm</text>
+  <line x1="370.0" y1="170.0" x2="370.0" y2="222.0" stroke="#111111" stroke-width="1.6" /><line x1="363.0" y1="170.0" x2="377.0" y2="170.0" stroke="#111111" stroke-width="1.4" /><line x1="363.0" y1="222.0" x2="377.0" y2="222.0" stroke="#111111" stroke-width="1.4" /><text x="220.0" y="201.0" font-family="Arial, sans-serif" font-size="20" fill="#111111">de = 60.0 mm</text>
+  <line x1="370.0" y1="222.0" x2="370.0" y2="274.0" stroke="#111111" stroke-width="1.6" /><line x1="363.0" y1="222.0" x2="377.0" y2="222.0" stroke="#111111" stroke-width="1.4" /><line x1="363.0" y1="274.0" x2="377.0" y2="274.0" stroke="#111111" stroke-width="1.4" /><text x="220.0" y="253.0" font-family="Arial, sans-serif" font-size="20" fill="#111111">pb = 95.0 mm</text>
+  <line x1="370.0" y1="274.0" x2="370.0" y2="330.0" stroke="#111111" stroke-width="1.6" /><line x1="363.0" y1="274.0" x2="377.0" y2="274.0" stroke="#111111" stroke-width="1.4" /><line x1="363.0" y1="330.0" x2="377.0" y2="330.0" stroke="#111111" stroke-width="1.4" /><text x="220.0" y="307.0" font-family="Arial, sans-serif" font-size="20" fill="#111111">pso = 50.0 mm</text>
+  <line x1="370.0" y1="330.0" x2="370.0" y2="382.0" stroke="#111111" stroke-width="1.6" /><line x1="363.0" y1="330.0" x2="377.0" y2="330.0" stroke="#111111" stroke-width="1.4" /><line x1="363.0" y1="382.0" x2="377.0" y2="382.0" stroke="#111111" stroke-width="1.4" /><text x="220.0" y="361.0" font-family="Arial, sans-serif" font-size="20" fill="#111111">psi = 51.4 mm</text>
+  <line x1="452.0" y1="640.0" x2="520.0" y2="640.0" stroke="#111111" stroke-width="1.6" /><line x1="452.0" y1="632.0" x2="452.0" y2="648.0" stroke="#111111" stroke-width="1.4" /><line x1="520.0" y1="632.0" x2="520.0" y2="648.0" stroke="#111111" stroke-width="1.4" /><text x="458.0" y="630.0" font-family="Arial, sans-serif" font-size="20" fill="#111111">Lst = 190.5 mm</text>
+  <line x1="542.0" y1="602.0" x2="542.0" y2="680.0" stroke="#111111" stroke-width="1.6" /><line x1="535.0" y1="602.0" x2="549.0" y2="602.0" stroke="#111111" stroke-width="1.4" /><line x1="535.0" y1="680.0" x2="549.0" y2="680.0" stroke="#111111" stroke-width="1.4" /><text x="552.0" y="646.0" font-family="Arial, sans-serif" font-size="20" fill="#111111">hst = 110.0 mm</text>
+  <text x="540" y="396" font-family="Arial, sans-serif" font-size="18" fill="#111111">tfb = 17.3 mm</text>
+</svg>

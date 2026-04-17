@@ -82,6 +82,7 @@ El archivo debe tener estos bloques:
 - `geometry.welds.weld_3`: soldadura #3 (alma de viga con end plate).
 - `geometry.welds.weld_3.weld_type`: tipo (`CJP`, `double_sided_fillet`, `single_sided_fillet`).
 - `geometry.welds.weld_3.thickness`: espesor `twe` (requerido si `weld_type` es `double_sided_fillet` o `single_sided_fillet`).
+- `geometry.welds.weld_3.nl`: numero de lineas efectivas `n_l` para Paso 11 (usado en `phiPnww3`).
 - En el chequeo de capacidad de soldadura #3 no se usa `Lwe` como input; se usa `hwef = pfi + pb + 150 mm`.
 - `psi` (linea de pernos 3 efectiva) se calcula como `psi = pfi + tfb - tcp`, donde `tfb` viene del catalogo de la viga.
 - `geometry.bolts.bolt_tightening_type`: tipo de apriete de pernos (`pretensioned` o `snug_tight`; tambien acepta `pretensionado` y `apriete_justo`).

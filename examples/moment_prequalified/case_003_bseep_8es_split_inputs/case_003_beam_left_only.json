@@ -1,132 +1,121 @@
 {
-  "sections": {
-    "beam_shape": "W24X76"
+  "viga": {
+    "perfil": "W24X76",
+    "tipo_acero_perfil": "ASTM A572 Gr 50",
+    "member_ductility_demand_beam": "high",
+    "elastic_modulus": {
+      "value": 200000,
+      "unit": "MPa"
+    },
+    "luz_libre": {
+      "value": 6096.0,
+      "unit": "mm"
+    },
+    "longitud_sin_conectores_desde_cara_columna": {
+      "value": 1000.0,
+      "unit": "mm"
+    },
+    "pu": {
+      "value": 0.0,
+      "unit": "kN"
+    },
+    "v_gravity": {
+      "value": 44.482,
+      "unit": "kN"
+    }
   },
-  "materials": {
-    "profile_steel_type": "ASTM A572 Gr 50",
-    "plate_steel_type": "ASTM A572 Gr 50",
+  "placa_extremo": {
+    "tipo_acero": "ASTM A572 Gr 50",
+    "bp": {
+      "value": 253.0,
+      "unit": "mm"
+    },
+    "tp": {
+      "value": 25.4,
+      "unit": "mm"
+    },
+    "de": {
+      "value": 60.0,
+      "unit": "mm"
+    },
+    "pb": {
+      "value": 94.996,
+      "unit": "mm"
+    },
+    "pfo": {
+      "value": 50.0,
+      "unit": "mm"
+    },
+    "pfi": {
+      "value": 50.0,
+      "unit": "mm"
+    }
+  },
+  "rigidizador": {
+    "tipo_acero": "ASTM A572 Gr 50",
+    "tr": {
+      "value": 12.7,
+      "unit": "mm"
+    }
+  },
+  "pernos": {
+    "g": {
+      "value": 140,
+      "unit": "mm"
+    },
+    "tipo_apriete": "pretensioned",
+    "clear_distance_end_plate": {
+      "value": 50.8,
+      "unit": "mm"
+    },
+    "clear_distance_column_flange": {
+      "value": 50.8,
+      "unit": "mm"
+    },
     "bolt_fabrication_standard": "ASTM A490",
     "bolt_description": "Grupo 150",
+    "bolt_shape": "P1-1/8\"X1-3/4\"",
+    "bolt_thread_condition": "N"
+  },
+  "soldaduras": {
     "weld_fexx": {
       "value": 490.0,
       "unit": "MPa"
     },
-    "elastic_modulus": {
-      "value": 200000,
-      "unit": "MPa"
-    }
-  },
-  "geometry": {
-    "beam_left": {
-      "clear_span_length": {
-        "value": 6096.0,
+    "weld_1": {
+      "description": "Rigidizador con end plate",
+      "weld_type": "Fillet",
+      "length": {
+        "value": 190.0,
         "unit": "mm"
       },
-      "shear_connector_free_length_from_column_face": {
-        "value": 1000.0,
+      "size": {
+        "value": 9.525,
         "unit": "mm"
-      }
+      },
+      "nl": 2
     },
-    "end_plate": {
-      "end_plate_width": {
-        "value": 253.0,
+    "weld_2": {
+      "description": "Viga con rigidizador",
+      "weld_type": "Fillet",
+      "length": {
+        "value": 190.0,
         "unit": "mm"
       },
-      "end_plate_thickness": {
-        "value": 25.4,
+      "size": {
+        "value": 9.525,
         "unit": "mm"
       },
-      "de": {
-        "value": 60.0,
-        "unit": "mm"
-      },
-      "pb": {
-        "value": 94.996,
-        "unit": "mm"
-      },
-      "pfo": {
-        "value": 50.0,
-        "unit": "mm"
-      },
-      "pfi": {
-        "value": 50.0,
-        "unit": "mm"
-      }
+      "nl": 2
     },
-    "continuity_plate": {
-      "continuity_plate_thickness": {
-        "value": 15.9,
-        "unit": "mm"
-      }
-    },
-    "stiffener": {
-      "stiffener_thickness": {
-        "value": 12.7,
-        "unit": "mm"
-      }
-    },
-    "bolts": {
-      "bolt_gage": {
-        "value": 140,
+    "weld_3": {
+      "description": "Alma de viga con end plate",
+      "weld_type": "CJP",
+      "thickness": {
+        "value": 8.0,
         "unit": "mm"
       },
-      "bolt_tightening_type": "pretensioned",
-      "clear_distance_end_plate": {
-        "value": 50.8,
-        "unit": "mm"
-      },
-      "clear_distance_column_flange": {
-        "value": 50.8,
-        "unit": "mm"
-      },
-      "bolt_shape": "P1-1/8\"X1-3/4\"",
-      "bolt_thread_condition": "N"
-    },
-    "welds": {
-      "weld_1": {
-        "description": "Rigidizador con end plate",
-        "weld_type": "Fillet",
-        "length": {
-          "value": 190.0,
-          "unit": "mm"
-        },
-        "size": {
-          "value": 9.525,
-          "unit": "mm"
-        },
-        "nl": 2
-      },
-      "weld_2": {
-        "description": "Viga con rigidizador",
-        "weld_type": "Fillet",
-        "length": {
-          "value": 190.0,
-          "unit": "mm"
-        },
-        "size": {
-          "value": 9.525,
-          "unit": "mm"
-        },
-        "nl": 2
-      },
-      "weld_3": {
-        "description": "Alma de viga con end plate",
-        "weld_type": "CJP",
-        "thickness": {
-          "value": 8.0,
-          "unit": "mm"
-        }
-      }
-    }
-  },
-  "loads": {
-    "pu_viga_left": {
-      "value": 0.0,
-      "unit": "kN"
-    },
-    "Beam_left_Vgravity": {
-      "value": 44.482,
-      "unit": "kN"
+      "nl": 2
     }
   }
 }

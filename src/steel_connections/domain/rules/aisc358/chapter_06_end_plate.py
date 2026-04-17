@@ -224,9 +224,15 @@ def _derive_stiffener_length_from_hst(*, stiffener_height: Quantity, unit_system
 
 
 def _active_beam_sides(case: AISC358MomentCase) -> tuple[str, ...]:
-    if case.design_factors.beam_connection_sides == "both_sides":
+    beam_connection_sides = case.design_factors.beam_connection_sides
+    if beam_connection_sides == "both_sides":
         return ("der", "izq")
-    return ("der",)
+    if beam_connection_sides == "right_only":
+        return ("der",)
+    raise ValueError(
+        "Required input 'design_factors.beam_connection_sides' is missing or invalid. "
+        "No default value is allowed under zero-guess policy."
+    )
 
 
 def _require_geometry_by_side(
@@ -983,7 +989,7 @@ def run_step3_shear_at_plastic_hinge(case: AISC358MomentCase, rule_binding: obje
             "Vhmin = 2*Mpr/Lh - Vgravity (Eq. 2.4-3, side-specific der/izq)"
         ),
         inputs={
-            "beam_connection_sides": case.design_factors.beam_connection_sides or "right_only",
+            "beam_connection_sides": case.design_factors.beam_connection_sides,
             "governing_side_vhmax": vh_data["governing_vhmax_side"],
             "selected_vhmax_source": selected_source,
             **side_inputs,
@@ -1022,7 +1028,7 @@ def run_step4_probable_moment_face_column(case: AISC358MomentCase, rule_binding:
             "Mfmin = Mpr + Vhmin*Sh (Eq. 2.4-4, side-specific der/izq)"
         ),
         inputs={
-            "beam_connection_sides": case.design_factors.beam_connection_sides or "right_only",
+            "beam_connection_sides": case.design_factors.beam_connection_sides,
             "governing_side_mfmax": mf_data["governing_mfmax_side"],
             "selected_mfmax_source": selected_source,
             **side_inputs,
@@ -1602,8 +1608,20 @@ def run_step9_1_1_stiffener_beam_weld_shear_rupture(case: AISC358MomentCase, rul
         nl_w2 = case.geometry.end_plate_stiffener_weld_lines_nl
         nl_w2_source = "geometry.end_plate_stiffener_weld_lines_nl"
     if nl_w2 is None:
-        nl_w2 = 2
-        nl_w2_source = "default_2"
+        raise missing_required_input_error(
+            rule_id=rule_binding.rule_id,
+            source_document=rule_binding.source_document,
+            missing_fields=[
+                "geometry.beam_stiffener_weld_lines_nl_w2",
+                "geometry.end_plate_stiffener_weld_lines_nl",
+            ],
+            message=(
+                "Required input for weld-line count is missing. "
+                "Provide 'geometry.beam_stiffener_weld_lines_nl_w2' or "
+                "'geometry.end_plate_stiffener_weld_lines_nl'. "
+                "No default value is allowed under zero-guess policy."
+            ),
+        )
     if nl_w2 <= 0:
         raise ValueError("beam_stiffener_weld_lines_nl_w2 must be >= 1 for Step 9.1.1.")
 
@@ -1762,7 +1780,7 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
         "geometry.beam_shear_connector_free_length_from_column_face",
         rule_binding,
     )
-    beam_connection_sides = case.design_factors.beam_connection_sides or "right_only"
+    beam_connection_sides = _require(case, "design_factors.beam_connection_sides", rule_binding)
     beam_clear_span_length_der, _ = _require_geometry_by_side(
         case,
         base_field="beam_clear_span_length",
@@ -3003,6 +3021,7 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
                     if case.geometry.end_plate_beam_web_weld_thickness_twe is not None
                     else None
                 ),
+                "end_plate_beam_web_weld_lines_nl": case.geometry.end_plate_beam_web_weld_lines_nl,
                 "bolt_tightening_type": bolt_tightening_type,
                 "bolt_fabrication_standard": bolt_fabrication_standard,
                 "end_plate_width_bp": bp.model_dump(),
@@ -3628,17 +3647,20 @@ def run_step18_weld_design(case: AISC358MomentCase, rule_binding: object) -> Che
     )
 
     if flange_weld_capacity is None or web_weld_capacity is None:
-        demand = Quantity(value=0.0, unit="ratio")
-        capacity = Quantity(value=1.0, unit="ratio")
+        missing_fields: list[str] = []
+        if flange_weld_capacity is None:
+            missing_fields.append("procedure.flange_weld_available_strength")
+        if web_weld_capacity is None:
+            missing_fields.append("procedure.web_weld_available_strength")
         return CheckResult(
             name=rule_binding.name,
             rule_id=rule_binding.rule_id,
             clause=rule_binding.clause,
             source_document=rule_binding.source_document,
-            demand=demand,
-            capacity=capacity,
-            dcr=0.0,
-            status=CheckStatus.PASS,
+            demand=None,
+            capacity=None,
+            dcr=None,
+            status=CheckStatus.NOT_IMPLEMENTED,
             calculation_memory=CalculationMemory(
                 inputs={
                     "mf": mf.model_dump(),
@@ -3647,15 +3669,16 @@ def run_step18_weld_design(case: AISC358MomentCase, rule_binding: object) -> Che
                     "vu_connection_source": vu_source,
                     "flange_weld_available_strength": None,
                     "web_weld_available_strength": None,
+                    "missing_fields": missing_fields,
                 },
                 intermediates={**ffu_intermediate, "ffu": ffu.value},
                 design_factors={},
                 equation=(
-                    "Section 6.7.1 Step 18 pendiente: capacidades de soldadura no requeridas "
-                    "mientras procedure este deshabilitado."
+                    "Section 6.7.1 Step 18 requires explicit weld capacities. "
+                    "No automatic PASS is allowed under zero-guess policy."
                 ),
                 units_trace={"dcr": "ratio"},
-                final_capacity=capacity,
+                final_capacity=None,
             ),
             notes=None,
         )
@@ -3783,8 +3806,19 @@ def run_column_step3_web_local_yielding(case: AISC358MomentCase, rule_binding: o
         w = case.geometry.end_plate_beam_web_weld_thickness_twe
         weld_size_source = "geometry.end_plate_beam_web_weld_thickness_twe"
     if w is None:
-        w = Quantity(value=0.0, unit=tp.unit)
-        weld_size_source = "assumed_zero_when_not_provided"
+        raise missing_required_input_error(
+            rule_id=rule_binding.rule_id,
+            source_document=rule_binding.source_document,
+            missing_fields=[
+                "geometry.end_plate_stiffener_weld_size_wst",
+                "geometry.beam_stiffener_weld_size_wst2",
+                "geometry.end_plate_beam_web_weld_thickness_twe",
+            ],
+            message=(
+                "Required weld size for lb calculation is missing. "
+                "No assumed zero value is allowed under zero-guess policy."
+            ),
+        )
 
     ct = 0.5 if column_top_distance.value < column_profile["d"].value else 1.0
     lb = Quantity(value=beam_profile["tf"].value + 2.0 * w.value + 2.0 * tp.value, unit=beam_profile["tf"].unit)
@@ -3838,8 +3872,19 @@ def run_column_step4_web_local_crippling(case: AISC358MomentCase, rule_binding: 
         w = case.geometry.end_plate_beam_web_weld_thickness_twe
         weld_size_source = "geometry.end_plate_beam_web_weld_thickness_twe"
     if w is None:
-        w = Quantity(value=0.0, unit=tp.unit)
-        weld_size_source = "assumed_zero_when_not_provided"
+        raise missing_required_input_error(
+            rule_id=rule_binding.rule_id,
+            source_document=rule_binding.source_document,
+            missing_fields=[
+                "geometry.end_plate_stiffener_weld_size_wst",
+                "geometry.beam_stiffener_weld_size_wst2",
+                "geometry.end_plate_beam_web_weld_thickness_twe",
+            ],
+            message=(
+                "Required weld size for lb calculation is missing. "
+                "No assumed zero value is allowed under zero-guess policy."
+            ),
+        )
     lb = Quantity(value=beam_profile["tf"].value + 2.0 * w.value + 2.0 * tp.value, unit=beam_profile["tf"].unit)
     capacity, intermediates = compute_column_web_local_crippling_strength(
         lb=lb,
@@ -3892,7 +3937,32 @@ def run_column_step5_continuity_plate_strength(case: AISC358MomentCase, rule_bin
     required_fsu = Quantity(value=max(ffu.value - min_strength, 0.0), unit=ffu.unit)
     continuity_capacity = _get_procedure_optional(case, "continuity_plate_available_strength")
     if continuity_capacity is None:
-        continuity_capacity = required_fsu
+        return CheckResult(
+            name=rule_binding.name,
+            rule_id=rule_binding.rule_id,
+            clause=rule_binding.clause,
+            source_document=rule_binding.source_document,
+            demand=required_fsu,
+            capacity=None,
+            dcr=None,
+            status=CheckStatus.NOT_IMPLEMENTED,
+            calculation_memory=CalculationMemory(
+                inputs={
+                    "ffu": ffu.model_dump(),
+                    "continuity_plate_available_strength": None,
+                    "missing_fields": ["procedure.continuity_plate_available_strength"],
+                },
+                intermediates={"min_design_strength": min_strength},
+                design_factors={},
+                equation=(
+                    "Fsu = Ffu - min(Rn) (Eq. 6.7-22). "
+                    "Explicit continuity-plate capacity is required; no auto-capacity is allowed."
+                ),
+                units_trace={"fsu_required": required_fsu.unit, "capacity": "n/a"},
+                final_capacity=None,
+            ),
+            notes=None,
+        )
 
     return _build_result(
         rule_binding=rule_binding,
@@ -3911,7 +3981,34 @@ def run_column_step6_panel_zone(case: AISC358MomentCase, rule_binding: object) -
     demand = Quantity(value=0.5 * vu_connection.value, unit=vu_connection.unit)
     capacity = _get_procedure_optional(case, "panel_zone_capacity")
     if capacity is None:
-        capacity = demand
+        return CheckResult(
+            name=rule_binding.name,
+            rule_id=rule_binding.rule_id,
+            clause=rule_binding.clause,
+            source_document=rule_binding.source_document,
+            demand=demand,
+            capacity=None,
+            dcr=None,
+            status=CheckStatus.NOT_IMPLEMENTED,
+            calculation_memory=CalculationMemory(
+                inputs={
+                    "panel_zone_demand_derived": demand.model_dump(),
+                    "vu_connection_derived": vu_connection.model_dump(),
+                    "vu_connection_source": vu_source,
+                    "panel_zone_capacity": None,
+                    "missing_fields": ["procedure.panel_zone_capacity"],
+                },
+                intermediates={},
+                design_factors={},
+                equation=(
+                    "Panel zone check per Section 2.7 / AISC Seismic Provisions requires explicit capacity. "
+                    "No auto-capacity is allowed."
+                ),
+                units_trace={"panel_zone_demand": demand.unit, "capacity": "n/a"},
+                final_capacity=None,
+            ),
+            notes=None,
+        )
     return _build_result(
         rule_binding=rule_binding,
         demand=demand,

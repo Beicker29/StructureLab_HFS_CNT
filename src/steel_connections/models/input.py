@@ -111,6 +111,7 @@ class AISC358MomentGeometry(StrictModel):
     column_end_distance_to_beam_flange: Quantity | None = None
     end_plate_beam_web_weld_type: str | None = None
     end_plate_beam_web_weld_thickness_twe: Quantity | None = None
+    end_plate_beam_web_weld_lines_nl: int | None = None
     end_plate_stiffener_weld_type: str | None = None
     end_plate_stiffener_weld_length_lst: Quantity | None = None
     end_plate_stiffener_weld_size_wst: Quantity | None = None
@@ -152,6 +153,15 @@ class AISC358MomentGeometry(StrictModel):
         if not normalized:
             return None
         return normalized
+
+    @field_validator("end_plate_beam_web_weld_lines_nl")
+    @classmethod
+    def validate_end_plate_beam_web_weld_lines_nl(cls, value: int | None) -> int | None:
+        if value is None:
+            return None
+        if value <= 0:
+            raise ValueError("geometry.end_plate_beam_web_weld_lines_nl must be >= 1.")
+        return value
 
     @field_validator("end_plate_stiffener_weld_lines_nl")
     @classmethod

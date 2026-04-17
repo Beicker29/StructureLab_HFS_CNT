@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="560" viewBox="0 0 980 560">
+  <rect x="0" y="0" width="980" height="560" fill="#f7f7f7" />
+  <text x="32" y="44" font-family="Arial, sans-serif" font-size="28" font-weight="700" fill="#111111">
+    BSEEP 8ES - Transverse Section Audit View
+  </text>
+  <text x="32" y="88" font-family="Arial, sans-serif" font-size="16" fill="#111111">bcf = 290.0 mm</text><text x="32" y="114" font-family="Arial, sans-serif" font-size="16" fill="#111111">dc = 508.0 mm</text><text x="32" y="140" font-family="Arial, sans-serif" font-size="16" fill="#111111">twc = 22.6 mm</text><text x="32" y="166" font-family="Arial, sans-serif" font-size="16" fill="#111111">tfc = 40.4 mm</text><text x="32" y="192" font-family="Arial, sans-serif" font-size="16" fill="#111111">g = 140.0 mm</text><text x="32" y="218" font-family="Arial, sans-serif" font-size="16" fill="#111111">bp = 253.0 mm</text><text x="32" y="244" font-family="Arial, sans-serif" font-size="16" fill="#111111">tp = 25.4 mm</text><text x="32" y="270" font-family="Arial, sans-serif" font-size="16" fill="#111111">ts = 12.7 mm</text><text x="32" y="296" font-family="Arial, sans-serif" font-size="16" fill="#111111">bbf = 228.0 mm</text><text x="32" y="322" font-family="Arial, sans-serif" font-size="16" fill="#111111">twb = 11.2 mm</text>
+
+  <rect x="360" y="130" width="30" height="300" fill="#d4d4d4" stroke="#232323" stroke-width="1.8" />
+  <rect x="620" y="130" width="30" height="300" fill="#d4d4d4" stroke="#232323" stroke-width="1.8" />
+  <rect x="390" y="265" width="230" height="30" fill="#e7e7e7" stroke="#232323" stroke-width="1.8" />
+  <rect x="650" y="245" width="220" height="70" fill="#efefef" stroke="#232323" stroke-width="1.8" />
+  <line x1="760" y1="140" x2="760" y2="420" stroke="#444444" stroke-width="1.2" stroke-dasharray="6 4" />
+
+  <line x1="392.0" y1="240.0" x2="618.0" y2="240.0" stroke="#111111" stroke-width="1.6" /><line x1="392.0" y1="232.0" x2="392.0" y2="248.0" stroke="#111111" stroke-width="1.4" /><line x1="618.0" y1="232.0" x2="618.0" y2="248.0" stroke="#111111" stroke-width="1.4" /><text x="477.0" y="230.0" font-family="Arial, sans-serif" font-size="20" fill="#111111">g = 140.0 mm</text>
+  <line x1="650.0" y1="216.0" x2="870.0" y2="216.0" stroke="#111111" stroke-width="1.6" /><line x1="650.0" y1="208.0" x2="650.0" y2="224.0" stroke="#111111" stroke-width="1.4" /><line x1="870.0" y1="208.0" x2="870.0" y2="224.0" stroke="#111111" stroke-width="1.4" /><text x="732.0" y="206.0" font-family="Arial, sans-serif" font-size="20" fill="#111111">bp = 253.0 mm</text>
+  <line x1="338.0" y1="130.0" x2="338.0" y2="430.0" stroke="#111111" stroke-width="1.6" /><line x1="331.0" y1="130.0" x2="345.0" y2="130.0" stroke="#111111" stroke-width="1.4" /><line x1="331.0" y1="430.0" x2="345.0" y2="430.0" stroke="#111111" stroke-width="1.4" /><text x="188.0" y="285.0" font-family="Arial, sans-serif" font-size="20" fill="#111111">bcf = 290.0 mm</text>
+  <line x1="682.0" y1="130.0" x2="682.0" y2="430.0" stroke="#111111" stroke-width="1.6" /><line x1="675.0" y1="130.0" x2="689.0" y2="130.0" stroke="#111111" stroke-width="1.4" /><line x1="675.0" y1="430.0" x2="689.0" y2="430.0" stroke="#111111" stroke-width="1.4" /><text x="692.0" y="285.0" font-family="Arial, sans-serif" font-size="20" fill="#111111">dc = 508.0 mm</text>
+  <text x="700" y="248" font-family="Arial, sans-serif" font-size="17" fill="#111111">twb = 11.2 mm</text>
+  <text x="700" y="270" font-family="Arial, sans-serif" font-size="17" fill="#111111">bbf = 228.0 mm</text>
+  <text x="700" y="294" font-family="Arial, sans-serif" font-size="17" fill="#111111">ts = 12.7 mm</text>
+  <text x="700" y="318" font-family="Arial, sans-serif" font-size="17" fill="#111111">tp = 25.4 mm</text>
+  <text x="700" y="342" font-family="Arial, sans-serif" font-size="17" fill="#111111">twc = 22.6 mm</text>
+  <text x="700" y="366" font-family="Arial, sans-serif" font-size="17" fill="#111111">tfc = 40.4 mm</text>
+</svg>

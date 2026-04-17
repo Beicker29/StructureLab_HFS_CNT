@@ -1,0 +1,64 @@
+{
+  "project_id": "proj_bueep_si_demo",
+  "case_id": "case_si_bueep_4e_w18x175_w24x76",
+  "design_code_context": {
+    "primary_document": "AISC 358-22",
+    "supporting_documents": []
+  },
+  "units_system": "SI",
+  "connection_family": "moment_prequalified",
+  "connection_type": "bueep_4e",
+  "load_state": "strength",
+  "factores_diseno": {
+    "factor_reduccion_modo_ductil": 1.0,
+    "factor_reduccion_modo_no_ductil": 0.9,
+    "beam_connection_sides": "right_only",
+    "member_ductility_demand_column": "high",
+    "column_beam_moment_ratio_minimum": 1.0,
+    "column_beam_moment_ratio": 1.2
+  },
+  "columna": {
+    "perfil": "W18X175",
+    "tipo_acero_perfil": "ASTM A572 Gr 50",
+    "elastic_modulus": {
+      "value": 199947.965,
+      "unit": "MPa"
+    },
+    "column_end_distance_to_beam_flange": {
+      "value": 762.0,
+      "unit": "mm"
+    },
+    "union_columna_losa": "isolated",
+    "pu": {
+      "value": 0.0,
+      "unit": "kN"
+    }
+  },
+  "platina_continuidad": {
+    "tipo_acero": "ASTM A572 Gr 50",
+    "tcp": {
+      "value": 15.9,
+      "unit": "mm"
+    }
+  },
+  "soldaduras": {
+    "weld_fexx": {
+      "value": 490.0,
+      "unit": "MPa"
+    },
+    "weld_4": {
+      "description": "Platina de continuidad con aleta de columna",
+      "weld_type": "CJP"
+    }
+  },
+  "loads": {
+    "pu_columna": {
+      "value": 0.0,
+      "unit": "kN"
+    },
+    "probable_moment_column_face": {
+      "value": 677908.974,
+      "unit": "kN-mm"
+    }
+  }
+}

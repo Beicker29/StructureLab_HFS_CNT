@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from copy import deepcopy
 import json
+import math
 from pathlib import Path
 from typing import Any
 
@@ -108,6 +109,7 @@ def _normalize_moment_geometry_payload(payload: dict[str, Any]) -> dict[str, Any
             "weld_effective_area",
             "end_plate_beam_web_weld_type",
             "end_plate_beam_web_weld_thickness_twe",
+            "end_plate_beam_web_weld_lines_nl",
             "end_plate_stiffener_weld_type",
             "end_plate_stiffener_weld_length_lst",
             "end_plate_stiffener_weld_size_wst",
@@ -391,6 +393,16 @@ def _normalize_moment_geometry_payload(payload: dict[str, Any]) -> dict[str, Any
                         "w",
                     ),
                 )
+                _assign_from_aliases(
+                    "end_plate_beam_web_weld_lines_nl",
+                    weld_3,
+                    (
+                        "end_plate_beam_web_weld_lines_nl",
+                        "nl",
+                        "n_l",
+                        "lines",
+                    ),
+                )
 
             if weld_4:
                 _assign_from_aliases(
@@ -425,6 +437,11 @@ def _normalize_moment_geometry_payload(payload: dict[str, Any]) -> dict[str, Any
                 flat_geometry["end_plate_beam_web_weld_thickness_twe"] = block["end_plate_beam_web_weld_thickness_twe"]
             if "twe" in block and "end_plate_beam_web_weld_thickness_twe" not in flat_geometry:
                 flat_geometry["end_plate_beam_web_weld_thickness_twe"] = block["twe"]
+            if (
+                "end_plate_beam_web_weld_lines_nl" in block
+                and "end_plate_beam_web_weld_lines_nl" not in flat_geometry
+            ):
+                flat_geometry["end_plate_beam_web_weld_lines_nl"] = block["end_plate_beam_web_weld_lines_nl"]
             if "end_plate_stiffener_weld_type" in block and "end_plate_stiffener_weld_type" not in flat_geometry:
                 flat_geometry["end_plate_stiffener_weld_type"] = block["end_plate_stiffener_weld_type"]
             if "stiffener_weld_type" in block and "end_plate_stiffener_weld_type" not in flat_geometry:
@@ -994,7 +1011,16 @@ def _resolve_catalog_driven_properties(case: AISC358MomentCase) -> None:
                 source_document="AISC 358-22",
             )
 
-    beam_connection_sides = case.design_factors.beam_connection_sides or "right_only"
+    beam_connection_sides = case.design_factors.beam_connection_sides
+    if beam_connection_sides is None:
+        _raise_validation_error(
+            message=(
+                "Required input 'design_factors.beam_connection_sides' is missing. "
+                "No default value is allowed under zero-guess policy."
+            ),
+            missing_fields=["design_factors.beam_connection_sides"],
+            source_document="AISC 358-22",
+        )
     case.design_factors.beam_connection_sides = beam_connection_sides
 
     if case.geometry.beam_clear_span_length_der is None and case.geometry.beam_clear_span_length is not None:
@@ -1185,7 +1211,7 @@ def _resolve_catalog_driven_properties(case: AISC358MomentCase) -> None:
         value=pfo.value + de.value,
         unit=pfo.unit,
     )
-    tan_30 = 0.5773502691896257
+    tan_30 = math.tan(math.radians(30.0))
     case.geometry.stiffener_length = Quantity(
         value=case.geometry.stiffener_height.value / tan_30,
         unit=case.geometry.stiffener_height.unit,
@@ -1276,9 +1302,490 @@ def _resolve_catalog_driven_properties(case: AISC358MomentCase) -> None:
     case.materials.bolt_grade = bolt_standard
 
 
+_MOMENT_SPLIT_RIGHT_SUFFIX = "_beam_right_only.json"
+_MOMENT_SPLIT_LEFT_SUFFIX = "_beam_left_only.json"
+_MOMENT_SPLIT_COLUMN_SUFFIX = "_column_and_common.json"
+
+
+def _first_dict(payload: dict[str, Any], *keys: str) -> dict[str, Any]:
+    for key in keys:
+        value = payload.get(key)
+        if isinstance(value, dict):
+            return value
+    return {}
+
+
+def _first_present(payload: dict[str, Any], *keys: str) -> Any:
+    for key in keys:
+        if key in payload and payload[key] is not None:
+            return payload[key]
+    return None
+
+
+def _compact_dict(payload: dict[str, Any]) -> dict[str, Any]:
+    return {key: value for key, value in payload.items() if value is not None}
+
+
+def _read_json_object(path: Path) -> dict[str, Any]:
+    with path.open("r", encoding="utf-8") as stream:
+        payload = json.load(stream)
+    if not isinstance(payload, dict):
+        raise ValueError(f"Expected JSON object at '{path}', got {type(payload).__name__}.")
+    return payload
+
+
+def _resolve_moment_prequalified_split_paths(input_path: Path) -> tuple[Path, Path, Path] | None:
+    def _triple_from_column_file(column_path: Path) -> tuple[Path, Path, Path] | None:
+        name = column_path.name
+        if not name.endswith(_MOMENT_SPLIT_COLUMN_SUFFIX):
+            return None
+        prefix = name[: -len(_MOMENT_SPLIT_COLUMN_SUFFIX)]
+        right = column_path.parent / f"{prefix}{_MOMENT_SPLIT_RIGHT_SUFFIX}"
+        left = column_path.parent / f"{prefix}{_MOMENT_SPLIT_LEFT_SUFFIX}"
+        if right.is_file() and left.is_file():
+            return (column_path, right, left)
+        return None
+
+    if input_path.is_dir():
+        for column_path in sorted(input_path.glob(f"*{_MOMENT_SPLIT_COLUMN_SUFFIX}")):
+            triple = _triple_from_column_file(column_path)
+            if triple is not None:
+                return triple
+        return None
+
+    if not input_path.is_file():
+        return None
+
+    name = input_path.name
+    parent = input_path.parent
+    if name.endswith(_MOMENT_SPLIT_COLUMN_SUFFIX):
+        return _triple_from_column_file(input_path)
+    if name.endswith(_MOMENT_SPLIT_RIGHT_SUFFIX):
+        prefix = name[: -len(_MOMENT_SPLIT_RIGHT_SUFFIX)]
+        column_path = parent / f"{prefix}{_MOMENT_SPLIT_COLUMN_SUFFIX}"
+        left = parent / f"{prefix}{_MOMENT_SPLIT_LEFT_SUFFIX}"
+        if column_path.is_file() and left.is_file():
+            return (column_path, input_path, left)
+    if name.endswith(_MOMENT_SPLIT_LEFT_SUFFIX):
+        prefix = name[: -len(_MOMENT_SPLIT_LEFT_SUFFIX)]
+        column_path = parent / f"{prefix}{_MOMENT_SPLIT_COLUMN_SUFFIX}"
+        right = parent / f"{prefix}{_MOMENT_SPLIT_RIGHT_SUFFIX}"
+        if column_path.is_file() and right.is_file():
+            return (column_path, right, input_path)
+    return None
+
+
+def _normalize_moment_split_side_payload(raw_payload: dict[str, Any], *, side: str) -> dict[str, Any]:
+    if isinstance(raw_payload.get("geometry"), dict):
+        return deepcopy(raw_payload)
+
+    viga = _first_dict(raw_payload, "viga", "beam")
+    materiales = _first_dict(raw_payload, "materiales", "materials")
+    factores = _first_dict(raw_payload, "design_factors", "factores_diseno")
+    placa_extremo = _first_dict(raw_payload, "placa_extremo", "end_plate")
+    platina_cont = _first_dict(raw_payload, "platina_continuidad", "continuity_plate")
+    rigidizador = _first_dict(raw_payload, "rigidizador", "stiffener")
+    pernos = _first_dict(raw_payload, "pernos", "bolts")
+    soldaduras = _first_dict(raw_payload, "soldaduras", "welds")
+
+    sections = {}
+    beam_shape = _first_present(viga, "perfil", "beam_shape", "shape")
+    if beam_shape is not None:
+        sections["beam_shape"] = beam_shape
+
+    materials = _compact_dict(
+        {
+            "profile_steel_type": _first_present(materiales, "profile_steel_type")
+            or _first_present(viga, "tipo_acero_perfil", "tipo_acero_viga", "profile_steel_type"),
+            "plate_steel_type": _first_present(materiales, "plate_steel_type")
+            or _first_present(placa_extremo, "tipo_acero", "plate_steel_type")
+            or _first_present(rigidizador, "tipo_acero", "plate_steel_type")
+            or _first_present(platina_cont, "tipo_acero", "plate_steel_type"),
+            "bolt_fabrication_standard": _first_present(materiales, "bolt_fabrication_standard")
+            or _first_present(pernos, "bolt_fabrication_standard"),
+            "bolt_description": _first_present(materiales, "bolt_description")
+            or _first_present(pernos, "bolt_description"),
+            "weld_fexx": _first_present(materiales, "weld_fexx")
+            or _first_present(soldaduras, "weld_fexx", "fexx"),
+            "elastic_modulus": _first_present(materiales, "elastic_modulus")
+            or _first_present(viga, "elastic_modulus"),
+        }
+    )
+
+    side_block = _compact_dict(
+        {
+            "clear_span_length": _first_present(viga, "clear_span_length", "luz_libre"),
+            "shear_connector_free_length_from_column_face": _first_present(
+                viga,
+                "shear_connector_free_length_from_column_face",
+                "longitud_sin_conectores_desde_cara_columna",
+            ),
+        }
+    )
+
+    end_plate = _compact_dict(
+        {
+            "end_plate_width": _first_present(placa_extremo, "end_plate_width", "bp"),
+            "end_plate_thickness": _first_present(placa_extremo, "end_plate_thickness", "tp"),
+            "de": _first_present(placa_extremo, "de"),
+            "pb": _first_present(placa_extremo, "pb"),
+            "pfo": _first_present(placa_extremo, "pfo"),
+            "pfi": _first_present(placa_extremo, "pfi"),
+        }
+    )
+    continuity_plate = _compact_dict(
+        {"continuity_plate_thickness": _first_present(platina_cont, "continuity_plate_thickness", "tcp")}
+    )
+    stiffener = _compact_dict({"stiffener_thickness": _first_present(rigidizador, "stiffener_thickness", "tr")})
+    bolts = _compact_dict(
+        {
+            "bolt_gage": _first_present(pernos, "bolt_gage", "g"),
+            "bolt_tightening_type": _first_present(pernos, "bolt_tightening_type", "tipo_apriete"),
+            "clear_distance_end_plate": _first_present(pernos, "clear_distance_end_plate"),
+            "clear_distance_column_flange": _first_present(pernos, "clear_distance_column_flange"),
+            "bolt_shape": _first_present(pernos, "bolt_shape", "shape"),
+            "bolt_thread_condition": _first_present(pernos, "bolt_thread_condition", "thread_condition"),
+        }
+    )
+
+    geometry: dict[str, Any] = {}
+    if side_block:
+        geometry[f"beam_{side}"] = side_block
+    if end_plate:
+        geometry["end_plate"] = end_plate
+    if continuity_plate:
+        geometry["continuity_plate"] = continuity_plate
+    if stiffener:
+        geometry["stiffener"] = stiffener
+    if bolts:
+        geometry["bolts"] = bolts
+    if soldaduras:
+        geometry["welds"] = soldaduras
+
+    loads = _compact_dict(
+        {
+            "pu_viga_right" if side == "right" else "pu_viga_left": _first_present(
+                viga,
+                "pu",
+                "pu_viga",
+                "pu_viga_right" if side == "right" else "pu_viga_left",
+            ),
+            "beam_right_vgravity" if side == "right" else "beam_left_vgravity": _first_present(
+                viga,
+                "v_gravity",
+                "beam_vgravity",
+                "beam_right_vgravity" if side == "right" else "beam_left_vgravity",
+                "Beam_right_Vgravity" if side == "right" else "Beam_left_Vgravity",
+            ),
+        }
+    )
+
+    normalized: dict[str, Any] = {}
+    if sections:
+        normalized["sections"] = sections
+    if materials:
+        normalized["materials"] = materials
+    if geometry:
+        normalized["geometry"] = geometry
+    if loads:
+        normalized["loads"] = loads
+    side_design_factors = _compact_dict(
+        {
+            "member_ductility_demand_beam": _first_present(viga, "member_ductility_demand_beam")
+            or _first_present(factores, "member_ductility_demand_beam")
+        }
+    )
+    if side_design_factors:
+        normalized["design_factors"] = side_design_factors
+    return normalized
+
+
+def _normalize_moment_split_column_payload(raw_payload: dict[str, Any]) -> dict[str, Any]:
+    if isinstance(raw_payload.get("geometry"), dict):
+        return deepcopy(raw_payload)
+
+    columna = _first_dict(raw_payload, "columna", "column")
+    platina_cont = _first_dict(raw_payload, "platina_continuidad", "continuity_plate")
+    materiales = _first_dict(raw_payload, "materiales", "materials")
+    soldaduras = _first_dict(raw_payload, "soldaduras", "welds")
+    cargas = _first_dict(raw_payload, "loads", "cargas")
+    factores = _first_dict(raw_payload, "design_factors", "factores_diseno")
+
+    normalized: dict[str, Any] = {}
+    for key in (
+        "project_id",
+        "case_id",
+        "design_code_context",
+        "units_system",
+        "connection_family",
+        "connection_type",
+        "load_state",
+    ):
+        if key in raw_payload:
+            normalized[key] = raw_payload[key]
+
+    sections = _compact_dict({"column_shape": _first_present(columna, "perfil", "column_shape")})
+    if sections:
+        normalized["sections"] = sections
+
+    materials = _compact_dict(
+        {
+            "profile_steel_type": _first_present(materiales, "profile_steel_type")
+            or _first_present(columna, "tipo_acero_perfil", "profile_steel_type"),
+            "weld_fexx": _first_present(materiales, "weld_fexx")
+            or _first_present(soldaduras, "weld_fexx", "fexx"),
+            "elastic_modulus": _first_present(materiales, "elastic_modulus")
+            or _first_present(columna, "elastic_modulus"),
+            "plate_steel_type": _first_present(materiales, "plate_steel_type")
+            or _first_present(platina_cont, "tipo_acero", "plate_steel_type"),
+        }
+    )
+    if materials:
+        normalized["materials"] = materials
+
+    column_block = _compact_dict(
+        {
+            "column_end_distance_to_beam_flange": _first_present(
+                columna,
+                "column_end_distance_to_beam_flange",
+                "distancia_borde_columna_a_ala_viga",
+            ),
+            "slab_connection_condition": _first_present(
+                columna,
+                "slab_connection_condition",
+                "union_columna_losa",
+            ),
+        }
+    )
+    weld_4 = soldaduras.get("weld_4") if isinstance(soldaduras.get("weld_4"), dict) else None
+    geometry = _compact_dict(
+        {
+            "column": column_block if column_block else None,
+            "continuity_plate": _compact_dict(
+                {"continuity_plate_thickness": _first_present(platina_cont, "continuity_plate_thickness", "tcp")}
+            )
+            or None,
+            "welds": {"weld_4": weld_4} if weld_4 is not None else None,
+        }
+    )
+    if geometry:
+        normalized["geometry"] = geometry
+
+    pu_columna = _first_present(cargas, "pu_columna") or _first_present(columna, "pu")
+    loads: dict[str, Any] = _compact_dict({"pu_columna": pu_columna})
+    for key in (
+        "probable_moment_column_face",
+        "probable_moment_plastic_hinge",
+        "shear_plastic_hinge_dermax",
+        "shear_plastic_hinge_dermin",
+        "shear_plastic_hinge_izqmax",
+        "shear_plastic_hinge_izqmin",
+        "shear_plastic_hinge",
+        "beam_gravity_shear_between_hinges_der",
+        "beam_gravity_shear_between_hinges_izq",
+        "beam_gravity_shear_between_hinges",
+        "beam_gravity_shear_face_segment",
+    ):
+        value = _first_present(cargas, key)
+        if value is not None:
+            loads[key] = value
+    if loads:
+        normalized["loads"] = loads
+    design_factors = dict(factores) if factores else {}
+    phi_no_ductil = _first_present(
+        design_factors,
+        "factor_reduccion_modo_no_ductil",
+        "phi_no_ductil",
+        "phi_non_ductile",
+    )
+    phi_ductil = _first_present(
+        design_factors,
+        "factor_reduccion_modo_ductil",
+        "phi_ductil",
+        "phi_ductile",
+    )
+    if phi_no_ductil is not None and "phi_n" not in design_factors:
+        design_factors["phi_n"] = phi_no_ductil
+    if phi_ductil is not None and "phi_d" not in design_factors:
+        design_factors["phi_d"] = phi_ductil
+    design_factors.pop("factor_reduccion_modo_no_ductil", None)
+    design_factors.pop("factor_reduccion_modo_ductil", None)
+    design_factors.pop("phi_no_ductil", None)
+    design_factors.pop("phi_non_ductile", None)
+    design_factors.pop("phi_ductil", None)
+    design_factors.pop("phi_ductile", None)
+    if design_factors:
+        normalized["design_factors"] = design_factors
+    return normalized
+
+
+def _require_dict_key(payload: dict[str, Any], key: str, context: str) -> dict[str, Any]:
+    value = payload.get(key)
+    if not isinstance(value, dict):
+        raise ValueError(f"Missing object '{key}' in {context}.")
+    return value
+
+
+def _assert_same(right_value: Any, left_value: Any, label: str) -> None:
+    if right_value != left_value:
+        raise ValueError(
+            f"Mismatch between right and left split inputs for '{label}'. "
+            "Both sides must provide the same shared values."
+        )
+
+
+def _compose_moment_prequalified_split_payload(
+    *,
+    column_raw: dict[str, Any],
+    right_raw: dict[str, Any],
+    left_raw: dict[str, Any],
+) -> dict[str, Any]:
+    column_payload = _normalize_moment_split_column_payload(column_raw)
+    right_payload = _normalize_moment_split_side_payload(right_raw, side="right")
+    left_payload = _normalize_moment_split_side_payload(left_raw, side="left")
+
+    merged = deepcopy(column_payload)
+    connection_family = merged.get("connection_family")
+    if not isinstance(connection_family, str) or not connection_family.strip():
+        raise ValueError(
+            "Missing text field 'connection_family' in column split payload. "
+            "No default value is allowed under zero-guess policy."
+        )
+    load_state = merged.get("load_state")
+    if not isinstance(load_state, str) or not load_state.strip():
+        raise ValueError(
+            "Missing text field 'load_state' in column split payload. "
+            "No default value is allowed under zero-guess policy."
+        )
+
+    merged_sections = _require_dict_key(merged, "sections", "column split payload")
+    right_sections = _require_dict_key(right_payload, "sections", "right beam split payload")
+    left_sections = _require_dict_key(left_payload, "sections", "left beam split payload")
+    right_beam_shape = right_sections.get("beam_shape")
+    left_beam_shape = left_sections.get("beam_shape")
+    if not isinstance(right_beam_shape, str) or not right_beam_shape.strip():
+        raise ValueError("Missing text field 'sections.beam_shape' in right beam split payload.")
+    if not isinstance(left_beam_shape, str) or not left_beam_shape.strip():
+        raise ValueError("Missing text field 'sections.beam_shape' in left beam split payload.")
+    _assert_same(right_beam_shape, left_beam_shape, "sections.beam_shape")
+    merged_sections["beam_shape"] = right_beam_shape
+
+    if not isinstance(merged.get("materials"), dict):
+        merged["materials"] = {}
+    merged_materials = _require_dict_key(merged, "materials", "column split payload")
+    right_materials = _require_dict_key(right_payload, "materials", "right beam split payload")
+    left_materials = _require_dict_key(left_payload, "materials", "left beam split payload")
+    _assert_same(right_materials, left_materials, "materials")
+    for key, merged_value in merged_materials.items():
+        if key in right_materials:
+            _assert_same(right_materials[key], merged_value, f"materials.{key}")
+    merged_materials.update(right_materials)
+
+    merged_geometry = _require_dict_key(merged, "geometry", "column split payload")
+    right_geometry = _require_dict_key(right_payload, "geometry", "right beam split payload")
+    left_geometry = _require_dict_key(left_payload, "geometry", "left beam split payload")
+    merged_geometry["beam_right"] = _require_dict_key(right_geometry, "beam_right", "right beam split geometry")
+    merged_geometry["beam_left"] = _require_dict_key(left_geometry, "beam_left", "left beam split geometry")
+
+    connection_type = str(merged.get("connection_type", "")).strip().lower()
+    requires_stiffener = connection_type in {"bseep_4es", "bseep_8es"}
+
+    group_names = ["end_plate", "bolts"]
+    if requires_stiffener:
+        group_names.append("stiffener")
+    elif "stiffener" in right_geometry and "stiffener" in left_geometry:
+        group_names.append("stiffener")
+
+    for group_name in group_names:
+        right_group = _require_dict_key(right_geometry, group_name, "right beam split geometry")
+        left_group = _require_dict_key(left_geometry, group_name, "left beam split geometry")
+        _assert_same(right_group, left_group, f"geometry.{group_name}")
+        merged_geometry[group_name] = right_group
+
+    if "continuity_plate" not in merged_geometry:
+        right_cont = right_geometry.get("continuity_plate")
+        left_cont = left_geometry.get("continuity_plate")
+        if isinstance(right_cont, dict) and isinstance(left_cont, dict):
+            _assert_same(right_cont, left_cont, "geometry.continuity_plate")
+            merged_geometry["continuity_plate"] = right_cont
+        else:
+            raise ValueError(
+                "Missing 'continuity_plate' input. Provide it in column/common split file "
+                "(or in both beam files for backward compatibility)."
+            )
+
+    right_welds = _require_dict_key(right_geometry, "welds", "right beam split geometry")
+    left_welds = _require_dict_key(left_geometry, "welds", "left beam split geometry")
+    base_welds = _require_dict_key(merged_geometry, "welds", "column split geometry")
+    weld_4 = _require_dict_key(base_welds, "weld_4", "column split geometry.welds")
+    merged_welds: dict[str, Any] = {"weld_4": weld_4}
+    required_weld_names = ["weld_3"]
+    if requires_stiffener:
+        required_weld_names = ["weld_1", "weld_2", "weld_3"]
+    for weld_name in required_weld_names:
+        right_weld = _require_dict_key(right_welds, weld_name, "right beam split geometry.welds")
+        left_weld = _require_dict_key(left_welds, weld_name, "left beam split geometry.welds")
+        _assert_same(right_weld, left_weld, f"geometry.welds.{weld_name}")
+        merged_welds[weld_name] = right_weld
+    merged_geometry["welds"] = merged_welds
+
+    merged_loads = dict(_require_dict_key(merged, "loads", "column split payload"))
+    merged_loads.update(_require_dict_key(right_payload, "loads", "right beam split payload"))
+    merged_loads.update(_require_dict_key(left_payload, "loads", "left beam split payload"))
+    merged["loads"] = merged_loads
+
+    if not isinstance(merged.get("design_factors"), dict):
+        merged["design_factors"] = {}
+    merged_design_factors = _require_dict_key(merged, "design_factors", "column split payload")
+
+    right_design_factors = right_payload.get("design_factors")
+    if not isinstance(right_design_factors, dict):
+        right_design_factors = {}
+    left_design_factors = left_payload.get("design_factors")
+    if not isinstance(left_design_factors, dict):
+        left_design_factors = {}
+
+    shared_design_factor_keys = set(right_design_factors.keys()) | set(left_design_factors.keys())
+    for key in shared_design_factor_keys:
+        right_value = right_design_factors.get(key)
+        left_value = left_design_factors.get(key)
+        if right_value is not None and left_value is not None:
+            _assert_same(right_value, left_value, f"design_factors.{key}")
+        beam_value = right_value if right_value is not None else left_value
+        if beam_value is None:
+            continue
+        if key in merged_design_factors and merged_design_factors[key] is not None:
+            _assert_same(beam_value, merged_design_factors[key], f"design_factors.{key}")
+        merged_design_factors[key] = beam_value
+    return merged
+
+
+def _load_moment_prequalified_split_payload(input_path: Path) -> dict[str, Any] | None:
+    split_paths = _resolve_moment_prequalified_split_paths(input_path)
+    if split_paths is None:
+        return None
+    column_path, right_path, left_path = split_paths
+    column_raw = _read_json_object(column_path)
+    right_raw = _read_json_object(right_path)
+    left_raw = _read_json_object(left_path)
+    return _compose_moment_prequalified_split_payload(
+        column_raw=column_raw,
+        right_raw=right_raw,
+        left_raw=left_raw,
+    )
+
+
 def load_input_payload(path: str | Path) -> dict[str, Any]:
     input_path = Path(path)
     try:
+        split_payload = _load_moment_prequalified_split_payload(input_path)
+        if split_payload is not None:
+            return split_payload
+        if input_path.is_dir():
+            raise OSError(
+                "Input path is a directory but no valid split-input bundle was found. "
+                "Expected files: *_column_and_common.json, *_beam_right_only.json, *_beam_left_only.json."
+            )
         with input_path.open("r", encoding="utf-8") as stream:
             return json.load(stream)
     except json.JSONDecodeError as exc:
@@ -1300,6 +1807,17 @@ def load_input_payload(path: str | Path) -> dict[str, Any]:
                 rule_id=None,
                 missing_fields=None,
                 message=f"Cannot read input file: {exc}",
+                source_document=None,
+            )
+        ) from exc
+    except ValueError as exc:
+        raise StructuredEngineException(
+            StructuredError(
+                error_code=ErrorCode.VALIDATION_ERROR,
+                stage=Stage.VALIDATE,
+                rule_id=None,
+                missing_fields=None,
+                message=f"Invalid split-input bundle: {exc}",
                 source_document=None,
             )
         ) from exc
