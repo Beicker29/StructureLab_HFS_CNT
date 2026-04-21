@@ -892,14 +892,184 @@
         "final_capacity": null
       },
       "notes": null
+    },
+    {
+      "name": "bbmb_splice Punto 2 pernos 1 metodo ICR/Elastic",
+      "rule_id": "AISC360.J3.bbmb_splice.step2_pernos1_method",
+      "clause": "Metodo configurable de pernos grupo 1 (ICR / Elastic)",
+      "source_document": "AISC 360-22 + ezbolt",
+      "demand": {
+        "value": 54.723151824842965,
+        "unit": "kN"
+      },
+      "capacity": {
+        "value": 65.9115588044792,
+        "unit": "kN"
+      },
+      "dcr": 0.8302512156809148,
+      "status": "PASS",
+      "calculation_memory": {
+        "inputs": {
+          "method_selected": "elastic_superposition",
+          "px": {
+            "value": 100.0,
+            "unit": "kN"
+          },
+          "py": {
+            "value": 250.0,
+            "unit": "kN"
+          },
+          "e": {
+            "value": 140.0,
+            "unit": "mm"
+          },
+          "mz": {
+            "value": 34999.99999999999,
+            "unit": "kN-mm"
+          },
+          "bolt_group_1_nx": 2,
+          "bolt_group_1_ny": 6,
+          "bolt_group_1_points_in": [
+            {
+              "x": 0.0,
+              "y": 0.0
+            },
+            {
+              "x": 0.0,
+              "y": 2.362204724409449
+            },
+            {
+              "x": 0.0,
+              "y": 4.724409448818898
+            },
+            {
+              "x": 0.0,
+              "y": 7.086614173228347
+            },
+            {
+              "x": 0.0,
+              "y": 9.448818897637796
+            },
+            {
+              "x": 0.0,
+              "y": 11.811023622047244
+            },
+            {
+              "x": 2.362204724409449,
+              "y": 0.0
+            },
+            {
+              "x": 2.362204724409449,
+              "y": 2.362204724409449
+            },
+            {
+              "x": 2.362204724409449,
+              "y": 4.724409448818898
+            },
+            {
+              "x": 2.362204724409449,
+              "y": 7.086614173228347
+            },
+            {
+              "x": 2.362204724409449,
+              "y": 9.448818897637796
+            },
+            {
+              "x": 2.362204724409449,
+              "y": 11.811023622047244
+            }
+          ],
+          "tolerance_1": 0.01,
+          "max_iterations_1": 1000,
+          "rult_1_kip": null
+        },
+        "intermediates": {
+          "elastic_capacity_basis": {
+            "db_web_us": {
+              "value": 0.625,
+              "unit": "in"
+            },
+            "ab_web_in2": 0.30679615757712825,
+            "fnv_web_us": {
+              "value": 53.663962960177415,
+              "unit": "ksi"
+            },
+            "phi_bolt_shear": 0.9,
+            "bolt_standard_web": "ASTM A325",
+            "bolt_description_web": "Grupo 120"
+          },
+          "active_mode_data": {
+            "method": "elastic_superposition",
+            "demand_kip": 12.30225392482794,
+            "capacity_kip": 14.817507872889388,
+            "dcr": 0.8302512156809148
+          },
+          "icr_compare_capacity": {
+            "value": 430.8267910525264,
+            "unit": "kN"
+          },
+          "method_report": {
+            "id": "bbmb_splice.step2.pernos1.method",
+            "scope": "pernos_1",
+            "method_selected": "elastic_superposition",
+            "px": {
+              "value": 100.0,
+              "unit": "kN"
+            },
+            "py": {
+              "value": 250.0,
+              "unit": "kN"
+            },
+            "e": {
+              "value": 140.0,
+              "unit": "mm"
+            },
+            "mz": {
+              "value": 34999.99999999999,
+              "unit": "kN-mm"
+            },
+            "demand": {
+              "value": 54.723151824842965,
+              "unit": "kN"
+            },
+            "capacity": {
+              "value": 65.9115588044792,
+              "unit": "kN"
+            },
+            "dcr": 0.8302512156809148,
+            "status": "PASS",
+            "icr_compare_capacity": {
+              "value": 430.8267910525264,
+              "unit": "kN"
+            },
+            "final_residual": 0.006440406915651873,
+            "n_iterations": 16
+          }
+        },
+        "design_factors": {
+          "phi_bolt_shear": 0.9
+        },
+        "equation": "Elastic Superposition: DCR = BoltDemand / BoltCapacity",
+        "units_trace": {
+          "px": "kN",
+          "py": "kN",
+          "e": "mm",
+          "mz": "kN-mm"
+        },
+        "final_capacity": {
+          "value": 65.9115588044792,
+          "unit": "kN"
+        }
+      },
+      "notes": null
     }
   ],
   "errors": [],
   "summary": {
-    "pass_count": 0,
+    "pass_count": 1,
     "fail_count": 1,
     "error_count": 0,
     "not_implemented_count": 0,
-    "worst_dcr": null
+    "worst_dcr": 0.8302512156809148
   }
 }

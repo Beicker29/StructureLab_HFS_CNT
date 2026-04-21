@@ -150,6 +150,11 @@ Opcionalmente puedes indicar carpeta de salida como segundo argumento:
 python -m src.steel_connections.run <archivo.json> <carpeta_salida>
 ```
 
+Para habilitar el backend opcional `ezbolt` (metodos ICR/Elastic en `bbmb_splice`):
+```bash
+python -m pip install -e ".[icr]"
+```
+
 ## Estado de chequeo
 - `PASS`
 - `FAIL`

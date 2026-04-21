@@ -160,6 +160,23 @@ def _collect_splice_step_1_notes(result: DetailedRunResult) -> list[dict]:
     return notes
 
 
+def _collect_splice_step_2_method(result: DetailedRunResult) -> dict | None:
+    for check in result.checks:
+        if ".bbmb_splice.step2_pernos1_method" not in check.rule_id:
+            continue
+        report = check.calculation_memory.intermediates.get("method_report")
+        if not isinstance(report, dict):
+            report = {}
+        return {
+            "rule_id": check.rule_id,
+            "clause": check.clause,
+            "status": check.status.value,
+            "notes": check.notes,
+            "report": report,
+        }
+    return None
+
+
 def _collect_step_2_mpr(result: DetailedRunResult) -> dict | None:
     for check in result.checks:
         if ".step2_probable_moment_plastic_hinge" not in check.rule_id:
@@ -1148,7 +1165,61 @@ def _render_splice_step_1_notes(notes: list[dict], *, allowed_scopes: set[str] |
     return "\n".join(lines)
 
 
-def _render_fully_restrained_splice_outline(rows_viga: list[dict], notes_viga: list[dict]) -> str:
+def _render_splice_step_2_method_block(step2: dict | None) -> str:
+    if not isinstance(step2, dict):
+        return "\n".join(
+            [
+                "### Punto 2 - Metodo ICR/Elastic",
+                "",
+                "Sin resultados de metodo ICR/Elastic para este caso.",
+                "",
+            ]
+        )
+    report = step2.get("report")
+    if not isinstance(report, dict):
+        report = {}
+    method = _format_text(report.get("method_selected"))
+    px = _format_quantity(report.get("px"))
+    py = _format_quantity(report.get("py"))
+    e = _format_quantity(report.get("e"))
+    mz = _format_quantity(report.get("mz"))
+    demand = _format_quantity(report.get("demand"))
+    capacity = _format_quantity(report.get("capacity"))
+    dcr = _format_text(report.get("dcr"))
+    result = _render_result_label(step2.get("status"))
+    icr_compare = _format_quantity(report.get("icr_compare_capacity"))
+    final_residual = _format_text(report.get("final_residual"))
+    n_iterations = _format_text(report.get("n_iterations"))
+    lines = [
+        "### Punto 2 - Metodo ICR/Elastic",
+        "",
+        f"- Metodo seleccionado: `{method}`",
+        f"- Px: `{px}`",
+        f"- Py: `{py}`",
+        f"- e: `{e}`",
+        f"- Mz: `{mz}`",
+        f"- Demanda (metodo activo): `{demand}`",
+        f"- Capacidad (metodo activo): `{capacity}`",
+        f"- DCR (metodo activo): `{dcr}`",
+        f"- Residual final ICR: `{final_residual}`",
+        f"- Iteraciones ICR: `{n_iterations}`",
+    ]
+    if icr_compare != "n/a":
+        lines.append(f"- Picr comparativo: `{icr_compare}`")
+    notes = _format_text(step2.get("notes"))
+    if notes != "n/a":
+        lines.append(f"- Nota: `{notes}`")
+    lines.extend(
+        [
+            f"- Clausula: `{_format_text(step2.get('clause'))}`",
+            f"- Resultado: {result}",
+            "",
+        ]
+    )
+    return "\n".join(lines)
+
+
+def _render_fully_restrained_splice_outline(rows_viga: list[dict], notes_viga: list[dict], step2_pernos1: dict | None) -> str:
     def _rows_for_scope(scope: str) -> list[dict]:
         target = scope.upper()
         return [item for item in rows_viga if str(item.get("scope", "")).upper() == target]
@@ -1191,6 +1262,7 @@ def _render_fully_restrained_splice_outline(rows_viga: list[dict], notes_viga: l
     lines.append("")
     lines.extend(_render_scope_block(title="## Revision conexion: Platina 1", scope="PLATINA_1"))
     lines.extend(_render_scope_block(title="## Revision conexion: Pernos 1", scope="PERNOS_1"))
+    lines.append(_render_splice_step_2_method_block(step2_pernos1))
     lines.extend(_render_scope_block(title="## Revision conexion: Platina 2", scope="PLATINA_2"))
     lines.extend(_render_scope_block(title="## Revision conexion: Pernos 2", scope="PERNOS_2"))
     return "\n".join(lines)
@@ -1359,6 +1431,7 @@ def render_memory_markdown(result: DetailedRunResult) -> str:
     notes = _collect_step_1_notes(result)
     splice_rows_viga = _collect_splice_step_1_rows(result)
     splice_notes_viga = _collect_splice_step_1_notes(result)
+    splice_step_2_pernos1 = _collect_splice_step_2_method(result)
     step_2 = _collect_step_2_mpr(result)
     step_3 = _collect_step_3_sh(result)
     step_4 = _collect_step_4_vh(result)
@@ -1403,7 +1476,7 @@ def render_memory_markdown(result: DetailedRunResult) -> str:
         else:
             content.append("No hay subchequeos de prequalification disponibles para este caso.")
     elif connection_family_normalized == "fully_restrained_moment":
-        content.append(_render_fully_restrained_splice_outline(splice_rows_viga, splice_notes_viga))
+        content.append(_render_fully_restrained_splice_outline(splice_rows_viga, splice_notes_viga, splice_step_2_pernos1))
     if step_2 is not None:
         content.append(_render_step_2_mpr(step_2))
     if step_3 is not None:

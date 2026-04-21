@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import Callable
 
 from steel_connections.domain.rules.aisc358 import beam_flange_tension, chapter_06_end_plate, flange_weld_strength
-from steel_connections.domain.rules.aisc360 import bbmb_splice_detailing
+from steel_connections.domain.rules.aisc360 import bbmb_splice_detailing, bbmb_splice_methods
 from steel_connections.domain.rules.dg1 import base_plate_anchor
 from steel_connections.models.output import CheckResult
 
@@ -226,6 +226,18 @@ APPLICABILITY_MATRIX: list[RuleBinding] = [
         connection_type="bbmb_splice",
         load_state="strength",
         evaluator=bbmb_splice_detailing.run_step1_viga_detailing,
+    ),
+    RuleBinding(
+        rule_id="AISC360.J3.bbmb_splice.step2_pernos1_method",
+        name="bbmb_splice Punto 2 pernos 1 metodo ICR/Elastic",
+        source_document="AISC 360-22 + ezbolt",
+        clause="Metodo configurable de pernos grupo 1 (ICR / Elastic)",
+        chapter="J3",
+        page=None,
+        connection_family="Fully_Restrained_Moment",
+        connection_type="bbmb_splice",
+        load_state="strength",
+        evaluator=bbmb_splice_methods.run_step2_pernos1_method,
     ),
     RuleBinding(
         rule_id="DG1.01.1.1.base_plate_anchor_strength",

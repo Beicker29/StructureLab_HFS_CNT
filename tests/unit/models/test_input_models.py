@@ -72,6 +72,7 @@ def test_parse_non_prequalified_moment_splice_case_valid() -> None:
             "web_bolt_edge_distance": {"value": 40.0, "unit": "mm"},
             "web_bolt_rows_per_side": 4,
             "web_bolt_lines": 2,
+            "beam_length_tolerance": {"value": 6.35, "unit": "mm"},
         },
         "loads": {
             "moment_right_end": {"value": 450000.0, "unit": "kN-mm"},

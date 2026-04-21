@@ -190,6 +190,22 @@
 - Altura de cabeza: `9.92 mm`
 
 
+### Punto 2 - Metodo ICR/Elastic
+
+- Metodo seleccionado: `elastic_superposition`
+- Px: `100 kN`
+- Py: `250 kN`
+- e: `140 mm`
+- Mz: `35 kN-m`
+- Demanda (metodo activo): `54.72 kN`
+- Capacidad (metodo activo): `65.91 kN`
+- DCR (metodo activo): `0.83`
+- Residual final ICR: `0.01`
+- Iteraciones ICR: `16`
+- Picr comparativo: `430.83 kN`
+- Clausula: `Metodo configurable de pernos grupo 1 (ICR / Elastic)`
+- Resultado: 🟢 Cumple
+
 ## Revision conexion: Platina 2
 
 ### Punto 1 - Revision geometrica de detalle (detailing checks)

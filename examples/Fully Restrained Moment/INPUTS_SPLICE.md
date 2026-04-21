@@ -190,3 +190,17 @@ En la conexion completa (dos vigas), el total de filas equivalentes es `2*nb2_z`
    - Grupo 2: conexion de ala.
    - `x = horizontal`, vertical = vertical.
 5. En implementaciones de codigo, documentar con docstrings/comentarios tecnicos el significado fisico de cada input.
+
+## 8) Selector de metodo para Pernos 1 (`procedure.icr`)
+
+Para el `Punto 2` de revision en `Pernos 1`, se puede seleccionar el metodo de analisis:
+
+- `procedure.icr.method`:
+  - `Elastic Method - Superposition`
+  - `Elastic Method - Center of Rotation`
+  - `Instant Center of Rotation Method`
+  - Tambien se aceptan alias normalizados: `elastic_superposition`, `elastic_ecr`, `icr`.
+- `procedure.icr.tolerance_1`: tolerancia de aceptacion de convergencia ICR.
+- `procedure.icr.max_iterations_1`: maximo de iteraciones aceptadas para ICR.
+- `procedure.icr.rult_1_kip`: requerido solo cuando el metodo seleccionado es ICR.
+  - Unidad obligatoria: `kip`.

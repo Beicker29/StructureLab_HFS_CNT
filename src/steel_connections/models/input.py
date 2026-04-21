@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 from typing import Annotated, Any, Literal, Union
 
@@ -713,6 +714,55 @@ class BeamBeamMomentBoltedDesignFactors(StrictModel):
         return value
 
 
+class BeamBeamMomentBoltedICRSettings(StrictModel):
+    method: str = "elastic_superposition"
+    tolerance_1: float = 0.01
+    max_iterations_1: int = 1000
+    rult_1_kip: Quantity | None = None
+
+    @field_validator("method")
+    @classmethod
+    def normalize_method(cls, value: str) -> str:
+        normalized = re.sub(r"[^a-z0-9]+", "_", value.strip().lower()).strip("_")
+        aliases = {
+            "icr": "icr",
+            "instant_center_of_rotation_method": "icr",
+            "nstant_center_of_rotation_method": "icr",
+            "elastic_superposition": "elastic_superposition",
+            "elastic_method_superposition": "elastic_superposition",
+            "elastic_ecr": "elastic_ecr",
+            "elastic_method_center_of_rotation": "elastic_ecr",
+        }
+        canonical = aliases.get(normalized)
+        if canonical is None:
+            raise ValueError("procedure.icr.method must be 'icr', 'elastic_superposition', or 'elastic_ecr'.")
+        return canonical
+
+    @field_validator("tolerance_1")
+    @classmethod
+    def validate_tolerance(cls, value: float) -> float:
+        if value <= 0.0:
+            raise ValueError("procedure.icr.tolerance_1 must be > 0.")
+        return value
+
+    @field_validator("max_iterations_1")
+    @classmethod
+    def validate_max_iterations(cls, value: int) -> int:
+        if value < 1:
+            raise ValueError("procedure.icr.max_iterations_1 must be >= 1.")
+        return value
+
+    @model_validator(mode="after")
+    def validate_conditional_rult(self) -> "BeamBeamMomentBoltedICRSettings":
+        if self.method == "icr" and self.rult_1_kip is None:
+            raise ValueError("procedure.icr.rult_1_kip is required when procedure.icr.method='icr'.")
+        return self
+
+
+class BeamBeamMomentBoltedProcedure(StrictModel):
+    icr: BeamBeamMomentBoltedICRSettings = Field(default_factory=BeamBeamMomentBoltedICRSettings)
+
+
 class BeamBeamMomentBoltedCase(CaseBase):
     connection_family: Literal["Fully_Restrained_Moment"]
     connection_type: Literal["bbmb_splice"]
@@ -721,6 +771,7 @@ class BeamBeamMomentBoltedCase(CaseBase):
     geometry: BeamBeamMomentBoltedGeometry
     loads: BeamBeamMomentBoltedLoads
     design_factors: BeamBeamMomentBoltedDesignFactors
+    procedure: BeamBeamMomentBoltedProcedure | None = None
 
     @model_validator(mode="after")
     def validate_units(self) -> "BeamBeamMomentBoltedCase":
@@ -785,6 +836,9 @@ class BeamBeamMomentBoltedCase(CaseBase):
                     f"Invalid unit at 'loads.{field_name}'. "
                     f"Expected '{expected_moment_unit}' for {self.units_system.value}."
                 )
+        if self.procedure is not None and self.procedure.icr.rult_1_kip is not None:
+            if self.procedure.icr.rult_1_kip.unit != "kip":
+                raise ValueError("Invalid unit at 'procedure.icr.rult_1_kip'. Expected 'kip'.")
         return self
 
 

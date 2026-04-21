@@ -16,6 +16,7 @@ def test_parse_new_splice_payload_derives_plate_dimensions() -> None:
             "sep": {"value": 20.0, "unit": "mm"},
             "perfil": "W24X76",
             "tipo_acero_viga": "ASTM A572 Gr 50",
+            "Tlvg": {"value": 6.35, "unit": "mm"},
         },
         "platina_1_alma": {
             "tp1": {"value": 12.7, "unit": "mm"},
