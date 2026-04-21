@@ -1006,18 +1006,39 @@ def _render_step_11_end_plate_beam_web_weld_tension(step_11_ctx: dict | None, st
     return "\n".join(lines)
 
 
-def _render_splice_step_1_notes(notes: list[dict]) -> str:
+def _render_splice_step_1_notes(notes: list[dict], *, allowed_scopes: set[str] | None = None) -> str:
     lines: list[str] = []
     for item in notes:
         note_id = _format_text(item.get("id"))
-        if note_id == "bbmb_splice.step1.geometry_formulas_common_note":
+        scope = _format_text(item.get("scope")).upper()
+        if allowed_scopes is not None and scope not in allowed_scopes:
+            continue
+        if note_id == "bbmb_splice.step1.geometry_note":
             lines.extend(
                 [
-                    "### Nota tecnica - Formulas geometricas (dato comun)",
+                    "### Nota tecnica - Geometria",
                     "",
                     "- Ambito: `VIGA`",
                     f"- Clausula: `{_format_text(item.get('clause'))}`",
-                    f"- alpha = sep: `{_format_quantity(item.get('alpha'))}`",
+                    f"- Separacion entre vigas (alpha): `{_format_quantity(item.get('alpha'))}`",
+                    f"- Tolerancia de fabricacion en longitud de viga ({_format_text(item.get('beam_length_tolerance_var'))}): `{_format_quantity(item.get('beam_length_tolerance'))}`",
+                    f"- Referencia tolerancia: `{_format_text(item.get('beam_length_tolerance_ref'))}`",
+                    f"- Separacion horizontal entre columnas de pernos del alma ({_format_text(item.get('s1x_var'))}): `{_format_quantity(item.get('s1x'))}`",
+                    f"- Distancia de borde en direccion X del grupo de pernos del alma ({_format_text(item.get('le1x1_var'))}): `{_format_quantity(item.get('le1x1'))}`",
+                    f"- Formula: `{_format_text(item.get('le1x1_prime_formula'))}`",
+                    f"- Distancia de borde ajustada ({_format_text(item.get('le1x1_prime_var'))}): `{_format_quantity(item.get('le1x1_prime'))}`",
+                    f"- Altura de viga ({_format_text(item.get('dvg_var'))}): `{_format_quantity(item.get('dvg'))}`",
+                    f"- Distancia vertical entre cara exterior de aleta inferior y fila inferior de pernos ({_format_text(item.get('le1y3_var'))}): `{_format_quantity(item.get('le1y3'))}`",
+                    f"- Formula: `{_format_text(item.get('le1y4_formula'))}`",
+                    f"- Distancia complementaria vertical ({_format_text(item.get('le1y4_var'))}): `{_format_quantity(item.get('le1y4'))}`",
+                    f"- Diametro de perforacion para pernos 1 (dh.1): `{_format_quantity(item.get('dh_1'))}`",
+                    f"- Diametro de perforacion para pernos 2 (dh.2): `{_format_quantity(item.get('dh_2'))}`",
+                    f"- Formula Area neta de cortante 1: `{_format_text(item.get('anv1_formula'))}`",
+                    f"- Area neta de cortante 1 (Anv.y1.vg): `{_format_quantity(item.get('anv1'))}`",
+                    f"- Formula Area neta a traccion 1: `{_format_text(item.get('ant1_formula'))}`",
+                    f"- Area neta a traccion 1 (Ant.x1.vg): `{_format_quantity(item.get('ant1'))}`",
+                    f"- Formula factor de rezago de cortante 1: `{_format_text(item.get('us1_formula'))}`",
+                    f"- Factor de rezago de cortante 1 (U11): `{_format_text(item.get('us1'))}`",
                     "",
                 ]
             )
@@ -1037,6 +1058,21 @@ def _render_splice_step_1_notes(notes: list[dict]) -> str:
                 ]
             )
             continue
+        if note_id == "bbmb_splice.step1.plate_1_hole_diameter_note":
+            lines.extend(
+                [
+                    "### Nota tecnica - Diametro de perforacion (Platina 1)",
+                    "",
+                    "- Ambito: `PLATINA_1`",
+                    f"- Clausula: `{_format_text(item.get('clause'))}`",
+                    f"- Formula: `{_format_text(item.get('formula'))}`",
+                    f"- {_format_text(item.get('db_var'))}: `{_format_quantity(item.get('db'))}`",
+                    f"- {_format_text(item.get('dh_var'))}: `{_format_quantity(item.get('dh'))}`",
+                    f"- Incremento aplicado (in): `{_format_text(item.get('hole_add_in'))}`",
+                    "",
+                ]
+            )
+            continue
         if note_id == "bbmb_splice.step1.geometry_formulas_plt2_note":
             lines.extend(
                 [
@@ -1051,36 +1087,112 @@ def _render_splice_step_1_notes(notes: list[dict]) -> str:
                     "",
                 ]
             )
+            continue
+        if note_id == "bbmb_splice.step1.plate_2_hole_diameter_note":
+            lines.extend(
+                [
+                    "### Nota tecnica - Diametro de perforacion (Platina 2)",
+                    "",
+                    "- Ambito: `PLATINA_2`",
+                    f"- Clausula: `{_format_text(item.get('clause'))}`",
+                    f"- Formula: `{_format_text(item.get('formula'))}`",
+                    f"- {_format_text(item.get('db_var'))}: `{_format_quantity(item.get('db'))}`",
+                    f"- {_format_text(item.get('dh_var'))}: `{_format_quantity(item.get('dh'))}`",
+                    f"- Incremento aplicado (in): `{_format_text(item.get('hole_add_in'))}`",
+                    "",
+                ]
+            )
+            continue
+        if note_id == "bbmb_splice.step1.bolt_group_1_properties_note":
+            lines.extend(
+                [
+                    "### Nota tecnica - Propiedades del perno (Grupo 1)",
+                    "",
+                    "- Ambito: `PERNOS_1`",
+                    f"- Clausula: `{_format_text(item.get('clause'))}`",
+                    f"- Perno: `{_format_text(item.get('bolt_shape'))}`",
+                    f"- Clasificacion: `{_format_text(item.get('classification'))}`",
+                    f"- Norma de fabricacion: `{_format_text(item.get('fabrication_standard'))}`",
+                    f"- Condicion de rosca: `{_format_text(item.get('thread_condition'))}`",
+                    f"- Tipo de apriete: `{_format_text(item.get('tightening_type'))}`",
+                    f"- Diametro nominal (db.1): `{_format_quantity(item.get('diameter_nominal'))}`",
+                    f"- Longitud de vastago: `{_format_quantity(item.get('length_shank'))}`",
+                    f"- Width across flats: `{_format_quantity(item.get('width_across_flats'))}`",
+                    f"- Diametro de cabeza: `{_format_quantity(item.get('head_diameter'))}`",
+                    f"- Altura de cabeza: `{_format_quantity(item.get('head_height'))}`",
+                    "",
+                ]
+            )
+            continue
+        if note_id == "bbmb_splice.step1.bolt_group_2_properties_note":
+            lines.extend(
+                [
+                    "### Nota tecnica - Propiedades del perno (Grupo 2)",
+                    "",
+                    "- Ambito: `PERNOS_2`",
+                    f"- Clausula: `{_format_text(item.get('clause'))}`",
+                    f"- Perno: `{_format_text(item.get('bolt_shape'))}`",
+                    f"- Clasificacion: `{_format_text(item.get('classification'))}`",
+                    f"- Norma de fabricacion: `{_format_text(item.get('fabrication_standard'))}`",
+                    f"- Condicion de rosca: `{_format_text(item.get('thread_condition'))}`",
+                    f"- Tipo de apriete: `{_format_text(item.get('tightening_type'))}`",
+                    f"- Diametro nominal (db.2): `{_format_quantity(item.get('diameter_nominal'))}`",
+                    f"- Longitud de vastago: `{_format_quantity(item.get('length_shank'))}`",
+                    f"- Width across flats: `{_format_quantity(item.get('width_across_flats'))}`",
+                    f"- Diametro de cabeza: `{_format_quantity(item.get('head_diameter'))}`",
+                    f"- Altura de cabeza: `{_format_quantity(item.get('head_height'))}`",
+                    "",
+                ]
+            )
+            continue
     return "\n".join(lines)
 
 
 def _render_fully_restrained_splice_outline(rows_viga: list[dict], notes_viga: list[dict]) -> str:
+    def _rows_for_scope(scope: str) -> list[dict]:
+        target = scope.upper()
+        return [item for item in rows_viga if str(item.get("scope", "")).upper() == target]
+
+    def _render_scope_block(*, title: str, scope: str) -> list[str]:
+        section_lines: list[str] = [
+            title,
+            "",
+            "### Punto 1 - Revision geometrica de detalle (detailing checks)",
+            "",
+        ]
+        scoped_rows = _rows_for_scope(scope)
+        if scoped_rows:
+            section_lines.append(_render_step_1_list(scoped_rows))
+        else:
+            section_lines.append("No hay chequeos de detailing en punto 1 para este ambito.")
+
+        scoped_notes = _render_splice_step_1_notes(notes_viga, allowed_scopes={scope.upper()})
+        if scoped_notes:
+            section_lines.append(scoped_notes)
+        else:
+            section_lines.extend(["", "Sin notas tecnicas en punto 1."])
+        section_lines.append("")
+        return section_lines
+
     lines = [
         "## Revision conexion: Viga",
         "",
         "### Punto 1 - Revision geometrica de detalle (detailing checks)",
         "",
     ]
-    if rows_viga:
-        lines.append(_render_step_1_list_grouped_by_scope(rows_viga))
+    rows_viga_scope = _rows_for_scope("VIGA")
+    if rows_viga_scope:
+        lines.append(_render_step_1_list(rows_viga_scope))
     else:
-        lines.append("No hay subchequeos de detailing disponibles para este caso.")
-    rendered_notes = _render_splice_step_1_notes(notes_viga)
+        lines.append("No hay chequeos de detailing en punto 1 para este ambito.")
+    rendered_notes = _render_splice_step_1_notes(notes_viga, allowed_scopes={"VIGA"})
     if rendered_notes:
         lines.append(rendered_notes)
-    lines.extend(
-        [
-            "",
-            "## Revision conexion: Platina 1",
-            "",
-            "## Revision conexion: Pernos 1",
-            "",
-            "## Revision conexion: Platina 2",
-            "",
-            "## Revision conexion: Pernos 2",
-            "",
-        ]
-    )
+    lines.append("")
+    lines.extend(_render_scope_block(title="## Revision conexion: Platina 1", scope="PLATINA_1"))
+    lines.extend(_render_scope_block(title="## Revision conexion: Pernos 1", scope="PERNOS_1"))
+    lines.extend(_render_scope_block(title="## Revision conexion: Platina 2", scope="PLATINA_2"))
+    lines.extend(_render_scope_block(title="## Revision conexion: Pernos 2", scope="PERNOS_2"))
     return "\n".join(lines)
 
 def _render_step_1_list(rows: list[dict]) -> str:

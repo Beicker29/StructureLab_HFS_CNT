@@ -792,6 +792,11 @@ def _normalize_fully_restrained_splice_payload(payload: dict[str, Any]) -> dict[
         "web_bolt_edge_distance_x2": b1.get("Le1_x2"),
         "web_bolt_edge_distance_y1": b1.get("Le1_y1"),
         "web_bolt_edge_distance_y2": b1.get("Le1_y2"),
+        "web_bolt_edge_distance_y3": (
+            viga.get("LE1.y3")
+            or viga.get("Le1.y3")
+            or viga.get("Le1_y3")
+        ),
         "flange_bolt_edge_distance_x1": b2.get("Le2_x1"),
         "flange_bolt_edge_distance_x2": b2.get("Le2_x2"),
         "flange_bolt_edge_distance_z1": b2.get("Le2_z1"),
@@ -800,6 +805,7 @@ def _normalize_fully_restrained_splice_payload(payload: dict[str, Any]) -> dict[
         "web_bolt_lines": b1.get("nb1_x"),
         "web_bolt_tightening_type": b1.get("bolt_tightening_type"),
         "flange_bolt_tightening_type": b2.get("bolt_tightening_type"),
+        "beam_length_tolerance": viga.get("Tlvg"),
         "beam_surface_condition": viga.get("condicion_superficial"),
         "beam_atmospheric_condition": viga.get("condicion_atmosferica"),
         "web_plate_surface_condition": p1.get("condicion_superficial"),

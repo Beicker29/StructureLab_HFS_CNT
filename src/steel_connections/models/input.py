@@ -597,6 +597,7 @@ class BeamBeamMomentBoltedGeometry(StrictModel):
     web_bolt_edge_distance_x2: Quantity | None = None
     web_bolt_edge_distance_y1: Quantity | None = None
     web_bolt_edge_distance_y2: Quantity | None = None
+    web_bolt_edge_distance_y3: Quantity | None = None
     flange_bolt_edge_distance_x1: Quantity | None = None
     flange_bolt_edge_distance_x2: Quantity | None = None
     flange_bolt_edge_distance_z1: Quantity | None = None
@@ -607,6 +608,7 @@ class BeamBeamMomentBoltedGeometry(StrictModel):
     flange_bolt_tightening_type: str | None = None
     beam_surface_condition: str | None = None
     beam_atmospheric_condition: str | None = None
+    beam_length_tolerance: Quantity
     web_plate_surface_condition: str | None = None
     web_plate_atmospheric_condition: str | None = None
     flange_plate_surface_condition: str | None = None
@@ -629,9 +631,9 @@ class BeamBeamMomentBoltedGeometry(StrictModel):
         return value
 
     @field_validator(
-        "beam_surface_condition",
-        "web_plate_surface_condition",
-        "flange_plate_surface_condition",
+            "beam_surface_condition",
+            "web_plate_surface_condition",
+            "flange_plate_surface_condition",
     )
     @classmethod
     def normalize_surface_condition(cls, value: str | None) -> str | None:
@@ -756,6 +758,8 @@ class BeamBeamMomentBoltedCase(CaseBase):
             "web_bolt_edge_distance_x2",
             "web_bolt_edge_distance_y1",
             "web_bolt_edge_distance_y2",
+            "web_bolt_edge_distance_y3",
+            "beam_length_tolerance",
         ):
             value = getattr(self.geometry, field_name)
             if value is not None:

@@ -16,6 +16,14 @@
     },
     "perfil": "W18X35",
     "tipo_acero_viga": "ASTM A572 Gr 50",
+    "Le1.y3": {
+      "value": 25.0,
+      "unit": "mm"
+    },
+    "Tlvg": {
+      "value": 6.35,
+      "unit": "mm"
+    },
     "condicion_superficial": "pintada",
     "condicion_atmosferica": "no corrosiva"
   },
