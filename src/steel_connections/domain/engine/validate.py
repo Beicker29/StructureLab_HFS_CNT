@@ -96,7 +96,7 @@ def _normalize_moment_geometry_payload(payload: dict[str, Any]) -> dict[str, Any
             "column_slab_connection_condition",
         ),
         "end_plate": ("end_plate_width", "end_plate_thickness", "de", "pb", "pfo", "pfi"),
-        "continuity_plate": ("continuity_plate_thickness", "continuity_plate_weld_type"),
+        "continuity_plate": ("continuity_plate_thickness", "continuity_plate_enabled", "continuity_plate_weld_type"),
         "stiffener": ("stiffener_height", "stiffener_thickness", "stiffener_length"),
         "bolts": (
             "bolt_diameter",
@@ -246,6 +246,12 @@ def _normalize_moment_geometry_payload(payload: dict[str, Any]) -> dict[str, Any
             if "union_columna_losa" in block and "column_slab_connection_condition" not in block:
                 flat_geometry["column_slab_connection_condition"] = block["union_columna_losa"]
         if group_name == "continuity_plate":
+            if "continuity_plate_enabled" in block and "continuity_plate_enabled" not in flat_geometry:
+                flat_geometry["continuity_plate_enabled"] = block["continuity_plate_enabled"]
+            if "usar_platinas_continuidad" in block and "continuity_plate_enabled" not in flat_geometry:
+                flat_geometry["continuity_plate_enabled"] = block["usar_platinas_continuidad"]
+            if "use_continuity_plates" in block and "continuity_plate_enabled" not in flat_geometry:
+                flat_geometry["continuity_plate_enabled"] = block["use_continuity_plates"]
             if "weld_type" in block and "continuity_plate_weld_type" not in flat_geometry:
                 flat_geometry["continuity_plate_weld_type"] = block["weld_type"]
             if "tipo_soldadura" in block and "continuity_plate_weld_type" not in flat_geometry:
@@ -1393,6 +1399,7 @@ def _normalize_moment_split_side_payload(raw_payload: dict[str, Any], *, side: s
     rigidizador = _first_dict(raw_payload, "rigidizador", "stiffener")
     pernos = _first_dict(raw_payload, "pernos", "bolts")
     soldaduras = _first_dict(raw_payload, "soldaduras", "welds")
+    cargas = _first_dict(raw_payload, "loads", "cargas")
 
     sections = {}
     beam_shape = _first_present(viga, "perfil", "beam_shape", "shape")
@@ -1440,7 +1447,15 @@ def _normalize_moment_split_side_payload(raw_payload: dict[str, Any], *, side: s
         }
     )
     continuity_plate = _compact_dict(
-        {"continuity_plate_thickness": _first_present(platina_cont, "continuity_plate_thickness", "tcp")}
+        {
+            "continuity_plate_thickness": _first_present(platina_cont, "continuity_plate_thickness", "tcp"),
+            "continuity_plate_enabled": _first_present(
+                platina_cont,
+                "continuity_plate_enabled",
+                "usar_platinas_continuidad",
+                "use_continuity_plates",
+            ),
+        }
     )
     stiffener = _compact_dict({"stiffener_thickness": _first_present(rigidizador, "stiffener_thickness", "tr")})
     bolts = _compact_dict(
@@ -1471,6 +1486,12 @@ def _normalize_moment_split_side_payload(raw_payload: dict[str, Any], *, side: s
     loads = _compact_dict(
         {
             "pu_viga_right" if side == "right" else "pu_viga_left": _first_present(
+                cargas,
+                "pu",
+                "pu_viga",
+                "pu_viga_right" if side == "right" else "pu_viga_left",
+            )
+            or _first_present(
                 viga,
                 "pu",
                 "pu_viga",
@@ -1564,11 +1585,28 @@ def _normalize_moment_split_column_payload(raw_payload: dict[str, Any]) -> dict[
         }
     )
     weld_4 = soldaduras.get("weld_4") if isinstance(soldaduras.get("weld_4"), dict) else None
+    continuity_plate_enabled = _first_present(
+        platina_cont,
+        "continuity_plate_enabled",
+        "usar_platinas_continuidad",
+        "use_continuity_plates",
+    )
+    if continuity_plate_enabled is None:
+        continuity_plate_enabled = _first_present(
+            columna,
+            "continuity_plate_enabled",
+            "usar_platinas_continuidad",
+            "use_continuity_plates",
+        )
+
     geometry = _compact_dict(
         {
             "column": column_block if column_block else None,
             "continuity_plate": _compact_dict(
-                {"continuity_plate_thickness": _first_present(platina_cont, "continuity_plate_thickness", "tcp")}
+                {
+                    "continuity_plate_thickness": _first_present(platina_cont, "continuity_plate_thickness", "tcp"),
+                    "continuity_plate_enabled": continuity_plate_enabled,
+                }
             )
             or None,
             "welds": {"weld_4": weld_4} if weld_4 is not None else None,
@@ -1673,7 +1711,8 @@ def _compose_moment_prequalified_split_payload(
         raise ValueError("Missing text field 'sections.beam_shape' in right beam split payload.")
     if not isinstance(left_beam_shape, str) or not left_beam_shape.strip():
         raise ValueError("Missing text field 'sections.beam_shape' in left beam split payload.")
-    _assert_same(right_beam_shape, left_beam_shape, "sections.beam_shape")
+    merged_sections["beam_shape_der"] = right_beam_shape
+    merged_sections["beam_shape_izq"] = left_beam_shape
     merged_sections["beam_shape"] = right_beam_shape
 
     if not isinstance(merged.get("materials"), dict):
@@ -1681,7 +1720,6 @@ def _compose_moment_prequalified_split_payload(
     merged_materials = _require_dict_key(merged, "materials", "column split payload")
     right_materials = _require_dict_key(right_payload, "materials", "right beam split payload")
     left_materials = _require_dict_key(left_payload, "materials", "left beam split payload")
-    _assert_same(right_materials, left_materials, "materials")
     for key, merged_value in merged_materials.items():
         if key in right_materials:
             _assert_same(right_materials[key], merged_value, f"materials.{key}")
@@ -1705,7 +1743,9 @@ def _compose_moment_prequalified_split_payload(
     for group_name in group_names:
         right_group = _require_dict_key(right_geometry, group_name, "right beam split geometry")
         left_group = _require_dict_key(left_geometry, group_name, "left beam split geometry")
-        _assert_same(right_group, left_group, f"geometry.{group_name}")
+        # Do not enforce equality between beam-right and beam-left split inputs.
+        # Current single-side canonical fields consume right-side values by design.
+        # Left-side values are allowed to differ and are kept available in side blocks.
         merged_geometry[group_name] = right_group
 
     if "continuity_plate" not in merged_geometry:
@@ -1731,8 +1771,9 @@ def _compose_moment_prequalified_split_payload(
     for weld_name in required_weld_names:
         right_weld = _require_dict_key(right_welds, weld_name, "right beam split geometry.welds")
         left_weld = _require_dict_key(left_welds, weld_name, "left beam split geometry.welds")
-        _assert_same(right_weld, left_weld, f"geometry.welds.{weld_name}")
-        merged_welds[weld_name] = right_weld
+        # Left and right beam weld definitions may differ by project intent.
+        # Current canonical path keeps right-side values for shared legacy fields.
+        merged_welds[weld_name] = right_weld if right_weld is not None else left_weld
     merged_geometry["welds"] = merged_welds
 
     merged_loads = dict(_require_dict_key(merged, "loads", "column split payload"))
@@ -1755,13 +1796,10 @@ def _compose_moment_prequalified_split_payload(
     for key in shared_design_factor_keys:
         right_value = right_design_factors.get(key)
         left_value = left_design_factors.get(key)
-        if right_value is not None and left_value is not None:
-            _assert_same(right_value, left_value, f"design_factors.{key}")
+        # Split side inputs are allowed to differ. Keep right-side value as canonical.
         beam_value = right_value if right_value is not None else left_value
         if beam_value is None:
             continue
-        if key in merged_design_factors and merged_design_factors[key] is not None:
-            _assert_same(beam_value, merged_design_factors[key], f"design_factors.{key}")
         merged_design_factors[key] = beam_value
     return merged
 

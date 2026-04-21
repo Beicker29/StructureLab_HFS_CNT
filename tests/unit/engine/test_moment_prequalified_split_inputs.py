@@ -43,5 +43,7 @@ def test_parse_moment_prequalified_split_bundle_4es_directory() -> None:
     case = parse_and_validate_file(SPLIT_4ES_ROOT)
     assert case.connection_family == "moment_prequalified"
     assert case.connection_type == "bseep_4es"
+    assert case.sections.beam_shape_der == "W18X76"
+    assert case.sections.beam_shape_izq == "W24X76"
     assert case.geometry.stiffener_thickness is not None
-    assert case.geometry.stiffener_thickness.value == 12.7
+    assert case.geometry.stiffener_thickness.value == 15.9

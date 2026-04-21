@@ -79,7 +79,11 @@ BUEEP_4E_CASE_PAYLOAD = {
     },
     "geometry": {
         "beam_clear_span_length": {"value": 240.0, "unit": "in"},
+        "beam_clear_span_length_der": {"value": 240.0, "unit": "in"},
+        "beam_clear_span_length_izq": {"value": 240.0, "unit": "in"},
         "beam_shear_connector_free_length_from_column_face": {"value": 40.0, "unit": "in"},
+        "beam_shear_connector_free_length_from_column_face_der": {"value": 40.0, "unit": "in"},
+        "beam_shear_connector_free_length_from_column_face_izq": {"value": 40.0, "unit": "in"},
         "column_slab_connection_condition": "isolated",
         "end_plate_width": {"value": 9.976377952755906, "unit": "in"},
         "end_plate_thickness": {"value": 1.2, "unit": "in"},
@@ -106,6 +110,7 @@ BUEEP_4E_CASE_PAYLOAD = {
     "design_factors": {
         "phi_d": 0.9,
         "phi_n": 0.9,
+        "beam_connection_sides": "right_only",
         "member_ductility_demand_beam": "moderate",
         "member_ductility_demand_column": "moderate",
         "column_beam_moment_ratio_minimum": 1.0,
@@ -137,7 +142,11 @@ BSEEP_8ES_CASE_PAYLOAD = {
     },
     "geometry": {
         "beam_clear_span_length": {"value": 240.0, "unit": "in"},
+        "beam_clear_span_length_der": {"value": 240.0, "unit": "in"},
+        "beam_clear_span_length_izq": {"value": 240.0, "unit": "in"},
         "beam_shear_connector_free_length_from_column_face": {"value": 40.0, "unit": "in"},
+        "beam_shear_connector_free_length_from_column_face_der": {"value": 40.0, "unit": "in"},
+        "beam_shear_connector_free_length_from_column_face_izq": {"value": 40.0, "unit": "in"},
         "column_slab_connection_condition": "isolated",
         "bolt_gage": {"value": 6.0, "unit": "in"},
         "end_plate_width": {"value": 9.976377952755906, "unit": "in"},
@@ -166,6 +175,8 @@ BSEEP_8ES_CASE_PAYLOAD = {
     },
     "loads": {
         "pu_viga": {"value": 0.0, "unit": "kip"},
+        "pu_viga_right": {"value": 0.0, "unit": "kip"},
+        "pu_viga_left": {"value": 0.0, "unit": "kip"},
         "pu_columna": {"value": 0.0, "unit": "kip"},
         "probable_moment_column_face": {"value": 6000.0, "unit": "kip-in"},
         "beam_right_vgravity": {"value": 10.0, "unit": "kip"},
@@ -174,6 +185,7 @@ BSEEP_8ES_CASE_PAYLOAD = {
     "design_factors": {
         "phi_d": 0.9,
         "phi_n": 0.9,
+        "beam_connection_sides": "both_sides",
         "member_ductility_demand_beam": "moderate",
         "member_ductility_demand_column": "moderate",
         "column_beam_moment_ratio_minimum": 1.0,

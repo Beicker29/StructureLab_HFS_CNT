@@ -85,10 +85,6 @@
     "weld_1": {
       "description": "Rigidizador con end plate",
       "weld_type": "Fillet",
-      "length": {
-        "value": 190.0,
-        "unit": "mm"
-      },
       "size": {
         "value": 9.525,
         "unit": "mm"
@@ -98,10 +94,6 @@
     "weld_2": {
       "description": "Viga con rigidizador",
       "weld_type": "Fillet",
-      "length": {
-        "value": 190.0,
-        "unit": "mm"
-      },
       "size": {
         "value": 9.525,
         "unit": "mm"

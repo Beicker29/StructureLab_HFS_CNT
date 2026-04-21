@@ -28,13 +28,10 @@
       "value": 762.0,
       "unit": "mm"
     },
-    "union_columna_losa": "isolated",
-    "pu": {
-      "value": 696.654,
-      "unit": "kN"
-    }
+    "union_columna_losa": "isolated"
   },
   "platina_continuidad": {
+    "usar_platinas_continuidad": true,
     "tipo_acero": "ASTM A572 Gr 50",
     "tcp": {
       "value": 15.9,

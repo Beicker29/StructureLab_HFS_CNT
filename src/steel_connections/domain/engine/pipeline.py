@@ -57,7 +57,28 @@ def run_case_payload(payload: dict) -> DetailedRunResult:
 
 
 def run_case_file(path: str | Path) -> DetailedRunResult:
-    payload = load_input_payload(path)
+    try:
+        payload = load_input_payload(path)
+    except StructuredEngineException as exc:
+        input_path = Path(path)
+        summary = RunSummary(
+            pass_count=0,
+            fail_count=0,
+            error_count=1,
+            not_implemented_count=0,
+            worst_dcr=None,
+        )
+        return DetailedRunResult(
+            project_id="unknown_project",
+            case_id=input_path.stem,
+            connection_family="unknown_family",
+            connection_type="unknown_type",
+            load_state="unknown_load_state",
+            global_status=GlobalStatus.ERROR,
+            checks=[],
+            errors=[exc.error],
+            summary=summary,
+        )
     try:
         return run_case_payload(payload)
     except StructuredEngineException as exc:

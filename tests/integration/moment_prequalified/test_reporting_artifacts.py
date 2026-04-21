@@ -11,7 +11,7 @@ from steel_connections.reporting.markdown_writer import write_memory_markdown
 
 
 def test_example_results_folder_and_geometry_artifact() -> None:
-    input_path = "examples/moment_prequalified/case_003_bseep_8es.json"
+    input_path = "examples/moment_prequalified/case_003_bseep_8es_split_inputs"
     out_root = Path(".tmp_test_outputs")
 
     result = run_case_file(input_path)
@@ -21,7 +21,7 @@ def test_example_results_folder_and_geometry_artifact() -> None:
     geometry_path = write_connection_geometry_artifact(case, detailed_path.parent)
 
     assert detailed_path.exists()
-    assert detailed_path == out_root / "case_003_bseep_8es" / "detailed.json"
+    assert detailed_path == out_root / "case_003_bseep_8es_split_inputs" / "detailed.json"
     assert memory_path.exists()
     assert memory_path.name == "memory.md"
     assert geometry_path is not None

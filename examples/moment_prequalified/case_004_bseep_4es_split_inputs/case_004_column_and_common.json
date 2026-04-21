@@ -25,16 +25,13 @@
       "unit": "MPa"
     },
     "column_end_distance_to_beam_flange": {
-      "value": 762.0,
+      "value": 240,
       "unit": "mm"
     },
-    "union_columna_losa": "isolated",
-    "pu": {
-      "value": 0.0,
-      "unit": "kN"
-    }
+    "union_columna_losa": "isolated"
   },
   "platina_continuidad": {
+    "usar_platinas_continuidad": true,
     "tipo_acero": "ASTM A572 Gr 50",
     "tcp": {
       "value": 15.9,
@@ -55,10 +52,6 @@
     "pu_columna": {
       "value": 0.0,
       "unit": "kN"
-    },
-    "probable_moment_column_face": {
-      "value": 677908.974,
-      "unit": "kN-mm"
     }
   }
 }

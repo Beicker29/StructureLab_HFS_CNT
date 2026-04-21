@@ -41,12 +41,38 @@ Motor de diseno de conexiones de acero estructural hot-rolled, deterministico, a
 src/steel_connections/
   models/        # contratos de entrada/salida, unidades y errores
   codes/         # calculos normativos puros
+    engineering/ # ecuaciones reutilizables por tema (DRY): weld, shear, flexure, geometry
   domain/        # reglas, routing y pipeline de motor
   reporting/     # salida terminal + persistencia JSON
   cli/           # interfaz de ejecucion
 examples/        # casos de entrada
 results/         # salidas por example
 tests/           # unit e integration tests
+```
+
+## API DRY de ecuaciones
+Ecuaciones de ingenieria reutilizables y trazables:
+- `src/steel_connections/codes/engineering/weld.py`
+- `src/steel_connections/codes/engineering/shear.py`
+- `src/steel_connections/codes/engineering/flexure.py`
+- `src/steel_connections/codes/engineering/geometry.py`
+- `src/steel_connections/codes/engineering/constants.py`
+
+Ejemplo (soldadura de filete, AISC 360-22 J2.4):
+```python
+from steel_connections.codes.engineering.weld import WeldFillet
+from steel_connections.models.units import Quantity, UnitSystem
+
+weld = WeldFillet(
+    fexx=Quantity(value=490.0, unit="MPa"),
+    weld_size=Quantity(value=8.0, unit="mm"),
+    weld_length=Quantity(value=300.0, unit="mm"),
+    weld_lines=2,
+    unit_system=UnitSystem.SI,
+    phi=0.9,
+)
+result = weld.design_strength()
+# result["phi_rn"], result["rn"], result["equation"], result["reference"]
 ```
 
 ## Entrada JSON requerida
@@ -126,17 +152,18 @@ Cada magnitud numerica usa objeto:
 - El Paso 1 tambien incluye los requisitos de Section 2.3.4: `Lsc >= 1.5d` y losa `isolated`.
 
 ## Ejemplos canonicos Chapter 6
-- Se mantiene un solo JSON por variacion:
-  - `case_002_bueep_4e.json`
-  - `case_004_bseep_4es.json`
-  - `case_003_bseep_8es.json`
-- Los tres ejemplos estan en unidades `SI` con `column_shape = W18X175` y `beam_shape = W24X76`.
+- Se mantiene un bundle split por variacion (3 archivos: columna/comunes, viga derecha, viga izquierda):
+  - `case_002_bueep_4e_split_inputs/`
+  - `case_004_bseep_4es_split_inputs/`
+  - `case_003_bseep_8es_split_inputs/`
+- Los tres ejemplos estan en unidades `SI`.
+- En split-inputs, derecha e izquierda pueden usar perfiles distintos; el motor conserva ambos (`beam_shape_der`, `beam_shape_izq`).
 
 ## CLI
 ```bash
-python -m src.steel_connections.run examples/moment_prequalified/case_002_bueep_4e.json
-python -m src.steel_connections.run examples/moment_prequalified/case_004_bseep_4es.json
-python -m src.steel_connections.run examples/moment_prequalified/case_003_bseep_8es.json
+python -m src.steel_connections.run examples/moment_prequalified/case_002_bueep_4e_split_inputs
+python -m src.steel_connections.run examples/moment_prequalified/case_004_bseep_4es_split_inputs
+python -m src.steel_connections.run examples/moment_prequalified/case_003_bseep_8es_split_inputs
 python -m src.steel_connections.run "examples/Fully Restrained Moment/case_001_bbmb_splice.json"
 ```
 

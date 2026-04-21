@@ -1,6 +1,6 @@
 {
   "viga": {
-    "perfil": "W24X76",
+    "perfil": "W18X76",
     "tipo_acero_perfil": "ASTM A572 Gr 50",
     "member_ductility_demand_beam": "high",
     "elastic_modulus": {
@@ -15,10 +15,6 @@
       "value": 1000.0,
       "unit": "mm"
     },
-    "pu": {
-      "value": 0.0,
-      "unit": "kN"
-    },
     "v_gravity": {
       "value": 44.482,
       "unit": "kN"
@@ -27,7 +23,7 @@
   "placa_extremo": {
     "tipo_acero": "ASTM A572 Gr 50",
     "bp": {
-      "value": 253.0,
+      "value": 270,
       "unit": "mm"
     },
     "tp": {
@@ -39,7 +35,7 @@
       "unit": "mm"
     },
     "pb": {
-      "value": 94.996,
+      "value": 95,
       "unit": "mm"
     },
     "pfo": {
@@ -54,13 +50,13 @@
   "rigidizador": {
     "tipo_acero": "ASTM A572 Gr 50",
     "tr": {
-      "value": 12.7,
+      "value": 15.9,
       "unit": "mm"
     }
   },
   "pernos": {
     "g": {
-      "value": 152.4,
+      "value": 140,
       "unit": "mm"
     },
     "tipo_apriete": "pretensioned",
@@ -74,7 +70,7 @@
     },
     "bolt_fabrication_standard": "ASTM A490",
     "bolt_description": "Grupo 150",
-    "bolt_shape": "P1-1/8\"X1-3/4\"",
+    "bolt_shape": "P1\"X3\"",
     "bolt_thread_condition": "N"
   },
   "soldaduras": {
@@ -85,10 +81,6 @@
     "weld_1": {
       "description": "Rigidizador con end plate",
       "weld_type": "CJP",
-      "length": {
-        "value": 190.0,
-        "unit": "mm"
-      },
       "size": {
         "value": 9.525,
         "unit": "mm"
@@ -98,10 +90,6 @@
     "weld_2": {
       "description": "Viga con rigidizador",
       "weld_type": "CJP",
-      "length": {
-        "value": 190.0,
-        "unit": "mm"
-      },
       "size": {
         "value": 9.525,
         "unit": "mm"
@@ -116,6 +104,12 @@
         "unit": "mm"
       },
       "nl": 2
+    }
+  },
+  "loads": {
+    "pu": {
+      "value": 0.0,
+      "unit": "kN"
     }
   }
 }

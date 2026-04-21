@@ -15,10 +15,6 @@
       "value": 1000.0,
       "unit": "mm"
     },
-    "pu": {
-      "value": 0.0,
-      "unit": "kN"
-    },
     "v_gravity": {
       "value": 44.482,
       "unit": "kN"
@@ -74,7 +70,7 @@
     },
     "bolt_fabrication_standard": "ASTM A490",
     "bolt_description": "Grupo 150",
-    "bolt_shape": "P1-1/8\"X1-3/4\"",
+    "bolt_shape": "P1\"X3\"",
     "bolt_thread_condition": "N"
   },
   "soldaduras": {
@@ -85,10 +81,6 @@
     "weld_1": {
       "description": "Rigidizador con end plate",
       "weld_type": "CJP",
-      "length": {
-        "value": 190.0,
-        "unit": "mm"
-      },
       "size": {
         "value": 9.525,
         "unit": "mm"
@@ -98,10 +90,6 @@
     "weld_2": {
       "description": "Viga con rigidizador",
       "weld_type": "CJP",
-      "length": {
-        "value": 190.0,
-        "unit": "mm"
-      },
       "size": {
         "value": 9.525,
         "unit": "mm"
@@ -116,6 +104,12 @@
         "unit": "mm"
       },
       "nl": 2
+    }
+  },
+  "loads": {
+    "pu": {
+      "value": 0.0,
+      "unit": "kN"
     }
   }
 }

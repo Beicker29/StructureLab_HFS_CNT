@@ -11,7 +11,7 @@ from steel_connections.models.units import UnitSystem
 def test_bueep_rule_set_runs_without_errors(bueep_4e_payload: dict) -> None:
     result = run_case_payload(bueep_4e_payload)
     assert result.global_status == GlobalStatus.PASS
-    assert len(result.checks) == 12
+    assert len(result.checks) == 13
     assert all(check.status == CheckStatus.PASS for check in result.checks)
 
 def test_bueep_missing_de_fails_hard(bueep_4e_payload: dict) -> None:
@@ -574,4 +574,4 @@ def test_grouped_geometry_payload_is_supported(bueep_4e_payload: dict) -> None:
 
     result = run_case_payload(bueep_4e_payload)
     assert result.global_status == GlobalStatus.PASS
-    assert len(result.checks) == 12
+    assert len(result.checks) == 13

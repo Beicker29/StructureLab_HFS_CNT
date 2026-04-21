@@ -90,6 +90,14 @@ def _chapter6_common_steps(connection_type: str) -> list[RuleBinding]:
             evaluator=chapter_06_end_plate.run_step4_probable_moment_face_column,
         ),
         _bind(
+            rule_id=f"AISC358.06.7.{connection_type}.step12_1_1_column_flange_local_bending",
+            name=f"{connection_type} Step 12.1.1 column flange local bending (LFB)",
+            clause="Chapter 6 / Section 6.7.2 + Eq. (6.7-13)",
+            page="9.2-25",
+            connection_type=connection_type,
+            evaluator=chapter_06_end_plate.run_column_step1_flange_yielding,
+        ),
+        _bind(
             rule_id=f"AISC358.06.7.{connection_type}.step6_1_bolt_tension_rupture",
             name=f"{connection_type} Step 6.1 bolt tension rupture capacity",
             clause="Chapter 6 / Section 6.7.1 Step 6.1 + AISC 360-22 J3.7",

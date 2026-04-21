@@ -19,7 +19,8 @@ Comparacion directa de valor calculado contra limite normativo (sin formato DCR)
 - Formula: `Lpz = min(d, 3bf)`
 - Candidato A (d): `607 mm`
 - Candidato B (3bf): `684 mm`
-- Longitud zona protegida requerida: `607 mm`
+- Alcance: `aplica para viga derecha`
+- Longitud zona protegida viga derecha: `607 mm`
 
 ### Nota tecnica - End-plate connection location on column
 
@@ -37,35 +38,27 @@ Comparacion directa de valor calculado contra limite normativo (sin formato DCR)
 - Candidato B (2*pfo + 2*de): `220 mm`
 - Valor derivado: `827 mm`
 
-### Nota tecnica - Distancias verticales h1, h2, h3 y h4 para trazabilidad geometrica
+### Nota tecnica - Geometria end-plate de viga a derecha
 
 - Ambito: `END_PLATE`
-- Clausula: `Section 6.3`
-- Requisito: `h1, h2, h3 y h4 medidos desde la mitad del espesor del ala inferior de la viga`
-- Formula: `h1=d-0.5tf+pso+pb; h2=d-0.5tf+pso; h3=d-1.5tf-psi; h4=d-1.5tf-psi-pb`
-- h1: `743.35 mm`
-- h2: `648.35 mm`
-- h3: `529.65 mm`
-- h4: `434.65 mm`
-
-### Nota tecnica - Diametro estandar de perforacion (dh) para pernos en end plate
-
-- Ambito: `END_PLATE`
-- Clausula: `AISC 360-22 Table J3.3`
-- Requisito: `dh segun tabla de agujero estandar: d+1/16 (hasta 7/8 in); d+1/8 (>=1 in)`
-- Formula: `dh = d + 1/16 in (db<=7/8 in) else dh = d + 1/8 in`
-- db (diametro perno): `28.57 mm`
-- dh (agujero estandar): `31.75 mm`
-- Incremento aplicado (in): `0.12`
+- Clausula: `Section 6.3 + AISC 360-22 Table J3.3`
+- Requisito: `h1_vgder, h2_vgder, h3_vgder, h4_vgder y dh_vgder para trazabilidad geometrica`
+- Formula: `h1=d-0.5tf+pso+pb; h2=d-0.5tf+pso; h3=d-1.5tf-psi; h4=d-1.5tf-psi-pb; dh=d+1/16 in (db<=7/8 in) else dh=d+1/8 in`
+- h1_vgder: `743.35 mm`
+- h2_vgder: `648.35 mm`
+- h3_vgder: `529.65 mm`
+- h4_vgder: `434.65 mm`
+- dh_vgder: `31.75 mm`
 
 ### Nota tecnica - Derived end-plate stiffener geometry and detailing edge requirement
 
 - Ambito: `END_PLATE_STIFFENER`
 - Clausula: `Section 6.3`
-- Requisito: `hst = pfo + de; Lst = hst/tan(30 deg); edge detailing >= 25 mm`
+- Requisito: `hst = pfo + de; Lst = hst/tan(30 deg); clip_st (Cst) = 25 mm; edge detailing >= 25 mm`
 - Formula: `hst = pfo + de; Lst = hst / tan(30 deg)`
 - stiffener_height (hst): `110 mm`
 - stiffener_widht(Lst): `190.53 mm`
+- clip_st (Cst): `25 mm`
 - edge detailing: `25 mm`
 
 ### Nota tecnica - Requisitos de soldadura entre ala de viga y placa de extremo
@@ -327,8 +320,6 @@ Calculo de momento probable segun Eq. (2.4-1) y Eq. (2.4-2), usando `Ze = Zx` de
 - Ze (catalogo): `3280000 mm3`
 - Cpr: `1.15`
 - Mpr calculado: `1434.18 kN-m`
-- Mpr de comparacion: `1434.18 kN-m`
-- Resultado: `PASS`
 
 ## Paso 3 - Distancia De Rotula Plastica Desde La Cara De Columna (Sh)
 
@@ -341,7 +332,6 @@ Para 4E: `Sh = min(d/2, 3bf)`. Para 4ES/8ES: `Sh = Lst + tp`.
 - Lst (si aplica): `190.53 mm`
 - tp (si aplica): `25.4 mm`
 - Sh calculado: `303.5 mm`
-- Resultado: `PASS`
 
 ## Paso 4 - Cortante Probable En Rotula Plastica (Vhmax, Vhmin)
 
@@ -359,7 +349,6 @@ Calculo segun Eq. (2.4-3): `Vhmax = 2*Mpr/Lh + Vgravity` y `Vhmin = 2*Mpr/Lh - V
 - Vh.dermax: `515.01 kN`
 - Vh.dermin: `426.05 kN`
 - Vhmax gobernante: `515.01 kN`
-- Resultado: `PASS`
 
 ## Paso 5 - Momento Probable En Cara De Columna (Mfmax, Mfmin)
 
@@ -367,6 +356,7 @@ Calculo segun Eq. (2.4-4): `Mfmax = Mpr + Vhmax*Sh` y `Mfmin = Mpr + Vhmin*Sh` (
 
 - Clausula: `Chapter 6 / Section 6.7.1 Step 5 + Eq. (2.4-4)`
 - Ecuacion: `Mfmax.der = Mpr + Vhmax.der*Sh; Mfmin.der = Mpr + Vhmin.der*Sh`
+- Definicion para diseno: `Mf = Mfmax gobernante`
 - Configuracion de vigas: `right_only`
 - Lado gobernante Mfmax: `der`
 - Fuente Mfmax seleccionado: `loads.probable_moment_column_face (legacy)`
@@ -376,8 +366,7 @@ Calculo segun Eq. (2.4-4): `Mfmax = Mpr + Vhmax*Sh` y `Mfmin = Mpr + Vhmin*Sh` (
 - Vh.dermin (intermedio): `426.05 kN`
 - Mf.dermax: `1590.49 kN-m`
 - Mf.dermin: `1563.49 kN-m`
-- Mfmax gobernante: `1590.49 kN-m`
-- Resultado: `PASS`
+- Mf (adoptado) = Mfmax gobernante: `1590.49 kN-m`
 
 ## Paso 6 - Revision De Resistencia Pernos
 
@@ -498,3 +487,25 @@ Calculo segun Eq. (2.4-4): `Mfmax = Mpr + Vhmax*Sh` y `Mfmin = Mpr + Vhmin*Sh` (
 - Tipo de soldadura viga-end_plate: `CJP`
 - CJP: `Cumple`
 - Resultado: `Cumple`
+
+## Paso 12 - Revision de resistencia de la aleta de la columna
+
+### 12.1. Revision de capacidad a flexion
+
+#### 12.1.1 ELR # 1: Flexion local de la aleta (LFB) (AISC 358-22 6.7.2)
+
+- Clausula: `Chapter 6 / Section 6.7.2 + Eq. (6.7-13)`
+- M_ucf: `677.91 kN-m`
+- phi usado: `1`
+- Condicion aplicable: `hay platinas de continuidad`
+- s: `98.18 mm`
+- Y_cs usado: `6350 mm`
+- Ecuacion: `phiM_ncf = phi((t_cf^2 * f_yc * Y_cs)/1.11)`
+- phiM_ncf: `3221.31 kN-m`
+- Ecuacion DCR: `DCR_cfm = M_ucf/(phiM_ncf)`
+- DCR_cfm: `0.21`
+- Resultado: `Cumple`
+
+Donde:
+- `Y_c`: no hay platinas de continuidad -> Tablas 6.5 y 6.6 (unstiffened column flange).
+- `Y_cs`: hay platinas de continuidad -> Tablas 6.5 y 6.6 (stiffened column flange).

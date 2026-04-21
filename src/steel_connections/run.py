@@ -18,6 +18,21 @@ from steel_connections.reporting.geometry_artifact import write_connection_geome
 from steel_connections.reporting.markdown_writer import write_memory_markdown
 
 
+def _print_errors_to_terminal(result) -> None:
+    if not result.errors:
+        return
+    print("ERRORS:")
+    for idx, error in enumerate(result.errors, start=1):
+        print(f"  [{idx}] code={error.error_code.value} stage={error.stage.value}")
+        if error.rule_id:
+            print(f"      rule_id: {error.rule_id}")
+        if error.source_document:
+            print(f"      source: {error.source_document}")
+        if error.missing_fields:
+            print(f"      missing_fields: {', '.join(error.missing_fields)}")
+        print(f"      message: {error.message}")
+
+
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="python -m src.steel_connections.run",
@@ -62,6 +77,8 @@ def main(argv: list[str] | None = None) -> int:
     print(f"MEMORY FILE: {memory_path}")
     if geometry_path is not None:
         print(f"GEOMETRY FILE: {geometry_path}")
+    if result.global_status == GlobalStatus.ERROR:
+        _print_errors_to_terminal(result)
 
     if result.global_status == GlobalStatus.PASS:
         return 0

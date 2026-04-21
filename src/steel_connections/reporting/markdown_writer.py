@@ -2,7 +2,17 @@
 
 from pathlib import Path
 
+from steel_connections.codes.engineering.flexure import (
+    compute_column_flange_local_bending_strength,
+    compute_dcr,
+)
+from steel_connections.codes.engineering.weld import (
+    WeldFillet,
+    compute_effective_web_weld_length,
+    compute_plate_tension_demand_from_yielding,
+)
 from steel_connections.models.output import DetailedRunResult
+from steel_connections.models.units import Quantity, UnitSystem
 
 
 def _format_decimal(value: float) -> str:
@@ -53,6 +63,47 @@ def _format_scalar_with_unit(value: object, unit: str) -> str:
     return f"{_format_decimal(numeric)} {rendered_unit}"
 
 
+def _as_quantity(value: object) -> Quantity | None:
+    if not isinstance(value, dict):
+        return None
+    raw = value.get("value")
+    unit = value.get("unit")
+    if raw is None or unit is None:
+        return None
+    try:
+        return Quantity(value=float(raw), unit=str(unit))
+    except (TypeError, ValueError):
+        return None
+
+
+def _infer_unit_system_from_quantity(value: object) -> UnitSystem | None:
+    quantity = _as_quantity(value)
+    if quantity is None:
+        return None
+    normalized = quantity.unit.strip().lower()
+    if normalized in {"mm", "mpa", "kn", "kn-mm", "kn-m"}:
+        return UnitSystem.SI
+    if normalized in {"in", "ksi", "kip", "kip-in", "kip-ft"}:
+        return UnitSystem.US
+    return None
+
+
+def _convert_moment_to_unit(moment: Quantity, target_unit: str) -> Quantity | None:
+    source = moment.unit.strip().lower()
+    target = target_unit.strip().lower()
+    if source == target:
+        return moment
+    if source == "kn-m" and target == "kn-mm":
+        return Quantity(value=moment.value * 1000.0, unit="kN-mm")
+    if source == "kn-mm" and target == "kn-m":
+        return Quantity(value=moment.value / 1000.0, unit="kN-m")
+    if source == "kip-ft" and target == "kip-in":
+        return Quantity(value=moment.value * 12.0, unit="kip-in")
+    if source == "kip-in" and target == "kip-ft":
+        return Quantity(value=moment.value / 12.0, unit="kip-ft")
+    return None
+
+
 def _quantity_to_mm(value: object) -> float | None:
     if not isinstance(value, dict):
         return None
@@ -82,6 +133,22 @@ def _stress_to_mpa(value: object) -> float | None:
         return numeric
     if unit == "ksi":
         return numeric * 6.894757293168361
+    return None
+
+
+def _stress_to_ksi(value: object) -> float | None:
+    if not isinstance(value, dict):
+        return None
+    raw = value.get("value")
+    unit = str(value.get("unit", "")).strip().lower()
+    try:
+        numeric = float(raw)
+    except (TypeError, ValueError):
+        return None
+    if unit == "ksi":
+        return numeric
+    if unit == "mpa":
+        return numeric / 6.894757293168361
     return None
 
 
@@ -449,6 +516,33 @@ def _collect_step_10_1_1_beam_shear_yielding(result: DetailedRunResult) -> dict 
     return None
 
 
+def _collect_step_12_1_1_column_flange_local_bending(result: DetailedRunResult) -> dict | None:
+    for check in result.checks:
+        rule_id = str(check.rule_id).lower()
+        clause = str(check.clause).lower()
+        name = str(check.name).lower()
+        if (
+            ".column_step1_flange_yielding" not in rule_id
+            and "flange_yielding" not in rule_id
+            and "eq. 6.7-13" not in clause
+            and "column flange" not in name
+        ):
+            continue
+        return {
+            "rule_id": check.rule_id,
+            "clause": check.clause,
+            "status": check.status.value,
+            "demand": check.demand.model_dump(),
+            "capacity": check.capacity.model_dump(),
+            "inputs": check.calculation_memory.inputs,
+            "intermediates": check.calculation_memory.intermediates,
+            "design_factors": check.calculation_memory.design_factors,
+            "equation": check.calculation_memory.equation,
+            "dcr": check.dcr,
+        }
+    return None
+
+
 def _render_step_1_notes(notes: list[dict]) -> str:
     lines: list[str] = []
     for item in notes:
@@ -467,11 +561,13 @@ def _render_step_1_notes(notes: list[dict]) -> str:
             formula = _format_text(item.get("formula"))
             hst = _format_quantity(item.get("candidate_a"))
             lst = _format_quantity(item.get("candidate_b"))
+            clip_st = _format_quantity(item.get("clip_st"))
             edge = _format_quantity(item.get("derived_value"))
             if formula != "n/a":
                 lines.append(f"- Formula: `{formula}`")
             lines.append(f"- stiffener_height (hst): `{hst}`")
             lines.append(f"- stiffener_widht(Lst): `{lst}`")
+            lines.append(f"- clip_st (Cst): `{clip_st}`")
             lines.append(f"- edge detailing: `{edge}`")
             lines.append("")
             continue
@@ -487,6 +583,38 @@ def _render_step_1_notes(notes: list[dict]) -> str:
             lines.append(f"- h2: `{h2}`")
             lines.append(f"- h3: `{h3}`")
             lines.append(f"- h4: `{h4}`")
+            lines.append("")
+            continue
+        if note_id == "section_6_3.end_plate_geometry_vgder_note":
+            formula = _format_text(item.get("formula"))
+            h1 = _format_quantity(item.get("h1_vgder"))
+            h2 = _format_quantity(item.get("h2_vgder"))
+            h3 = _format_quantity(item.get("h3_vgder"))
+            h4 = _format_quantity(item.get("h4_vgder"))
+            dh = _format_quantity(item.get("dh_vgder"))
+            if formula != "n/a":
+                lines.append(f"- Formula: `{formula}`")
+            lines.append(f"- h1_vgder: `{h1}`")
+            lines.append(f"- h2_vgder: `{h2}`")
+            lines.append(f"- h3_vgder: `{h3}`")
+            lines.append(f"- h4_vgder: `{h4}`")
+            lines.append(f"- dh_vgder: `{dh}`")
+            lines.append("")
+            continue
+        if note_id == "section_6_3.end_plate_geometry_vgizq_note":
+            formula = _format_text(item.get("formula"))
+            h1 = _format_quantity(item.get("h1_vgizq"))
+            h2 = _format_quantity(item.get("h2_vgizq"))
+            h3 = _format_quantity(item.get("h3_vgizq"))
+            h4 = _format_quantity(item.get("h4_vgizq"))
+            dh = _format_quantity(item.get("dh_vgizq"))
+            if formula != "n/a":
+                lines.append(f"- Formula: `{formula}`")
+            lines.append(f"- h1_vgizq: `{h1}`")
+            lines.append(f"- h2_vgizq: `{h2}`")
+            lines.append(f"- h3_vgizq: `{h3}`")
+            lines.append(f"- h4_vgizq: `{h4}`")
+            lines.append(f"- dh_vgizq: `{dh}`")
             lines.append("")
             continue
         if note_id == "section_6_7.end_plate_standard_hole_diameter_note":
@@ -508,13 +636,27 @@ def _render_step_1_notes(notes: list[dict]) -> str:
             candidate_b_label = _format_text(item.get("candidate_b_label"))
             candidate_b = _format_quantity(item.get("candidate_b"))
             protected_zone = _format_quantity(item.get("protected_zone_length"))
+            protected_zone_der = _format_quantity(item.get("protected_zone_length_vgder"))
+            protected_zone_izq = _format_quantity(item.get("protected_zone_length_vgizq"))
             derived_value = _format_quantity(item.get("derived_value"))
             lines.append(f"- Formula: `{formula}`")
             lines.append(f"- Candidato A ({candidate_a_label}): `{candidate_a}`")
             lines.append(f"- Candidato B ({candidate_b_label}): `{candidate_b}`")
+            if note_id == "section_2_3_4.protected_zone_length":
+                side_mode = _format_text(item.get("beam_connection_sides")).lower()
+                if side_mode == "both_sides":
+                    lines.append("- Alcance: `aplica para viga derecha e izquierda`")
+                elif side_mode == "left_only":
+                    lines.append("- Alcance: `aplica para viga izquierda`")
+                else:
+                    lines.append("- Alcance: `aplica para viga derecha`")
+            if protected_zone_der != "n/a":
+                lines.append(f"- Longitud zona protegida viga derecha: `{protected_zone_der}`")
+            if protected_zone_izq != "n/a":
+                lines.append(f"- Longitud zona protegida viga izquierda: `{protected_zone_izq}`")
             if derived_value != "n/a":
                 lines.append(f"- Valor derivado: `{derived_value}`")
-            elif protected_zone != "n/a":
+            elif protected_zone != "n/a" and protected_zone_der == "n/a" and protected_zone_izq == "n/a":
                 lines.append(f"- Longitud zona protegida requerida: `{protected_zone}`")
         lines.append("")
     return "\n".join(lines)
@@ -536,8 +678,6 @@ def _render_step_2_mpr(step_2: dict) -> str:
         f"- Ze (catalogo): `{_format_quantity(inputs.get('ze'))}`",
         f"- Cpr: `{_format_text(inter.get('cpr'))}`",
         f"- Mpr calculado: `{_format_quantity(step_2.get('demand'))}`",
-        f"- Mpr de comparacion: `{_format_quantity(step_2.get('capacity'))}`",
-        f"- Resultado: `{_format_text(step_2.get('status'))}`",
         "",
     ]
     return "\n".join(lines)
@@ -557,7 +697,6 @@ def _render_step_3_sh(step_3: dict) -> str:
         f"- Lst (si aplica): `{_format_quantity(inputs.get('stiffener_length'))}`",
         f"- tp (si aplica): `{_format_quantity(inputs.get('end_plate_thickness'))}`",
         f"- Sh calculado: `{_format_quantity(step_3.get('demand'))}`",
-        f"- Resultado: `{_format_text(step_3.get('status'))}`",
         "",
     ]
     return "\n".join(lines)
@@ -595,7 +734,6 @@ def _render_step_4_vh(step_4: dict) -> str:
     lines.extend(
         [
             f"- Vhmax gobernante: `{_format_quantity(step_4.get('demand'))}`",
-        f"- Resultado: `{_format_text(step_4.get('status'))}`",
         "",
         ]
     )
@@ -615,6 +753,7 @@ def _render_step_5_mf(step_5: dict) -> str:
         "",
         f"- Clausula: `{_format_text(step_5.get('clause'))}`",
         "- Ecuacion: `Mfmax.der = Mpr + Vhmax.der*Sh; Mfmin.der = Mpr + Vhmin.der*Sh`",
+        "- Definicion para diseno: `Mf = Mfmax gobernante`",
         f"- Configuracion de vigas: `{beam_connection_sides}`",
         f"- Lado gobernante Mfmax: `{_format_text(inputs.get('governing_side_mfmax'))}`",
         f"- Fuente Mfmax seleccionado: `{_format_text(inputs.get('selected_mfmax_source'))}`",
@@ -632,8 +771,7 @@ def _render_step_5_mf(step_5: dict) -> str:
         )
     lines.extend(
         [
-        f"- Mfmax gobernante: `{_format_quantity(step_5.get('demand'))}`",
-        f"- Resultado: `{_format_text(step_5.get('status'))}`",
+        f"- Mf (adoptado) = Mfmax gobernante: `{_format_quantity(step_5.get('demand'))}`",
         "",
         ]
     )
@@ -850,7 +988,10 @@ def _render_step_8_stiffener_weld(step_8_1_1: dict | None) -> str:
             f"- Pust: `{_format_quantity(step_8_1_1.get('demand'))}`",
             f"- phiRnst: `{_format_quantity(step_8_1_1.get('capacity'))}`",
             f"- DCRst,w1,t: `{_format_text(step_8_1_1.get('dcr'))}`",
-            f"- l_st (longitud soldadura): `{_format_quantity(inputs.get('lst'))}`",
+            "- l_st (longitud soldadura calculada): `l_st = hst - clip_st - 2*w_st`",
+            f"- l_st: `{_format_quantity(inputs.get('lst'))}`",
+            f"- clip_st: `{_format_quantity(inputs.get('clip_st'))}`",
+            f"- hst: `{_format_quantity(inputs.get('hst'))}`",
             f"- w_st (espesor soldadura): `{_format_quantity(inputs.get('wst'))}`",
             f"- n_l (lineas soldadura): `{_format_text(inputs.get('nl'))}`",
             f"- Resultado: `{_format_text(step_8_1_1.get('status'))}`",
@@ -892,7 +1033,10 @@ def _render_step_9_stiffener_beam_weld(step_9_1_1: dict | None) -> str:
             f"- Vust,w2: `{_format_quantity(step_9_1_1.get('demand'))}`",
             f"- phiVnst,w2: `{_format_quantity(step_9_1_1.get('capacity'))}`",
             f"- DCRst,w2,v: `{_format_text(step_9_1_1.get('dcr'))}`",
-            f"- l_st,w2 (longitud soldadura): `{_format_quantity(inputs.get('lst_w2'))}`",
+            "- l_st,w2 (longitud soldadura calculada): `l_st,w2 = Lst - clip_st - 2*w_st`",
+            f"- l_st,w2: `{_format_quantity(inputs.get('lst_w2'))}`",
+            f"- Lst: `{_format_quantity(inputs.get('lst'))}`",
+            f"- clip_st: `{_format_quantity(inputs.get('clip_st'))}`",
             f"- w_st,2 (espesor soldadura): `{_format_quantity(inputs.get('wst2'))}`",
             f"- n_l,w2 (lineas soldadura): `{_format_text(inputs.get('nl_w2'))}`",
             f"- Resultado: `{_format_text(step_9_1_1.get('status'))}`",
@@ -940,13 +1084,16 @@ def _render_step_11_end_plate_beam_web_weld_tension(step_11_ctx: dict | None, st
     weld_type_raw = step_11_inputs.get("end_plate_beam_web_weld_type")
     weld_thickness_twe = step_11_inputs.get("end_plate_beam_web_weld_thickness_twe")
     weld_type = _normalize_weld_type_step11(weld_type_raw)
-    pfi_mm = _quantity_to_mm(step_11_inputs.get("edge_pfi"))
-    pb_mm = _quantity_to_mm(step_11_inputs.get("pitch_pb"))
-    twe_mm = _quantity_to_mm(weld_thickness_twe)
-    fybm_mpa = _stress_to_mpa(step_10_inputs.get("fybm"))
-    tw_bm_mm = _quantity_to_mm(step_10_inputs.get("tw_bm"))
-    fexx_mpa = _stress_to_mpa(step_11_inputs.get("weld_fexx"))
+    pfi_q = _as_quantity(step_11_inputs.get("edge_pfi"))
+    pb_q = _as_quantity(step_11_inputs.get("pitch_pb"))
+    twe_q = _as_quantity(weld_thickness_twe)
+    fybm_q = _as_quantity(step_10_inputs.get("fybm"))
+    tw_bm_q = _as_quantity(step_10_inputs.get("tw_bm"))
+    fexx_q = _as_quantity(step_11_inputs.get("weld_fexx"))
     nl_raw = step_11_inputs.get("end_plate_beam_web_weld_lines_nl")
+    unit_system = _infer_unit_system_from_quantity(step_11_inputs.get("edge_pfi"))
+    if unit_system is None:
+        unit_system = _infer_unit_system_from_quantity(step_10_inputs.get("tw_bm"))
     try:
         nl = int(nl_raw) if nl_raw is not None else None
     except (TypeError, ValueError):
@@ -955,22 +1102,44 @@ def _render_step_11_end_plate_beam_web_weld_tension(step_11_ctx: dict | None, st
         nl = None
     phi = 0.9
 
-    hwef_mm = None
-    puww3_kn = None
-    phi_pnww3_kn = None
+    hwef_q: Quantity | None = None
+    pu_q: Quantity | None = None
+    phi_pn_q: Quantity | None = None
     dcr_ww3p = None
-    if pfi_mm is not None and pb_mm is not None:
-        hwef_mm = pfi_mm + pb_mm + 150.0
-    if hwef_mm is not None and fybm_mpa is not None and tw_bm_mm is not None:
-        puww3_kn = fybm_mpa * tw_bm_mm * hwef_mm / 1000.0
-    if hwef_mm is not None and fexx_mpa is not None and twe_mm is not None and nl is not None:
-        phi_pnww3_kn = phi * nl * 0.6 * fexx_mpa * 0.707 * hwef_mm * twe_mm / 1000.0
-    if puww3_kn is not None and phi_pnww3_kn is not None and phi_pnww3_kn > 0.0:
-        dcr_ww3p = puww3_kn / phi_pnww3_kn
+    if unit_system is not None and pfi_q is not None and pb_q is not None:
+        hwef_q = compute_effective_web_weld_length(
+            pfi=pfi_q,
+            pb=pb_q,
+            unit_system=unit_system,
+        )["hwef"]
+    if unit_system is not None and hwef_q is not None and fybm_q is not None and tw_bm_q is not None:
+        pu_q = compute_plate_tension_demand_from_yielding(
+            fy=fybm_q,
+            thickness=tw_bm_q,
+            effective_length=hwef_q,
+            unit_system=unit_system,
+        )["pu"]
+    if (
+        unit_system is not None
+        and hwef_q is not None
+        and fexx_q is not None
+        and twe_q is not None
+        and nl is not None
+    ):
+        phi_pn_q = WeldFillet(
+            fexx=fexx_q,
+            weld_size=twe_q,
+            weld_length=hwef_q,
+            weld_lines=nl,
+            unit_system=unit_system,
+            phi=phi,
+        ).design_strength()["phi_rn"]
+    if pu_q is not None and phi_pn_q is not None and phi_pn_q.value > 0.0:
+        dcr_ww3p = compute_dcr(demand=pu_q, capacity=phi_pn_q)["dcr"]
 
-    hwef_text = f"{_format_decimal(hwef_mm)} mm" if hwef_mm is not None else "n/a"
-    puww3_text = f"{_format_decimal(puww3_kn)} kN" if puww3_kn is not None else "n/a"
-    phi_pnww3_text = f"{_format_decimal(phi_pnww3_kn)} kN" if phi_pnww3_kn is not None else "n/a"
+    hwef_text = _format_quantity(hwef_q.model_dump()) if hwef_q is not None else "n/a"
+    puww3_text = _format_quantity(pu_q.model_dump()) if pu_q is not None else "n/a"
+    phi_pnww3_text = _format_quantity(phi_pn_q.model_dump()) if phi_pn_q is not None else "n/a"
     dcr_text = _format_decimal(dcr_ww3p) if dcr_ww3p is not None else "n/a"
     twe_text = _format_quantity(weld_thickness_twe)
 
@@ -1020,6 +1189,100 @@ def _render_step_11_end_plate_beam_web_weld_tension(step_11_ctx: dict | None, st
             "",
         ]
     )
+    return "\n".join(lines)
+
+
+def _render_step_12_column_flange_local_bending(step_12_1_1: dict | None, step_11_ctx: dict | None) -> str:
+    inputs = step_12_1_1.get("inputs", {}) if isinstance(step_12_1_1, dict) else {}
+    capacity = step_12_1_1.get("capacity") if isinstance(step_12_1_1, dict) else None
+    design_factors = step_12_1_1.get("design_factors", {}) if isinstance(step_12_1_1, dict) else {}
+    prequal_inputs = step_11_ctx.get("inputs", {}) if isinstance(step_11_ctx, dict) else {}
+
+    tcp_mm = _quantity_to_mm(prequal_inputs.get("continuity_plate_thickness_tcp"))
+    enabled_raw = prequal_inputs.get("continuity_plate_enabled")
+    enabled_flag: bool | None = None
+    if isinstance(enabled_raw, bool):
+        enabled_flag = enabled_raw
+    elif isinstance(enabled_raw, str):
+        normalized = enabled_raw.strip().lower()
+        if normalized in {"true", "si", "sí", "yes", "1"}:
+            enabled_flag = True
+        elif normalized in {"false", "no", "0"}:
+            enabled_flag = False
+    has_continuity_plate = enabled_flag if enabled_flag is not None else (tcp_mm is not None and tcp_mm > 0.0)
+    bp_mm = _quantity_to_mm(prequal_inputs.get("end_plate_width_bp"))
+    g_mm = _quantity_to_mm(prequal_inputs.get("bolt_gage_g"))
+    s_mm = None
+    if bp_mm is not None and g_mm is not None and bp_mm > 0.0 and g_mm > 0.0:
+        s_mm = 0.5 * ((bp_mm * g_mm) ** 0.5)
+
+    tcf_q = _as_quantity(capacity)
+    yc_q = _as_quantity(inputs.get("yc"))
+    fyc_q = _as_quantity(inputs.get("column_fy"))
+    mf_q = _as_quantity(inputs.get("mf"))
+    unit_system = _infer_unit_system_from_quantity(capacity)
+    if unit_system is None:
+        unit_system = _infer_unit_system_from_quantity(inputs.get("column_fy"))
+    phi_input = design_factors.get("phi_d")
+    try:
+        phi = float(phi_input)
+    except (TypeError, ValueError):
+        phi = 1.0
+    phi_mn_q: Quantity | None = None
+    if unit_system is not None and tcf_q is not None and yc_q is not None and fyc_q is not None:
+        phi_mn_q = compute_column_flange_local_bending_strength(
+            t_cf=tcf_q,
+            f_yc=fyc_q,
+            y_parameter=yc_q,
+            phi=phi,
+            unit_system=unit_system,
+        )["phi_mn"]
+
+    mucf_q = None
+    if mf_q is not None and phi_mn_q is not None:
+        mucf_q = _convert_moment_to_unit(mf_q, phi_mn_q.unit)
+    dcr_cfm = None
+    if mucf_q is not None and phi_mn_q is not None:
+        try:
+            dcr_cfm = compute_dcr(demand=mucf_q, capacity=phi_mn_q)["dcr"]
+        except ValueError:
+            dcr_cfm = None
+
+    y_symbol = "Y_cs" if has_continuity_plate else "Y_c"
+    continuity_text = "hay platinas de continuidad" if has_continuity_plate else "no hay platinas de continuidad"
+    phi_mncf_text = _format_quantity(phi_mn_q.model_dump()) if phi_mn_q is not None else "n/a"
+
+    dcr_text = _format_decimal(dcr_cfm) if dcr_cfm is not None else "n/a"
+    if dcr_cfm is None:
+        result_line = "n/a"
+    else:
+        result_line = "Cumple" if dcr_cfm <= 1.0 else "No cumple"
+    clause_text = _format_text(step_12_1_1.get("clause")) if isinstance(step_12_1_1, dict) else "AISC 358-22 6.7.2"
+
+    lines = [
+        "## Paso 12 - Revision de resistencia de la aleta de la columna",
+        "",
+        "### 12.1. Revision de capacidad a flexion",
+        "",
+        "#### 12.1.1 ELR # 1: Flexion local de la aleta (LFB) (AISC 358-22 6.7.2)",
+        "",
+        f"- Clausula: `{clause_text}`",
+        f"- M_ucf: `{_format_quantity(inputs.get('mf'))}`",
+        f"- phi usado: `{_format_decimal(phi)}`",
+        f"- Condicion aplicable: `{continuity_text}`",
+        f"- s: `{_format_decimal(s_mm)} mm`" if s_mm is not None else "- s: `n/a`",
+        f"- {y_symbol} usado: `{_format_quantity(inputs.get('yc'))}`",
+        f"- Ecuacion: `phiM_ncf = phi((t_cf^2 * f_yc * {y_symbol})/1.11)`",
+        f"- phiM_ncf: `{phi_mncf_text}`",
+        "- Ecuacion DCR: `DCR_cfm = M_ucf/(phiM_ncf)`",
+        f"- DCR_cfm: `{dcr_text}`",
+        f"- Resultado: `{result_line}`",
+        "",
+        "Donde:",
+        "- `Y_c`: no hay platinas de continuidad -> Tablas 6.5 y 6.6 (unstiffened column flange).",
+        "- `Y_cs`: hay platinas de continuidad -> Tablas 6.5 y 6.6 (stiffened column flange).",
+        "",
+    ]
     return "\n".join(lines)
 
 
@@ -1447,6 +1710,7 @@ def render_memory_markdown(result: DetailedRunResult) -> str:
     step_9_1_1 = _collect_step_9_1_1_stiffener_beam_weld_shear_rupture(result)
     step_10_1_1 = _collect_step_10_1_1_beam_shear_yielding(result)
     step_11_ctx = _collect_step_11_web_weld_tension_context(result)
+    step_12_1_1 = _collect_step_12_1_1_column_flange_local_bending(result)
     content = [
         "# Memoria de Calculo",
         "",
@@ -1503,6 +1767,8 @@ def render_memory_markdown(result: DetailedRunResult) -> str:
         content.append(_render_step_10_beam_shear(step_10_1_1))
     if step_11_ctx is not None:
         content.append(_render_step_11_end_plate_beam_web_weld_tension(step_11_ctx, step_10_1_1))
+    if connection_family_normalized == "moment_prequalified":
+        content.append(_render_step_12_column_flange_local_bending(step_12_1_1, step_11_ctx))
     content.append("")
     return "\n".join(content)
 

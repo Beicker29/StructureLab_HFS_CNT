@@ -17,14 +17,18 @@ class DesignCodeContext(StrictModel):
 
 class SectionReferences(StrictModel):
     beam_shape: str
+    beam_shape_der: str | None = None
+    beam_shape_izq: str | None = None
     column_shape: str | None = None
 
-    @field_validator("beam_shape")
+    @field_validator("beam_shape", "beam_shape_der", "beam_shape_izq")
     @classmethod
-    def normalize_beam_shape(cls, value: str) -> str:
+    def normalize_beam_shape(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
         normalized = value.strip().upper()
         if not normalized:
-            raise ValueError("sections.beam_shape cannot be empty.")
+            raise ValueError("sections.beam_shape/beam_shape_der/beam_shape_izq cannot be empty.")
         return normalized
 
     @field_validator("column_shape")
@@ -103,6 +107,7 @@ class AISC358MomentGeometry(StrictModel):
     pfo: Quantity | None = None
     pfi: Quantity | None = None
     continuity_plate_thickness: Quantity | None = None
+    continuity_plate_enabled: bool | None = None
     continuity_plate_weld_type: str | None = None
     bolt_diameter: Quantity | None = None
     bolt_gage: Quantity | None = None
