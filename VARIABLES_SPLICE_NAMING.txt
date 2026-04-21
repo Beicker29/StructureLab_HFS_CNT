@@ -1,0 +1,161 @@
+SPLICE - LISTA DE VARIABLES (NAMING SUGERIDO)
+=============================================
+
+Objetivo:
+- Mantener el estilo del repo usado en BUEEP/BSEEP:
+  snake_case + bloques sections/materials/geometry/loads/design_factors/procedure
+  + sufijos por grupo (_1/_2) y por lado (_right/_left) cuando aplique.
+
+
+1) REGLAS DE NAMING
+-------------------
+- Inputs del modelo: snake_case en ingles.
+- Grupo de pernos del alma: sufijo _1.
+- Grupo de pernos de ala: sufijo _2.
+- Cargas por extremo de viga: _right / _left.
+- Variables derivadas de reporte: permitir notacion tecnica con punto (ej. db.1, dh.2)
+  solo en memory/reporting, no en JSON de input.
+
+
+2) ESTRUCTURA CANONICA DE INPUT
+-------------------------------
+- sections
+- materials
+- geometry
+- loads
+- design_factors
+- procedure
+
+
+3) LISTA SUGERIDA POR BLOQUE
+----------------------------
+
+[sections]
+- beam_left_shape
+- beam_right_shape
+
+[materials]
+- beam_left_steel_type
+- beam_right_steel_type
+- plate_steel_type
+- bolt_shape
+- bolt_shape_web
+- bolt_shape_flange
+- bolt_thread_condition
+- bolt_fabrication_standard
+- bolt_fabrication_standard_web
+- bolt_fabrication_standard_flange
+- bolt_description
+- weld_fexx
+
+[geometry]
+- splice_gap
+- beam_length_tolerance
+- beam_surface_condition
+- beam_atmospheric_condition
+- web_plate_thickness
+- web_plate_surface_condition
+- web_plate_atmospheric_condition
+- flange_plate_top_thickness
+- flange_plate_bottom_thickness
+- flange_plate_surface_condition
+- flange_plate_atmospheric_condition
+
+[geometry - pernos grupo 1 (alma)]
+- web_bolt_lines
+- web_bolt_rows_per_side
+- web_bolt_gage
+- web_bolt_pitch
+- web_bolt_edge_distance_x1
+- web_bolt_edge_distance_x2
+- web_bolt_edge_distance_y1
+- web_bolt_edge_distance_y2
+- web_bolt_edge_distance_y3
+- web_bolt_tightening_type
+
+[geometry - pernos grupo 2 (ala)]
+- flange_bolt_lines
+- flange_bolt_rows_per_side
+- flange_bolt_gage
+- flange_bolt_pitch
+- flange_bolt_pitch_secondary
+- flange_bolt_edge_distance_x1
+- flange_bolt_edge_distance_x2
+- flange_bolt_edge_distance_z1
+- flange_bolt_edge_distance_z2
+- flange_bolt_tightening_type
+
+[loads]
+- moment_right_end
+- moment_left_end
+- shear_right_end
+- shear_left_end
+- axial_right_end
+- axial_left_end
+- eccentricity_ey
+
+[design_factors]
+- phi_bolt_tension
+- phi_bolt_shear
+- phi_plate_yielding
+- phi_plate_rupture
+- phi_block_shear
+- phi_slip_critical
+
+[procedure]
+- procedure.icr.method
+- procedure.icr.tolerance_1
+- procedure.icr.max_iterations_1
+- procedure.icr.rult_1_kip
+
+
+4) MAPEOS DE NOTACION TECNICA (MEMORY) -> INPUT CANONICO
+---------------------------------------------------------
+[viga]
+- alpha -> geometry.splice_gap
+- Tlvg -> geometry.beam_length_tolerance
+
+[pernos 1]
+- nb1_x -> geometry.web_bolt_lines
+- nb1_y -> geometry.web_bolt_rows_per_side
+- S1_x -> geometry.web_bolt_gage
+- S1_y -> geometry.web_bolt_pitch
+- Le1_x1 -> geometry.web_bolt_edge_distance_x1
+- Le1_x2 -> geometry.web_bolt_edge_distance_x2
+- Le1_y1 -> geometry.web_bolt_edge_distance_y1
+- Le1_y2 -> geometry.web_bolt_edge_distance_y2
+- Le1_y3 -> geometry.web_bolt_edge_distance_y3
+- db.1 -> catalogo a partir de materials.bolt_shape_web (o bolt_shape)
+- dh.1 -> derivada por tipo de agujero + db.1
+
+[pernos 2]
+- nb2_x -> geometry.flange_bolt_lines
+- nb2_z -> geometry.flange_bolt_rows_per_side
+- S2_x -> geometry.flange_bolt_gage
+- S2_z1 -> geometry.flange_bolt_pitch
+- S2_z2 -> geometry.flange_bolt_pitch_secondary
+- Le2_x1 -> geometry.flange_bolt_edge_distance_x1
+- Le2_x2 -> geometry.flange_bolt_edge_distance_x2
+- Le2_z1 -> geometry.flange_bolt_edge_distance_z1
+- Le2_z2 -> geometry.flange_bolt_edge_distance_z2
+- db.2 -> catalogo a partir de materials.bolt_shape_flange (o bolt_shape)
+- dh.2 -> derivada por tipo de agujero + db.2
+
+
+5) VARIABLES DERIVADAS RECOMENDADAS (NO INPUT)
+----------------------------------------------
+- hp1 = Le1_y1 + Le1_y2 + (nb1_y - 1)*S1_y
+- bp1 = Le1_x1 + Le1_x2 + alpha + 2*(nb1_x - 1)*S1_x
+- bp2 = Le2_z2 + Le2_z1 + S2_z2 + (nb2_z - 2)*S2_z1
+- lp2 = 2*(Le2_x1 + Le2_x2) + alpha + 2*(nb2_x - 1)*S2_x + alpha
+- ex_splice = alpha + 2*Le1_x1 + (nb1_x - 1)*S1_x
+- ey_splice = loads.eccentricity_ey (default 0)
+- mz_splice = Vy*ex_splice - Vx*ey_splice
+
+
+6) NOMBRES CORTOS SUGERIDOS EN REPORTES
+---------------------------------------
+- Grupo 1: db.1, dh.1, Ab.1, Fnt.1, Fnv.1, Tbolt_min.1
+- Grupo 2: db.2, dh.2, Ab.2, Fnt.2, Fnv.2, Tbolt_min.2
+- DCRs: DCRb_t_1, DCRb_v_1, DCRb_t_2, DCRb_v_2
+

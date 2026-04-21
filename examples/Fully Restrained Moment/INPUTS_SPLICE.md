@@ -204,3 +204,15 @@ Para el `Punto 2` de revision en `Pernos 1`, se puede seleccionar el metodo de a
 - `procedure.icr.max_iterations_1`: maximo de iteraciones aceptadas para ICR.
 - `procedure.icr.rult_1_kip`: requerido solo cuando el metodo seleccionado es ICR.
   - Unidad obligatoria: `kip`.
+
+## 9) Definicion de excentricidad en splice (Pernos 1 / Punto 2)
+
+Para la conexion `bbmb_splice`, el motor usa:
+
+- `ex = sep + 2*Le1.x1 + (nb1.x-1)*S1.x`
+- `ey = loads.eccentricity_ey` (si no se entrega, `ey = 0`)
+- `Mz = Vy*ex - Vx*ey`
+
+Esto deja explicita la convencion de splice:
+- la excentricidad relevante del punto de aplicacion se toma en `X`,
+- mientras que el brazo en `Y` queda controlado por el input `loads.eccentricity_ey`.

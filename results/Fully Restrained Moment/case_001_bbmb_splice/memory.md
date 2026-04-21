@@ -13,14 +13,14 @@
 ### Chequeo 1.1 - Distancia minima a borde Le1_x1 para agujero estandar (`Le1_x1`)
 
 - Ambito: `VIGA`
-- Verificacion: `Le1_x1 >= max(Le_min, 5*(8*db.1+2mm)); 35 mm >= 35 mm`
+- Verificacion: `Le1_x1 >= max(Le_min, 5*(8*db.1+2mm)); 25.4 mm >= 35 mm`
 - Clausula: `AISC 360-22 Tabla J3.4 + Recomendacion del Manual AISC (metrico)`
-- Resultado: 🟢 Cumple
+- Resultado: 🔴 No cumple
 
 ### Chequeo 1.2 - Distancia maxima a borde Le1_x1 (`Le1_x1`)
 
 - Ambito: `VIGA`
-- Verificacion: `Le1_x1 <= Le_max; 35 mm <= 91.44 mm`
+- Verificacion: `Le1_x1 <= Le_max; 25.4 mm <= 91.44 mm`
 - Clausula: `AISC 360-22 J3.6`
 - Resultado: 🟢 Cumple
 
@@ -34,7 +34,7 @@
 ### Chequeo 1.4 - Factor de rezago de cortante 1 (U1) no mayor que 1 (`U1`)
 
 - Ambito: `VIGA`
-- Verificacion: `U1 <= 1.0; 0.94 ratio <= 1 ratio`
+- Verificacion: `U1 <= 1.0; 0.95 ratio <= 1 ratio`
 - Clausula: `Criterio solicitado por usuario`
 - Resultado: 🟢 Cumple
 
@@ -42,13 +42,13 @@
 
 - Ambito: `VIGA`
 - Clausula: `Criterio solicitado por usuario`
-- Separacion entre vigas (alpha): `10 mm`
+- Separacion entre vigas (alpha): `25.4 mm`
 - Tolerancia de fabricacion en longitud de viga (Tlvg): `6.35 mm`
 - Referencia tolerancia: `AISC 303-22`
-- Separacion horizontal entre columnas de pernos del alma (S1.x): `60 mm`
-- Distancia de borde en direccion X del grupo de pernos del alma (Le1.x1): `35 mm`
+- Separacion horizontal entre columnas de pernos del alma (S1.x): `76.2 mm`
+- Distancia de borde en direccion X del grupo de pernos del alma (Le1.x1): `25.4 mm`
 - Formula: `Le1.x1' = Le1.x1 - Tlvg`
-- Distancia de borde ajustada (Le1.x1'): `28.65 mm`
+- Distancia de borde ajustada (Le1.x1'): `19.05 mm`
 - Altura de viga (dvg): `450 mm`
 - Distancia vertical entre cara exterior de aleta inferior y fila inferior de pernos (Le1.y3): `25 mm`
 - Formula: `Le1.y4 = dvg - Le1.y3`
@@ -60,7 +60,7 @@
 - Formula Area neta a traccion 1: `Ant.x1.1 = tw*(d-nb1.y*(dh.1+1.6mm))`
 - Area neta a traccion 1 (Ant.x1.vg): `2557.46 mm2`
 - Formula factor de rezago de cortante 1: `si nb1.x > 1 -> U.1 = 1 - 0.5*tw/((nb1.x-1)*S1.x)`
-- Factor de rezago de cortante 1 (U11): `0.94`
+- Factor de rezago de cortante 1 (U11): `0.95`
 
 
 ## Revision conexion: Platina 1
@@ -70,18 +70,18 @@
 ### Chequeo 1.1 - Altura de platina 1 no supera T del catalogo del perfil (`hp1`)
 
 - Ambito: `PLATINA_1`
-- Verificacion: `hp1 <= T; 350 mm <= 394 mm`
+- Verificacion: `hp1 <= T; 431 mm <= 394 mm`
 - Clausula: `Indicacion de diseno del usuario (constructivo) + catalogo de secciones`
-- Resultado: 🟢 Cumple
+- Resultado: 🔴 No cumple
 
 ### Nota tecnica - Formulas geometricas (Platina 1)
 
 - Ambito: `PLATINA_1`
 - Clausula: `Criterio solicitado por usuario`
 - Formula hp1: `hp1 = Le1.y1 + Le1.y2 + (nb1.y - 1) * S1.y`
-- hp1 calculado: `350 mm`
+- hp1 calculado: `431 mm`
 - Formula bp1: `bp1 = Le1.x1 + Le1.x2 + alpha + 2 * (nb1.x - 1) * S1.x`
-- bp1 calculado: `200 mm`
+- bp1 calculado: `238.2 mm`
 
 ### Nota tecnica - Diametro de perforacion (Platina 1)
 
@@ -100,28 +100,28 @@
 ### Chequeo 1.1 - Separacion minima entre pernos del alma en direccion X (`S1_x`)
 
 - Ambito: `PERNOS_1`
-- Verificacion: `S1_x >= Smin; 60 mm >= 47.62 mm`
+- Verificacion: `S1_x >= Smin; 76.2 mm >= 47.62 mm`
 - Clausula: `AISC 360-22 J3.3`
 - Resultado: 🟢 Cumple
 
 ### Chequeo 1.2 - Separacion maxima entre pernos del alma en direccion X (`S1_x`)
 
 - Ambito: `PERNOS_1`
-- Verificacion: `S1_x <= Smax; 60 mm <= 182.88 mm`
+- Verificacion: `S1_x <= Smax; 76.2 mm <= 182.88 mm`
 - Clausula: `AISC 360-22 J3.6`
 - Resultado: 🟢 Cumple
 
 ### Chequeo 1.3 - Separacion minima entre pernos del alma en direccion Y (`S1_y`)
 
 - Ambito: `PERNOS_1`
-- Verificacion: `S1_y >= Smin; 60 mm >= 47.62 mm`
+- Verificacion: `S1_y >= Smin; 76.2 mm >= 47.62 mm`
 - Clausula: `AISC 360-22 J3.3`
 - Resultado: 🟢 Cumple
 
 ### Chequeo 1.4 - Separacion maxima entre pernos del alma en direccion Y (`S1_y`)
 
 - Ambito: `PERNOS_1`
-- Verificacion: `S1_y <= Smax; 60 mm <= 182.88 mm`
+- Verificacion: `S1_y <= Smax; 76.2 mm <= 182.88 mm`
 - Clausula: `AISC 360-22 J3.6`
 - Resultado: 🟢 Cumple
 
@@ -192,17 +192,19 @@
 
 ### Punto 2 - Metodo ICR/Elastic
 
-- Metodo seleccionado: `elastic_superposition`
-- Px: `100 kN`
+- Metodo seleccionado: `icr`
+- Px: `0 kN`
 - Py: `250 kN`
-- e: `140 mm`
-- Mz: `35 kN-m`
-- Demanda (metodo activo): `54.72 kN`
-- Capacidad (metodo activo): `65.91 kN`
-- DCR (metodo activo): `0.83`
+- ex: `152.4 mm`
+- ey: `0 mm`
+- Fuente excentricidad: `splice_formula_ex_plus_input_ey`
+- Mz: `38.1 kN-m`
+- Demanda (metodo activo): `250 kN`
+- Capacidad (metodo activo): `2361.63 kN`
+- DCR (metodo activo): `0.11`
 - Residual final ICR: `0.01`
-- Iteraciones ICR: `16`
-- Picr comparativo: `430.83 kN`
+- Iteraciones ICR: `18`
+- Coeficiente Cu (ICR): `7.17`
 - Clausula: `Metodo configurable de pernos grupo 1 (ICR / Elastic)`
 - Resultado: 🟢 Cumple
 
@@ -224,7 +226,7 @@
 - Formula bp2: `bp2 = Le2.z2 + Le2.z1 + S2.z2 + (nb2.z - 2) * S2.z1`
 - bp2 calculado: `160 mm`
 - Formula lp2: `lp2 = 2 * (Le2.x1 + Le2.x2) + alpha + 2 * (nb2.x - 1) * S2.x + alpha`
-- lp2 calculado: `580 mm`
+- lp2 calculado: `610.8 mm`
 
 ### Nota tecnica - Diametro de perforacion (Platina 2)
 

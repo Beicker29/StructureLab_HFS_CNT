@@ -1,4 +1,4 @@
-PROPUESTA DE RENOMBRADO DE VARIABLES (BSEEP SPLIT INPUTS)
+PROPUESTA DE RENOMBRADO DE VARIABLES (BSEEP y BEUSEEP SPLIT INPUTS)
 Version inicial para revision del usuario
 
 Regla general
@@ -6,7 +6,7 @@ Regla general
 - Viga lado: simbolo_componente_<lado>
 - Columna: simbolo_componente_col
 - Platina continuidad: simbolo_componente_pc
-- Soldaduras por union: ..._w1_<lado>, ..._w2_<lado>, ..._w3_<lado>, ..._w4_col
+- Soldaduras por union: ..._w1_<lado>, ..._w2_<lado>, ..._w3_<lado>, ..._w4
 
 ==================================================
 1) VIGA
@@ -84,22 +84,25 @@ pernos.bolt_thread_condition -> thread_b_<lado>
 5) SOLDADURAS DE LADO VIGA
 ==================================================
 
-soldaduras.weld_fexx -> Fexx_sold_<lado>
-
+soldaduras.weld_1.fexx -> Fexx_w1_<lado>
 soldaduras.weld_1.weld_type -> tipo_w1_<lado>
 soldaduras.weld_1.size -> w_w1_<lado>
 soldaduras.weld_1.nl -> nl_w1_<lado>
 
+soldaduras.weld_2.fexx -> Fexx_w2_<lado>
 soldaduras.weld_2.weld_type -> tipo_w2_<lado>
 soldaduras.weld_2.size -> w_w2_<lado>
 soldaduras.weld_2.nl -> nl_w2_<lado>
 
+soldaduras.weld_2.fexx -> Fexx_w3_<lado>
 soldaduras.weld_3.weld_type -> tipo_w3_<lado>
 soldaduras.weld_3.thickness -> t_w3_<lado>
 soldaduras.weld_3.nl -> nl_w3_<lado>
 
 Variable derivada:
-- hwef_w3_<lado>
+- L_w3_<lado> # Se calcula como pfi_pe_<lado> - pb_pe_<lado> + 150mm
+- L_w2_<lado> # Se calcula como L_pest_<lado> - c_pest_<lado - 2*w_w2_<lado>
+- L_w1_<lado> # Se calcula como h_pest_<lado> - c_pest_<lado - 2*w_w1_<lado>
 
 ==================================================
 6) COLUMNA
@@ -124,8 +127,10 @@ platina_continuidad.tcp -> tpc_col
 8) SOLDADURA EN COLUMNA
 ==================================================
 
-soldaduras.weld_4.weld_type -> tipo_w4_col
-soldaduras.weld_fexx (si queda en columna) -> Fexx_sold_col
+soldaduras.weld_4.weld_type -> tipo_w4
+soldaduras.weld_fexx (si queda en columna) -> Fexx_w4
+soldaduras.weld_4.thickness -> t_w4
+soldaduras.weld_4.nl -> nl_w4
 
 ==================================================
 9) FACTORES DE DISENO
@@ -174,6 +179,6 @@ Rigidizador:
 Nota
 ==================================================
 - Confirmar criterio final de idioma para nombres:
-  opcion A: todo en espanol tecnico (recomendado para tu equipo)
-  opcion B: todo en ingles tecnico (si se integra con librerias externas)
-- Confirmar si Bpe = ancho (recomendado) y Hpe = altura.
+   usar opcion A: todo en espanol tecnico (recomendado para tu equipo)
+
+

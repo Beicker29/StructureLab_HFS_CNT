@@ -105,6 +105,7 @@ def _base_payload() -> dict:
         ("Elastic Method - Superposition", "elastic_superposition"),
         ("Elastic Method - Center of Rotation", "elastic_ecr"),
         ("Instant Center of Rotation Method", "icr"),
+        ("nstant Center of Rotation Method continua", "icr"),
     ],
 )
 def test_parse_splice_method_aliases(method_raw: str, expected: str) -> None:

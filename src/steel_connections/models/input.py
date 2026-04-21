@@ -692,6 +692,7 @@ class BeamBeamMomentBoltedLoads(StrictModel):
     shear_left_end: Quantity
     axial_right_end: Quantity
     axial_left_end: Quantity
+    eccentricity_ey: Quantity | None = None
 
 
 class BeamBeamMomentBoltedDesignFactors(StrictModel):
@@ -732,6 +733,8 @@ class BeamBeamMomentBoltedICRSettings(StrictModel):
         aliases = {
             "icr": "icr",
             "instant_center_of_rotation_method": "icr",
+            "instant_center_of_rotation": "icr",
+            "instantaneous_center_of_rotation_method": "icr",
             "nstant_center_of_rotation_method": "icr",
             "elastic_superposition": "elastic_superposition",
             "elastic_method_superposition": "elastic_superposition",
@@ -739,6 +742,14 @@ class BeamBeamMomentBoltedICRSettings(StrictModel):
             "elastic_method_center_of_rotation": "elastic_ecr",
         }
         canonical = aliases.get(normalized)
+        if canonical is None:
+            if "superposition" in normalized:
+                canonical = "elastic_superposition"
+            elif "center_of_rotation" in normalized:
+                if "instant" in normalized or "nstant" in normalized or normalized.startswith("icr"):
+                    canonical = "icr"
+                else:
+                    canonical = "elastic_ecr"
         if canonical is None:
             raise ValueError("procedure.icr.method must be 'icr', 'elastic_superposition', or 'elastic_ecr'.")
         return canonical
@@ -833,6 +844,15 @@ class BeamBeamMomentBoltedCase(CaseBase):
                 self.units_system,
                 f"loads.{field_name}",
             )
+        for field_name in ("eccentricity_ey",):
+            value = getattr(self.loads, field_name)
+            if value is not None:
+                validate_quantity_unit(
+                    value,
+                    "length",
+                    self.units_system,
+                    f"loads.{field_name}",
+                )
         expected_moment_unit = "kip-in" if self.units_system == UnitSystem.US else "kN-mm"
         for field_name in ("moment_right_end", "moment_left_end"):
             value = getattr(self.loads, field_name)

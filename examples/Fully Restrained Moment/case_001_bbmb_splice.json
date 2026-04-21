@@ -11,7 +11,7 @@
   "load_state": "strength",
   "viga": {
     "sep": {
-      "value": 10.0,
+      "value": 25.4,
       "unit": "mm"
     },
     "perfil": "W18X35",
@@ -54,7 +54,7 @@
     "bolt_description_1": "Grupo 120",
     "bolt_tightening_type": "pretensioned",
     "Le1_x1": {
-      "value": 35.0,
+      "value": 25.4,
       "unit": "mm"
     },
     "Le1_x2": {
@@ -62,11 +62,11 @@
       "unit": "mm"
     },
     "S1_x": {
-      "value": 60.0,
+      "value": 76.2,
       "unit": "mm"
     },
     "S1_y": {
-      "value": 60.0,
+      "value": 76.2,
       "unit": "mm"
     },
     "Le1_y1": {
@@ -87,7 +87,7 @@
     "bolt_description_2": "Grupo 120",
     "bolt_tightening_type": "pretensioned",
     "Le2_x1": {
-      "value": 50.0,
+      "value": 50,
       "unit": "mm"
     },
     "Le2_x2": {
@@ -135,12 +135,16 @@
       "unit": "kN"
     },
     "axial_right_end": {
-      "value": 100.0,
+      "value": 0,
       "unit": "kN"
     },
     "axial_left_end": {
-      "value": 100.0,
+      "value": 0,
       "unit": "kN"
+    },
+    "eccentricity_ey": {
+      "value": 0.0,
+      "unit": "mm"
     }
   },
   "design_factors": {
@@ -153,9 +157,13 @@
   },
   "procedure": {
     "icr": {
-      "method": "Elastic Method - Superposition",
+      "method": "ICR",
       "tolerance_1": 0.01,
-      "max_iterations_1": 1000
+      "max_iterations_1": 1000,
+      "rult_1_kip": {
+        "value": 74.0,
+        "unit": "kip"
+      }
     }
   }
 }

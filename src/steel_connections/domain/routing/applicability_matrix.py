@@ -238,7 +238,7 @@ APPLICABILITY_MATRIX: list[RuleBinding] = [
     RuleBinding(
         rule_id="AISC360.J3.bbmb_splice.step2_pernos1_method",
         name="bbmb_splice Punto 2 pernos 1 metodo ICR/Elastic",
-        source_document="AISC 360-22 + ezbolt",
+        source_document="AISC 360-22 (motor interno ICR/Elastic)",
         clause="Metodo configurable de pernos grupo 1 (ICR / Elastic)",
         chapter="J3",
         page=None,

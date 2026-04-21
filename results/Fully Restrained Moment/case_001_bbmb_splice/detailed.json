@@ -27,11 +27,11 @@
             "unit": "mm"
           },
           "s1_x": {
-            "value": 60.0,
+            "value": 76.2,
             "unit": "mm"
           },
           "s1_y": {
-            "value": 60.0,
+            "value": 76.2,
             "unit": "mm"
           },
           "s2_x": {
@@ -47,7 +47,7 @@
             "unit": "mm"
           },
           "le1_x1": {
-            "value": 35.0,
+            "value": 25.4,
             "unit": "mm"
           },
           "le1_x2": {
@@ -83,7 +83,7 @@
             "unit": "mm"
           },
           "hp1": {
-            "value": 350.0,
+            "value": 431.0,
             "unit": "mm"
           },
           "T_catalog": {
@@ -113,7 +113,7 @@
               "comparison": "simple",
               "comparison_text": ">=",
               "calculated": {
-                "value": 60.0,
+                "value": 76.2,
                 "unit": "mm"
               },
               "limit": {
@@ -131,7 +131,7 @@
               "comparison": "simple",
               "comparison_text": "<=",
               "calculated": {
-                "value": 60.0,
+                "value": 76.2,
                 "unit": "mm"
               },
               "limit": {
@@ -149,7 +149,7 @@
               "comparison": "simple",
               "comparison_text": ">=",
               "calculated": {
-                "value": 60.0,
+                "value": 76.2,
                 "unit": "mm"
               },
               "limit": {
@@ -167,7 +167,7 @@
               "comparison": "simple",
               "comparison_text": "<=",
               "calculated": {
-                "value": 60.0,
+                "value": 76.2,
                 "unit": "mm"
               },
               "limit": {
@@ -257,7 +257,7 @@
               "comparison": "simple",
               "comparison_text": ">=",
               "calculated": {
-                "value": 35.0,
+                "value": 25.4,
                 "unit": "mm"
               },
               "limit": {
@@ -265,7 +265,7 @@
                 "unit": "mm"
               },
               "clause": "AISC 360-22 Tabla J3.4 + Recomendacion del Manual AISC (metrico)",
-              "result": "PASS"
+              "result": "FAIL"
             },
             {
               "scope": "viga",
@@ -275,7 +275,7 @@
               "comparison": "simple",
               "comparison_text": "<=",
               "calculated": {
-                "value": 35.0,
+                "value": 25.4,
                 "unit": "mm"
               },
               "limit": {
@@ -545,7 +545,7 @@
               "comparison": "simple",
               "comparison_text": "<=",
               "calculated": {
-                "value": 350.0,
+                "value": 431.0,
                 "unit": "mm"
               },
               "limit": {
@@ -553,7 +553,7 @@
                 "unit": "mm"
               },
               "clause": "Indicacion de diseno del usuario (constructivo) + catalogo de secciones",
-              "result": "PASS"
+              "result": "FAIL"
             },
             {
               "scope": "platina_2",
@@ -599,7 +599,7 @@
               "comparison": "simple",
               "comparison_text": "<=",
               "calculated": {
-                "value": 0.9365,
+                "value": 0.95,
                 "unit": "ratio"
               },
               "limit": {
@@ -654,7 +654,7 @@
               "clause": "Criterio solicitado por usuario",
               "alpha_symbol": "sep",
               "alpha": {
-                "value": 10.0,
+                "value": 25.4,
                 "unit": "mm"
               },
               "beam_length_tolerance_var": "Tlvg",
@@ -665,18 +665,18 @@
               "beam_length_tolerance_ref": "AISC 303-22",
               "s1x_var": "S1.x",
               "s1x": {
-                "value": 60.0,
+                "value": 76.2,
                 "unit": "mm"
               },
               "le1x1_var": "Le1.x1",
               "le1x1": {
-                "value": 35.0,
+                "value": 25.4,
                 "unit": "mm"
               },
               "le1x1_prime_var": "Le1.x1'",
               "le1x1_prime_formula": "Le1.x1' = Le1.x1 - Tlvg",
               "le1x1_prime": {
-                "value": 28.65,
+                "value": 19.049999999999997,
                 "unit": "mm"
               },
               "dvg_var": "dvg",
@@ -706,7 +706,7 @@
                 "unit": "mm2"
               },
               "us1_formula": "si nb1.x > 1 -> U.1 = 1 - 0.5*tw/((nb1.x-1)*S1.x)",
-              "us1": 0.9365,
+              "us1": 0.95,
               "nb1x": 2,
               "nb1y": 6,
               "tw": {
@@ -737,12 +737,12 @@
               "clause": "Criterio solicitado por usuario",
               "hp1_formula": "hp1 = Le1.y1 + Le1.y2 + (nb1.y - 1) * S1.y",
               "hp1_calc": {
-                "value": 350.0,
+                "value": 431.0,
                 "unit": "mm"
               },
               "bp1_formula": "bp1 = Le1.x1 + Le1.x2 + alpha + 2 * (nb1.x - 1) * S1.x",
               "bp1_calc": {
-                "value": 200.0,
+                "value": 238.2,
                 "unit": "mm"
               }
             },
@@ -758,7 +758,7 @@
               },
               "lp2_formula": "lp2 = 2 * (Le2.x1 + Le2.x2) + alpha + 2 * (nb2.x - 1) * S2.x + alpha",
               "lp2_calc": {
-                "value": 580.0,
+                "value": 610.8,
                 "unit": "mm"
               }
             },
@@ -897,91 +897,111 @@
       "name": "bbmb_splice Punto 2 pernos 1 metodo ICR/Elastic",
       "rule_id": "AISC360.J3.bbmb_splice.step2_pernos1_method",
       "clause": "Metodo configurable de pernos grupo 1 (ICR / Elastic)",
-      "source_document": "AISC 360-22 + ezbolt",
+      "source_document": "AISC 360-22 (motor interno ICR/Elastic)",
       "demand": {
-        "value": 54.723151824842965,
+        "value": 250.0,
         "unit": "kN"
       },
       "capacity": {
-        "value": 65.9115588044792,
+        "value": 2361.634198865155,
         "unit": "kN"
       },
-      "dcr": 0.8302512156809148,
+      "dcr": 0.10585890063758961,
       "status": "PASS",
       "calculation_memory": {
         "inputs": {
-          "method_selected": "elastic_superposition",
+          "method_selected": "icr",
           "px": {
-            "value": 100.0,
+            "value": 0.0,
             "unit": "kN"
           },
           "py": {
             "value": 250.0,
             "unit": "kN"
           },
-          "e": {
-            "value": 140.0,
+          "ex": {
+            "value": 152.39999999999998,
             "unit": "mm"
           },
+          "ey": {
+            "value": 0.0,
+            "unit": "mm"
+          },
+          "eccentricity_source": "splice_formula_ex_plus_input_ey",
           "mz": {
-            "value": 34999.99999999999,
+            "value": 38099.999999999985,
             "unit": "kN-mm"
           },
           "bolt_group_1_nx": 2,
           "bolt_group_1_ny": 6,
           "bolt_group_1_points_in": [
             {
+              "tag": "w1",
               "x": 0.0,
               "y": 0.0
             },
             {
+              "tag": "w2",
               "x": 0.0,
-              "y": 2.362204724409449
+              "y": 3.0000000000000004
             },
             {
+              "tag": "w3",
               "x": 0.0,
-              "y": 4.724409448818898
+              "y": 6.000000000000001
             },
             {
+              "tag": "w4",
               "x": 0.0,
-              "y": 7.086614173228347
+              "y": 9.000000000000002
             },
             {
+              "tag": "w5",
               "x": 0.0,
-              "y": 9.448818897637796
+              "y": 12.000000000000002
             },
             {
+              "tag": "w6",
               "x": 0.0,
-              "y": 11.811023622047244
+              "y": 15.000000000000002
             },
             {
-              "x": 2.362204724409449,
+              "tag": "w7",
+              "x": 3.0000000000000004,
               "y": 0.0
             },
             {
-              "x": 2.362204724409449,
-              "y": 2.362204724409449
+              "tag": "w8",
+              "x": 3.0000000000000004,
+              "y": 3.0000000000000004
             },
             {
-              "x": 2.362204724409449,
-              "y": 4.724409448818898
+              "tag": "w9",
+              "x": 3.0000000000000004,
+              "y": 6.000000000000001
             },
             {
-              "x": 2.362204724409449,
-              "y": 7.086614173228347
+              "tag": "w10",
+              "x": 3.0000000000000004,
+              "y": 9.000000000000002
             },
             {
-              "x": 2.362204724409449,
-              "y": 9.448818897637796
+              "tag": "w11",
+              "x": 3.0000000000000004,
+              "y": 12.000000000000002
             },
             {
-              "x": 2.362204724409449,
-              "y": 11.811023622047244
+              "tag": "w12",
+              "x": 3.0000000000000004,
+              "y": 15.000000000000002
             }
           ],
           "tolerance_1": 0.01,
           "max_iterations_1": 1000,
-          "rult_1_kip": null
+          "rult_1_kip": {
+            "value": 74.0,
+            "unit": "kip"
+          }
         },
         "intermediates": {
           "elastic_capacity_basis": {
@@ -998,66 +1018,285 @@
             "bolt_standard_web": "ASTM A325",
             "bolt_description_web": "Grupo 120"
           },
+          "bolt_group_geometry": {
+            "bolt_count": 12,
+            "centroid_x_in": 1.5000000000000002,
+            "centroid_y_in": 7.500000000000001,
+            "ix_in2": 315.00000000000006,
+            "iy_in2": 27.000000000000004,
+            "ixy_in2": 0.0,
+            "ip_in2": 342.00000000000006
+          },
+          "load_in_plane_kip_in": {
+            "vx_kip": 0.0,
+            "vy_kip": 56.20223577492762,
+            "mz_kip_in": 337.21341464956566,
+            "ex_in": 5.999999999999999,
+            "ey_in": 0.0,
+            "resultant_kip": 56.20223577492762
+          },
           "active_mode_data": {
-            "method": "elastic_superposition",
-            "demand_kip": 12.30225392482794,
-            "capacity_kip": 14.817507872889388,
-            "dcr": 0.8302512156809148
+            "method": "icr",
+            "converged": true,
+            "icr_x_in": -2.3854609221094605,
+            "icr_y_in": 7.500000000000001,
+            "cu": 7.174547138310905,
+            "demand_kip": 56.20223577492762,
+            "capacity_kip": 530.916488235007,
+            "dcr": 0.10585890063758961,
+            "final_residual": 0.008458213074192145,
+            "n_iterations": 18,
+            "solver_note": null
           },
-          "icr_compare_capacity": {
-            "value": 430.8267910525264,
-            "unit": "kN"
+          "icr_active_or_compare": {
+            "converged": true,
+            "note": null,
+            "icr_x": -2.3854609221094605,
+            "icr_y": 7.500000000000001,
+            "cu": 7.174547138310905,
+            "demand": 56.20223577492762,
+            "capacity": 530.916488235007,
+            "dcr": 0.10585890063758961,
+            "final_residual": 0.008458213074192145,
+            "n_iterations": 18,
+            "iterations": [
+              {
+                "iteration": 1,
+                "icr_x": -3.2500000000000018,
+                "icr_y": 7.500000000000001,
+                "residual_fx": 1.7763568394002505e-15,
+                "residual_fy": -5.731742921673039,
+                "residual_norm": 5.731742921673039,
+                "step_dx": -0.24221259619437274,
+                "step_dy": 7.506547444964221e-17
+              },
+              {
+                "iteration": 2,
+                "icr_x": -3.007787403805629,
+                "icr_y": 7.500000000000001,
+                "residual_fx": 8.881784197001252e-16,
+                "residual_fy": -4.346830055617872,
+                "residual_norm": 4.346830055617872,
+                "step_dx": -0.18368880240700255,
+                "step_dy": 3.7532737224821105e-17
+              },
+              {
+                "iteration": 3,
+                "icr_x": -2.8240986013986262,
+                "icr_y": 7.500000000000001,
+                "residual_fx": 5.329070518200751e-15,
+                "residual_fy": -3.18982135857042,
+                "residual_norm": 3.18982135857042,
+                "step_dx": -0.13479580700211932,
+                "step_dy": 2.2519642334892664e-16
+              },
+              {
+                "iteration": 4,
+                "icr_x": -2.689302794396507,
+                "icr_y": 7.500000000000001,
+                "residual_fx": 8.881784197001252e-16,
+                "residual_fy": -2.2776396165943,
+                "residual_norm": 2.2776396165943,
+                "step_dx": -0.09624873485592986,
+                "step_dy": 3.7532737224821105e-17
+              },
+              {
+                "iteration": 5,
+                "icr_x": -2.593054059540577,
+                "icr_y": 7.500000000000001,
+                "residual_fx": 1.7763568394002505e-15,
+                "residual_fy": -1.5917469066863177,
+                "residual_norm": 1.5917469066863177,
+                "step_dx": -0.06726420846528813,
+                "step_dy": 7.506547444964221e-17
+              },
+              {
+                "iteration": 6,
+                "icr_x": -2.525789851075289,
+                "icr_y": 7.500000000000001,
+                "residual_fx": 7.993605777301127e-15,
+                "residual_fy": -1.0946200829878165,
+                "residual_norm": 1.0946200829878165,
+                "step_dx": -0.046256570779624175,
+                "step_dy": 3.3779463502338994e-16
+              },
+              {
+                "iteration": 7,
+                "icr_x": -2.479533280295665,
+                "icr_y": 7.500000000000001,
+                "residual_fx": 1.7763568394002505e-15,
+                "residual_fy": -0.7440237713433291,
+                "residual_norm": 0.7440237713433291,
+                "step_dx": -0.03144103490859182,
+                "step_dy": 7.506547444964221e-17
+              },
+              {
+                "iteration": 8,
+                "icr_x": -2.4480922453870733,
+                "icr_y": 7.500000000000001,
+                "residual_fx": 3.552713678800501e-15,
+                "residual_fy": -0.501580608201813,
+                "residual_norm": 0.501580608201813,
+                "step_dx": -0.021195846180388733,
+                "step_dy": 1.5013094889928442e-16
+              },
+              {
+                "iteration": 9,
+                "icr_x": -2.4268963992066843,
+                "icr_y": 7.500000000000001,
+                "residual_fx": 2.6645352591003757e-15,
+                "residual_fy": -0.3362232946754915,
+                "residual_norm": 0.3362232946754915,
+                "step_dx": -0.014208159405831413,
+                "step_dy": 1.1259821167446332e-16
+              },
+              {
+                "iteration": 10,
+                "icr_x": -2.412688239800853,
+                "icr_y": 7.500000000000001,
+                "residual_fx": 1.7763568394002505e-15,
+                "residual_fy": -0.22450861493765473,
+                "residual_norm": 0.22450861493765473,
+                "step_dx": -0.009487308700889789,
+                "step_dy": 7.506547444964221e-17
+              },
+              {
+                "iteration": 11,
+                "icr_x": -2.4032009310999634,
+                "icr_y": 7.500000000000001,
+                "residual_fx": 1.7763568394002505e-15,
+                "residual_fy": -0.1495210249710084,
+                "residual_norm": 0.1495210249710084,
+                "step_dx": -0.006318475224513475,
+                "step_dy": 7.506547444964221e-17
+              },
+              {
+                "iteration": 12,
+                "icr_x": -2.39688245587545,
+                "icr_y": 7.500000000000001,
+                "residual_fx": 4.440892098500626e-15,
+                "residual_fy": -0.09940521050556583,
+                "residual_norm": 0.09940521050556583,
+                "step_dx": -0.004200675857383594,
+                "step_dy": 1.8766368612410552e-16
+              },
+              {
+                "iteration": 13,
+                "icr_x": -2.3926817800180666,
+                "icr_y": 7.500000000000001,
+                "residual_fx": 5.329070518200751e-15,
+                "residual_fy": -0.06600952108675529,
+                "residual_norm": 0.06600952108675529,
+                "step_dx": -0.002789437295855438,
+                "step_dy": 2.2519642334892664e-16
+              },
+              {
+                "iteration": 14,
+                "icr_x": -2.389892342722211,
+                "icr_y": 7.500000000000001,
+                "residual_fx": 4.440892098500626e-15,
+                "residual_fy": -0.04379903646383099,
+                "residual_norm": 0.04379903646383099,
+                "step_dx": -0.0018508642968969608,
+                "step_dy": 1.8766368612410552e-16
+              },
+              {
+                "iteration": 15,
+                "icr_x": -2.3880414784253143,
+                "icr_y": 7.500000000000001,
+                "residual_fx": 3.552713678800501e-15,
+                "residual_fy": -0.02904669864769005,
+                "residual_norm": 0.02904669864769005,
+                "step_dx": -0.0012274584513778223,
+                "step_dy": 1.5013094889928442e-16
+              },
+              {
+                "iteration": 16,
+                "icr_x": -2.3868140199739365,
+                "icr_y": 7.500000000000001,
+                "residual_fx": 4.440892098500626e-15,
+                "residual_fy": -0.019256575665849596,
+                "residual_norm": 0.019256575665849596,
+                "step_dx": -0.0008137464030709498,
+                "step_dy": 1.8766368612410552e-16
+              },
+              {
+                "iteration": 17,
+                "icr_x": -2.3860002735708656,
+                "icr_y": 7.500000000000001,
+                "residual_fx": 1.7763568394002505e-15,
+                "residual_fy": -0.01276326652608617,
+                "residual_norm": 0.01276326652608617,
+                "step_dx": -0.0005393514614053395,
+                "step_dy": 7.506547444964221e-17
+              },
+              {
+                "iteration": 18,
+                "icr_x": -2.3854609221094605,
+                "icr_y": 7.500000000000001,
+                "residual_fx": 5.329070518200751e-15,
+                "residual_fy": -0.008458213074192145,
+                "residual_norm": 0.008458213074192145,
+                "step_dx": 0.0,
+                "step_dy": 0.0
+              }
+            ]
           },
+          "icr_compare_capacity": null,
           "method_report": {
             "id": "bbmb_splice.step2.pernos1.method",
             "scope": "pernos_1",
-            "method_selected": "elastic_superposition",
+            "method_selected": "icr",
             "px": {
-              "value": 100.0,
+              "value": 0.0,
               "unit": "kN"
             },
             "py": {
               "value": 250.0,
               "unit": "kN"
             },
-            "e": {
-              "value": 140.0,
+            "ex": {
+              "value": 152.39999999999998,
               "unit": "mm"
             },
+            "ey": {
+              "value": 0.0,
+              "unit": "mm"
+            },
+            "eccentricity_source": "splice_formula_ex_plus_input_ey",
             "mz": {
-              "value": 34999.99999999999,
+              "value": 38099.999999999985,
               "unit": "kN-mm"
             },
             "demand": {
-              "value": 54.723151824842965,
+              "value": 250.0,
               "unit": "kN"
             },
             "capacity": {
-              "value": 65.9115588044792,
+              "value": 2361.634198865155,
               "unit": "kN"
             },
-            "dcr": 0.8302512156809148,
+            "dcr": 0.10585890063758961,
             "status": "PASS",
-            "icr_compare_capacity": {
-              "value": 430.8267910525264,
-              "unit": "kN"
-            },
-            "final_residual": 0.006440406915651873,
-            "n_iterations": 16
+            "cu": 7.174547138310905,
+            "icr_compare_capacity": null,
+            "final_residual": 0.008458213074192145,
+            "n_iterations": 18
           }
         },
         "design_factors": {
           "phi_bolt_shear": 0.9
         },
-        "equation": "Elastic Superposition: DCR = BoltDemand / BoltCapacity",
+        "equation": "ICR: DCR = ConnectionDemand / ConnectionCapacity",
         "units_trace": {
           "px": "kN",
           "py": "kN",
-          "e": "mm",
+          "ex": "mm",
+          "ey": "mm",
           "mz": "kN-mm"
         },
         "final_capacity": {
-          "value": 65.9115588044792,
+          "value": 2361.634198865155,
           "unit": "kN"
         }
       },
@@ -1070,6 +1309,6 @@
     "fail_count": 1,
     "error_count": 0,
     "not_implemented_count": 0,
-    "worst_dcr": 0.8302512156809148
+    "worst_dcr": 0.10585890063758961
   }
 }

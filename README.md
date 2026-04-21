@@ -177,10 +177,15 @@ Opcionalmente puedes indicar carpeta de salida como segundo argumento:
 python -m src.steel_connections.run <archivo.json> <carpeta_salida>
 ```
 
-Para habilitar el backend opcional `ezbolt` (metodos ICR/Elastic en `bbmb_splice`):
-```bash
-python -m pip install -e ".[icr]"
-```
+En `bbmb_splice` (Pernos 1 / Punto 2) puedes seleccionar:
+- `Elastic Method - Superposition`
+- `Elastic Method - Center of Rotation`
+- `Instant Center of Rotation Method`
+El motor usa un nucleo matematico interno desacoplado (sin dependencia runtime de `ezbolt`).
+Para `bbmb_splice`, la excentricidad se define por convencion de detalle:
+- `ex = sep + 2*Le1.x1 + (nb1.x-1)*S1.x`
+- `ey = loads.eccentricity_ey` (default `0`)
+- `Mz = Vy*ex - Vx*ey`
 
 ## Estado de chequeo
 - `PASS`

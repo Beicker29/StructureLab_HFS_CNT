@@ -1444,11 +1444,14 @@ def _render_splice_step_2_method_block(step2: dict | None) -> str:
     method = _format_text(report.get("method_selected"))
     px = _format_quantity(report.get("px"))
     py = _format_quantity(report.get("py"))
-    e = _format_quantity(report.get("e"))
+    ex = _format_quantity(report.get("ex"))
+    ey = _format_quantity(report.get("ey"))
+    e_source = _format_text(report.get("eccentricity_source"))
     mz = _format_quantity(report.get("mz"))
     demand = _format_quantity(report.get("demand"))
     capacity = _format_quantity(report.get("capacity"))
     dcr = _format_text(report.get("dcr"))
+    cu = _format_text(report.get("cu"))
     result = _render_result_label(step2.get("status"))
     icr_compare = _format_quantity(report.get("icr_compare_capacity"))
     final_residual = _format_text(report.get("final_residual"))
@@ -1459,7 +1462,9 @@ def _render_splice_step_2_method_block(step2: dict | None) -> str:
         f"- Metodo seleccionado: `{method}`",
         f"- Px: `{px}`",
         f"- Py: `{py}`",
-        f"- e: `{e}`",
+        f"- ex: `{ex}`",
+        f"- ey: `{ey}`",
+        f"- Fuente excentricidad: `{e_source}`",
         f"- Mz: `{mz}`",
         f"- Demanda (metodo activo): `{demand}`",
         f"- Capacidad (metodo activo): `{capacity}`",
@@ -1467,6 +1472,8 @@ def _render_splice_step_2_method_block(step2: dict | None) -> str:
         f"- Residual final ICR: `{final_residual}`",
         f"- Iteraciones ICR: `{n_iterations}`",
     ]
+    if method == "icr" and cu != "n/a":
+        lines.append(f"- Coeficiente Cu (ICR): `{cu}`")
     if icr_compare != "n/a":
         lines.append(f"- Picr comparativo: `{icr_compare}`")
     notes = _format_text(step2.get("notes"))

@@ -820,6 +820,16 @@ def _normalize_fully_restrained_splice_payload(payload: dict[str, Any]) -> dict[
         "flange_plate_atmospheric_condition": p2.get("condicion_atmosferica"),
     }
 
+    loads = normalized.get("loads")
+    if isinstance(loads, dict):
+        for alias in ("eccentricity_ex", "ex", "e_x", "eccentricidad_ex", "excentricidad_x", "eccentricity_x"):
+            loads.pop(alias, None)
+        if "eccentricity_ey" not in loads:
+            for alias in ("ey", "e_y", "eccentricidad_ey", "excentricidad_y", "eccentricity_y"):
+                if alias in loads:
+                    loads["eccentricity_ey"] = loads[alias]
+                    break
+
     normalized.pop("viga", None)
     normalized.pop("platina_1_alma", None)
     normalized.pop("platina_2_ala", None)
