@@ -18,10 +18,6 @@
     "pu": {
       "value": 0.0,
       "unit": "kN"
-    },
-    "v_gravity": {
-      "value": 44.482,
-      "unit": "kN"
     }
   },
   "placa_extremo": {
@@ -86,6 +82,12 @@
         "unit": "mm"
       },
       "nl": 2
+    }
+  },
+  "loads": {
+    "v_gravity": {
+      "value": 44.482,
+      "unit": "kN"
     }
   }
 }

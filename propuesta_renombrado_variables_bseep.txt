@@ -1,0 +1,179 @@
+PROPUESTA DE RENOMBRADO DE VARIABLES (BSEEP SPLIT INPUTS)
+Version inicial para revision del usuario
+
+Regla general
+- <lado> = vgder o vgizq
+- Viga lado: simbolo_componente_<lado>
+- Columna: simbolo_componente_col
+- Platina continuidad: simbolo_componente_pc
+- Soldaduras por union: ..._w1_<lado>, ..._w2_<lado>, ..._w3_<lado>, ..._w4_col
+
+==================================================
+1) VIGA
+==================================================
+
+viga.perfil -> perfil_<lado>
+viga.tipo_acero_perfil -> tipo_acero_perfil_<lado>
+viga.member_ductility_demand_beam -> demanda_ductilidad_<lado>
+viga.elastic_modulus -> E_<lado>
+viga.luz_libre -> Llb_<lado>
+viga.longitud_sin_conectores_desde_cara_columna -> Lnc_<lado>
+loads.pu -> Pu_<lado>
+loads.v_gravity -> Vg_<lado>
+
+Catalogo de seccion (regla)
+- toda propiedad de catalogo: <propiedad>_<lado>
+Ejemplos:
+- bf -> bf_<lado>
+- tf -> tf_<lado>
+- d -> d_<lado>
+- tw -> tw_<lado>
+- Ag -> Ag_<lado>
+- Ix -> Ix_<lado>
+- Zx -> Zx_<lado>
+- ry -> ry_<lado>
+- kdes -> kdes_<lado>
+
+==================================================
+2) PLATINA EXTREMO
+==================================================
+
+placa_extremo.bp -> Bpe_<lado>
+placa_extremo.tp -> tpe_<lado>
+placa_extremo.de -> de_pe_<lado>
+placa_extremo.pb -> pb_pe_<lado>
+placa_extremo.pfo -> pfo_pe_<lado>
+placa_extremo.pfi -> pfi_pe_<lado>
+
+Si aplica (8ES): # Comentario pso y psi aplica siempre  lo que aplcia solo cuando es 8ES es pb_pe_<lado>
+- placa_extremo.pso -> pso_pe_<lado>
+- placa_extremo.psi -> psi_pe_<lado>
+
+Variables derivadas (no input directo):
+- h1_pe_<lado>
+- h2_pe_<lado>
+- h3_pe_<lado>
+- h4_pe_<lado>
+- dh_pe_<lado>
+
+==================================================
+3) RIGIDIZADOR
+==================================================
+
+rigidizador.tr -> t_pest_<lado>
+
+Variables derivadas:
+- h_pest_<lado>
+- L_pest_<lado>
+- c_pest_<lado>
+
+==================================================
+4) PERNOS
+==================================================
+
+pernos.g -> g_b_<lado>
+pernos.tipo_apriete -> tipo_apriete_b_<lado>
+pernos.clear_distance_end_plate -> lc_pe_<lado> # Elimina de input, renombra como lc_pe_<lado> y calcúlalo como el mínimo entre (pb_pe_<lado> - dh_pe_<lado> ; pfo_pe_<lado> + pfi_pe_<lado> + tf_<lado> - dh_pe_<lado>)
+pernos.clear_distance_column_flange -> lc_cf_<lado> # Elimina de input, renombra como lc_cf_<lado> y calcúlalo como el mínimo entre (pb_pe_<lado> - dh_pe_<lado> ; pfo_pe_<lado> + pfi_pe_<lado> + tf_<lado> - dh_pe_<lado>)
+pernos.bolt_fabrication_standard -> std_b_<lado>
+pernos.bolt_description -> desc_b_<lado>
+pernos.bolt_shape -> shape_b_<lado>
+pernos.bolt_thread_condition -> thread_b_<lado>
+
+==================================================
+5) SOLDADURAS DE LADO VIGA
+==================================================
+
+soldaduras.weld_fexx -> Fexx_sold_<lado>
+
+soldaduras.weld_1.weld_type -> tipo_w1_<lado>
+soldaduras.weld_1.size -> w_w1_<lado>
+soldaduras.weld_1.nl -> nl_w1_<lado>
+
+soldaduras.weld_2.weld_type -> tipo_w2_<lado>
+soldaduras.weld_2.size -> w_w2_<lado>
+soldaduras.weld_2.nl -> nl_w2_<lado>
+
+soldaduras.weld_3.weld_type -> tipo_w3_<lado>
+soldaduras.weld_3.thickness -> t_w3_<lado>
+soldaduras.weld_3.nl -> nl_w3_<lado>
+
+Variable derivada:
+- hwef_w3_<lado>
+
+==================================================
+6) COLUMNA
+==================================================
+
+columna.perfil -> perfil_col
+columna.tipo_acero_perfil -> tipo_acero_perfil_col
+columna.elastic_modulus -> E_col
+columna.column_end_distance_to_beam_flange -> dcf_col
+columna.union_columna_losa -> union_col_losa
+loads.pu_columna -> Pu_col
+
+==================================================
+7) PLATINA DE CONTINUIDAD (COLUMNA)
+==================================================
+
+platina_continuidad.usar_platinas_continuidad -> usar_pc_col
+platina_continuidad.tipo_acero -> tipo_acero_pc_col
+platina_continuidad.tcp -> tpc_col
+
+==================================================
+8) SOLDADURA EN COLUMNA
+==================================================
+
+soldaduras.weld_4.weld_type -> tipo_w4_col
+soldaduras.weld_fexx (si queda en columna) -> Fexx_sold_col
+
+==================================================
+9) FACTORES DE DISENO
+==================================================
+
+factores_diseno.factor_reduccion_modo_ductil -> phi_ductil
+factores_diseno.factor_reduccion_modo_no_ductil -> phi_no_ductil
+factores_diseno.member_ductility_demand_column -> demanda_ductilidad_col
+factores_diseno.column_beam_moment_ratio_minimum -> ratio_McMb_min
+factores_diseno.column_beam_moment_ratio -> ratio_McMb
+factores_diseno.beam_connection_sides -> lados_conexion
+
+==================================================
+10) VARIABLES QUE YA DEFINISTE (RESUMEN)
+==================================================
+
+Vigas:
+- Lpz_vgder, Lpz_vgizq
+- bf_vgizq, bf_vgder
+- tf_vgizq, tf_vgder
+- d_vgizq, d_vgder
+- tw_vgizq, tw_vgder
+- Llb_vgder, Llb_vgizq
+- Lnc_vgizq, Lnc_vgder
+- Vg_vgder, Vg_vgizq
+- Fy_vgizq, Fy_vgder
+
+Platina extremo:
+- Hpe_vgizq, Hpe_vgder
+- Bpe_vgizq, Bpe_vgder
+- tpe_vgizq, tpe_vgder
+- de_pe_vgder, de_pe_vgizq
+- pb_pe_vgizq, pb_pe_vgder
+- pfo_pe_vgizq, pfo_pe_vgder
+- pfi_pe_vgizq, pfi_pe_vgder
+- h1_pe_vgizq, h1_pe_vgder
+- h2_pe_vgizq, h2_pe_vgder
+- h3_pe_vgizq, h3_pe_vgder
+
+Rigidizador:
+- h_pest_vgizq, h_pest_vgder
+- L_pest_vgizq, L_pest_vgder
+- t_pest_vgizq, t_pest_vgder
+
+==================================================
+Nota
+==================================================
+- Confirmar criterio final de idioma para nombres:
+  opcion A: todo en espanol tecnico (recomendado para tu equipo)
+  opcion B: todo en ingles tecnico (si se integra con librerias externas)
+- Confirmar si Bpe = ancho (recomendado) y Hpe = altura.

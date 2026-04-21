@@ -45,8 +45,8 @@ Comparacion directa de valor calculado contra limite normativo (sin formato DCR)
 - Requisito: `h1_vgder, h2_vgder, h3_vgder, h4_vgder y dh_vgder para trazabilidad geometrica`
 - Formula: `h1=d-0.5tf+pso+pb; h2=d-0.5tf+pso; h3=d-1.5tf-psi; h4=d-1.5tf-psi-pb; dh=d+1/16 in (db<=7/8 in) else dh=d+1/8 in`
 - h1_vgder: `598.35 mm`
-- h2_vgder: `503.35 mm`
-- h3_vgder: `384.65 mm`
+- h2_vgder: `508.35 mm`
+- h3_vgder: `379.65 mm`
 - h4_vgder: `289.65 mm`
 - dh_vgder: `28.57 mm`
 
@@ -101,14 +101,14 @@ Comparacion directa de valor calculado contra limite normativo (sin formato DCR)
 ### Chequeo 1.2 - End-plate width vs beam flange width (`bp`)
 
 - Ambito: `BEAM`
-- Verificacion: `bp >= bf + margin; 270 mm >= 304 mm`
+- Verificacion: `bp >= bf + margin; 260 mm >= 304 mm`
 - Clausula: `Section 6.3 / Table 6.1`
 - Resultado: 🔴 No cumple
 
 ### Chequeo 1.3 - Bolt gage minimum spacing (`g`)
 
 - Ambito: `BEAM`
-- Verificacion: `g >= 3db; 140 mm >= 76.2 mm`
+- Verificacion: `g >= 3db; 135 mm >= 76.2 mm`
 - Clausula: `Section 6.3 / Table 6.1`
 - Resultado: 🟢 Cumple
 
@@ -122,7 +122,7 @@ Comparacion directa de valor calculado contra limite normativo (sin formato DCR)
 ### Chequeo 1.5 - Beam clearance criterion using Sc and S threshold (`Sc`)
 
 - Ambito: `BEAM`
-- Verificacion: `Sc = Stc - pfo; S = 0.5*sqrt(bcf*g); Sc > S => 190.000 mm > 100.747 mm`
+- Verificacion: `Sc = Stc - pfo; S = 0.5*sqrt(bcf*g); Sc > S => 185.000 mm > 98.932 mm`
 - Clausula: `Section 6.3.1 (beam clearance criterion)`
 - Resultado: 🟢 Cumple
 
@@ -164,7 +164,7 @@ Comparacion directa de valor calculado contra limite normativo (sin formato DCR)
 ### Chequeo 1.11 - End-plate fit within column flange width (`bp`)
 
 - Ambito: `COLUMN`
-- Verificacion: `bp <= bcf; 270 mm <= 290 mm`
+- Verificacion: `bp <= bcf; 260 mm <= 290 mm`
 - Clausula: `Section 6.3 / Table 6.1`
 - Resultado: 🟢 Cumple
 
@@ -206,7 +206,7 @@ Comparacion directa de valor calculado contra limite normativo (sin formato DCR)
 ### Chequeo 1.17 - End-plate stiffener height derived from end-plate geometry (`hst`)
 
 - Ambito: `END_PLATE_STIFFENER`
-- Verificacion: `hst = pfo + de; 110.000 mm = 50.000 mm + 60.000 mm`
+- Verificacion: `hst = pfo + de; 110.000 mm = 55.000 mm + 55.000 mm`
 - Clausula: `Section 6.3`
 - Resultado: 🟢 Cumple
 
@@ -227,7 +227,7 @@ Comparacion directa de valor calculado contra limite normativo (sin formato DCR)
 ### Chequeo 1.20 - Bolt gage clearance with stiffener thickness (`g`)
 
 - Ambito: `END_PLATE_STIFFENER`
-- Verificacion: `g >= 2emin + ts; 140 mm >= 79.4 mm`
+- Verificacion: `g >= 2emin + ts; 135 mm >= 79.4 mm`
 - Clausula: `Section 6.3 (stiffened) + AISC 360 Table J3.4`
 - Resultado: 🟢 Cumple
 
@@ -276,14 +276,14 @@ Comparacion directa de valor calculado contra limite normativo (sin formato DCR)
 ### Chequeo 1.27 - Vertical pitch minimum spacing (`pb`)
 
 - Ambito: `TABLE_6_1`
-- Verificacion: `pb >= 3db; 95 mm >= 76.2 mm`
+- Verificacion: `pb >= 3db; 90 mm >= 76.2 mm`
 - Clausula: `Table 6.1`
 - Resultado: 🟢 Cumple
 
 ### Chequeo 1.28 - Edge distance at de (`de`)
 
 - Ambito: `TABLE_6_1`
-- Verificacion: `de >= emin; 60 mm >= 31.75 mm`
+- Verificacion: `de >= emin; 55 mm >= 31.75 mm`
 - Clausula: `Table 6.1 + AISC 360 Table J3.4`
 - Resultado: 🟢 Cumple
 
@@ -332,7 +332,7 @@ Comparacion directa de valor calculado contra limite normativo (sin formato DCR)
 ### Chequeo 1.35 - Horizontal bolt spacing limits (`g`)
 
 - Ambito: `TABLE_6_1`
-- Verificacion: `g in [g_min, g_max]; 82.55 mm <= 140 mm <= 152.4 mm`
+- Verificacion: `g in [g_min, g_max]; 82.55 mm <= 135 mm <= 152.4 mm`
 - Clausula: `Table 6.1`
 - Resultado: 🟢 Cumple
 
@@ -403,15 +403,15 @@ Calculo segun Eq. (2.4-4): `Mfmax = Mpr + Vhmax*Sh` y `Mfmin = Mpr + Vhmin*Sh` (
 #### 6.1.1 Estado #1: Rotura en el perno
 
 - Clausula: `Chapter 6 / Section 6.7.1 Step 6.1 + AISC 360-22 J3.7`
-- Ecuacion: `Pub = Mf / (2*(h1 + h2)); phiPnb = phi * Ab * Fnt, Ab = pi*db^2/4, phi = 0.9 (AISC 360-22 J3.7)`
+- Ecuacion: `Rut_b = Mf / (2*(h1 + h2)); phiRnt_b = phi * Rnt_b, Rnt_b = Ab * Fnt, Ab = pi*db^2/4 (AISC 360-22 J3.7)`
 - phi usado: `0.9`
 - h1: `598.35 mm`
-- h2: `503.35 mm`
-- h3: `384.65 mm`
+- h2: `508.35 mm`
+- h3: `379.65 mm`
 - h4: `289.65 mm`
-- Pub: `571.74 kN`
-- phiPnb: `355.71 kN`
-- DCRbt: `1.61`
+- Rut_b: `569.15 kN`
+- phiRnt_b: `355.71 kN`
+- DCRbt: `1.6`
 - Resultado: `FAIL`
 
 ### 6.2 Revision de capacidad a cortante
@@ -419,12 +419,12 @@ Calculo segun Eq. (2.4-4): `Mfmax = Mpr + Vhmax*Sh` y `Mfmin = Mpr + Vhmin*Sh` (
 #### 6.2.1 ELR #1: Rotura por cortante en el perno
 
 - Clausula: `Chapter 6 / Section 6.7.1 Step 6.2 + AISC 360-22 J3.7`
-- Ecuacion: `Vub = Vhmax/nb, phiVnb = phi * Ab * Fnv, Ab = pi*db^2/4, nb = 4 (4E/4ES) or 8 (8ES), phi = 0.9 (AISC 360-22 J3.7)`
+- Ecuacion: `Ruv2_b = Vhmax/nb, phiRnv_b = phi * Rnv_b, Rnv_b = Ab * Fnv, Ab = pi*db^2/4, nb = 4 (4E/4ES) or 8 (8ES) (AISC 360-22 J3.7)`
 - phi usado: `0.9`
 - Vhmax: `427.51 kN`
 - nb: `4`
-- Vub: `106.88 kN`
-- phiVnb: `214.34 kN`
+- Ruv2_b: `106.88 kN`
+- phiRnv_b: `214.34 kN`
 - DCRbv: `0.5`
 - Resultado: `PASS`
 
@@ -438,15 +438,15 @@ Calculo segun Eq. (2.4-4): `Mfmax = Mpr + Vhmax*Sh` y `Mfmin = Mpr + Vhmin*Sh` (
 - Ecuacion: `Mup = Mf; phiMnb = phi * tp^2 * Fyp * Yp (AISC 358-22 Eq. 6.7-8)`
 - phi usado: `0.9`
 - Mup: `1259.77 kN-m`
-- phiMnb: `1271.16 kN-m`
-- DCRpm: `0.99`
-- Yp calculado: `6345.57 mm`
+- phiMnb: `1226.62 kN-m`
+- DCRpm: `1.03`
+- Yp calculado: `6123.23 mm`
 - Tabla Yp aplicada: `AISC 358-22 Table 6.3`
 - Caso Yp: `Case 1 (de <= s)`
-- s: `97.21 mm`
-- pfi de entrada: `50 mm`
-- pfi efectivo: `50 mm`
-- Resultado: `PASS`
+- s: `93.67 mm`
+- pfi de entrada: `55 mm`
+- pfi efectivo: `55 mm`
+- Resultado: `FAIL`
 
 ### 7.2. Revision de capacidad a cortante perpendicular al plano de la platina
 
@@ -456,8 +456,8 @@ Calculo segun Eq. (2.4-4): `Mfmax = Mpr + Vhmax*Sh` y `Mfmin = Mpr + Vhmin*Sh` (
 - Ecuacion: `Vup = Mf / (2*(d - tbf)); phiVnb = phi * 0.6 * Fyp * bp * tp (AISC 358-22 Eq. 6.7-10)`
 - phi usado: `0.9`
 - Vup: `1416.42 kN`
-- phiVn1p: `1277.65 kN`
-- DCRpv: `1.11`
+- phiVn1p: `1230.33 kN`
+- DCRpv: `1.15`
 - d (altura viga): `462 mm`
 - Resultado: `FAIL`
 
@@ -467,8 +467,8 @@ Calculo segun Eq. (2.4-4): `Mfmax = Mpr + Vhmax*Sh` y `Mfmin = Mpr + Vhmin*Sh` (
 - Ecuacion: `Vup = Mf / (2*(d - tbf)); phiVnb = phi * 0.6 * Fup * tp * (bp - 2*dh) (AISC 358-22 Eq. 6.7-12)`
 - phi usado: `0.9`
 - Vup: `1416.42 kN`
-- phiVnb: `1313.75 kN`
-- DCRpv: `1.08`
+- phiVnb: `1252.03 kN`
+- DCRpv: `1.13`
 - dh (diametro agujero estandar): `28.57 mm`
 - d (altura viga): `462 mm`
 - Resultado: `FAIL`
@@ -481,9 +481,9 @@ Calculo segun Eq. (2.4-4): `Mfmax = Mpr + Vhmax*Sh` y `Mfmin = Mpr + Vhmin*Sh` (
 - Ecuacion: `Vu2p = Vhmax/nb; phiVn2p = phi * 1.2 * lc * tp * Fup (AISC 360-22 J3.11a)`
 - phi usado: `0.9`
 - Vu2p: `106.88 kN`
-- phiVn2p: `1095.26 kN`
-- DCRpn2: `0.1`
-- lc: `88.72 mm`
+- phiVn2p: `1218.7 kN`
+- DCRpn2: `0.09`
+- lc: `98.72 mm`
 - dh: `28.57 mm`
 - db: `25.4 mm`
 - Resultado: `PASS`
@@ -496,7 +496,7 @@ Calculo segun Eq. (2.4-4): `Mfmax = Mpr + Vhmax*Sh` y `Mfmin = Mpr + Vhmin*Sh` (
 - Vu2p: `106.88 kN`
 - phiVn2p: `666.6 kN`
 - DCRpn2: `0.16`
-- lc: `88.72 mm`
+- lc: `98.72 mm`
 - dh: `28.57 mm`
 - db: `25.4 mm`
 - Resultado: `PASS`
@@ -570,7 +570,7 @@ Calculo segun Eq. (2.4-4): `Mfmax = Mpr + Vhmax*Sh` y `Mfmin = Mpr + Vhmin*Sh` (
 - M_ucf: `1259.77 kN-m`
 - phi usado: `1`
 - Condicion aplicable: `hay platinas de continuidad`
-- s: `97.21 mm`
+- s: `93.67 mm`
 - Y_cs usado: `6985 mm`
 - Ecuacion: `phiM_ncf = phi((t_cf^2 * f_yc * Y_cs)/1.11)`
 - phiM_ncf: `3543.44 kN-m`

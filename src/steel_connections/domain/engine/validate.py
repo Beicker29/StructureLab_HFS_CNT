@@ -1275,9 +1275,11 @@ def _resolve_catalog_driven_properties(case: AISC358MomentCase) -> None:
     # Bolt geometry is sourced from sections.xlsx/Perno.
     bolt_shape = _require_text(case.materials.bolt_shape, "geometry.bolts.bolt_shape", "data/sections.xlsx")
     bolt_geom = get_bolt_section_properties(bolt_shape=bolt_shape, unit_system=case.units_system)
-    geom_standard = str(bolt_geom["fabrication_standard"])
+    geom_standard = str(bolt_geom["fabrication_standard"] or "").strip()
     geom_description = str(bolt_geom["classification"])
-    if normalize_text(geom_standard) != normalize_text(bolt_standard):
+    # Some bolt rows in sections/Perno may omit fabrication_standard metadata.
+    # Keep strict validation only when catalog standard is explicitly populated.
+    if geom_standard and normalize_text(geom_standard) != normalize_text(bolt_standard):
         _raise_validation_error(
             message=(
                 f"Mismatch between materials.bolt_fabrication_standard='{bolt_standard}' and "
@@ -1498,6 +1500,13 @@ def _normalize_moment_split_side_payload(raw_payload: dict[str, Any], *, side: s
                 "pu_viga_right" if side == "right" else "pu_viga_left",
             ),
             "beam_right_vgravity" if side == "right" else "beam_left_vgravity": _first_present(
+                cargas,
+                "v_gravity",
+                "beam_vgravity",
+                "beam_right_vgravity" if side == "right" else "beam_left_vgravity",
+                "Beam_right_Vgravity" if side == "right" else "Beam_left_Vgravity",
+            )
+            or _first_present(
                 viga,
                 "v_gravity",
                 "beam_vgravity",

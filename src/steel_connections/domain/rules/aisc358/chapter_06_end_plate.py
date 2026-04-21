@@ -29,6 +29,15 @@ from steel_connections.codes.aisc358.chapter_06 import (
     compute_web_slenderness_limit,
     compute_web_slenderness_ratio,
 )
+from steel_connections.codes.engineering.common import (
+    compute_bolt_shear_rupture_capacity_per_bolt,
+    compute_bolt_tension_rupture_capacity_per_bolt,
+)
+from steel_connections.codes.engineering.customized import (
+    compute_bseep_step6_1_bolt_tension_demand,
+    compute_moment_prequalified_step6_1_bolt_tension_demand,
+    compute_moment_prequalified_step6_2_bolt_shear_demand,
+)
 from steel_connections.codes.engineering.geometry import compute_protected_zone_length as compute_protected_zone_length_eq
 from steel_connections.codes.engineering.shear import compute_beam_web_shear_yielding_strength
 from steel_connections.codes.engineering.weld import (
@@ -1086,30 +1095,49 @@ def run_step6_1_bolt_tension_rupture(case: AISC358MomentCase, rule_binding: obje
     h3 = h_distances["h3"]
     h4 = h_distances["h4"]
 
-    if case.connection_type == "bseep_8es":
-        sum_h = h1.value + h2.value + h3.value + h4.value
-        pu_equation = "Pu = Mf / (2*(h1 + h2 + h3 + h4))"
+    if case.connection_type in {"bseep_4es", "bseep_8es"}:
+        pu_result = compute_bseep_step6_1_bolt_tension_demand(
+            mf=mf,
+            h1=h1,
+            h2=h2,
+            h3=h3,
+            h4=h4,
+            connection_type=case.connection_type,
+            unit_system=case.units_system,
+        )
+        rut_b = pu_result["rut_b"]
+        sum_h = pu_result["sum_h"].value
+        pu_equation = pu_result["equation"]
     else:
-        sum_h = h1.value + h2.value
-        pu_equation = "Pu = Mf / (2*(h1 + h2))"
-    if sum_h <= 0.0:
-        raise ValueError("Computed sum of bolt lever arms for tension check must be positive.")
+        pu_result = compute_moment_prequalified_step6_1_bolt_tension_demand(
+            mf=mf,
+            h1=h1,
+            h2=h2,
+            connection_type=case.connection_type,
+            unit_system=case.units_system,
+        )
+        rut_b = pu_result["rut_b"]
+        sum_h = pu_result["sum_h"].value
+        pu_equation = pu_result["equation"]
 
-    pu = Quantity(value=mf.value / (2.0 * sum_h), unit="kip" if case.units_system == UnitSystem.US else "kN")
-    bolt_area = math.pi * (db.value**2) / 4.0
-    nominal_capacity = bolt_area * fnt.value
-    if case.units_system == UnitSystem.SI:
-        nominal_capacity /= 1000.0
-    phi = 0.9
-    phi_pn = Quantity(value=phi * nominal_capacity, unit=pu.unit)
+    capacity_result = compute_bolt_tension_rupture_capacity_per_bolt(
+        bolt_diameter=db,
+        bolt_fnt=fnt,
+        unit_system=case.units_system,
+    )
+    rnt_b = capacity_result["rnt_b"]
+    phi_rnt_b = capacity_result["phi_rnt_b"]
+    bolt_area = capacity_result["bolt_area"].value
+    nominal_capacity = rnt_b.value
+    phi = capacity_result["phi"]
 
     return _build_result(
         rule_binding=rule_binding,
-        demand=pu,
-        capacity=phi_pn,
+        demand=rut_b,
+        capacity=phi_rnt_b,
         equation=(
-            f"{pu_equation.replace('Pu', 'Pub')}; "
-            "phiPnb = phi * Ab * Fnt, Ab = pi*db^2/4, phi = 0.9 (AISC 360-22 J3.7)"
+            f"{pu_equation}; "
+            "phiRnt_b = phi * Rnt_b, Rnt_b = Ab * Fnt, Ab = pi*db^2/4 (AISC 360-22 J3.7)"
         ),
         inputs={
             "mf": mf.model_dump(),
@@ -1126,12 +1154,13 @@ def run_step6_1_bolt_tension_rupture(case: AISC358MomentCase, rule_binding: obje
         intermediates={
             "sum_h": sum_h,
             "bolt_area": bolt_area,
+            "rnt_b": rnt_b.value,
+            "rut_b": rut_b.value,
+            "phi_rnt_b": phi_rnt_b.value,
             "nominal_tension_capacity_per_bolt": nominal_capacity,
-            "pu": pu.value,
-            "phi_pn": phi_pn.value,
         },
         design_factors={"phi": phi},
-        units_trace={"pu": pu.unit, "phi_pn": phi_pn.unit},
+        units_trace={"rut_b": rut_b.unit, "phi_rnt_b": phi_rnt_b.unit},
     )
 
 
@@ -1141,22 +1170,32 @@ def run_step6_2_bolt_shear_rupture(case: AISC358MomentCase, rule_binding: object
     vh, vh_source = _select_stated_vhmax_for_design(case, vh_data)
     fnv = _require(case, "materials.bolt_fnv", rule_binding)
     db = _require(case, "geometry.bolt_diameter", rule_binding)
-    nb = _compression_bolt_count(case)
-    vup = Quantity(value=vh.value / float(nb), unit=vh.unit)
-    bolt_area = math.pi * (db.value**2) / 4.0
-    nominal_capacity = bolt_area * fnv.value
-    if case.units_system == UnitSystem.SI:
-        nominal_capacity /= 1000.0
-    phi = 0.9
-    phi_vnp = Quantity(value=phi * nominal_capacity, unit=vup.unit)
+    demand_result = compute_moment_prequalified_step6_2_bolt_shear_demand(
+        vhmax=vh,
+        connection_type=case.connection_type,
+        unit_system=case.units_system,
+    )
+    nb = demand_result["nb"]
+    ruv2_b = demand_result["ruv2_b"]
+
+    capacity_result = compute_bolt_shear_rupture_capacity_per_bolt(
+        bolt_diameter=db,
+        bolt_fnv=fnv,
+        unit_system=case.units_system,
+    )
+    rnv_b = capacity_result["rnv_b"]
+    phi_rnv_b = capacity_result["phi_rnv_b"]
+    bolt_area = capacity_result["bolt_area"].value
+    nominal_capacity = rnv_b.value
+    phi = capacity_result["phi"]
 
     return _build_result(
         rule_binding=rule_binding,
-        demand=vup,
-        capacity=phi_vnp,
+        demand=ruv2_b,
+        capacity=phi_rnv_b,
         equation=(
-            "Vub = Vhmax/nb, phiVnb = phi * Ab * Fnv, Ab = pi*db^2/4, "
-            "nb = 4 (4E/4ES) or 8 (8ES), phi = 0.9 (AISC 360-22 J3.7)"
+            "Ruv2_b = Vhmax/nb, phiRnv_b = phi * Rnv_b, Rnv_b = Ab * Fnv, Ab = pi*db^2/4, "
+            "nb = 4 (4E/4ES) or 8 (8ES) (AISC 360-22 J3.7)"
         ),
         inputs={
             "vhmax": vh.model_dump(),
@@ -1169,12 +1208,13 @@ def run_step6_2_bolt_shear_rupture(case: AISC358MomentCase, rule_binding: object
         },
         intermediates={
             "bolt_area": bolt_area,
+            "rnv_b": rnv_b.value,
+            "ruv2_b": ruv2_b.value,
+            "phi_rnv_b": phi_rnv_b.value,
             "nominal_shear_capacity_per_bolt": nominal_capacity,
-            "vup": vup.value,
-            "phi_vnp": phi_vnp.value,
         },
         design_factors={"phi": phi},
-        units_trace={"vup": vup.unit, "phi_vnp": phi_vnp.unit},
+        units_trace={"ruv2_b": ruv2_b.unit, "phi_rnv_b": phi_rnv_b.unit},
     )
 
 

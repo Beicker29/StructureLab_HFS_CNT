@@ -22,6 +22,10 @@ Se creo la capa `src/steel_connections/codes/engineering/`:
 
 - `constants.py`
   - `AISCConstants` centraliza factores repetidos (`0.6`, `0.707`, `1.11`, `phi`, `kv`, etc.).
+- `common/`
+  - Ecuaciones reutilizables entre conexiones (ejemplo: capacidad a traccion por rotura de perno).
+- `customized/`
+  - Ecuaciones especificas por tipo de conexion (ejemplo: demanda `Pu` de 6.1.1 para BSEEP).
 - `weld.py`
   - `WeldFillet.design_strength()` (AISC 360-22 J2.4)
   - `compute_effective_web_weld_length()`

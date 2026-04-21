@@ -14,16 +14,12 @@
     "longitud_sin_conectores_desde_cara_columna": {
       "value": 1000.0,
       "unit": "mm"
-    },
-    "v_gravity": {
-      "value": 44.482,
-      "unit": "kN"
     }
   },
   "placa_extremo": {
     "tipo_acero": "ASTM A572 Gr 50",
     "bp": {
-      "value": 270,
+      "value": 260,
       "unit": "mm"
     },
     "tp": {
@@ -31,19 +27,19 @@
       "unit": "mm"
     },
     "de": {
-      "value": 60.0,
+      "value": 55.0,
       "unit": "mm"
     },
     "pb": {
-      "value": 95,
+      "value": 90,
       "unit": "mm"
     },
     "pfo": {
-      "value": 50.0,
+      "value": 55.0,
       "unit": "mm"
     },
     "pfi": {
-      "value": 50.0,
+      "value": 55.0,
       "unit": "mm"
     }
   },
@@ -56,7 +52,7 @@
   },
   "pernos": {
     "g": {
-      "value": 140,
+      "value": 135,
       "unit": "mm"
     },
     "tipo_apriete": "pretensioned",
@@ -109,6 +105,10 @@
   "loads": {
     "pu": {
       "value": 0.0,
+      "unit": "kN"
+    },
+    "v_gravity": {
+      "value": 44.482,
       "unit": "kN"
     }
   }

@@ -2253,17 +2253,18 @@
         "intermediates": {
           "sum_h": 1391.7,
           "bolt_area": 641.3016532327706,
-          "nominal_tension_capacity_per_bolt": 500.2152895215611,
-          "pu": 243.55427678378962,
-          "phi_pn": 450.193760569405
+          "rnt_b": 500.2152895215611,
+          "rut_b": 243.55427678378962,
+          "phi_rnt_b": 450.193760569405,
+          "nominal_tension_capacity_per_bolt": 500.2152895215611
         },
         "design_factors": {
           "phi": 0.9
         },
-        "equation": "Pub = Mf / (2*(h1 + h2)); phiPnb = phi * Ab * Fnt, Ab = pi*db^2/4, phi = 0.9 (AISC 360-22 J3.7)",
+        "equation": "Rut_b = Mf / (2*(h1 + h2)); phiRnt_b = phi * Rnt_b, Rnt_b = Ab * Fnt, Ab = pi*db^2/4 (AISC 360-22 J3.7)",
         "units_trace": {
-          "pu": "kN",
-          "phi_pn": "kN"
+          "rut_b": "kN",
+          "phi_rnt_b": "kN"
         },
         "final_capacity": {
           "value": 450.193760569405,
@@ -2311,17 +2312,18 @@
         },
         "intermediates": {
           "bolt_area": 641.3016532327706,
-          "nominal_shear_capacity_per_bolt": 301.41177701940217,
-          "vup": 128.75337401574805,
-          "phi_vnp": 271.270599317462
+          "rnv_b": 301.41177701940217,
+          "ruv2_b": 128.75337401574805,
+          "phi_rnv_b": 271.270599317462,
+          "nominal_shear_capacity_per_bolt": 301.41177701940217
         },
         "design_factors": {
           "phi": 0.9
         },
-        "equation": "Vub = Vhmax/nb, phiVnb = phi * Ab * Fnv, Ab = pi*db^2/4, nb = 4 (4E/4ES) or 8 (8ES), phi = 0.9 (AISC 360-22 J3.7)",
+        "equation": "Ruv2_b = Vhmax/nb, phiRnv_b = phi * Rnv_b, Rnv_b = Ab * Fnv, Ab = pi*db^2/4, nb = 4 (4E/4ES) or 8 (8ES) (AISC 360-22 J3.7)",
         "units_trace": {
-          "vup": "kN",
-          "phi_vnp": "kN"
+          "ruv2_b": "kN",
+          "phi_rnv_b": "kN"
         },
         "final_capacity": {
           "value": 271.270599317462,

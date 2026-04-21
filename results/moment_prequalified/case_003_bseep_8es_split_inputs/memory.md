@@ -416,14 +416,14 @@ Calculo segun Eq. (2.4-4): `Mfmax = Mpr + Vhmax*Sh` y `Mfmin = Mpr + Vhmin*Sh` (
 #### 6.1.1 Estado #1: Rotura en el perno
 
 - Clausula: `Chapter 6 / Section 6.7.1 Step 6.1 + AISC 360-22 J3.7`
-- Ecuacion: `Pub = Mf / (2*(h1 + h2 + h3 + h4)); phiPnb = phi * Ab * Fnt, Ab = pi*db^2/4, phi = 0.9 (AISC 360-22 J3.7)`
+- Ecuacion: `Rut_b = Mf / (2*(h1 + h2 + h3 + h4)); phiRnt_b = phi * Rnt_b, Rnt_b = Ab * Fnt, Ab = pi*db^2/4 (AISC 360-22 J3.7)`
 - phi usado: `0.9`
 - h1: `743.35 mm`
 - h2: `648.35 mm`
 - h3: `529.65 mm`
 - h4: `434.65 mm`
-- Pub: `327.97 kN`
-- phiPnb: `450.19 kN`
+- Rut_b: `327.97 kN`
+- phiRnt_b: `450.19 kN`
 - DCRbt: `0.73`
 - Resultado: `PASS`
 
@@ -432,12 +432,12 @@ Calculo segun Eq. (2.4-4): `Mfmax = Mpr + Vhmax*Sh` y `Mfmin = Mpr + Vhmin*Sh` (
 #### 6.2.1 ELR #1: Rotura por cortante en el perno
 
 - Clausula: `Chapter 6 / Section 6.7.1 Step 6.2 + AISC 360-22 J3.7`
-- Ecuacion: `Vub = Vhmax/nb, phiVnb = phi * Ab * Fnv, Ab = pi*db^2/4, nb = 4 (4E/4ES) or 8 (8ES), phi = 0.9 (AISC 360-22 J3.7)`
+- Ecuacion: `Ruv2_b = Vhmax/nb, phiRnv_b = phi * Rnv_b, Rnv_b = Ab * Fnv, Ab = pi*db^2/4, nb = 4 (4E/4ES) or 8 (8ES) (AISC 360-22 J3.7)`
 - phi usado: `0.9`
 - Vhmax: `515.01 kN`
 - nb: `8`
-- Vub: `64.38 kN`
-- phiVnb: `271.27 kN`
+- Ruv2_b: `64.38 kN`
+- phiRnv_b: `271.27 kN`
 - DCRbv: `0.24`
 - Resultado: `PASS`
 
