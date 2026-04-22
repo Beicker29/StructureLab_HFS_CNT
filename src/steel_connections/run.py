@@ -12,7 +12,7 @@ if str(SRC_ROOT) not in sys.path:
 from steel_connections.domain.engine.pipeline import run_case_file
 from steel_connections.models.output import GlobalStatus
 from steel_connections.reporting.json_writer import write_detailed_result
-from steel_connections.reporting.markdown_writer import write_memory_markdown
+from steel_connections.reporting.markdown_writer import write_memory_markdown, write_splice_methods_table_markdown
 
 
 def _print_errors_to_terminal(result) -> None:
@@ -64,9 +64,12 @@ def main(argv: list[str] | None = None) -> int:
     result = run_case_file(str(input_path))
     output_path = write_detailed_result(result, args.out, example_id=example_id)
     memory_path = write_memory_markdown(result, output_path.parent)
+    splice_table_path = write_splice_methods_table_markdown(result, output_path.parent)
 
     print(f"DETAIL FILE: {output_path}")
     print(f"MEMORY FILE: {memory_path}")
+    if splice_table_path is not None:
+        print(f"SPLICE METHODS TABLE FILE: {splice_table_path}")
     if result.global_status == GlobalStatus.ERROR:
         _print_errors_to_terminal(result)
 

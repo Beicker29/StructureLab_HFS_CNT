@@ -580,262 +580,125 @@ def _normalize_fully_restrained_splice_payload(payload: dict[str, Any]) -> dict[
         return normalized
     if normalized.get("connection_type") != "bbmb_splice":
         return normalized
-    if isinstance(normalized.get("sections"), dict):
+    # Canonical payload already present.
+    if (
+        isinstance(normalized.get("sections"), dict)
+        and isinstance(normalized.get("materials"), dict)
+        and isinstance(normalized.get("geometry"), dict)
+    ):
         return normalized
 
-    viga = normalized.get("viga")
-    p1 = normalized.get("platina_1_alma")
-    p2 = normalized.get("platina_2_ala")
-    b1 = normalized.get("pernos_grupo_1_alma")
-    b2 = normalized.get("pernos_grupo_2_ala")
-    if not all(isinstance(block, dict) for block in (viga, p1, p2, b1, b2)):
-        return normalized
-
-    def _q(block: dict[str, Any], key: str) -> Any:
-        return block.get(key)
-
-    def _calc_plate_dimension(
-        edge_1: Any,
-        edge_2: Any,
-        spacing: Any,
-        n_lines: int,
-    ) -> Any:
-        if not isinstance(edge_1, dict) or not isinstance(edge_2, dict) or not isinstance(spacing, dict):
-            return None
-        if not isinstance(edge_1.get("value"), (int, float)):
-            return None
-        if not isinstance(edge_2.get("value"), (int, float)):
-            return None
-        if not isinstance(spacing.get("value"), (int, float)):
-            return None
-        unit_1 = str(edge_1.get("unit", "")).strip()
-        unit_2 = str(edge_2.get("unit", "")).strip()
-        unit_s = str(spacing.get("unit", "")).strip()
-        if not unit_1 or unit_1 != unit_2 or unit_1 != unit_s:
-            return None
-        gaps = max(int(n_lines) - 1, 0)
-        return {
-            "value": float(edge_1["value"]) + float(edge_2["value"]) + gaps * float(spacing["value"]),
-            "unit": unit_1,
-        }
-
-    def _calc_double_side_plate_length_x(
-        edge_near_gap: Any,
-        edge_far: Any,
-        spacing: Any,
-        n_lines_per_beam: int,
-        splice_gap: Any,
-    ) -> Any:
-        if (
-            not isinstance(edge_near_gap, dict)
-            or not isinstance(edge_far, dict)
-            or not isinstance(spacing, dict)
-            or not isinstance(splice_gap, dict)
-        ):
-            return None
-        if not isinstance(edge_near_gap.get("value"), (int, float)):
-            return None
-        if not isinstance(edge_far.get("value"), (int, float)):
-            return None
-        if not isinstance(spacing.get("value"), (int, float)):
-            return None
-        if not isinstance(splice_gap.get("value"), (int, float)):
-            return None
-        unit = str(edge_near_gap.get("unit", "")).strip()
-        if (
-            not unit
-            or unit != str(edge_far.get("unit", "")).strip()
-            or unit != str(spacing.get("unit", "")).strip()
-            or unit != str(splice_gap.get("unit", "")).strip()
-        ):
-            return None
-        gaps = max(int(n_lines_per_beam) - 1, 0)
-        half_side = float(edge_near_gap["value"]) + float(edge_far["value"]) + gaps * float(spacing["value"])
-        total = 2.0 * half_side + float(splice_gap["value"])
-        return {"value": total, "unit": unit}
-
-    nb1_x = int(b1.get("nb1_x", 0) or 0)
-    nb1_y = int(b1.get("nb1_y", 0) or 0)
-    nb2_x = int(b2.get("nb2_x", 0) or 0)
-    nb2_z = int(b2.get("nb2_z", 0) or 0)
-
-    hp1 = _q(p1, "hp1") or _calc_plate_dimension(_q(b1, "Le1_y1"), _q(b1, "Le1_y2"), _q(b1, "S1_y"), nb1_y)
-    bp1 = _q(p1, "bp1") or _calc_double_side_plate_length_x(
-        _q(b1, "Le1_x1"),
-        _q(b1, "Le1_x2"),
-        _q(b1, "S1_x"),
-        nb1_x,
-        _q(viga, "sep"),
+    # Subdivision by scope (as defined in VARIABLES_SPLICE_NAMING.txt).
+    viga = _first_dict(normalized, "viga", "beam")
+    seccion_material = _first_dict(normalized, "seccion_material", "section_material")
+    platina_web = _first_dict(normalized, "platina_web", "platina_1_alma", "web_plate")
+    platina_flange = _first_dict(normalized, "platina_flange", "platina_2_ala", "flange_plate")
+    pernos_web = _first_dict(
+        normalized,
+        "pernos_grupo_1_web",
+        "pernos_web",
+        "pernos_grupo_1_alma",
+        "bolts_web",
     )
-    lp2 = _q(p2, "lp2") or _calc_plate_dimension(_q(b2, "Le2_x1"), _q(b2, "Le2_x2"), _q(b2, "S2_x"), nb2_x)
+    pernos_flange = _first_dict(
+        normalized,
+        "pernos_grupo_2_flange",
+        "pernos_flange",
+        "pernos_grupo_2_ala",
+        "bolts_flange",
+    )
+    loads = _first_dict(normalized, "loads", "cargas", "cargas_splice")
+    design_factors = _first_dict(normalized, "design_factors", "factores_diseno")
+    procedure = _first_dict(normalized, "procedure", "procedimiento")
 
-    bp2 = _q(p2, "bp2")
-    if bp2 is None and isinstance(_q(b2, "Le2_z1"), dict) and isinstance(_q(b2, "Le2_z2"), dict):
-        z1 = _q(b2, "Le2_z1")
-        z2 = _q(b2, "Le2_z2")
-        s21 = _q(b2, "S2_z1")
-        s22 = _q(b2, "S2_z2")
-        if (
-            isinstance(s21, dict)
-            and isinstance(s22, dict)
-            and isinstance(z1.get("value"), (int, float))
-            and isinstance(z2.get("value"), (int, float))
-            and isinstance(s21.get("value"), (int, float))
-            and isinstance(s22.get("value"), (int, float))
-        ):
-            unit = str(z1.get("unit", "")).strip()
-            if unit and unit == str(z2.get("unit", "")).strip() == str(s21.get("unit", "")).strip() == str(
-                s22.get("unit", "")
-            ).strip():
-                # Non-uniform vertical spacing model for flange bolts:
-                # nb2_z=2 -> [S2_z1]
-                # nb2_z=3 -> [S2_z1, S2_z2]
-                # nb2_z>=4 -> [S2_z1, S2_z2, S2_z1, ...]
-                spacing_sum = 0.0
-                if nb2_z == 2:
-                    spacing_sum = float(s21["value"])
-                elif nb2_z == 3:
-                    spacing_sum = float(s21["value"]) + float(s22["value"])
-                elif nb2_z >= 4:
-                    spacing_sum = float(s21["value"]) + float(s22["value"]) + (nb2_z - 3) * float(s21["value"])
-                bp2 = {
-                    "value": float(z1["value"]) + float(z2["value"]) + spacing_sum,
-                    "unit": unit,
-                }
-
-    bolt_standard_1 = b1.get("bolt_fabrication_standard_1")
-    bolt_standard_2 = b2.get("bolt_fabrication_standard_2")
-    bolt_description_1 = b1.get("bolt_description_1")
-    bolt_description_2 = b2.get("bolt_description_2")
-    bolt_shape_1 = b1.get("bolt_shape_1")
-    bolt_shape_2 = b2.get("bolt_shape_2")
-    bolt_thread_1 = b1.get("bolt_thread_condition_1")
-    bolt_thread_2 = b2.get("bolt_thread_condition_2")
-
-    plate_steel_type = p1.get("tipo_acero_p1") or p2.get("tipo_acero_p2")
-
-    le1_values = []
-    for key in ("Le1_x1", "Le1_x2", "Le1_y1", "Le1_y2"):
-        raw = b1.get(key)
-        if isinstance(raw, dict) and isinstance(raw.get("value"), (int, float)):
-            le1_values.append(raw)
-    web_edge = None
-    if le1_values and all(str(le1_values[0].get("unit")) == str(item.get("unit")) for item in le1_values):
-        web_edge = {
-            "value": min(float(item["value"]) for item in le1_values),
-            "unit": str(le1_values[0]["unit"]),
+    sections = _compact_dict(
+        {
+            "shape_vg": _first_present(viga, "shape_vg", "perfil"),
         }
+    )
+    materials = _compact_dict(
+        {
+            "steel_vg": _first_present(viga, "steel_vg", "tipo_acero_viga"),
+            "Fy_vg": _first_present(seccion_material, "Fy_vg"),
+            "Fu_vg": _first_present(seccion_material, "Fu_vg"),
+            "E_vg": _first_present(seccion_material, "E_vg"),
+            "shape_blt_web": _first_present(pernos_web, "shape_blt_web", "bolt_shape_1"),
+            "std_blt_web": _first_present(pernos_web, "std_blt_web", "bolt_fabrication_standard_1"),
+            "desc_blt_web": _first_present(pernos_web, "desc_blt_web", "bolt_description_1"),
+            "thread_blt_web": _first_present(pernos_web, "thread_blt_web", "bolt_thread_condition_1"),
+            "shape_blt_flange": _first_present(pernos_flange, "shape_blt_flange", "bolt_shape_2"),
+            "std_blt_flange": _first_present(pernos_flange, "std_blt_flange", "bolt_fabrication_standard_2"),
+            "desc_blt_flange": _first_present(pernos_flange, "desc_blt_flange", "bolt_description_2"),
+            "thread_blt_flange": _first_present(pernos_flange, "thread_blt_flange", "bolt_thread_condition_2"),
+        }
+    )
+    geometry = _compact_dict(
+        {
+            "gap_sp": _first_present(viga, "gap_sp", "sep"),
+            "tol_L_vg": _first_present(viga, "tol_L_vg", "Tlvg"),
+            "cond_sup_vg": _first_present(viga, "cond_sup_vg", "condicion_superficial"),
+            "cond_amb_vg": _first_present(viga, "cond_amb_vg", "condicion_atmosferica"),
+            "t_plt_web": _first_present(platina_web, "t_plt_web", "tp1"),
+            "type_hole_plt_web": _first_present(platina_web, "type_hole_plt_web", "tipo_agujero_p1"),
+            "cond_sup_plt_web": _first_present(platina_web, "cond_sup_plt_web", "condicion_superficial"),
+            "cond_amb_plt_web": _first_present(platina_web, "cond_amb_plt_web", "condicion_atmosferica"),
+            "t_plt_ftop": _first_present(platina_flange, "t_plt_ftop", "tp2"),
+            "t_plt_fbot": _first_present(platina_flange, "t_plt_fbot", "tp2"),
+            "type_hole_plt_flange": _first_present(platina_flange, "type_hole_plt_flange", "tipo_agujero_p2"),
+            "cond_sup_plt_flange": _first_present(platina_flange, "cond_sup_plt_flange", "condicion_superficial"),
+            "cond_amb_plt_flange": _first_present(platina_flange, "cond_amb_plt_flange", "condicion_atmosferica"),
+            "n_blt_web_x": _first_present(pernos_web, "n_blt_web_x", "nb1_x"),
+            "n_blt_web_y": _first_present(pernos_web, "n_blt_web_y", "nb1_y"),
+            "g_blt_web": _first_present(pernos_web, "g_blt_web", "S1_x"),
+            "p_blt_web": _first_present(pernos_web, "p_blt_web", "S1_y"),
+            "Le_blt_web_x1": _first_present(pernos_web, "Le_blt_web_x1", "Le1_x1"),
+            "Le_blt_web_x2": _first_present(pernos_web, "Le_blt_web_x2", "Le1_x2"),
+            "Le_blt_web_y1": _first_present(pernos_web, "Le_blt_web_y1", "Le1_y1"),
+            "Le_blt_web_y2": _first_present(pernos_web, "Le_blt_web_y2", "Le1_y2"),
+            "Le_blt_web_y3": _first_present(pernos_web, "Le_blt_web_y3", "Le1_y3", "Le1.y3"),
+            "type_tight_blt_web": _first_present(pernos_web, "type_tight_blt_web", "bolt_tightening_type"),
+            "n_blt_flange_x": _first_present(pernos_flange, "n_blt_flange_x", "nb2_x"),
+            "n_blt_flange_z": _first_present(pernos_flange, "n_blt_flange_z", "nb2_z"),
+            "p_blt_flange": _first_present(pernos_flange, "p_blt_flange", "S2_x"),
+            "g_blt_flange": _first_present(pernos_flange, "g_blt_flange", "S2_z1"),
+            "Le_blt_flange_x1": _first_present(pernos_flange, "Le_blt_flange_x1", "Le2_x1"),
+            "Le_blt_flange_x2": _first_present(pernos_flange, "Le_blt_flange_x2", "Le2_x2"),
+            "Le_blt_flange_z1": _first_present(pernos_flange, "Le_blt_flange_z1", "Le2_z1"),
+            "Le_blt_flange_z2": _first_present(pernos_flange, "Le_blt_flange_z2", "Le2_z2"),
+            "Le_blt_flange_z3": _first_present(pernos_flange, "Le_blt_flange_z3"),
+            "type_tight_blt_flange": _first_present(
+                pernos_flange,
+                "type_tight_blt_flange",
+                "bolt_tightening_type",
+            ),
+        }
+    )
 
-    le2x_1 = b2.get("Le2_x1")
-    le2x_2 = b2.get("Le2_x2")
-    flange_edge_long = None
-    if (
-        isinstance(le2x_1, dict)
-        and isinstance(le2x_2, dict)
-        and str(le2x_1.get("unit")) == str(le2x_2.get("unit"))
-        and isinstance(le2x_1.get("value"), (int, float))
-        and isinstance(le2x_2.get("value"), (int, float))
+    top_payload: dict[str, Any] = {}
+    for key in (
+        "project_id",
+        "case_id",
+        "design_code_context",
+        "units_system",
+        "connection_family",
+        "connection_type",
+        "load_state",
     ):
-        flange_edge_long = {
-            "value": min(float(le2x_1["value"]), float(le2x_2["value"])),
-            "unit": str(le2x_1["unit"]),
-        }
-
-    le2z_1 = b2.get("Le2_z1")
-    le2z_2 = b2.get("Le2_z2")
-    flange_edge_trans = None
-    if (
-        isinstance(le2z_1, dict)
-        and isinstance(le2z_2, dict)
-        and str(le2z_1.get("unit")) == str(le2z_2.get("unit"))
-        and isinstance(le2z_1.get("value"), (int, float))
-        and isinstance(le2z_2.get("value"), (int, float))
-    ):
-        flange_edge_trans = {
-            "value": min(float(le2z_1["value"]), float(le2z_2["value"])),
-            "unit": str(le2z_1["unit"]),
-        }
-
-    normalized["sections"] = {
-        "beam_left_shape": viga.get("perfil"),
-        "beam_right_shape": viga.get("perfil"),
-    }
-    normalized["materials"] = {
-        "beam_left_steel_type": viga.get("tipo_acero_viga"),
-        "beam_right_steel_type": viga.get("tipo_acero_viga"),
-        "plate_steel_type": plate_steel_type,
-        "bolt_fabrication_standard": bolt_standard_1 or bolt_standard_2,
-        "bolt_fabrication_standard_web": bolt_standard_1,
-        "bolt_fabrication_standard_flange": bolt_standard_2,
-        "bolt_description": bolt_description_1 or bolt_description_2,
-        "bolt_shape": bolt_shape_1 or bolt_shape_2,
-        "bolt_shape_web": bolt_shape_1,
-        "bolt_shape_flange": bolt_shape_2,
-        "bolt_thread_condition": bolt_thread_1 or bolt_thread_2,
-    }
-    normalized["geometry"] = {
-        "splice_gap": viga.get("sep"),
-        "flange_plate_top_thickness": p2.get("tp2"),
-        "flange_plate_top_width": bp2,
-        "flange_plate_top_length": lp2,
-        "flange_plate_bottom_thickness": p2.get("tp2"),
-        "flange_plate_bottom_width": bp2,
-        "flange_plate_bottom_length": lp2,
-        "web_plate_thickness": p1.get("tp1"),
-        "web_plate_height": hp1,
-        "web_plate_length": bp1,
-        "flange_bolt_gage": b2.get("S2_x"),
-        "flange_bolt_pitch": b2.get("S2_z1"),
-        "flange_bolt_pitch_secondary": b2.get("S2_z2"),
-        "flange_bolt_edge_distance_longitudinal": flange_edge_long,
-        "flange_bolt_edge_distance_transverse": flange_edge_trans,
-        "flange_bolt_rows_per_side": b2.get("nb2_z"),
-        "flange_bolt_lines": b2.get("nb2_x"),
-        "web_bolt_gage": b1.get("S1_x"),
-        "web_bolt_pitch": b1.get("S1_y"),
-        "web_bolt_edge_distance": web_edge,
-        "web_bolt_edge_distance_x1": b1.get("Le1_x1"),
-        "web_bolt_edge_distance_x2": b1.get("Le1_x2"),
-        "web_bolt_edge_distance_y1": b1.get("Le1_y1"),
-        "web_bolt_edge_distance_y2": b1.get("Le1_y2"),
-        "web_bolt_edge_distance_y3": (
-            viga.get("LE1.y3")
-            or viga.get("Le1.y3")
-            or viga.get("Le1_y3")
-        ),
-        "flange_bolt_edge_distance_x1": b2.get("Le2_x1"),
-        "flange_bolt_edge_distance_x2": b2.get("Le2_x2"),
-        "flange_bolt_edge_distance_z1": b2.get("Le2_z1"),
-        "flange_bolt_edge_distance_z2": b2.get("Le2_z2"),
-        "web_bolt_rows_per_side": b1.get("nb1_y"),
-        "web_bolt_lines": b1.get("nb1_x"),
-        "web_bolt_tightening_type": b1.get("bolt_tightening_type"),
-        "flange_bolt_tightening_type": b2.get("bolt_tightening_type"),
-        "beam_length_tolerance": viga.get("Tlvg"),
-        "beam_surface_condition": viga.get("condicion_superficial"),
-        "beam_atmospheric_condition": viga.get("condicion_atmosferica"),
-        "web_plate_surface_condition": p1.get("condicion_superficial"),
-        "web_plate_atmospheric_condition": p1.get("condicion_atmosferica"),
-        "flange_plate_surface_condition": p2.get("condicion_superficial"),
-        "flange_plate_atmospheric_condition": p2.get("condicion_atmosferica"),
-    }
-
-    loads = normalized.get("loads")
-    if isinstance(loads, dict):
-        for alias in ("eccentricity_ex", "ex", "e_x", "eccentricidad_ex", "excentricidad_x", "eccentricity_x"):
-            loads.pop(alias, None)
-        if "eccentricity_ey" not in loads:
-            for alias in ("ey", "e_y", "eccentricidad_ey", "excentricidad_y", "eccentricity_y"):
-                if alias in loads:
-                    loads["eccentricity_ey"] = loads[alias]
-                    break
-
-    normalized.pop("viga", None)
-    normalized.pop("platina_1_alma", None)
-    normalized.pop("platina_2_ala", None)
-    normalized.pop("pernos_grupo_1_alma", None)
-    normalized.pop("pernos_grupo_2_ala", None)
-    return normalized
+        if key in normalized:
+            top_payload[key] = normalized[key]
+    if sections:
+        top_payload["sections"] = sections
+    if materials:
+        top_payload["materials"] = materials
+    if geometry:
+        top_payload["geometry"] = geometry
+    if loads:
+        top_payload["loads"] = loads
+    if design_factors:
+        top_payload["design_factors"] = design_factors
+    if procedure:
+        top_payload["procedure"] = procedure
+    return top_payload
 
 
 def _normalize_moment_loads_payload(payload: dict[str, Any]) -> dict[str, Any]:

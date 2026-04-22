@@ -1,5 +1,6 @@
 ﻿from __future__ import annotations
 
+import math
 from pathlib import Path
 
 from steel_connections.codes.engineering.flexure import (
@@ -345,6 +346,8 @@ def _collect_splice_step_2_method(result: DetailedRunResult) -> dict | None:
             "status": check.status.value,
             "notes": check.notes,
             "report": report,
+            "inputs": check.calculation_memory.inputs,
+            "intermediates": check.calculation_memory.intermediates,
         }
     return None
 
@@ -1482,7 +1485,7 @@ def _render_splice_step_1_notes(notes: list[dict], *, allowed_scopes: set[str] |
                     "",
                     "- Ambito: `VIGA`",
                     f"- Clausula: `{_render_clause_text(item.get('clause'), item.get('source_document'), item.get('rule_id'))}`",
-                    f"- Separacion entre vigas (alpha): `{_format_quantity(item.get('alpha'))}`",
+                    f"- Separacion entre vigas (gap_sp): `{_format_quantity(item.get('alpha'))}`",
                     f"- Tolerancia de fabricacion en longitud de viga ({_format_text(item.get('beam_length_tolerance_var'))}): `{_format_quantity(item.get('beam_length_tolerance'))}`",
                     f"- Referencia tolerancia: `{_format_text(item.get('beam_length_tolerance_ref'))}`",
                     f"- Separacion horizontal entre columnas de pernos del alma ({_format_text(item.get('s1x_var'))}): `{_format_quantity(item.get('s1x'))}`",
@@ -1500,7 +1503,7 @@ def _render_splice_step_1_notes(notes: list[dict], *, allowed_scopes: set[str] |
                     f"- Formula Area neta a traccion 1: `{_format_text(item.get('ant1_formula'))}`",
                     f"- Area neta a traccion 1 (Ant.x1.vg): `{_format_quantity(item.get('ant1'))}`",
                     f"- Formula factor de rezago de cortante 1: `{_format_text(item.get('us1_formula'))}`",
-                    f"- Factor de rezago de cortante 1 (U11): `{_format_text(item.get('us1'))}`",
+                    f"- Factor de rezago de cortante 1 (U1): `{_format_text(item.get('us1'))}`",
                     "",
                 ]
             )
@@ -1577,7 +1580,7 @@ def _render_splice_step_1_notes(notes: list[dict], *, allowed_scopes: set[str] |
                     f"- Norma de fabricacion: `{_format_text(item.get('fabrication_standard'))}`",
                     f"- Condicion de rosca: `{_format_text(item.get('thread_condition'))}`",
                     f"- Tipo de apriete: `{_format_text(item.get('tightening_type'))}`",
-                    f"- Diametro nominal (db.1): `{_format_quantity(item.get('diameter_nominal'))}`",
+                    f"- Diametro nominal (db_blt_web): `{_format_quantity(item.get('diameter_nominal'))}`",
                     f"- Longitud de vastago: `{_format_quantity(item.get('length_shank'))}`",
                     f"- Width across flats: `{_format_quantity(item.get('width_across_flats'))}`",
                     f"- Diametro de cabeza: `{_format_quantity(item.get('head_diameter'))}`",
@@ -1598,7 +1601,7 @@ def _render_splice_step_1_notes(notes: list[dict], *, allowed_scopes: set[str] |
                     f"- Norma de fabricacion: `{_format_text(item.get('fabrication_standard'))}`",
                     f"- Condicion de rosca: `{_format_text(item.get('thread_condition'))}`",
                     f"- Tipo de apriete: `{_format_text(item.get('tightening_type'))}`",
-                    f"- Diametro nominal (db.2): `{_format_quantity(item.get('diameter_nominal'))}`",
+                    f"- Diametro nominal (db_blt_flange): `{_format_quantity(item.get('diameter_nominal'))}`",
                     f"- Longitud de vastago: `{_format_quantity(item.get('length_shank'))}`",
                     f"- Width across flats: `{_format_quantity(item.get('width_across_flats'))}`",
                     f"- Diametro de cabeza: `{_format_quantity(item.get('head_diameter'))}`",
@@ -1642,12 +1645,12 @@ def _render_splice_step_2_method_block(step2: dict | None) -> str:
         "### Punto 2 - Metodo ICR/Elastic",
         "",
         f"- Metodo seleccionado: `{method}`",
-        f"- Px: `{px}`",
-        f"- Py: `{py}`",
-        f"- ex: `{ex}`",
-        f"- ey: `{ey}`",
+        f"- Pu_sp: `{px}`",
+        f"- Vu2_sp: `{py}`",
+        f"- ex_blt_web: `{ex}`",
+        f"- ey_blt_web: `{ey}`",
         f"- Fuente excentricidad: `{e_source}`",
-        f"- Mz: `{mz}`",
+        f"- Muz_blt_web: `{mz}`",
         f"- Demanda (metodo activo): `{demand}`",
         f"- Capacidad (metodo activo): `{capacity}`",
         f"- DCR (metodo activo): `{dcr}`",
@@ -1979,6 +1982,556 @@ def write_memory_markdown(result: DetailedRunResult, target_dir: str | Path) -> 
     directory.mkdir(parents=True, exist_ok=True)
     target = directory / "memory.md"
     rendered = render_memory_markdown(result).rstrip("\n") + "\n"
+    target.write_text(rendered, encoding="utf-8")
+    return target
+
+
+def render_splice_methods_table_markdown(result: DetailedRunResult) -> str:
+    step2 = _collect_splice_step_2_method(result)
+    if not isinstance(step2, dict):
+        return "\n".join(
+            [
+                "# Metodos Pernos 1 (Splice) - Desarrollo Paso a Paso",
+                "",
+                "No existe resultado de `Punto 2 - Metodo ICR/Elastic` para este caso.",
+                "",
+            ]
+        )
+
+    def _to_float(value: object) -> float | None:
+        try:
+            if value is None:
+                return None
+            return float(value)
+        except (TypeError, ValueError):
+            return None
+
+    def _num(value: object) -> str:
+        numeric = _to_float(value)
+        if numeric is None:
+            return "n/a"
+        return _format_decimal(numeric)
+
+    def _normalize_markdown_spacing(text: str) -> str:
+        raw_lines = text.splitlines()
+        lines: list[str] = []
+        for raw in raw_lines:
+            lines.append(raw.rstrip())
+
+        # Pass 1: ensure blank line before headings and before list blocks.
+        pass1: list[str] = []
+        for line in lines:
+            stripped = line.strip()
+            is_heading = stripped.startswith("#")
+            is_list = stripped.startswith("- ")
+
+            if is_heading and pass1 and pass1[-1] != "":
+                pass1.append("")
+
+            if is_list and pass1 and pass1[-1] != "" and not pass1[-1].lstrip().startswith("- "):
+                pass1.append("")
+
+            pass1.append(line)
+
+        # Pass 2: ensure blank line after headings and after list blocks.
+        pass2: list[str] = []
+        total = len(pass1)
+        for idx, line in enumerate(pass1):
+            stripped = line.strip()
+            is_heading = stripped.startswith("#")
+            is_list = stripped.startswith("- ")
+            next_line = pass1[idx + 1] if idx + 1 < total else None
+            next_stripped = next_line.strip() if next_line is not None else ""
+            next_is_list = next_stripped.startswith("- ")
+
+            pass2.append(line)
+
+            if is_heading and next_line is not None and next_stripped != "":
+                pass2.append("")
+            if is_list and next_line is not None and (not next_is_list) and next_stripped != "":
+                pass2.append("")
+
+        # Pass 3: collapse consecutive blank lines to one.
+        pass3: list[str] = []
+        previous_blank = False
+        for line in pass2:
+            is_blank = line.strip() == ""
+            if is_blank and previous_blank:
+                continue
+            pass3.append(line)
+            previous_blank = is_blank
+
+        while pass3 and pass3[-1].strip() == "":
+            pass3.pop()
+        pass3.append("")
+        return "\n".join(pass3)
+
+    def _md_table(headers: list[str], rows: list[list[object]]) -> list[str]:
+        lines = [
+            "| " + " | ".join(headers) + " |",
+            "| " + " | ".join("---" for _ in headers) + " |",
+        ]
+        if not rows:
+            lines.append("| " + " | ".join("-" for _ in headers) + " |")
+            return lines
+        for row in rows:
+            formatted = [_format_text(value).replace("|", "\\|") for value in row]
+            lines.append("| " + " | ".join(formatted) + " |")
+        return lines
+
+    report = step2.get("report")
+    if not isinstance(report, dict):
+        report = {}
+    intermediates = step2.get("intermediates")
+    if not isinstance(intermediates, dict):
+        intermediates = {}
+
+    methods_summary = report.get("methods_summary")
+    if not isinstance(methods_summary, list):
+        methods_summary = []
+    methods_by_name: dict[str, dict] = {}
+    for item in methods_summary:
+        if isinstance(item, dict):
+            methods_by_name[_format_text(item.get("method"))] = item
+
+    method_super = methods_by_name.get("elastic_superposition", {})
+    method_ecr = methods_by_name.get("elastic_ecr", {})
+    method_icr = methods_by_name.get("icr", {})
+
+    geometry_block = intermediates.get("bolt_group_geometry")
+    if not isinstance(geometry_block, dict):
+        geometry_block = {}
+    load_block = intermediates.get("load_in_plane_kip_in")
+    if not isinstance(load_block, dict):
+        load_block = {}
+
+    bolts_offsets = geometry_block.get("bolts_offsets")
+    if not isinstance(bolts_offsets, list):
+        bolts_offsets = []
+
+    bolts: list[dict[str, object]] = []
+    for index, bolt in enumerate(bolts_offsets, start=1):
+        if not isinstance(bolt, dict):
+            continue
+        x_in = _to_float(bolt.get("x_in"))
+        y_in = _to_float(bolt.get("y_in"))
+        if x_in is None or y_in is None:
+            continue
+        bolts.append(
+            {
+                "row": index,
+                "tag": _format_text(bolt.get("tag")),
+                "x_in": x_in,
+                "y_in": y_in,
+                "dx_in": _to_float(bolt.get("dx_in")),
+                "dy_in": _to_float(bolt.get("dy_in")),
+                "r_in": _to_float(bolt.get("r_in")),
+            }
+        )
+
+    bolt_count = _to_float(geometry_block.get("bolt_count"))
+    x_cg = _to_float(geometry_block.get("centroid_x_in"))
+    y_cg = _to_float(geometry_block.get("centroid_y_in"))
+    ix_in2 = _to_float(geometry_block.get("ix_in2"))
+    iy_in2 = _to_float(geometry_block.get("iy_in2"))
+    ip_in2 = _to_float(geometry_block.get("ip_in2"))
+    if x_cg is None and bolts:
+        x_cg = sum(_to_float(b["x_in"]) or 0.0 for b in bolts) / float(len(bolts))
+    if y_cg is None and bolts:
+        y_cg = sum(_to_float(b["y_in"]) or 0.0 for b in bolts) / float(len(bolts))
+    if bolt_count is None:
+        bolt_count = float(len(bolts)) if bolts else None
+    if ix_in2 is None and bolts and y_cg is not None:
+        ix_in2 = sum(((_to_float(b["y_in"]) or 0.0) - y_cg) ** 2 for b in bolts)
+    if iy_in2 is None and bolts and x_cg is not None:
+        iy_in2 = sum(((_to_float(b["x_in"]) or 0.0) - x_cg) ** 2 for b in bolts)
+    if ip_in2 is None and ix_in2 is not None and iy_in2 is not None:
+        ip_in2 = ix_in2 + iy_in2
+
+    vx_kip = _to_float(load_block.get("vx_kip")) or 0.0
+    vy_kip = _to_float(load_block.get("vy_kip")) or 0.0
+    ex_in = _to_float(load_block.get("ex_in")) or 0.0
+    ey_in = _to_float(load_block.get("ey_in")) or 0.0
+    mz_kip_in = _to_float(load_block.get("mz_kip_in"))
+    if mz_kip_in is None:
+        mz_kip_in = vy_kip * ex_in - vx_kip * ey_in
+
+    p_kip = math.hypot(vx_kip, vy_kip)
+    theta_deg = math.degrees(math.atan2(vy_kip, vx_kip)) if p_kip > 1e-12 else 0.0
+    e_mag_in = math.hypot(ex_in, ey_in)
+    dmax_cg = None
+    if bolts and x_cg is not None and y_cg is not None:
+        dmax_cg = max(
+            math.hypot((_to_float(b["x_in"]) or 0.0) - x_cg, (_to_float(b["y_in"]) or 0.0) - y_cg)
+            for b in bolts
+        )
+
+    geometry_rows = [
+        ["P", "sqrt(Vx^2 + Vy^2)", _num(p_kip), "kip"],
+        ["theta_deg", "atan2(Vy, Vx)", _num(theta_deg), "deg"],
+        ["e_x", "ex_blt_web", _num(ex_in), "in"],
+        ["e_y", "ey_blt_web", _num(ey_in), "in"],
+        ["e", "sqrt(e_x^2 + e_y^2)", _num(e_mag_in), "in"],
+        ["n_bolts", "conteo pernos activos", _num(bolt_count), "-"],
+        ["x_cg", "sum(x_i)/n", _num(x_cg), "in"],
+        ["y_cg", "sum(y_i)/n", _num(y_cg), "in"],
+        ["I_x", "sum((y_i-y_cg)^2)", _num(ix_in2), "in2"],
+        ["I_y", "sum((x_i-x_cg)^2)", _num(iy_in2), "in2"],
+        ["J", "I_x + I_y", _num(ip_in2), "in2"],
+        ["M_z", "Vy*e_x - Vx*e_y", _num(mz_kip_in), "kip-in"],
+        ["d_max(cg)", "max(sqrt((x_i-x_cg)^2+(y_i-y_cg)^2))", _num(dmax_cg), "in"],
+    ]
+
+    bolts_rows = [
+        [
+            bolt.get("tag"),
+            _num(bolt.get("x_in")),
+            _num(bolt.get("y_in")),
+            _num(bolt.get("dx_in")),
+            _num(bolt.get("dy_in")),
+            _num(bolt.get("r_in")),
+        ]
+        for bolt in bolts
+    ]
+
+    summary_rows = []
+    for method in ("elastic_superposition", "elastic_ecr", "icr"):
+        item = methods_by_name.get(method, {})
+        summary_rows.append(
+            [
+                method,
+                _format_text(item.get("applicable")),
+                _format_text(item.get("status")),
+                _num(item.get("demand_kip")),
+                _num(item.get("capacity_kip")),
+                _num(item.get("dcr")),
+            ]
+        )
+
+    super_geom_rows: list[list[object]] = []
+    super_force_rows: list[list[object]] = []
+    if bolts and bolt_count is not None and ip_in2 is not None and abs(ip_in2) > 1e-12:
+        fx_dir = -vx_kip / bolt_count
+        fy_dir = -vy_kip / bolt_count
+        for bolt in bolts:
+            dx = _to_float(bolt.get("dx_in")) or 0.0
+            dy = _to_float(bolt.get("dy_in")) or 0.0
+            d = math.hypot(dx, dy)
+            fx_t = mz_kip_in * dy / ip_in2
+            fy_t = -mz_kip_in * dx / ip_in2
+            fx = fx_dir + fx_t
+            fy = fy_dir + fy_t
+            r = math.hypot(fx, fy)
+            tag = bolt.get("tag")
+            super_geom_rows.append([tag, _num(bolt.get("x_in")), _num(bolt.get("y_in")), _num(dx), _num(dy), _num(d)])
+            super_force_rows.append([tag, _num(fx_dir), _num(fy_dir), _num(fx_t), _num(fy_t), _num(r)])
+
+    ecr_geom_rows: list[list[object]] = []
+    ecr_force_rows: list[list[object]] = []
+    center_x_ecr = _to_float(method_ecr.get("center_x_in"))
+    center_y_ecr = _to_float(method_ecr.get("center_y_in"))
+    bolt_forces_ecr = method_ecr.get("bolt_forces")
+    forces_ecr_by_tag: dict[str, dict] = {}
+    if isinstance(bolt_forces_ecr, list):
+        for bf in bolt_forces_ecr:
+            if isinstance(bf, dict):
+                forces_ecr_by_tag[_format_text(bf.get("tag"))] = bf
+    if bolts and center_x_ecr is not None and center_y_ecr is not None:
+        for bolt in bolts:
+            tag = _format_text(bolt.get("tag"))
+            x_i = _to_float(bolt.get("x_in")) or 0.0
+            y_i = _to_float(bolt.get("y_in")) or 0.0
+            dx_ecr = x_i - center_x_ecr
+            dy_ecr = y_i - center_y_ecr
+            d = math.hypot(dx_ecr, dy_ecr)
+            bf = forces_ecr_by_tag.get(tag, {})
+            ecr_geom_rows.append([tag, _num(x_i), _num(y_i), _num(dx_ecr), _num(dy_ecr), _num(d)])
+            ecr_force_rows.append([tag, _num(bf.get("fx_kip")), _num(bf.get("fy_kip")), _num(bf.get("resultant_kip")), _num(center_x_ecr), _num(center_y_ecr)])
+
+    icr_iterations = report.get("icr_iterations")
+    if not isinstance(icr_iterations, list):
+        icr_iterations = []
+    mu = _to_float(method_icr.get("law_mu")) or 10.0
+    lambda_exp = _to_float(method_icr.get("law_lambda")) or 0.55
+    delta_max = _to_float(method_icr.get("law_delta_max")) or 0.34
+
+    icr_iter_rows_a: list[list[object]] = []
+    icr_iter_rows_b: list[list[object]] = []
+    icr_bolt_rows_a: list[list[object]] = []
+    icr_bolt_rows_b: list[list[object]] = []
+
+    if bolts:
+        for it in icr_iterations:
+            if not isinstance(it, dict):
+                continue
+            iteration = _to_float(it.get("iteration"))
+            x_icr = _to_float(it.get("icr_x"))
+            y_icr = _to_float(it.get("icr_y"))
+            if iteration is None or x_icr is None or y_icr is None:
+                continue
+
+            if x_cg is not None and y_cg is not None:
+                r_ox = ex_in + (x_cg - x_icr)
+                r_oy = ey_in - (y_icr - y_cg)
+                r_o = math.hypot(r_ox, r_oy)
+            else:
+                r_ox = None
+                r_oy = None
+                r_o = None
+
+            per_bolt: list[dict[str, float | str | None]] = []
+            for bolt in bolts:
+                x_i = _to_float(bolt.get("x_in")) or 0.0
+                y_i = _to_float(bolt.get("y_in")) or 0.0
+                dx = x_i - x_icr
+                dy = y_i - y_icr
+                d = math.hypot(dx, dy)
+                per_bolt.append({"tag": _format_text(bolt.get("tag")), "dx": dx, "dy": dy, "d": d})
+
+            d_max = max((item["d"] for item in per_bolt), default=0.0)
+            if d_max > 1e-12:
+                for item in per_bolt:
+                    delta = delta_max * float(item["d"]) / d_max
+                    phi = (1.0 - math.exp(-mu * delta)) ** lambda_exp
+                    item["delta"] = delta
+                    item["phi"] = phi
+            else:
+                for item in per_bolt:
+                    item["delta"] = 0.0
+                    item["phi"] = 0.0
+
+            sum_phi_d = sum(float(item.get("phi") or 0.0) * float(item["d"]) for item in per_bolt)
+            m_p = (vx_kip * r_oy - vy_kip * r_ox) if (r_ox is not None and r_oy is not None) else None
+            r_max = (m_p / sum_phi_d) if (m_p is not None and abs(sum_phi_d) > 1e-12) else None
+            c_coeff = (sum_phi_d / r_o) if (r_o is not None and abs(r_o) > 1e-12) else None
+
+            for item in per_bolt:
+                d = float(item["d"])
+                phi = float(item.get("phi") or 0.0)
+                if r_max is None:
+                    r_i = None
+                    r_x = None
+                    r_y = None
+                else:
+                    r_i = phi * r_max
+                    if d > 1e-12:
+                        r_x = -r_i * float(item["dy"]) / d
+                        r_y = r_i * float(item["dx"]) / d
+                    else:
+                        r_x = 0.0
+                        r_y = 0.0
+                item["r_i"] = r_i
+                item["r_x"] = r_x
+                item["r_y"] = r_y
+                icr_bolt_rows_a.append([_num(iteration), item["tag"], _num(item["dx"]), _num(item["dy"]), _num(item["d"]), _num(item.get("delta"))])
+                icr_bolt_rows_b.append([_num(iteration), item["tag"], _num(item.get("phi")), _num(item.get("r_i")), _num(item.get("r_x")), _num(item.get("r_y"))])
+
+            icr_iter_rows_a.append([_num(iteration), _num(x_icr), _num(y_icr), _num(it.get("residual_fx")), _num(it.get("residual_fy")), _num(it.get("residual_norm"))])
+            icr_iter_rows_b.append([_num(iteration), _num(d_max), _num(sum_phi_d), _num(r_max), _num(c_coeff), _num(m_p)])
+
+    lines: list[str] = [
+        "# Reporte Metodos Pernos 1 (Splice)",
+        "",
+        "## 1. Informacion General",
+        "",
+        f"- Proyecto: `{result.project_id}`",
+        f"- Caso: `{result.case_id}`",
+        f"- Metodo seleccionado en JSON: `{_format_text(report.get('method_selected'))}`",
+        "",
+        "### 1.1 Variables de carga",
+        "",
+    ]
+
+    px = report.get("px") if isinstance(report.get("px"), dict) else {}
+    py = report.get("py") if isinstance(report.get("py"), dict) else {}
+    ex = report.get("ex") if isinstance(report.get("ex"), dict) else {}
+    ey = report.get("ey") if isinstance(report.get("ey"), dict) else {}
+    mz = report.get("mz") if isinstance(report.get("mz"), dict) else {}
+
+    lines.extend(
+        [
+            "- Ecuacion base: `Muz_blt_web = Vu2_sp*ex_blt_web - Pu_sp*ey_blt_web`",
+            f"- Pu_sp: `{_format_text(px.get('value'))} {_format_text(px.get('unit'))}` (origen: `loads.Pu_sp`)",
+            f"- Vu2_sp: `{_format_text(py.get('value'))} {_format_text(py.get('unit'))}` (origen: `loads.Vu2_sp`)",
+            f"- ex_blt_web: `{_format_text(ex.get('value'))} {_format_text(ex.get('unit'))}` (origen: `formula splice`)",
+            f"- ey_blt_web: `{_format_text(ey.get('value'))} {_format_text(ey.get('unit'))}` (origen: `input ey`)",
+            f"- Muz_blt_web: `{_format_text(mz.get('value'))} {_format_text(mz.get('unit'))}`",
+        ]
+    )
+
+    lines.extend(["", "## 2. Geometria de pernos derivada", ""])
+    for variable, formula, value, unit in geometry_rows:
+        lines.append(f"- {variable}: `{value} {unit}` con `{formula}`")
+
+    lines.extend(["", "## 3. Geometria del grupo de pernos", ""])
+    if not bolts_rows:
+        lines.append("- No hay pernos activos reportados.")
+    else:
+        for tag, x_val, y_val, dx_val, dy_val, r_val in bolts_rows:
+            lines.append(
+                f"- Perno `{tag}`: x=`{x_val} in`, y=`{y_val} in`, dx=`{dx_val} in`, dy=`{dy_val} in`, r=`{r_val} in`"
+            )
+
+    lines.extend(["", "## 4. Resumen global por metodo", ""])
+    for method, applicable, status, demand, capacity, dcr in summary_rows:
+        lines.append(
+            f"- Metodo `{method}`: applicable=`{applicable}`, estado=`{status}`, demanda=`{demand} kip`, capacidad=`{capacity} kip`, DCR=`{dcr}`"
+        )
+
+    lines.extend(["", "## 5. Elastic Method - Superposition", ""])
+    lines.append("")
+    lines.append("### 5.1 Formulacion")
+    lines.extend(
+        [
+            "- Ecuaciones:",
+            "- `Fx_dir = -Vx/n`",
+            "- `Fy_dir = -Vy/n`",
+            "- `Fx_t = Mz*dy/J`",
+            "- `Fy_t = -Mz*dx/J`",
+            "- `R = sqrt((Fx_dir+Fx_t)^2 + (Fy_dir+Fy_t)^2)`",
+            "- Geometria por perno:",
+        ]
+    )
+    lines.append("")
+    lines.append("### 5.2 Geometria por perno")
+    if not super_geom_rows:
+        lines.append("- Sin datos de geometria para superposition.")
+    else:
+        for tag, x_val, y_val, dx_val, dy_val, d_val in super_geom_rows:
+            lines.append(
+                f"- `{tag}`: x=`{x_val}`, y=`{y_val}`, dx=`{dx_val}`, dy=`{dy_val}`, d=`{d_val}`"
+            )
+    lines.append("")
+    lines.append("### 5.3 Fuerzas por perno")
+    if not super_force_rows:
+        lines.append("- Sin datos de fuerzas para superposition.")
+    else:
+        for tag, fx_dir, fy_dir, fx_t, fy_t, r_val in super_force_rows:
+            lines.append(
+                f"- `{tag}`: Fx_dir=`{fx_dir}`, Fy_dir=`{fy_dir}`, Fx_t=`{fx_t}`, Fy_t=`{fy_t}`, R=`{r_val}`"
+            )
+
+    lines.extend(["", "## 6. Elastic Method - Center of Rotation (ECR)", ""])
+    lines.append("")
+    lines.append("### 6.1 Formulacion")
+    lines.extend(
+        [
+            "- Ecuaciones:",
+            "- `dx_ECR = x - x_ECR`",
+            "- `dy_ECR = y - y_ECR`",
+            "- `d = sqrt(dx_ECR^2 + dy_ECR^2)`",
+            "- `Fx = k*dy_ECR`",
+            "- `Fy = -k*dx_ECR`",
+            "- Geometria por perno respecto al ECR:",
+        ]
+    )
+    lines.append("")
+    lines.append("### 6.2 Geometria por perno respecto al ECR")
+    if not ecr_geom_rows:
+        lines.append("- Sin datos de geometria para ECR.")
+    else:
+        for tag, x_val, y_val, dx_val, dy_val, d_val in ecr_geom_rows:
+            lines.append(
+                f"- `{tag}`: x=`{x_val}`, y=`{y_val}`, dx_ECR=`{dx_val}`, dy_ECR=`{dy_val}`, d=`{d_val}`"
+            )
+    lines.append("")
+    lines.append("### 6.3 Fuerzas por perno en ECR")
+    if not ecr_force_rows:
+        lines.append("- Sin datos de fuerzas para ECR.")
+    else:
+        for tag, fx_val, fy_val, r_val, x_ecr, y_ecr in ecr_force_rows:
+            lines.append(
+                f"- `{tag}`: Fx=`{fx_val}`, Fy=`{fy_val}`, R=`{r_val}`, x_ECR=`{x_ecr}`, y_ECR=`{y_ecr}`"
+            )
+
+    lines.extend(["", "## 7. Instant Center of Rotation (ICR)", ""])
+    lines.append("")
+    lines.append("### 7.1 Formulacion")
+    lines.extend(
+        [
+            "- Ecuaciones:",
+            "- `delta_i = (d_i/d_max)*delta_max`",
+            "- `phi_i = (1-exp(-mu*delta_i))^lambda`",
+            "- `sum(phi*d) = sum(phi_i*d_i)`",
+            "- `R_max = M_p/sum(phi*d)`",
+            "- Iteraciones del ICR:",
+        ]
+    )
+    lines.append("")
+    lines.append("### 7.2 Iteraciones globales (residuales)")
+    if not icr_iter_rows_a:
+        lines.append("- Sin iteraciones ICR.")
+    else:
+        for it, x_icr, y_icr, rfx, rfy, rnorm in icr_iter_rows_a:
+            lines.append(
+                f"- Iter `{it}`: x_ICR=`{x_icr}`, y_ICR=`{y_icr}`, residual_Fx=`{rfx}`, residual_Fy=`{rfy}`, residual_norm=`{rnorm}`"
+            )
+    lines.append("")
+    lines.append("### 7.3 Parametros auxiliares por iteracion")
+    if not icr_iter_rows_b:
+        lines.append("- Sin parametros auxiliares ICR.")
+    else:
+        for it, dmax_val, sum_phi_d, rmax_val, c_val, mp_val in icr_iter_rows_b:
+            lines.append(
+                f"- Iter `{it}`: d_max=`{dmax_val}`, sum(phi*d)=`{sum_phi_d}`, R_max=`{rmax_val}`, C=`{c_val}`, M_p=`{mp_val}`"
+            )
+
+    lines.extend(["", "## 8. Bolt Detail ICR por iteracion", ""])
+    if not icr_bolt_rows_a and not icr_bolt_rows_b:
+        lines.append("- Sin datos de detalle por iteracion en ICR.")
+    else:
+        cinematic_by_iter: dict[str, list[tuple[object, object, object, object, object]]] = {}
+        forces_by_iter: dict[str, list[tuple[object, object, object, object, object]]] = {}
+
+        for it, perno, dx_val, dy_val, d_val, delta_val in icr_bolt_rows_a:
+            iter_key = str(it)
+            cinematic_by_iter.setdefault(iter_key, []).append((perno, dx_val, dy_val, d_val, delta_val))
+
+        for it, perno, phi_val, ri_val, rx_val, ry_val in icr_bolt_rows_b:
+            iter_key = str(it)
+            forces_by_iter.setdefault(iter_key, []).append((perno, phi_val, ri_val, rx_val, ry_val))
+
+        iter_keys = sorted(
+            set(cinematic_by_iter.keys()) | set(forces_by_iter.keys()),
+            key=lambda raw: float(raw) if str(raw).replace(".", "", 1).isdigit() else 1e12,
+        )
+
+        for idx, iter_key in enumerate(iter_keys, start=1):
+            lines.append("")
+            lines.append(f"### 8.{idx} Iteracion {iter_key}")
+            lines.append("")
+            lines.append("- Cinematica por perno:")
+            cinematic_rows = cinematic_by_iter.get(iter_key, [])
+            if not cinematic_rows:
+                lines.append("- Sin datos cinematicos para esta iteracion.")
+            else:
+                for perno, dx_val, dy_val, d_val, delta_val in cinematic_rows:
+                    lines.append(
+                        f"- `{perno}`: dx=`{dx_val}`, dy=`{dy_val}`, d=`{d_val}`, Delta=`{delta_val}`"
+                    )
+
+            lines.append("- Fuerzas por perno:")
+            force_rows = forces_by_iter.get(iter_key, [])
+            if not force_rows:
+                lines.append("- Sin datos de fuerzas para esta iteracion.")
+            else:
+                for perno, phi_val, ri_val, rx_val, ry_val in force_rows:
+                    lines.append(
+                        f"- `{perno}`: phi=`{phi_val}`, R_i=`{ri_val}`, R_x=`{rx_val}`, R_y=`{ry_val}`"
+                    )
+
+    rendered = "\n".join(lines)
+    return _normalize_markdown_spacing(rendered)
+
+def write_splice_methods_table_markdown(result: DetailedRunResult, target_dir: str | Path) -> Path | None:
+    if str(result.connection_family).strip().lower() != "fully_restrained_moment":
+        return None
+    if str(result.connection_type).strip().lower() != "bbmb_splice":
+        return None
+    directory = Path(target_dir)
+    directory.mkdir(parents=True, exist_ok=True)
+    target = directory / "tabla_metodos_pernos_1.md"
+    rendered = render_splice_methods_table_markdown(result).rstrip("\n") + "\n"
     target.write_text(rendered, encoding="utf-8")
     return target
 

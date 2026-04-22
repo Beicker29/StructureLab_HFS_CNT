@@ -103,7 +103,7 @@ def test_step2_method_elastic_superposition_governs_status(monkeypatch) -> None:
     monkeypatch.setattr(
         bbmb_splice_methods,
         "_derive_elastic_bolt_capacity_kip",
-        lambda *_args, **_kwargs: (20.0, {"phi_bolt_shear": 0.9}),
+        lambda *_args, **_kwargs: (20.0, {"phi_bv": 0.9}),
     )
     monkeypatch.setattr(
         bbmb_splice_methods,
@@ -142,7 +142,7 @@ def test_step2_method_elastic_ecr_governs_status(monkeypatch) -> None:
     monkeypatch.setattr(
         bbmb_splice_methods,
         "_derive_elastic_bolt_capacity_kip",
-        lambda *_args, **_kwargs: (20.0, {"phi_bolt_shear": 0.9}),
+        lambda *_args, **_kwargs: (20.0, {"phi_bv": 0.9}),
     )
     monkeypatch.setattr(
         bbmb_splice_methods,
@@ -190,7 +190,7 @@ def test_step2_method_icr_checks_convergence_acceptance(monkeypatch) -> None:
     monkeypatch.setattr(
         bbmb_splice_methods,
         "_derive_elastic_bolt_capacity_kip",
-        lambda *_args, **_kwargs: (20.0, {"phi_bolt_shear": 0.9}),
+        lambda *_args, **_kwargs: (20.0, {"phi_bv": 0.9}),
     )
     monkeypatch.setattr(
         bbmb_splice_methods,
@@ -210,7 +210,7 @@ def test_step2_method_icr_checks_convergence_acceptance(monkeypatch) -> None:
 
 def test_step2_method_uses_splice_formula_ex_and_input_ey(monkeypatch) -> None:
     case = _load_case("elastic_superposition", include_rult=False)
-    case.loads.eccentricity_ey = Quantity(value=40.0, unit="mm")
+    case.loads.ey_blt_web = Quantity(value=40.0, unit="mm")
     case = parse_and_validate_payload(case.model_dump())  # re-validate with explicit fields
 
     active = ElasticSuperpositionResult(
@@ -239,17 +239,17 @@ def test_step2_method_uses_splice_formula_ex_and_input_ey(monkeypatch) -> None:
     monkeypatch.setattr(
         bbmb_splice_methods,
         "_derive_elastic_bolt_capacity_kip",
-        lambda *_args, **_kwargs: (20.0, {"phi_bolt_shear": 0.9}),
+        lambda *_args, **_kwargs: (20.0, {"phi_bv": 0.9}),
     )
     monkeypatch.setattr(bbmb_splice_methods, "_solve_bolt_group_methods", _capture_solver)
 
     result = bbmb_splice_methods.run_step2_pernos1_method(case, _binding())
     assert result.status == CheckStatus.PASS
-    # splice formula: ex = sep + 2*Le1.x1 + (nb1.x-1)*S1.x
+    # splice formula: ex = gap_sp + 2*Le_blt_web_x1 + (n_blt_web_x-1)*g_blt_web
     expected_ex_mm = (
-        case.geometry.splice_gap.value
-        + 2.0 * (case.geometry.web_bolt_edge_distance_x1 or case.geometry.web_bolt_edge_distance).value
-        + (case.geometry.web_bolt_lines - 1) * case.geometry.web_bolt_gage.value
+        case.geometry.gap_sp.value
+        + 2.0 * case.geometry.Le_blt_web_x1.value
+        + (case.geometry.n_blt_web_x - 1) * case.geometry.g_blt_web.value
     )
     assert captured["ex_in"] == pytest.approx(expected_ex_mm / 25.4)
     assert captured["ey_in"] == pytest.approx(40.0 / 25.4)

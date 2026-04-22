@@ -123,7 +123,7 @@ def test_splice_memory_includes_step2_method_block(monkeypatch) -> None:
     monkeypatch.setattr(
         bbmb_splice_methods,
         "_derive_elastic_bolt_capacity_kip",
-        lambda *_args, **_kwargs: (20.0, {"phi_bolt_shear": 0.9}),
+        lambda *_args, **_kwargs: (20.0, {"phi_bv": 0.9}),
     )
     monkeypatch.setattr(
         bbmb_splice_methods,
@@ -146,7 +146,7 @@ def test_splice_memory_prints_cu_when_method_is_icr(monkeypatch) -> None:
     monkeypatch.setattr(
         bbmb_splice_methods,
         "_derive_elastic_bolt_capacity_kip",
-        lambda *_args, **_kwargs: (20.0, {"phi_bolt_shear": 0.9}),
+        lambda *_args, **_kwargs: (20.0, {"phi_bv": 0.9}),
     )
     monkeypatch.setattr(
         bbmb_splice_methods,

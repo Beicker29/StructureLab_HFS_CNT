@@ -67,24 +67,23 @@ def _selected_procedure_icr(case: BeamBeamMomentBoltedCase) -> BeamBeamMomentBol
 
 
 def _resolve_eccentricity(case: BeamBeamMomentBoltedCase) -> Quantity:
-    alpha = case.geometry.splice_gap
-    le1_x1 = case.geometry.web_bolt_edge_distance_x1 or case.geometry.web_bolt_edge_distance
-    sx = case.geometry.web_bolt_gage
-    if alpha.unit != le1_x1.unit or alpha.unit != sx.unit:
-        raise ValueError("Incompatible units in e = sep + 2*Le1.x1 + (nb1.x-1)*S1.x")
-    e_value = alpha.value + 2.0 * le1_x1.value + (case.geometry.web_bolt_lines - 1) * sx.value
-    return Quantity(value=e_value, unit=alpha.unit)
+    # Splice convention fixed by project:
+    # ex = gap_sp + 2*Le_blt_web_x1 + (n_blt_web_x-1)*g_blt_web
+    alpha = case.geometry.gap_sp
+    le_x1 = case.geometry.Le_blt_web_x1
+    g_web = case.geometry.g_blt_web
+    if alpha.unit != le_x1.unit or alpha.unit != g_web.unit:
+        raise ValueError("Incompatible units in ex = gap_sp + 2*Le_blt_web_x1 + (n_blt_web_x-1)*g_blt_web")
+    ex_value = alpha.value + 2.0 * le_x1.value + (case.geometry.n_blt_web_x - 1) * g_web.value
+    return Quantity(value=ex_value, unit=alpha.unit)
 
 
 def _resolve_eccentricity_components(
     *,
     case: BeamBeamMomentBoltedCase,
 ) -> tuple[Quantity, Quantity, str]:
-    # Splice-specific convention requested by user:
-    # ex = sep + 2*Le1.x1 + (nb1.x-1)*S1.x
-    # ey = input loads.eccentricity_ey (default 0)
     ex = _resolve_eccentricity(case)
-    ey_input = case.loads.eccentricity_ey
+    ey_input = case.loads.ey_blt_web
     if ey_input is None:
         ey = Quantity(value=0.0, unit=ex.unit)
         return ex, ey, "splice_formula_ex_and_default_ey_zero"
@@ -95,12 +94,12 @@ def _resolve_eccentricity_components(
 
 
 def _web_group_points_in(case: BeamBeamMomentBoltedCase) -> tuple[BoltCoordinate, ...]:
-    sx_in = _to_in(case.geometry.web_bolt_gage, case.units_system)
-    sy_in = _to_in(case.geometry.web_bolt_pitch, case.units_system)
+    sx_in = _to_in(case.geometry.g_blt_web, case.units_system)
+    sy_in = _to_in(case.geometry.p_blt_web, case.units_system)
     points: list[BoltCoordinate] = []
     index = 1
-    for ix in range(case.geometry.web_bolt_lines):
-        for iy in range(case.geometry.web_bolt_rows_per_side):
+    for ix in range(case.geometry.n_blt_web_x):
+        for iy in range(case.geometry.n_blt_web_y):
             points.append(
                 BoltCoordinate(
                     tag=f"w{index}",
@@ -113,11 +112,11 @@ def _web_group_points_in(case: BeamBeamMomentBoltedCase) -> tuple[BoltCoordinate
 
 
 def _derive_elastic_bolt_capacity_kip(case: BeamBeamMomentBoltedCase) -> tuple[float, dict[str, Any]]:
-    bolt_shape = case.materials.bolt_shape_web or case.materials.bolt_shape
-    bolt_standard = case.materials.bolt_fabrication_standard_web or case.materials.bolt_fabrication_standard
-    bolt_description = case.materials.bolt_description
+    bolt_shape = case.materials.shape_blt_web
+    bolt_standard = case.materials.std_blt_web
+    bolt_description = case.materials.desc_blt_web
     if not bolt_standard.strip() or not bolt_description.strip():
-        raise ValueError("Bolt standard/description are required to derive elastic bolt capacity.")
+        raise ValueError("std_blt_web/desc_blt_web are required to derive elastic bolt capacity.")
 
     bolt_geom_us = get_bolt_section_properties(bolt_shape=bolt_shape, unit_system=UnitSystem.US)
     db_us = bolt_geom_us["diameter_nominal"]
@@ -130,25 +129,25 @@ def _derive_elastic_bolt_capacity_kip(case: BeamBeamMomentBoltedCase) -> tuple[f
         specification=bolt_standard,
         unit_system=UnitSystem.US,
     )
-    thread = case.materials.bolt_thread_condition.strip().upper()
+    thread = case.materials.thread_blt_web.strip().upper()
     if thread == "N":
         fnv = strengths_us["fnv_threads_not_excluded"]
     elif thread == "X":
         fnv = strengths_us["fnv_threads_excluded"]
     else:
-        raise ValueError("materials.bolt_thread_condition must be N or X.")
+        raise ValueError("materials.thread_blt_web must be N or X.")
     if not isinstance(fnv, Quantity):
         raise ValueError("Unable to resolve bolt shear strength Fnv.")
 
-    phi = case.design_factors.phi_bolt_shear
+    phi = case.design_factors.phi_bv
     bolt_capacity_kip = phi * fnv.value * area_in2
     return bolt_capacity_kip, {
         "db_web_us": db_us.model_dump(),
         "ab_web_in2": area_in2,
         "fnv_web_us": fnv.model_dump(),
-        "phi_bolt_shear": phi,
-        "bolt_standard_web": bolt_standard,
-        "bolt_description_web": bolt_description,
+        "phi_bv": phi,
+        "std_blt_web": bolt_standard,
+        "desc_blt_web": bolt_description,
     }
 
 
@@ -244,14 +243,143 @@ def _solve_bolt_group_methods(
     }
 
 
+def _summarize_method_result(
+    *,
+    method_name: str,
+    result: ElasticSuperpositionResult | ElasticECRResult | ICRResult,
+    tolerance: float,
+    max_iterations: int,
+    geometry: Any,
+    load: Any,
+    law_params: dict[str, float],
+) -> dict[str, Any]:
+    bolt_forces_table = [
+        {
+            "tag": item.tag,
+            "fx_kip": item.fx,
+            "fy_kip": item.fy,
+            "resultant_kip": item.resultant,
+            "moment_about_cg_kip_in": item.moment_about_cg,
+        }
+        for item in result.bolt_forces
+    ]
+    if isinstance(result, ElasticSuperpositionResult):
+        status = "PASS" if result.dcr <= 1.0 else "FAIL"
+        direct_fx = -load.vx / float(geometry.bolt_count)
+        direct_fy = -load.vy / float(geometry.bolt_count)
+        return {
+            "method": method_name,
+            "applicable": True,
+            "status": status,
+            "demand_kip": result.bolt_demand,
+            "capacity_kip": result.bolt_capacity,
+            "dcr": result.dcr,
+            "direct_fx_kip": direct_fx,
+            "direct_fy_kip": direct_fy,
+            "ip_in2": geometry.ip,
+            "sum_fx_kip": result.sum_fx,
+            "sum_fy_kip": result.sum_fy,
+            "sum_mz_kip_in": result.sum_mz,
+            "bolt_forces": bolt_forces_table,
+            "note": None,
+        }
+    if isinstance(result, ElasticECRResult):
+        center_x = result.center_x
+        center_y = result.center_y
+        ax = geometry.centroid_x - center_x if center_x is not None else None
+        ay = center_y - geometry.centroid_y if center_y is not None else None
+        ecc_x = (load.ex + ax) if ax is not None else None
+        ecc_y = (load.ey - ay) if ay is not None else None
+        radii = []
+        if center_x is not None and center_y is not None:
+            radii = [math.hypot(bolt.x - center_x, bolt.y - center_y) for bolt in geometry.bolts]
+        dmax = max(radii) if radii else None
+        sum_d2 = sum(value * value for value in radii) if radii else None
+        if not result.applicable or result.dcr is None:
+            return {
+                "method": method_name,
+                "applicable": False,
+                "status": "FAIL",
+                "demand_kip": result.demand,
+                "capacity_kip": result.capacity,
+                "dcr": result.dcr,
+                "ax_in": ax,
+                "ay_in": ay,
+                "ecc_x_in": ecc_x,
+                "ecc_y_in": ecc_y,
+                "dmax_in": dmax,
+                "sum_d2_in2": sum_d2,
+                "center_x_in": result.center_x,
+                "center_y_in": result.center_y,
+                "ce": result.ce,
+                "sum_fx_kip": result.sum_fx,
+                "sum_fy_kip": result.sum_fy,
+                "sum_mz_kip_in": result.sum_mz,
+                "bolt_forces": bolt_forces_table,
+                "note": result.note,
+            }
+        status = "PASS" if result.dcr <= 1.0 else "FAIL"
+        return {
+            "method": method_name,
+            "applicable": True,
+            "status": status,
+            "demand_kip": result.demand,
+            "capacity_kip": result.capacity,
+            "dcr": result.dcr,
+            "ax_in": ax,
+            "ay_in": ay,
+            "ecc_x_in": ecc_x,
+            "ecc_y_in": ecc_y,
+            "dmax_in": dmax,
+            "sum_d2_in2": sum_d2,
+            "center_x_in": result.center_x,
+            "center_y_in": result.center_y,
+            "ce": result.ce,
+            "sum_fx_kip": result.sum_fx,
+            "sum_fy_kip": result.sum_fy,
+            "sum_mz_kip_in": result.sum_mz,
+            "bolt_forces": bolt_forces_table,
+            "note": result.note,
+        }
+    # ICR
+    n_iterations = len(result.iterations)
+    acceptance = (
+        result.converged
+        and result.final_residual <= tolerance
+        and n_iterations <= max_iterations
+        and result.dcr is not None
+    )
+    status = "PASS" if (acceptance and result.dcr is not None and result.dcr <= 1.0) else "FAIL"
+    return {
+        "method": method_name,
+        "applicable": True,
+        "status": status,
+        "converged": result.converged,
+        "acceptance_ok": acceptance,
+        "demand_kip": result.demand,
+        "capacity_kip": result.capacity,
+        "dcr": result.dcr,
+        "icr_x_in": result.icr_x,
+        "icr_y_in": result.icr_y,
+        "cu": result.cu,
+        "final_residual": result.final_residual,
+        "n_iterations": n_iterations,
+        "law_mu": law_params["mu"],
+        "law_lambda": law_params["lambda_exp"],
+        "law_delta_max": law_params["delta_max"],
+        "bolt_forces": bolt_forces_table,
+        "note": result.note,
+    }
+
+
 def run_step2_pernos1_method(case: BeamBeamMomentBoltedCase, rule_binding: object) -> CheckResult:
     procedure_icr = _selected_procedure_icr(case)
     method = procedure_icr.method
     tolerance = procedure_icr.tolerance_1
     max_iterations = procedure_icr.max_iterations_1
 
-    px_kip = abs(_to_kip(case.loads.axial_right_end, case.units_system))
-    py_kip = abs(_to_kip(case.loads.shear_right_end, case.units_system))
+    px_kip = abs(_to_kip(case.loads.Pu_sp, case.units_system))
+    py_kip = abs(_to_kip(case.loads.Vu2_sp, case.units_system))
     ex, ey, eccentricity_source = _resolve_eccentricity_components(case=case)
     ex_in = _to_in(ex, case.units_system)
     ey_in = _to_in(ey, case.units_system)
@@ -291,7 +419,7 @@ def run_step2_pernos1_method(case: BeamBeamMomentBoltedCase, rule_binding: objec
     capacity: Quantity | None = None
     dcr: float | None = None
     status = CheckStatus.FAIL
-    equation = "bbmb_splice Step 2 pernos 1: internal nonlinear/elastic bolt-group solver"
+    equation = "bbmb_splice Punto 2 pernos 1: solver interno ICR/Elastic"
     notes: str | None = None
     active_mode_data: dict[str, Any] = {"method": method}
 
@@ -380,17 +508,96 @@ def run_step2_pernos1_method(case: BeamBeamMomentBoltedCase, rule_binding: objec
     if method in {"elastic_superposition", "elastic_ecr"} and icr_compare is not None and icr_compare.capacity is not None:
         icr_capacity_compare_kip = icr_compare.capacity
 
+    # Always compute a complete comparative bundle for reporting tables,
+    # independent of selected method in JSON.
+    geometry_all = build_bolt_group_geometry(bolt_points)
+    load_all = build_in_plane_load_from_explicit_eccentricity(
+        vx=px_kip,
+        vy=py_kip,
+        ex=ex_in,
+        ey=ey_in,
+    )
+    options_all = BoltGroupSolverOptions(tolerance=tolerance, max_iterations=max_iterations)
+    icr_reporting_capacity_kip = (
+        procedure_icr.rult_1_kip.value if procedure_icr.rult_1_kip is not None else elastic_capacity_kip
+    )
+    result_elastic_superposition = solve_bolt_group_method(
+        method=BoltGroupMethod.ELASTIC_SUPERPOSITION,
+        geometry=geometry_all,
+        load=load_all,
+        bolt_capacity=elastic_capacity_kip,
+        options=options_all,
+    )
+    result_elastic_ecr = solve_bolt_group_method(
+        method=BoltGroupMethod.ELASTIC_ECR,
+        geometry=geometry_all,
+        load=load_all,
+        bolt_capacity=elastic_capacity_kip,
+        options=options_all,
+    )
+    result_icr = solve_bolt_group_method(
+        method=BoltGroupMethod.ICR,
+        geometry=geometry_all,
+        load=load_all,
+        bolt_capacity=icr_reporting_capacity_kip,
+        options=options_all,
+    )
+    methods_summary = [
+        _summarize_method_result(
+            method_name="elastic_superposition",
+            result=result_elastic_superposition,
+            tolerance=tolerance,
+            max_iterations=max_iterations,
+            geometry=geometry_all,
+            load=load_all,
+            law_params={"mu": options_all.icr_law.mu, "lambda_exp": options_all.icr_law.lambda_exp, "delta_max": options_all.icr_law.delta_max},
+        ),
+        _summarize_method_result(
+            method_name="elastic_ecr",
+            result=result_elastic_ecr,
+            tolerance=tolerance,
+            max_iterations=max_iterations,
+            geometry=geometry_all,
+            load=load_all,
+            law_params={"mu": options_all.icr_law.mu, "lambda_exp": options_all.icr_law.lambda_exp, "delta_max": options_all.icr_law.delta_max},
+        ),
+        _summarize_method_result(
+            method_name="icr",
+            result=result_icr,
+            tolerance=tolerance,
+            max_iterations=max_iterations,
+            geometry=geometry_all,
+            load=load_all,
+            law_params={"mu": options_all.icr_law.mu, "lambda_exp": options_all.icr_law.lambda_exp, "delta_max": options_all.icr_law.delta_max},
+        ),
+    ]
+    icr_iterations_table = []
+    if isinstance(result_icr, ICRResult):
+        icr_iterations_table = [
+            {
+                "iteration": item.iteration,
+                "icr_x": item.icr_x,
+                "icr_y": item.icr_y,
+                "residual_fx": item.residual_fx,
+                "residual_fy": item.residual_fy,
+                "residual_norm": item.residual_norm,
+                "step_dx": item.step_dx,
+                "step_dy": item.step_dy,
+            }
+            for item in result_icr.iterations
+        ]
+
     memory = CalculationMemory(
         inputs={
             "method_selected": method,
-            "px": case.loads.axial_right_end.model_dump(),
-            "py": case.loads.shear_right_end.model_dump(),
-            "ex": ex.model_dump(),
-            "ey": ey.model_dump(),
+            "Pu_sp": case.loads.Pu_sp.model_dump(),
+            "Vu2_sp": case.loads.Vu2_sp.model_dump(),
+            "ex_blt_web": ex.model_dump(),
+            "ey_blt_web": ey.model_dump(),
             "eccentricity_source": eccentricity_source,
-            "mz": _from_kip_in(mz_kip_in, case.units_system).model_dump(),
-            "bolt_group_1_nx": case.geometry.web_bolt_lines,
-            "bolt_group_1_ny": case.geometry.web_bolt_rows_per_side,
+            "Muz_blt_web": _from_kip_in(mz_kip_in, case.units_system).model_dump(),
+            "n_blt_web_x": case.geometry.n_blt_web_x,
+            "n_blt_web_y": case.geometry.n_blt_web_y,
             "bolt_group_1_points_in": [{"tag": point.tag, "x": point.x, "y": point.y} for point in bolt_points],
             "tolerance_1": tolerance,
             "max_iterations_1": max_iterations,
@@ -410,6 +617,17 @@ def run_step2_pernos1_method(case: BeamBeamMomentBoltedCase, rule_binding: objec
                 "iy_in2": geometry.iy,
                 "ixy_in2": geometry.ixy,
                 "ip_in2": geometry.ip,
+                "bolts_offsets": [
+                    {
+                        "tag": bolt.tag,
+                        "x_in": bolt.x,
+                        "y_in": bolt.y,
+                        "dx_in": bolt.dx,
+                        "dy_in": bolt.dy,
+                        "r_in": bolt.radius,
+                    }
+                    for bolt in geometry.bolts
+                ],
             },
             "load_in_plane_kip_in": {
                 "vx_kip": load.vx,
@@ -448,18 +666,24 @@ def run_step2_pernos1_method(case: BeamBeamMomentBoltedCase, rule_binding: objec
                 ),
                 "final_residual": icr_report_source.final_residual if icr_report_source is not None else None,
                 "n_iterations": len(icr_report_source.iterations) if icr_report_source is not None else None,
+                "methods_summary": methods_summary,
+                "icr_iterations": icr_iterations_table,
+                "capacity_basis": {
+                    "elastic_capacity_kip": elastic_capacity_kip,
+                    "icr_reporting_capacity_kip": icr_reporting_capacity_kip,
+                },
             },
         },
         design_factors={
-            "phi_bolt_shear": case.design_factors.phi_bolt_shear,
+            "phi_bv": case.design_factors.phi_bv,
         },
         equation=equation,
         units_trace={
-            "px": case.loads.axial_right_end.unit,
-            "py": case.loads.shear_right_end.unit,
-            "ex": ex.unit,
-            "ey": ey.unit,
-            "mz": "kip-in" if case.units_system == UnitSystem.US else "kN-mm",
+            "Pu_sp": case.loads.Pu_sp.unit,
+            "Vu2_sp": case.loads.Vu2_sp.unit,
+            "ex_blt_web": ex.unit,
+            "ey_blt_web": ey.unit,
+            "Muz_blt_web": "kip-in" if case.units_system == UnitSystem.US else "kN-mm",
         },
         final_capacity=capacity,
     )

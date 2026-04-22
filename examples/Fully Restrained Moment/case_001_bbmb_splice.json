@@ -10,150 +10,153 @@
   "connection_type": "bbmb_splice",
   "load_state": "strength",
   "viga": {
-    "sep": {
+    "shape_vg": "W18X35",
+    "steel_vg": "ASTM A572 Gr 50",
+    "gap_sp": {
       "value": 25.4,
       "unit": "mm"
     },
-    "perfil": "W18X35",
-    "tipo_acero_viga": "ASTM A572 Gr 50",
-    "Le1.y3": {
-      "value": 25.0,
-      "unit": "mm"
-    },
-    "Tlvg": {
+    "tol_L_vg": {
       "value": 6.35,
       "unit": "mm"
     },
-    "condicion_superficial": "pintada",
-    "condicion_atmosferica": "no corrosiva"
+    "cond_sup_vg": "painted",
+    "cond_amb_vg": "non_corrosive"
   },
-  "platina_1_alma": {
-    "tp1": {
+  "platina_web": {
+    "t_plt_web": {
       "value": 9.5,
       "unit": "mm"
     },
-    "tipo_acero_p1": "ASTM A36",
-    "tipo_agujero_p1": "estandar",
-    "condicion_superficial": "pintada",
-    "condicion_atmosferica": "no corrosiva"
+    "type_hole_plt_web": "standard",
+    "cond_sup_plt_web": "painted",
+    "cond_amb_plt_web": "non_corrosive"
   },
-  "platina_2_ala": {
-    "tp2": {
+  "platina_flange": {
+    "t_plt_ftop": {
       "value": 19.05,
       "unit": "mm"
     },
-    "tipo_acero_p2": "ASTM A36",
-    "tipo_agujero_p2": "estandar",
-    "condicion_superficial": "pintada",
-    "condicion_atmosferica": "no corrosiva"
+    "t_plt_fbot": {
+      "value": 19.05,
+      "unit": "mm"
+    },
+    "type_hole_plt_flange": "standard",
+    "cond_sup_plt_flange": "painted",
+    "cond_amb_plt_flange": "non_corrosive"
   },
-  "pernos_grupo_1_alma": {
-    "bolt_shape_1": "P5/8\"X1-3/4\"",
-    "bolt_thread_condition_1": "N",
-    "bolt_fabrication_standard_1": "ASTM A325",
-    "bolt_description_1": "Grupo 120",
-    "bolt_tightening_type": "pretensioned",
-    "Le1_x1": {
+  "pernos_grupo_1_web": {
+    "shape_blt_web": "P5/8\"X1-3/4\"",
+    "std_blt_web": "ASTM A325",
+    "desc_blt_web": "Grupo 120",
+    "thread_blt_web": "N",
+    "type_tight_blt_web": "pretensioned",
+    "n_blt_web_x": 2,
+    "n_blt_web_y": 6,
+    "g_blt_web": {
+      "value": 76.2,
+      "unit": "mm"
+    },
+    "p_blt_web": {
+      "value": 76.2,
+      "unit": "mm"
+    },
+    "Le_blt_web_x1": {
       "value": 25.4,
       "unit": "mm"
     },
-    "Le1_x2": {
+    "Le_blt_web_x2": {
       "value": 35.0,
       "unit": "mm"
     },
-    "S1_x": {
-      "value": 76.2,
-      "unit": "mm"
-    },
-    "S1_y": {
-      "value": 76.2,
-      "unit": "mm"
-    },
-    "Le1_y1": {
+    "Le_blt_web_y1": {
       "value": 25.0,
       "unit": "mm"
     },
-    "Le1_y2": {
+    "Le_blt_web_y2": {
       "value": 25.0,
       "unit": "mm"
     },
-    "nb1_x": 2,
-    "nb1_y": 6
+    "Le_blt_web_y3": {
+      "value": 25.0,
+      "unit": "mm"
+    }
   },
-  "pernos_grupo_2_ala": {
-    "bolt_shape_2": "P3/4\"X1-3/4\"",
-    "bolt_thread_condition_2": "N",
-    "bolt_fabrication_standard_2": "ASTM A325",
-    "bolt_description_2": "Grupo 120",
-    "bolt_tightening_type": "pretensioned",
-    "Le2_x1": {
-      "value": 50,
-      "unit": "mm"
-    },
-    "Le2_x2": {
-      "value": 50.0,
-      "unit": "mm"
-    },
-    "S2_x": {
+  "pernos_grupo_2_flange": {
+    "shape_blt_flange": "P3/4\"X1-3/4\"",
+    "std_blt_flange": "ASTM A325",
+    "desc_blt_flange": "Grupo 120",
+    "thread_blt_flange": "N",
+    "type_tight_blt_flange": "pretensioned",
+    "n_blt_flange_x": 4,
+    "n_blt_flange_z": 2,
+    "p_blt_flange": {
       "value": 60.0,
       "unit": "mm"
     },
-    "Le2_z1": {
+    "g_blt_flange": {
+      "value": 40.0,
+      "unit": "mm"
+    },
+    "Le_blt_flange_x1": {
+      "value": 50.0,
+      "unit": "mm"
+    },
+    "Le_blt_flange_x2": {
+      "value": 50.0,
+      "unit": "mm"
+    },
+    "Le_blt_flange_z1": {
       "value": 30.0,
       "unit": "mm"
     },
-    "Le2_z2": {
+    "Le_blt_flange_z2": {
       "value": 40.0,
       "unit": "mm"
     },
-    "S2_z1": {
-      "value": 40.0,
+    "Le_blt_flange_z3": {
+      "value": 30.0,
       "unit": "mm"
-    },
-    "S2_z2": {
-      "value": 90.0,
-      "unit": "mm"
-    },
-    "nb2_x": 4,
-    "nb2_z": 2
+    }
   },
   "loads": {
-    "moment_right_end": {
-      "value": 450000.0,
-      "unit": "kN-mm"
+    "Pu_sp": {
+      "value": 0.0,
+      "unit": "kN"
     },
-    "moment_left_end": {
-      "value": 450000.0,
-      "unit": "kN-mm"
-    },
-    "shear_right_end": {
+    "Vu2_sp": {
       "value": 250.0,
       "unit": "kN"
     },
-    "shear_left_end": {
-      "value": 250.0,
+    "Vu3_sp": {
+      "value": 0.0,
       "unit": "kN"
     },
-    "axial_right_end": {
-      "value": 0,
-      "unit": "kN"
+    "Mu3_sp": {
+      "value": 450000.0,
+      "unit": "kN-mm"
     },
-    "axial_left_end": {
-      "value": 0,
-      "unit": "kN"
+    "Mu2_sp": {
+      "value": 0.0,
+      "unit": "kN-mm"
     },
-    "eccentricity_ey": {
+    "Tu_sp": {
+      "value": 0.0,
+      "unit": "kN-mm"
+    },
+    "alpha_Pu_web": 0.0,
+    "ey_blt_web": {
       "value": 0.0,
       "unit": "mm"
     }
   },
   "design_factors": {
-    "phi_bolt_tension": 0.9,
-    "phi_bolt_shear": 0.9,
-    "phi_plate_yielding": 0.9,
-    "phi_plate_rupture": 0.75,
-    "phi_block_shear": 0.75,
-    "phi_slip_critical": 1.0
+    "phi_bt": 0.9,
+    "phi_bv": 0.9,
+    "phi_py": 0.9,
+    "phi_pr": 0.75,
+    "phi_bs": 0.75,
+    "phi_sc": 1.0
   },
   "procedure": {
     "icr": {

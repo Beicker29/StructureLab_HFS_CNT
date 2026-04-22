@@ -17,98 +17,82 @@
       "status": "FAIL",
       "calculation_memory": {
         "inputs": {
-          "beam_shape": "W18X35",
-          "db_web": {
+          "shape_vg": "W18X35",
+          "db_blt_web": {
             "value": 15.875,
             "unit": "mm"
           },
-          "db_flange": {
+          "db_blt_flange": {
             "value": 19.049999999999997,
             "unit": "mm"
           },
-          "s1_x": {
+          "g_blt_web": {
             "value": 76.2,
             "unit": "mm"
           },
-          "s1_y": {
+          "p_blt_web": {
             "value": 76.2,
             "unit": "mm"
           },
-          "s2_x": {
+          "p_blt_flange": {
             "value": 60.0,
             "unit": "mm"
           },
-          "s2_z1": {
+          "g_blt_flange": {
             "value": 40.0,
             "unit": "mm"
           },
-          "s2_z2": {
-            "value": 90.0,
-            "unit": "mm"
-          },
-          "le1_x1": {
+          "Le_blt_web_x1": {
             "value": 25.4,
             "unit": "mm"
           },
-          "le1_x2": {
+          "Le_blt_web_x2": {
             "value": 35.0,
             "unit": "mm"
           },
-          "le1_y1": {
+          "Le_blt_web_y1": {
             "value": 25.0,
             "unit": "mm"
           },
-          "le1_y2": {
+          "Le_blt_web_y2": {
             "value": 25.0,
             "unit": "mm"
           },
-          "le2_x1": {
+          "Le_blt_flange_x1": {
             "value": 50.0,
             "unit": "mm"
           },
-          "le2_x2": {
+          "Le_blt_flange_x2": {
             "value": 50.0,
             "unit": "mm"
           },
-          "le2_z1": {
+          "Le_blt_flange_z1": {
             "value": 30.0,
             "unit": "mm"
           },
-          "le2_z2": {
+          "Le_blt_flange_z2": {
             "value": 40.0,
             "unit": "mm"
           },
-          "k1_catalog": {
-            "value": 19.1,
+          "Le_blt_flange_z3": {
+            "value": 30.0,
             "unit": "mm"
           },
-          "hp1": {
-            "value": 431.0,
-            "unit": "mm"
-          },
-          "T_catalog": {
+          "T_vg": {
             "value": 394.0,
             "unit": "mm"
           },
-          "bp2": {
-            "value": 110.0,
-            "unit": "mm"
-          },
-          "bf_catalog": {
+          "bf_vg": {
             "value": 152.0,
             "unit": "mm"
-          },
-          "web_plate_surface_condition": "painted",
-          "web_plate_atmospheric_condition": "non_corrosive",
-          "flange_plate_surface_condition": "painted",
-          "flange_plate_atmospheric_condition": "non_corrosive"
+          }
         },
         "intermediates": {
           "step_1_limits": [
             {
               "scope": "pernos_1",
               "description": "Separacion minima entre pernos del alma en direccion X",
-              "calculated_symbol": "S1_x",
+              "calculated_symbol": "g_blt_web",
               "limit_symbol": "Smin",
               "comparison": "simple",
               "comparison_text": ">=",
@@ -126,7 +110,7 @@
             {
               "scope": "pernos_1",
               "description": "Separacion maxima entre pernos del alma en direccion X",
-              "calculated_symbol": "S1_x",
+              "calculated_symbol": "g_blt_web",
               "limit_symbol": "Smax",
               "comparison": "simple",
               "comparison_text": "<=",
@@ -143,8 +127,8 @@
             },
             {
               "scope": "pernos_1",
-              "description": "Separacion minima entre pernos del alma en direccion Y",
-              "calculated_symbol": "S1_y",
+              "description": "Separacion minima entre pernos del alma en direccion Z",
+              "calculated_symbol": "p_blt_web",
               "limit_symbol": "Smin",
               "comparison": "simple",
               "comparison_text": ">=",
@@ -161,8 +145,8 @@
             },
             {
               "scope": "pernos_1",
-              "description": "Separacion maxima entre pernos del alma en direccion Y",
-              "calculated_symbol": "S1_y",
+              "description": "Separacion maxima entre pernos del alma en direccion Z",
+              "calculated_symbol": "p_blt_web",
               "limit_symbol": "Smax",
               "comparison": "simple",
               "comparison_text": "<=",
@@ -180,7 +164,7 @@
             {
               "scope": "pernos_2",
               "description": "Separacion minima entre pernos del ala en direccion X",
-              "calculated_symbol": "S2_x",
+              "calculated_symbol": "p_blt_flange",
               "limit_symbol": "Smin",
               "comparison": "simple",
               "comparison_text": ">=",
@@ -198,7 +182,7 @@
             {
               "scope": "pernos_2",
               "description": "Separacion maxima entre pernos del ala en direccion X",
-              "calculated_symbol": "S2_x",
+              "calculated_symbol": "p_blt_flange",
               "limit_symbol": "Smax",
               "comparison": "simple",
               "comparison_text": "<=",
@@ -215,8 +199,8 @@
             },
             {
               "scope": "pernos_2",
-              "description": "Separacion minima entre pernos del ala en direccion Z (S2_z1)",
-              "calculated_symbol": "S2_z1",
+              "description": "Separacion minima entre pernos del ala en direccion Z",
+              "calculated_symbol": "g_blt_flange",
               "limit_symbol": "Smin",
               "comparison": "simple",
               "comparison_text": ">=",
@@ -233,8 +217,8 @@
             },
             {
               "scope": "pernos_2",
-              "description": "Separacion maxima entre pernos del ala en direccion Z (S2_z1)",
-              "calculated_symbol": "S2_z1",
+              "description": "Separacion maxima entre pernos del ala en direccion Z",
+              "calculated_symbol": "g_blt_flange",
               "limit_symbol": "Smax",
               "comparison": "simple",
               "comparison_text": "<=",
@@ -251,8 +235,8 @@
             },
             {
               "scope": "viga",
-              "description": "Distancia minima a borde Le1_x1 para agujero estandar",
-              "calculated_symbol": "Le1_x1",
+              "description": "Distancia minima a borde Le_blt_web_x1 para agujero estandar",
+              "calculated_symbol": "Le_blt_web_x1",
               "limit_symbol": "max(Le_min, 5*(8*db.1+2mm))",
               "comparison": "simple",
               "comparison_text": ">=",
@@ -269,8 +253,8 @@
             },
             {
               "scope": "viga",
-              "description": "Distancia maxima a borde Le1_x1",
-              "calculated_symbol": "Le1_x1",
+              "description": "Distancia maxima a borde Le_blt_web_x1",
+              "calculated_symbol": "Le_blt_web_x1",
               "limit_symbol": "Le_max",
               "comparison": "simple",
               "comparison_text": "<=",
@@ -287,8 +271,8 @@
             },
             {
               "scope": "pernos_1",
-              "description": "Distancia minima a borde Le1_x2 para agujero estandar",
-              "calculated_symbol": "Le1_x2",
+              "description": "Distancia minima a borde Le_blt_web_x2 para agujero estandar",
+              "calculated_symbol": "Le_blt_web_x2",
               "limit_symbol": "max(Le_min, 5*(8*db.1+2mm))",
               "comparison": "simple",
               "comparison_text": ">=",
@@ -305,26 +289,8 @@
             },
             {
               "scope": "pernos_1",
-              "description": "Distancia maxima a borde Le1_x2",
-              "calculated_symbol": "Le1_x2",
-              "limit_symbol": "Le_max",
-              "comparison": "simple",
-              "comparison_text": "<=",
-              "calculated": {
-                "value": 35.0,
-                "unit": "mm"
-              },
-              "limit": {
-                "value": 91.44,
-                "unit": "mm"
-              },
-              "clause": "AISC 360-22 J3.6",
-              "result": "PASS"
-            },
-            {
-              "scope": "pernos_1",
-              "description": "Distancia minima a borde Le1_y1 para agujero estandar",
-              "calculated_symbol": "Le1_y1",
+              "description": "Distancia minima a borde Le_blt_web_y1 para agujero estandar",
+              "calculated_symbol": "Le_blt_web_y1",
               "limit_symbol": "Le_min",
               "comparison": "simple",
               "comparison_text": ">=",
@@ -341,26 +307,8 @@
             },
             {
               "scope": "pernos_1",
-              "description": "Distancia maxima a borde Le1_y1",
-              "calculated_symbol": "Le1_y1",
-              "limit_symbol": "Le_max",
-              "comparison": "simple",
-              "comparison_text": "<=",
-              "calculated": {
-                "value": 25.0,
-                "unit": "mm"
-              },
-              "limit": {
-                "value": 91.44,
-                "unit": "mm"
-              },
-              "clause": "AISC 360-22 J3.6",
-              "result": "PASS"
-            },
-            {
-              "scope": "pernos_1",
-              "description": "Distancia minima a borde Le1_y2 para agujero estandar",
-              "calculated_symbol": "Le1_y2",
+              "description": "Distancia minima a borde Le_blt_web_y2 para agujero estandar",
+              "calculated_symbol": "Le_blt_web_y2",
               "limit_symbol": "Le_min",
               "comparison": "simple",
               "comparison_text": ">=",
@@ -376,27 +324,9 @@
               "result": "PASS"
             },
             {
-              "scope": "pernos_1",
-              "description": "Distancia maxima a borde Le1_y2",
-              "calculated_symbol": "Le1_y2",
-              "limit_symbol": "Le_max",
-              "comparison": "simple",
-              "comparison_text": "<=",
-              "calculated": {
-                "value": 25.0,
-                "unit": "mm"
-              },
-              "limit": {
-                "value": 91.44,
-                "unit": "mm"
-              },
-              "clause": "AISC 360-22 J3.6",
-              "result": "PASS"
-            },
-            {
               "scope": "pernos_2",
-              "description": "Distancia minima a borde Le2_x1 para agujero estandar",
-              "calculated_symbol": "Le2_x1",
+              "description": "Distancia minima a borde Le_blt_flange_x1 para agujero estandar",
+              "calculated_symbol": "Le_blt_flange_x1",
               "limit_symbol": "Le_min",
               "comparison": "simple",
               "comparison_text": ">=",
@@ -413,26 +343,8 @@
             },
             {
               "scope": "pernos_2",
-              "description": "Distancia maxima a borde Le2_x1",
-              "calculated_symbol": "Le2_x1",
-              "limit_symbol": "Le_max",
-              "comparison": "simple",
-              "comparison_text": "<=",
-              "calculated": {
-                "value": 50.0,
-                "unit": "mm"
-              },
-              "limit": {
-                "value": 129.60000000000002,
-                "unit": "mm"
-              },
-              "clause": "AISC 360-22 J3.6",
-              "result": "PASS"
-            },
-            {
-              "scope": "pernos_2",
-              "description": "Distancia minima a borde Le2_x2 para agujero estandar",
-              "calculated_symbol": "Le2_x2",
+              "description": "Distancia minima a borde Le_blt_flange_x2 para agujero estandar",
+              "calculated_symbol": "Le_blt_flange_x2",
               "limit_symbol": "Le_min",
               "comparison": "simple",
               "comparison_text": ">=",
@@ -449,26 +361,8 @@
             },
             {
               "scope": "pernos_2",
-              "description": "Distancia maxima a borde Le2_x2",
-              "calculated_symbol": "Le2_x2",
-              "limit_symbol": "Le_max",
-              "comparison": "simple",
-              "comparison_text": "<=",
-              "calculated": {
-                "value": 50.0,
-                "unit": "mm"
-              },
-              "limit": {
-                "value": 129.60000000000002,
-                "unit": "mm"
-              },
-              "clause": "AISC 360-22 J3.6",
-              "result": "PASS"
-            },
-            {
-              "scope": "pernos_2",
-              "description": "Distancia minima a borde Le2_z1 para agujero estandar",
-              "calculated_symbol": "Le2_z1",
+              "description": "Distancia minima a borde Le_blt_flange_z1 para agujero estandar",
+              "calculated_symbol": "Le_blt_flange_z1",
               "limit_symbol": "Le_min",
               "comparison": "simple",
               "comparison_text": ">=",
@@ -485,26 +379,8 @@
             },
             {
               "scope": "pernos_2",
-              "description": "Distancia maxima a borde Le2_z1",
-              "calculated_symbol": "Le2_z1",
-              "limit_symbol": "Le_max",
-              "comparison": "simple",
-              "comparison_text": "<=",
-              "calculated": {
-                "value": 30.0,
-                "unit": "mm"
-              },
-              "limit": {
-                "value": 129.60000000000002,
-                "unit": "mm"
-              },
-              "clause": "AISC 360-22 J3.6",
-              "result": "PASS"
-            },
-            {
-              "scope": "pernos_2",
-              "description": "Distancia minima a borde Le2_z2 para agujero estandar",
-              "calculated_symbol": "Le2_z2",
+              "description": "Distancia minima a borde Le_blt_flange_z2 para agujero estandar",
+              "calculated_symbol": "Le_blt_flange_z2",
               "limit_symbol": "Le_min",
               "comparison": "simple",
               "comparison_text": ">=",
@@ -521,27 +397,27 @@
             },
             {
               "scope": "pernos_2",
-              "description": "Distancia maxima a borde Le2_z2",
-              "calculated_symbol": "Le2_z2",
-              "limit_symbol": "Le_max",
+              "description": "Distancia minima a borde Le_blt_flange_z3 para agujero estandar",
+              "calculated_symbol": "Le_blt_flange_z3",
+              "limit_symbol": "Le_min",
               "comparison": "simple",
-              "comparison_text": "<=",
+              "comparison_text": ">=",
               "calculated": {
-                "value": 40.0,
+                "value": 30.0,
                 "unit": "mm"
               },
               "limit": {
-                "value": 129.60000000000002,
+                "value": 25.4,
                 "unit": "mm"
               },
-              "clause": "AISC 360-22 J3.6",
+              "clause": "AISC 360-22 Tabla J3.4",
               "result": "PASS"
             },
             {
               "scope": "platina_1",
-              "description": "Altura de platina 1 no supera T del catalogo del perfil",
-              "calculated_symbol": "hp1",
-              "limit_symbol": "T",
+              "description": "Altura de platina de alma no supera T_vg del catalogo",
+              "calculated_symbol": "B_plt_web",
+              "limit_symbol": "T_vg",
               "comparison": "simple",
               "comparison_text": "<=",
               "calculated": {
@@ -552,32 +428,32 @@
                 "value": 394.0,
                 "unit": "mm"
               },
-              "clause": "Indicacion de diseno del usuario (constructivo) + catalogo de secciones",
+              "clause": "Criterio de detallado solicitado por usuario",
               "result": "FAIL"
             },
             {
               "scope": "platina_2",
-              "description": "Ancho de platina 2 no supera bf del catalogo del perfil",
-              "calculated_symbol": "bp2",
-              "limit_symbol": "bf",
+              "description": "Ancho de platina de ala no supera bf_vg del catalogo",
+              "calculated_symbol": "B_plt_flange",
+              "limit_symbol": "bf_vg",
               "comparison": "simple",
               "comparison_text": "<=",
               "calculated": {
-                "value": 110.0,
+                "value": 162.0,
                 "unit": "mm"
               },
               "limit": {
                 "value": 152.0,
                 "unit": "mm"
               },
-              "clause": "Indicacion de diseno del usuario (constructivo) + catalogo de secciones",
-              "result": "PASS"
+              "clause": "Criterio de detallado solicitado por usuario",
+              "result": "FAIL"
             },
             {
               "scope": "viga",
-              "description": "Distancia Le1.y3 no menor que kdes del catalogo",
-              "calculated_symbol": "Le1.y3",
-              "limit_symbol": "kdes",
+              "description": "Distancia Le_blt_web_y3 no menor que kdes_vg del catalogo",
+              "calculated_symbol": "Le_blt_web_y3",
+              "limit_symbol": "kdes_vg",
               "comparison": "simple",
               "comparison_text": ">=",
               "calculated": {
@@ -652,75 +528,61 @@
               "scope": "viga",
               "description": "Parametros geometricos base",
               "clause": "Criterio solicitado por usuario",
-              "alpha_symbol": "sep",
+              "alpha_symbol": "gap_sp",
               "alpha": {
                 "value": 25.4,
                 "unit": "mm"
               },
-              "beam_length_tolerance_var": "Tlvg",
+              "beam_length_tolerance_var": "tol_L_vg",
               "beam_length_tolerance": {
                 "value": 6.35,
                 "unit": "mm"
               },
               "beam_length_tolerance_ref": "AISC 303-22",
-              "s1x_var": "S1.x",
+              "s1x_var": "g_blt_web",
               "s1x": {
                 "value": 76.2,
                 "unit": "mm"
               },
-              "le1x1_var": "Le1.x1",
+              "le1x1_var": "Le_blt_web_x1",
               "le1x1": {
                 "value": 25.4,
                 "unit": "mm"
               },
-              "le1x1_prime_var": "Le1.x1'",
-              "le1x1_prime_formula": "Le1.x1' = Le1.x1 - Tlvg",
+              "le1x1_prime_var": "Le_blt_web_x1'",
+              "le1x1_prime_formula": "Le_blt_web_x1' = Le_blt_web_x1 - tol_L_vg",
               "le1x1_prime": {
                 "value": 19.049999999999997,
                 "unit": "mm"
               },
-              "dvg_var": "dvg",
+              "dvg_var": "d_vg",
               "dvg": {
                 "value": 450.0,
                 "unit": "mm"
               },
-              "le1y3_var": "Le1.y3",
+              "le1y3_var": "Le_blt_web_y3",
               "le1y3": {
                 "value": 25.0,
                 "unit": "mm"
               },
-              "le1y4_var": "Le1.y4",
-              "le1y4_formula": "Le1.y4 = dvg - Le1.y3",
+              "le1y4_var": "Le_blt_web_y4",
+              "le1y4_formula": "Le_blt_web_y4 = d_vg - Le_blt_web_y3",
               "le1y4": {
                 "value": 425.0,
                 "unit": "mm"
               },
-              "anv1_formula": "Anv.y1.vg = tw*(d-nb1.y*(dh.1+1.6mm))",
+              "anv1_formula": "Anv.y1.vg = tw_vg*(d_vg-n_blt_web_y*(dh_plt_web+1.6mm))",
               "anv1": {
                 "value": 2557.4625,
                 "unit": "mm2"
               },
-              "ant1_formula": "Ant.x1.1 = tw*(d-nb1.y*(dh.1+1.6mm))",
+              "ant1_formula": "Ant.x1.vg = tw_vg*(d_vg-n_blt_web_y*(dh_plt_web+1.6mm))",
               "ant1": {
                 "value": 2557.4625,
                 "unit": "mm2"
               },
-              "us1_formula": "si nb1.x > 1 -> U.1 = 1 - 0.5*tw/((nb1.x-1)*S1.x)",
+              "us1_formula": "si n_blt_web_x > 1 -> U1 = 1 - 0.5*tw_vg/((n_blt_web_x-1)*g_blt_web)",
               "us1": 0.95,
-              "nb1x": 2,
-              "nb1y": 6,
-              "tw": {
-                "value": 7.62,
-                "unit": "mm"
-              },
-              "d": {
-                "value": 450.0,
-                "unit": "mm"
-              },
-              "ag": {
-                "value": 6650.0,
-                "unit": "mm2"
-              },
               "dh_1": {
                 "value": 17.4625,
                 "unit": "mm"
@@ -734,13 +596,13 @@
               "id": "bbmb_splice.step1.geometry_formulas_plt1_note",
               "scope": "platina_1",
               "description": "Formulas geometricas de platina 1",
-              "clause": "Criterio solicitado por usuario",
-              "hp1_formula": "hp1 = Le1.y1 + Le1.y2 + (nb1.y - 1) * S1.y",
+              "clause": "Nomenclatura oficial splice",
+              "hp1_formula": "B_plt_web = Le_blt_web_y1 + Le_blt_web_y2 + (n_blt_web_y - 1)*p_blt_web",
               "hp1_calc": {
                 "value": 431.0,
                 "unit": "mm"
               },
-              "bp1_formula": "bp1 = Le1.x1 + Le1.x2 + alpha + 2 * (nb1.x - 1) * S1.x",
+              "bp1_formula": "L_plt_web = 2*(Le_blt_web_x1 + (n_blt_web_x - 1)*g_blt_web + Le_blt_web_x2) + gap_sp",
               "bp1_calc": {
                 "value": 238.2,
                 "unit": "mm"
@@ -750,17 +612,53 @@
               "id": "bbmb_splice.step1.geometry_formulas_plt2_note",
               "scope": "platina_2",
               "description": "Formulas geometricas de platina 2",
-              "clause": "Criterio solicitado por usuario",
-              "bp2_formula": "bp2 = Le2.z2 + Le2.z1 + S2.z2 + (nb2.z - 2) * S2.z1",
+              "clause": "Nomenclatura oficial splice",
+              "bp2_formula": "B_plt_flange = bf_vg - 2*Le_blt_flange_z3 + Le_blt_flange_z1 + Le_blt_flange_z2",
               "bp2_calc": {
-                "value": 160.0,
+                "value": 162.0,
                 "unit": "mm"
               },
-              "lp2_formula": "lp2 = 2 * (Le2.x1 + Le2.x2) + alpha + 2 * (nb2.x - 1) * S2.x + alpha",
+              "lp2_formula": "L_plt_flange = 2*(Le_blt_flange_x1 + (n_blt_flange_x - 1)*p_blt_flange + Le_blt_flange_x2) + gap_sp",
               "lp2_calc": {
-                "value": 610.8,
+                "value": 585.4,
                 "unit": "mm"
               }
+            },
+            {
+              "id": "bbmb_splice.step1.plate_1_hole_diameter_note",
+              "scope": "platina_1",
+              "description": "Diametro de perforacion estandar en platina 1",
+              "clause": "AISC 360-22 Table J3.3",
+              "formula": "dh_plt_web = db_blt_web + 1/16 in (db<=7/8 in) else +1/8 in",
+              "db_var": "db_blt_web",
+              "dh_var": "dh_plt_web",
+              "db": {
+                "value": 15.875,
+                "unit": "mm"
+              },
+              "dh": {
+                "value": 17.4625,
+                "unit": "mm"
+              },
+              "hole_add_in": 0.0625
+            },
+            {
+              "id": "bbmb_splice.step1.plate_2_hole_diameter_note",
+              "scope": "platina_2",
+              "description": "Diametro de perforacion estandar en platina 2",
+              "clause": "AISC 360-22 Table J3.3",
+              "formula": "dh_plt_flange = db_blt_flange + 1/16 in (db<=7/8 in) else +1/8 in",
+              "db_var": "db_blt_flange",
+              "dh_var": "dh_plt_flange",
+              "db": {
+                "value": 19.049999999999997,
+                "unit": "mm"
+              },
+              "dh": {
+                "value": 20.637499999999996,
+                "unit": "mm"
+              },
+              "hole_add_in": 0.0625
             },
             {
               "id": "bbmb_splice.step1.bolt_group_1_properties_note",
@@ -794,24 +692,6 @@
               }
             },
             {
-              "id": "bbmb_splice.step1.plate_1_hole_diameter_note",
-              "scope": "platina_1",
-              "description": "Diametro de perforacion estandar en platina 1",
-              "clause": "AISC 360-22 Table J3.3",
-              "formula": "dh = d + 1/16 in (db<=7/8 in) else dh = d + 1/8 in",
-              "db_var": "db.1",
-              "dh_var": "dh.1",
-              "db": {
-                "value": 15.875,
-                "unit": "mm"
-              },
-              "dh": {
-                "value": 17.4625,
-                "unit": "mm"
-              },
-              "hole_add_in": 0.0625
-            },
-            {
               "id": "bbmb_splice.step1.bolt_group_2_properties_note",
               "scope": "pernos_2",
               "description": "Propiedades del perno usado en Pernos 2",
@@ -841,53 +721,29 @@
                 "value": 11.90625,
                 "unit": "mm"
               }
-            },
-            {
-              "id": "bbmb_splice.step1.plate_2_hole_diameter_note",
-              "scope": "platina_2",
-              "description": "Diametro de perforacion estandar en platina 2",
-              "clause": "AISC 360-22 Table J3.3",
-              "formula": "dh = d + 1/16 in (db<=7/8 in) else dh = d + 1/8 in",
-              "db_var": "db.2",
-              "dh_var": "dh.2",
-              "db": {
-                "value": 19.049999999999997,
-                "unit": "mm"
-              },
-              "dh": {
-                "value": 20.637499999999996,
-                "unit": "mm"
-              },
-              "hole_add_in": 0.0625
             }
           ],
           "edge_distance_table_row_web": "db=0.625 in",
-          "edge_distance_table_row_flange": "db=0.75 in",
-          "j3_6_t_web_governing": 7.62,
-          "j3_6_t_flange_governing": 10.8
+          "edge_distance_table_row_flange": "db=0.75 in"
         },
         "design_factors": {},
-        "equation": "Step 1 Detailing: S>=3db (J3.3), Le>=Tabla J3.4, hp1<=T_catalog, bp2<=bf_catalog",
+        "equation": "Step 1 detailing splice: J3.3 + Tabla J3.4 + J3.6 + checks geometricos de proyecto",
         "units_trace": {
-          "db_web": "mm",
-          "db_flange": "mm",
-          "s1_x": "mm",
-          "s1_y": "mm",
-          "s2_x": "mm",
-          "s2_z1": "mm",
-          "s2_z2": "mm",
-          "le1_x1": "mm",
-          "le1_x2": "mm",
-          "le1_y1": "mm",
-          "le1_y2": "mm",
-          "le2_x1": "mm",
-          "le2_x2": "mm",
-          "le2_z1": "mm",
-          "le2_z2": "mm",
-          "k1_catalog": "mm",
-          "hp1": "mm",
-          "T_catalog": "mm",
-          "bf_catalog": "mm"
+          "db_blt_web": "mm",
+          "db_blt_flange": "mm",
+          "g_blt_web": "mm",
+          "p_blt_web": "mm",
+          "p_blt_flange": "mm",
+          "g_blt_flange": "mm",
+          "Le_blt_web_x1": "mm",
+          "Le_blt_web_x2": "mm",
+          "Le_blt_web_y1": "mm",
+          "Le_blt_web_y2": "mm",
+          "Le_blt_flange_x1": "mm",
+          "Le_blt_flange_x2": "mm",
+          "Le_blt_flange_z1": "mm",
+          "Le_blt_flange_z2": "mm",
+          "Le_blt_flange_z3": "mm"
         },
         "final_capacity": null
       },
@@ -911,29 +767,29 @@
       "calculation_memory": {
         "inputs": {
           "method_selected": "icr",
-          "px": {
+          "Pu_sp": {
             "value": 0.0,
             "unit": "kN"
           },
-          "py": {
+          "Vu2_sp": {
             "value": 250.0,
             "unit": "kN"
           },
-          "ex": {
+          "ex_blt_web": {
             "value": 152.39999999999998,
             "unit": "mm"
           },
-          "ey": {
+          "ey_blt_web": {
             "value": 0.0,
             "unit": "mm"
           },
           "eccentricity_source": "splice_formula_ex_plus_input_ey",
-          "mz": {
+          "Muz_blt_web": {
             "value": 38099.999999999985,
             "unit": "kN-mm"
           },
-          "bolt_group_1_nx": 2,
-          "bolt_group_1_ny": 6,
+          "n_blt_web_x": 2,
+          "n_blt_web_y": 6,
           "bolt_group_1_points_in": [
             {
               "tag": "w1",
@@ -1014,9 +870,9 @@
               "value": 53.663962960177415,
               "unit": "ksi"
             },
-            "phi_bolt_shear": 0.9,
-            "bolt_standard_web": "ASTM A325",
-            "bolt_description_web": "Grupo 120"
+            "phi_bv": 0.9,
+            "std_blt_web": "ASTM A325",
+            "desc_blt_web": "Grupo 120"
           },
           "bolt_group_geometry": {
             "bolt_count": 12,
@@ -1025,7 +881,105 @@
             "ix_in2": 315.00000000000006,
             "iy_in2": 27.000000000000004,
             "ixy_in2": 0.0,
-            "ip_in2": 342.00000000000006
+            "ip_in2": 342.00000000000006,
+            "bolts_offsets": [
+              {
+                "tag": "w1",
+                "x_in": 0.0,
+                "y_in": 0.0,
+                "dx_in": -1.5000000000000002,
+                "dy_in": -7.500000000000001,
+                "r_in": 7.6485292703891785
+              },
+              {
+                "tag": "w2",
+                "x_in": 0.0,
+                "y_in": 3.0000000000000004,
+                "dx_in": -1.5000000000000002,
+                "dy_in": -4.5,
+                "r_in": 4.743416490252569
+              },
+              {
+                "tag": "w3",
+                "x_in": 0.0,
+                "y_in": 6.000000000000001,
+                "dx_in": -1.5000000000000002,
+                "dy_in": -1.5,
+                "r_in": 2.121320343559643
+              },
+              {
+                "tag": "w4",
+                "x_in": 0.0,
+                "y_in": 9.000000000000002,
+                "dx_in": -1.5000000000000002,
+                "dy_in": 1.5000000000000009,
+                "r_in": 2.1213203435596433
+              },
+              {
+                "tag": "w5",
+                "x_in": 0.0,
+                "y_in": 12.000000000000002,
+                "dx_in": -1.5000000000000002,
+                "dy_in": 4.500000000000001,
+                "r_in": 4.74341649025257
+              },
+              {
+                "tag": "w6",
+                "x_in": 0.0,
+                "y_in": 15.000000000000002,
+                "dx_in": -1.5000000000000002,
+                "dy_in": 7.500000000000001,
+                "r_in": 7.6485292703891785
+              },
+              {
+                "tag": "w7",
+                "x_in": 3.0000000000000004,
+                "y_in": 0.0,
+                "dx_in": 1.5000000000000002,
+                "dy_in": -7.500000000000001,
+                "r_in": 7.6485292703891785
+              },
+              {
+                "tag": "w8",
+                "x_in": 3.0000000000000004,
+                "y_in": 3.0000000000000004,
+                "dx_in": 1.5000000000000002,
+                "dy_in": -4.5,
+                "r_in": 4.743416490252569
+              },
+              {
+                "tag": "w9",
+                "x_in": 3.0000000000000004,
+                "y_in": 6.000000000000001,
+                "dx_in": 1.5000000000000002,
+                "dy_in": -1.5,
+                "r_in": 2.121320343559643
+              },
+              {
+                "tag": "w10",
+                "x_in": 3.0000000000000004,
+                "y_in": 9.000000000000002,
+                "dx_in": 1.5000000000000002,
+                "dy_in": 1.5000000000000009,
+                "r_in": 2.1213203435596433
+              },
+              {
+                "tag": "w11",
+                "x_in": 3.0000000000000004,
+                "y_in": 12.000000000000002,
+                "dx_in": 1.5000000000000002,
+                "dy_in": 4.500000000000001,
+                "r_in": 4.74341649025257
+              },
+              {
+                "tag": "w12",
+                "x_in": 3.0000000000000004,
+                "y_in": 15.000000000000002,
+                "dx_in": 1.5000000000000002,
+                "dy_in": 7.500000000000001,
+                "r_in": 7.6485292703891785
+              }
+            ]
           },
           "load_in_plane_kip_in": {
             "vx_kip": 0.0,
@@ -1281,19 +1235,520 @@
             "cu": 7.174547138310905,
             "icr_compare_capacity": null,
             "final_residual": 0.008458213074192145,
-            "n_iterations": 18
+            "n_iterations": 18,
+            "methods_summary": [
+              {
+                "method": "elastic_superposition",
+                "applicable": true,
+                "status": "PASS",
+                "demand_kip": 9.626173108472758,
+                "capacity_kip": 14.817507872889388,
+                "dcr": 0.6496485907785565,
+                "direct_fx_kip": -0.0,
+                "direct_fy_kip": -4.683519647910635,
+                "ip_in2": 342.00000000000006,
+                "sum_fx_kip": 3.552713678800501e-15,
+                "sum_fy_kip": -56.20223577492762,
+                "sum_mz_kip_in": -337.2134146495657,
+                "bolt_forces": [
+                  {
+                    "tag": "w1",
+                    "fx_kip": -7.39503102301679,
+                    "fy_kip": -3.2045134433072766,
+                    "resultant_kip": 8.059490693568534,
+                    "moment_about_cg_kip_in": -50.655962507665016
+                  },
+                  {
+                    "tag": "w2",
+                    "fx_kip": -4.437018613810073,
+                    "fy_kip": -3.2045134433072766,
+                    "resultant_kip": 5.4732111769631295,
+                    "moment_about_cg_kip_in": -15.159813597184414
+                  },
+                  {
+                    "tag": "w3",
+                    "fx_kip": -1.4790062046033579,
+                    "fy_kip": -3.2045134433072766,
+                    "resultant_kip": 3.5293576981643966,
+                    "moment_about_cg_kip_in": 2.588260858055879
+                  },
+                  {
+                    "tag": "w4",
+                    "fx_kip": 1.4790062046033587,
+                    "fy_kip": -3.2045134433072766,
+                    "resultant_kip": 3.529357698164397,
+                    "moment_about_cg_kip_in": 2.588260858055876
+                  },
+                  {
+                    "tag": "w5",
+                    "fx_kip": 4.437018613810075,
+                    "fy_kip": -3.2045134433072766,
+                    "resultant_kip": 5.47321117696313,
+                    "moment_about_cg_kip_in": -15.159813597184424
+                  },
+                  {
+                    "tag": "w6",
+                    "fx_kip": 7.39503102301679,
+                    "fy_kip": -3.2045134433072766,
+                    "resultant_kip": 8.059490693568534,
+                    "moment_about_cg_kip_in": -50.655962507665016
+                  },
+                  {
+                    "tag": "w7",
+                    "fx_kip": -7.39503102301679,
+                    "fy_kip": -6.162525852513993,
+                    "resultant_kip": 9.626173108472758,
+                    "moment_about_cg_kip_in": -64.70652145139692
+                  },
+                  {
+                    "tag": "w8",
+                    "fx_kip": -4.437018613810073,
+                    "fy_kip": -6.162525852513993,
+                    "resultant_kip": 7.593672304109546,
+                    "moment_about_cg_kip_in": -29.21037254091632
+                  },
+                  {
+                    "tag": "w9",
+                    "fx_kip": -1.4790062046033579,
+                    "fy_kip": -6.162525852513993,
+                    "resultant_kip": 6.33752193180888,
+                    "moment_about_cg_kip_in": -11.462298085676029
+                  },
+                  {
+                    "tag": "w10",
+                    "fx_kip": 1.4790062046033587,
+                    "fy_kip": -6.162525852513993,
+                    "resultant_kip": 6.33752193180888,
+                    "moment_about_cg_kip_in": -11.46229808567603
+                  },
+                  {
+                    "tag": "w11",
+                    "fx_kip": 4.437018613810075,
+                    "fy_kip": -6.162525852513993,
+                    "resultant_kip": 7.593672304109547,
+                    "moment_about_cg_kip_in": -29.21037254091633
+                  },
+                  {
+                    "tag": "w12",
+                    "fx_kip": 7.39503102301679,
+                    "fy_kip": -6.162525852513993,
+                    "resultant_kip": 9.626173108472758,
+                    "moment_about_cg_kip_in": -64.70652145139692
+                  }
+                ],
+                "note": null
+              },
+              {
+                "method": "elastic_ecr",
+                "applicable": true,
+                "status": "PASS",
+                "demand_kip": 56.20223577492762,
+                "capacity_kip": 86.51174892502011,
+                "dcr": 0.6496485907785565,
+                "ax_in": 4.750000000000002,
+                "ay_in": 0.0,
+                "ecc_x_in": 10.75,
+                "ecc_y_in": 0.0,
+                "dmax_in": 9.76281209488332,
+                "sum_d2_in2": 612.7500000000002,
+                "center_x_in": -3.2500000000000018,
+                "center_y_in": 7.500000000000001,
+                "ce": 5.838481724940057,
+                "sum_fx_kip": 8.881784197001252e-16,
+                "sum_fy_kip": -56.20223577492762,
+                "sum_mz_kip_in": -337.2134146495657,
+                "bolt_forces": [
+                  {
+                    "tag": "w1",
+                    "fx_kip": -7.39503102301679,
+                    "fy_kip": -3.204513443307277,
+                    "resultant_kip": 8.059490693568534,
+                    "moment_about_cg_kip_in": -50.655962507665016
+                  },
+                  {
+                    "tag": "w2",
+                    "fx_kip": -4.437018613810073,
+                    "fy_kip": -3.204513443307277,
+                    "resultant_kip": 5.4732111769631295,
+                    "moment_about_cg_kip_in": -15.159813597184414
+                  },
+                  {
+                    "tag": "w3",
+                    "fx_kip": -1.4790062046033579,
+                    "fy_kip": -3.204513443307277,
+                    "resultant_kip": 3.529357698164397,
+                    "moment_about_cg_kip_in": 2.5882608580558797
+                  },
+                  {
+                    "tag": "w4",
+                    "fx_kip": 1.4790062046033585,
+                    "fy_kip": -3.204513443307277,
+                    "resultant_kip": 3.5293576981643975,
+                    "moment_about_cg_kip_in": 2.588260858055877
+                  },
+                  {
+                    "tag": "w5",
+                    "fx_kip": 4.437018613810074,
+                    "fy_kip": -3.204513443307277,
+                    "resultant_kip": 5.47321117696313,
+                    "moment_about_cg_kip_in": -15.15981359718442
+                  },
+                  {
+                    "tag": "w6",
+                    "fx_kip": 7.39503102301679,
+                    "fy_kip": -3.204513443307277,
+                    "resultant_kip": 8.059490693568534,
+                    "moment_about_cg_kip_in": -50.655962507665016
+                  },
+                  {
+                    "tag": "w7",
+                    "fx_kip": -7.39503102301679,
+                    "fy_kip": -6.162525852513992,
+                    "resultant_kip": 9.626173108472758,
+                    "moment_about_cg_kip_in": -64.70652145139692
+                  },
+                  {
+                    "tag": "w8",
+                    "fx_kip": -4.437018613810073,
+                    "fy_kip": -6.162525852513992,
+                    "resultant_kip": 7.593672304109545,
+                    "moment_about_cg_kip_in": -29.210372540916318
+                  },
+                  {
+                    "tag": "w9",
+                    "fx_kip": -1.4790062046033579,
+                    "fy_kip": -6.162525852513992,
+                    "resultant_kip": 6.337521931808879,
+                    "moment_about_cg_kip_in": -11.462298085676025
+                  },
+                  {
+                    "tag": "w10",
+                    "fx_kip": 1.4790062046033585,
+                    "fy_kip": -6.162525852513992,
+                    "resultant_kip": 6.337521931808879,
+                    "moment_about_cg_kip_in": -11.462298085676029
+                  },
+                  {
+                    "tag": "w11",
+                    "fx_kip": 4.437018613810074,
+                    "fy_kip": -6.162525852513992,
+                    "resultant_kip": 7.593672304109546,
+                    "moment_about_cg_kip_in": -29.210372540916325
+                  },
+                  {
+                    "tag": "w12",
+                    "fx_kip": 7.39503102301679,
+                    "fy_kip": -6.162525852513992,
+                    "resultant_kip": 9.626173108472758,
+                    "moment_about_cg_kip_in": -64.70652145139692
+                  }
+                ],
+                "note": null
+              },
+              {
+                "method": "icr",
+                "applicable": true,
+                "status": "PASS",
+                "converged": true,
+                "acceptance_ok": true,
+                "demand_kip": 56.20223577492762,
+                "capacity_kip": 530.916488235007,
+                "dcr": 0.10585890063758961,
+                "icr_x_in": -2.3854609221094605,
+                "icr_y_in": 7.500000000000001,
+                "cu": 7.174547138310905,
+                "final_residual": 0.008458213074192145,
+                "n_iterations": 18,
+                "law_mu": 10.0,
+                "law_lambda": 0.55,
+                "law_delta_max": 0.34,
+                "bolt_forces": [
+                  {
+                    "tag": "w1",
+                    "fx_kip": -7.235827421525153,
+                    "fy_kip": -2.3014378070901746,
+                    "resultant_kip": 7.593010895158743,
+                    "moment_about_cg_kip_in": -50.81654895080339
+                  },
+                  {
+                    "tag": "w2",
+                    "fx_kip": -6.315962385371512,
+                    "fy_kip": -3.348106990181554,
+                    "resultant_kip": 7.148510423237165,
+                    "moment_about_cg_kip_in": -23.399670248899476
+                  },
+                  {
+                    "tag": "w3",
+                    "fx_kip": -3.278300947743827,
+                    "fy_kip": -5.213505867838205,
+                    "resultant_kip": 6.158563187786699,
+                    "moment_about_cg_kip_in": 2.902807380141568
+                  },
+                  {
+                    "tag": "w4",
+                    "fx_kip": 3.278300947743829,
+                    "fy_kip": -5.2135058678382045,
+                    "resultant_kip": 6.1585631877867,
+                    "moment_about_cg_kip_in": 2.902807380141561
+                  },
+                  {
+                    "tag": "w5",
+                    "fx_kip": 6.315962385371512,
+                    "fy_kip": -3.348106990181553,
+                    "resultant_kip": 7.148510423237164,
+                    "moment_about_cg_kip_in": -23.39967024889948
+                  },
+                  {
+                    "tag": "w6",
+                    "fx_kip": 7.235827421525153,
+                    "fy_kip": -2.3014378070901746,
+                    "resultant_kip": 7.593010895158743,
+                    "moment_about_cg_kip_in": -50.81654895080339
+                  },
+                  {
+                    "tag": "w7",
+                    "fx_kip": -6.245358676194296,
+                    "fy_kip": -4.484551346026886,
+                    "resultant_kip": 7.688673862862627,
+                    "moment_about_cg_kip_in": -53.56701709049755
+                  },
+                  {
+                    "tag": "w8",
+                    "fx_kip": -4.810787754490643,
+                    "fy_kip": -5.757402101416018,
+                    "resultant_kip": 7.502756678458039,
+                    "moment_about_cg_kip_in": -30.28464804733192
+                  },
+                  {
+                    "tag": "w9",
+                    "fx_kip": -1.9497893446897578,
+                    "fy_kip": -7.00034288144807,
+                    "resultant_kip": 7.2668066539922735,
+                    "moment_about_cg_kip_in": -13.425198339206744
+                  },
+                  {
+                    "tag": "w10",
+                    "fx_kip": 1.9497893446897592,
+                    "fy_kip": -7.00034288144807,
+                    "resultant_kip": 7.2668066539922735,
+                    "moment_about_cg_kip_in": -13.425198339206748
+                  },
+                  {
+                    "tag": "w11",
+                    "fx_kip": 4.810787754490643,
+                    "fy_kip": -5.757402101416017,
+                    "resultant_kip": 7.502756678458038,
+                    "moment_about_cg_kip_in": -30.284648047331924
+                  },
+                  {
+                    "tag": "w12",
+                    "fx_kip": 6.245358676194296,
+                    "fy_kip": -4.484551346026886,
+                    "resultant_kip": 7.688673862862627,
+                    "moment_about_cg_kip_in": -53.56701709049755
+                  }
+                ],
+                "note": null
+              }
+            ],
+            "icr_iterations": [
+              {
+                "iteration": 1,
+                "icr_x": -3.2500000000000018,
+                "icr_y": 7.500000000000001,
+                "residual_fx": 1.7763568394002505e-15,
+                "residual_fy": -5.731742921673039,
+                "residual_norm": 5.731742921673039,
+                "step_dx": -0.24221259619437274,
+                "step_dy": 7.506547444964221e-17
+              },
+              {
+                "iteration": 2,
+                "icr_x": -3.007787403805629,
+                "icr_y": 7.500000000000001,
+                "residual_fx": 8.881784197001252e-16,
+                "residual_fy": -4.346830055617872,
+                "residual_norm": 4.346830055617872,
+                "step_dx": -0.18368880240700255,
+                "step_dy": 3.7532737224821105e-17
+              },
+              {
+                "iteration": 3,
+                "icr_x": -2.8240986013986262,
+                "icr_y": 7.500000000000001,
+                "residual_fx": 5.329070518200751e-15,
+                "residual_fy": -3.18982135857042,
+                "residual_norm": 3.18982135857042,
+                "step_dx": -0.13479580700211932,
+                "step_dy": 2.2519642334892664e-16
+              },
+              {
+                "iteration": 4,
+                "icr_x": -2.689302794396507,
+                "icr_y": 7.500000000000001,
+                "residual_fx": 8.881784197001252e-16,
+                "residual_fy": -2.2776396165943,
+                "residual_norm": 2.2776396165943,
+                "step_dx": -0.09624873485592986,
+                "step_dy": 3.7532737224821105e-17
+              },
+              {
+                "iteration": 5,
+                "icr_x": -2.593054059540577,
+                "icr_y": 7.500000000000001,
+                "residual_fx": 1.7763568394002505e-15,
+                "residual_fy": -1.5917469066863177,
+                "residual_norm": 1.5917469066863177,
+                "step_dx": -0.06726420846528813,
+                "step_dy": 7.506547444964221e-17
+              },
+              {
+                "iteration": 6,
+                "icr_x": -2.525789851075289,
+                "icr_y": 7.500000000000001,
+                "residual_fx": 7.993605777301127e-15,
+                "residual_fy": -1.0946200829878165,
+                "residual_norm": 1.0946200829878165,
+                "step_dx": -0.046256570779624175,
+                "step_dy": 3.3779463502338994e-16
+              },
+              {
+                "iteration": 7,
+                "icr_x": -2.479533280295665,
+                "icr_y": 7.500000000000001,
+                "residual_fx": 1.7763568394002505e-15,
+                "residual_fy": -0.7440237713433291,
+                "residual_norm": 0.7440237713433291,
+                "step_dx": -0.03144103490859182,
+                "step_dy": 7.506547444964221e-17
+              },
+              {
+                "iteration": 8,
+                "icr_x": -2.4480922453870733,
+                "icr_y": 7.500000000000001,
+                "residual_fx": 3.552713678800501e-15,
+                "residual_fy": -0.501580608201813,
+                "residual_norm": 0.501580608201813,
+                "step_dx": -0.021195846180388733,
+                "step_dy": 1.5013094889928442e-16
+              },
+              {
+                "iteration": 9,
+                "icr_x": -2.4268963992066843,
+                "icr_y": 7.500000000000001,
+                "residual_fx": 2.6645352591003757e-15,
+                "residual_fy": -0.3362232946754915,
+                "residual_norm": 0.3362232946754915,
+                "step_dx": -0.014208159405831413,
+                "step_dy": 1.1259821167446332e-16
+              },
+              {
+                "iteration": 10,
+                "icr_x": -2.412688239800853,
+                "icr_y": 7.500000000000001,
+                "residual_fx": 1.7763568394002505e-15,
+                "residual_fy": -0.22450861493765473,
+                "residual_norm": 0.22450861493765473,
+                "step_dx": -0.009487308700889789,
+                "step_dy": 7.506547444964221e-17
+              },
+              {
+                "iteration": 11,
+                "icr_x": -2.4032009310999634,
+                "icr_y": 7.500000000000001,
+                "residual_fx": 1.7763568394002505e-15,
+                "residual_fy": -0.1495210249710084,
+                "residual_norm": 0.1495210249710084,
+                "step_dx": -0.006318475224513475,
+                "step_dy": 7.506547444964221e-17
+              },
+              {
+                "iteration": 12,
+                "icr_x": -2.39688245587545,
+                "icr_y": 7.500000000000001,
+                "residual_fx": 4.440892098500626e-15,
+                "residual_fy": -0.09940521050556583,
+                "residual_norm": 0.09940521050556583,
+                "step_dx": -0.004200675857383594,
+                "step_dy": 1.8766368612410552e-16
+              },
+              {
+                "iteration": 13,
+                "icr_x": -2.3926817800180666,
+                "icr_y": 7.500000000000001,
+                "residual_fx": 5.329070518200751e-15,
+                "residual_fy": -0.06600952108675529,
+                "residual_norm": 0.06600952108675529,
+                "step_dx": -0.002789437295855438,
+                "step_dy": 2.2519642334892664e-16
+              },
+              {
+                "iteration": 14,
+                "icr_x": -2.389892342722211,
+                "icr_y": 7.500000000000001,
+                "residual_fx": 4.440892098500626e-15,
+                "residual_fy": -0.04379903646383099,
+                "residual_norm": 0.04379903646383099,
+                "step_dx": -0.0018508642968969608,
+                "step_dy": 1.8766368612410552e-16
+              },
+              {
+                "iteration": 15,
+                "icr_x": -2.3880414784253143,
+                "icr_y": 7.500000000000001,
+                "residual_fx": 3.552713678800501e-15,
+                "residual_fy": -0.02904669864769005,
+                "residual_norm": 0.02904669864769005,
+                "step_dx": -0.0012274584513778223,
+                "step_dy": 1.5013094889928442e-16
+              },
+              {
+                "iteration": 16,
+                "icr_x": -2.3868140199739365,
+                "icr_y": 7.500000000000001,
+                "residual_fx": 4.440892098500626e-15,
+                "residual_fy": -0.019256575665849596,
+                "residual_norm": 0.019256575665849596,
+                "step_dx": -0.0008137464030709498,
+                "step_dy": 1.8766368612410552e-16
+              },
+              {
+                "iteration": 17,
+                "icr_x": -2.3860002735708656,
+                "icr_y": 7.500000000000001,
+                "residual_fx": 1.7763568394002505e-15,
+                "residual_fy": -0.01276326652608617,
+                "residual_norm": 0.01276326652608617,
+                "step_dx": -0.0005393514614053395,
+                "step_dy": 7.506547444964221e-17
+              },
+              {
+                "iteration": 18,
+                "icr_x": -2.3854609221094605,
+                "icr_y": 7.500000000000001,
+                "residual_fx": 5.329070518200751e-15,
+                "residual_fy": -0.008458213074192145,
+                "residual_norm": 0.008458213074192145,
+                "step_dx": 0.0,
+                "step_dy": 0.0
+              }
+            ],
+            "capacity_basis": {
+              "elastic_capacity_kip": 14.817507872889388,
+              "icr_reporting_capacity_kip": 74.0
+            }
           }
         },
         "design_factors": {
-          "phi_bolt_shear": 0.9
+          "phi_bv": 0.9
         },
         "equation": "ICR: DCR = ConnectionDemand / ConnectionCapacity",
         "units_trace": {
-          "px": "kN",
-          "py": "kN",
-          "ex": "mm",
-          "ey": "mm",
-          "mz": "kN-mm"
+          "Pu_sp": "kN",
+          "Vu2_sp": "kN",
+          "ex_blt_web": "mm",
+          "ey_blt_web": "mm",
+          "Muz_blt_web": "kN-mm"
         },
         "final_capacity": {
           "value": 2361.634198865155,

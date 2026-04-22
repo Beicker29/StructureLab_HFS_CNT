@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from steel_connections.codes.aisc358.chapter_06 import (
     compute_minimum_bolt_spacing,
@@ -89,27 +89,25 @@ def _row(
 
 def run_step1_viga_detailing(case: BeamBeamMomentBoltedCase, rule_binding: object) -> CheckResult:
     bolt_web = get_bolt_section_properties(
-        bolt_shape=case.materials.bolt_shape_web or case.materials.bolt_shape,
+        bolt_shape=case.materials.shape_blt_web,
         unit_system=case.units_system,
     )
     bolt_flange = get_bolt_section_properties(
-        bolt_shape=case.materials.bolt_shape_flange or case.materials.bolt_shape,
+        bolt_shape=case.materials.shape_blt_flange,
         unit_system=case.units_system,
     )
     db_web = bolt_web["diameter_nominal"]
     db_flange = bolt_flange["diameter_nominal"]
-    if not isinstance(db_web, object) or not hasattr(db_web, "model_dump"):
-        raise ValueError("Unable to resolve bolt diameter from bolt shape for bbmb_splice detailing.")
-    if not isinstance(db_flange, object) or not hasattr(db_flange, "model_dump"):
-        raise ValueError("Unable to resolve flange bolt diameter from bolt shape for bbmb_splice detailing.")
+    if not isinstance(db_web, Quantity) or not isinstance(db_flange, Quantity):
+        raise ValueError("Unable to resolve bolt diameters for bbmb_splice detailing.")
+
     db_web_in = db_web.value if case.units_system.value == "US" else db_web.value / 25.4
     db_flange_in = db_flange.value if case.units_system.value == "US" else db_flange.value / 25.4
+
     dh_web, dh_web_inter = _compute_standard_hole_diameter(bolt_diameter=db_web, unit_system=case.units_system)
     dh_flange, dh_flange_inter = _compute_standard_hole_diameter(bolt_diameter=db_flange, unit_system=case.units_system)
-    standard_web = case.materials.bolt_fabrication_standard_web or case.materials.bolt_fabrication_standard
-    standard_flange = case.materials.bolt_fabrication_standard_flange or case.materials.bolt_fabrication_standard
 
-    s_min = compute_minimum_bolt_spacing(bolt_diameter=db_web, unit_system=case.units_system)
+    s_min_web = compute_minimum_bolt_spacing(bolt_diameter=db_web, unit_system=case.units_system)
     s_min_flange = compute_minimum_bolt_spacing(bolt_diameter=db_flange, unit_system=case.units_system)
     le_min_web, le_meta_web = compute_minimum_edge_distance_standard_hole(
         bolt_diameter=db_web,
@@ -119,139 +117,106 @@ def run_step1_viga_detailing(case: BeamBeamMomentBoltedCase, rule_binding: objec
         bolt_diameter=db_flange,
         unit_system=case.units_system,
     )
+
     beam_props = get_beam_profile_properties(
-        beam_shape=case.sections.beam_right_shape,
+        beam_shape=case.sections.shape_vg,
         unit_system=case.units_system,
     )
     t_catalog = beam_props.get("T")
-    if t_catalog is None:
-        raise ValueError(
-            f"Sections catalog does not provide 'T' for shape '{case.sections.beam_right_shape}'."
-        )
-    k1_catalog = beam_props.get("k1")
-    if k1_catalog is None:
-        raise ValueError(
-            f"Sections catalog does not provide 'k1' for shape '{case.sections.beam_right_shape}'."
-        )
     kdes_catalog = beam_props.get("kdes")
-    if kdes_catalog is None:
-        raise ValueError(
-            f"Sections catalog does not provide 'kdes' for shape '{case.sections.beam_right_shape}'."
-        )
     tw_catalog = beam_props.get("tw")
     tf_catalog = beam_props.get("tf")
     bf_catalog = beam_props.get("bf")
     dvg_catalog = beam_props.get("d")
     ag_catalog = beam_props.get("ag")
-    if tw_catalog is None or tf_catalog is None or bf_catalog is None or dvg_catalog is None:
+    if (
+        not isinstance(t_catalog, Quantity)
+        or not isinstance(kdes_catalog, Quantity)
+        or not isinstance(tw_catalog, Quantity)
+        or not isinstance(tf_catalog, Quantity)
+        or not isinstance(bf_catalog, Quantity)
+        or not isinstance(dvg_catalog, Quantity)
+    ):
         raise ValueError(
-            f"Sections catalog does not provide 'd/tw/tf/bf' for shape '{case.sections.beam_right_shape}'."
+            f"Sections catalog does not provide required properties for shape '{case.sections.shape_vg}'."
         )
 
-    s1x_ok = case.geometry.web_bolt_gage.value >= s_min.value
-    s1y_ok = case.geometry.web_bolt_pitch.value >= s_min.value
-    s2x_ok = case.geometry.flange_bolt_gage.value >= s_min_flange.value
-    s2z1_ok = case.geometry.flange_bolt_pitch.value >= s_min_flange.value
-    s2z2 = case.geometry.flange_bolt_pitch_secondary or case.geometry.flange_bolt_pitch
-    le1_x1 = case.geometry.web_bolt_edge_distance_x1 or case.geometry.web_bolt_edge_distance
-    le1_x2 = case.geometry.web_bolt_edge_distance_x2 or case.geometry.web_bolt_edge_distance
-    le1_y1 = case.geometry.web_bolt_edge_distance_y1 or case.geometry.web_bolt_edge_distance
-    le1_y2 = case.geometry.web_bolt_edge_distance_y2 or case.geometry.web_bolt_edge_distance
-    le1_y3 = case.geometry.web_bolt_edge_distance_y3
-    le2_x1 = case.geometry.flange_bolt_edge_distance_x1 or case.geometry.flange_bolt_edge_distance_longitudinal
-    le2_x2 = case.geometry.flange_bolt_edge_distance_x2 or case.geometry.flange_bolt_edge_distance_longitudinal
-    le2_z1 = case.geometry.flange_bolt_edge_distance_z1 or case.geometry.flange_bolt_edge_distance_transverse
-    le2_z2 = case.geometry.flange_bolt_edge_distance_z2 or case.geometry.flange_bolt_edge_distance_transverse
+    s1x = case.geometry.g_blt_web
+    s1y = case.geometry.p_blt_web
+    s2x = case.geometry.p_blt_flange
+    s2z1 = case.geometry.g_blt_flange
+    le1_x1 = case.geometry.Le_blt_web_x1
+    le1_x2 = case.geometry.Le_blt_web_x2
+    le1_y1 = case.geometry.Le_blt_web_y1
+    le1_y2 = case.geometry.Le_blt_web_y2
+    le1_y3 = case.geometry.Le_blt_web_y3
+    le2_x1 = case.geometry.Le_blt_flange_x1
+    le2_x2 = case.geometry.Le_blt_flange_x2
+    le2_z1 = case.geometry.Le_blt_flange_z1
+    le2_z2 = case.geometry.Le_blt_flange_z2
+    le2_z3 = case.geometry.Le_blt_flange_z3
 
     if case.units_system.value == "SI":
         le1_manual_add_mm = 2.0 if db_web_in <= (7.0 / 8.0 + 1e-9) else 3.0
-        # User-defined evaluation convention:
-        # 5*(8*db.1+2mm) with db.1 inserted as inch numeric value (e.g., 5/8 -> 0.625),
-        # producing final limit in mm.
+        # Convencion solicitada por usuario:
+        # 5*(8*db.1+2mm), con db.1 ingresado en pulgadas y resultado en SI.
         le1_manual_value = 5.0 * (8.0 * db_web_in + le1_manual_add_mm)
         le1_governing_value = max(le_min_web.value, le1_manual_value)
         le1_min_limit = Quantity(value=le1_governing_value, unit="mm")
-        le1_min_limit_symbol = "max(Le_min, 5*(8*db.1+2mm))" if le1_manual_add_mm == 2.0 else "max(Le_min, 5*(8*db.1+3mm))"
+        le1_min_limit_symbol = (
+            "max(Le_min, 5*(8*db.1+2mm))" if le1_manual_add_mm == 2.0 else "max(Le_min, 5*(8*db.1+3mm))"
+        )
         le1_min_clause = "AISC 360-22 Tabla J3.4 + Recomendacion del Manual AISC (metrico)"
     else:
         le1_min_limit = le_min_web
         le1_min_limit_symbol = "Le_min"
         le1_min_clause = "AISC 360-22 Tabla J3.4"
 
-    le1_x1_ok = le1_x1.value >= le1_min_limit.value
-    le1_x2_ok = le1_x2.value >= le1_min_limit.value
-    le1_y1_ok = le1_y1.value >= le_min_web.value
-    le1_y2_ok = le1_y2.value >= le_min_web.value
-    le2_x1_ok = le2_x1.value >= le_min_flange.value
-    le2_x2_ok = le2_x2.value >= le_min_flange.value
-    le2_z1_ok = le2_z1.value >= le_min_flange.value
-    le2_z2_ok = le2_z2.value >= le_min_flange.value
-    s2_z2_compound_limit = 2.0 * s_min_flange.value + 2.0 * k1_catalog.value
-    s2_z2_compound_ok = s2z2.value >= s2_z2_compound_limit
-    hp1_ok = case.geometry.web_plate_height.value <= t_catalog.value
-    bp2_ok = case.geometry.flange_plate_top_width.value <= bf_catalog.value
-    le1_y3_kdes_ok = le1_y3 is not None and le1_y3.unit == kdes_catalog.unit and le1_y3.value >= kdes_catalog.value
-
-    alpha = case.geometry.splice_gap
-    hp1_calc = le1_y1.value + le1_y2.value + (case.geometry.web_bolt_rows_per_side - 1) * case.geometry.web_bolt_pitch.value
-    bp1_calc = (
-        le1_x1.value
-        + le1_x2.value
-        + alpha.value
-        + 2.0 * (case.geometry.web_bolt_lines - 1) * case.geometry.web_bolt_gage.value
-    )
-    bp2_calc = le2_z2.value + le2_z1.value + s2z2.value + max(case.geometry.flange_bolt_rows_per_side - 2, 0) * case.geometry.flange_bolt_pitch.value
+    alpha = case.geometry.gap_sp
+    hp1_calc = le1_y1.value + le1_y2.value + (case.geometry.n_blt_web_y - 1) * s1y.value
+    bp1_calc = le1_x1.value + le1_x2.value + alpha.value + 2.0 * (case.geometry.n_blt_web_x - 1) * s1x.value
+    bp2_calc = bf_catalog.value - 2.0 * le2_z3.value + le2_z1.value + le2_z2.value
     lp2_calc = (
-        2.0 * (le2_x1.value + le2_x2.value)
-        + alpha.value
-        + 2.0 * (case.geometry.flange_bolt_lines - 1) * case.geometry.flange_bolt_gage.value
-        + alpha.value
+        2.0 * (le2_x1.value + (case.geometry.n_blt_flange_x - 1) * s2x.value + le2_x2.value) + alpha.value
     )
+
+    hp1 = Quantity(value=hp1_calc, unit=le1_y1.unit)
+    bp1 = Quantity(value=bp1_calc, unit=le1_x1.unit)
+    bp2 = Quantity(value=bp2_calc, unit=bf_catalog.unit)
+    lp2 = Quantity(value=lp2_calc, unit=le2_x1.unit)
+
+    # Le_blt_web_y4 is derived for reporting only.
     le1_y4: Quantity | None = None
     if le1_y3 is not None and le1_y3.unit == dvg_catalog.unit:
         le1_y4 = Quantity(value=dvg_catalog.value - le1_y3.value, unit=dvg_catalog.unit)
-    le1_x1_prime: Quantity | None = None
-    if case.geometry.beam_length_tolerance is not None and case.geometry.beam_length_tolerance.unit == le1_x1.unit:
-        le1_x1_prime = Quantity(
-            value=le1_x1.value - case.geometry.beam_length_tolerance.value,
-            unit=le1_x1.unit,
-        )
-    dh1_clearance = 1.6 if case.units_system.value == "SI" else 1.6 / 25.4
-    anv1_value = tw_catalog.value * (
-        dvg_catalog.value - case.geometry.web_bolt_rows_per_side * (dh_web.value + dh1_clearance)
-    )
+
+    # Net section note variables
+    dh_clearance = 1.6 if case.units_system.value == "SI" else (1.6 / 25.4)
+    anv1_value = tw_catalog.value * (dvg_catalog.value - case.geometry.n_blt_web_y * (dh_web.value + dh_clearance))
     ant1_value = anv1_value
     area_unit = "mm2" if case.units_system.value == "SI" else "in2"
     anv1 = Quantity(value=anv1_value, unit=area_unit)
     ant1 = Quantity(value=ant1_value, unit=area_unit)
-    if case.geometry.web_bolt_lines <= 1:
-        if ag_catalog is not None:
-            us1 = (t_catalog.value * tw_catalog.value) / ag_catalog.value
-        else:
-            us1 = None
-        us1_formula = "si nb1.x <= 1 -> U.1 = T*tw/A"
+    if case.geometry.n_blt_web_x <= 1:
+        u1 = ((t_catalog.value * tw_catalog.value) / ag_catalog.value) if isinstance(ag_catalog, Quantity) else None
+        u1_formula = "si n_blt_web_x <= 1 -> U1 = T_vg*tw_vg/A_vg"
     else:
-        us1 = 1.0 - 0.5 * tw_catalog.value / ((case.geometry.web_bolt_lines - 1) * case.geometry.web_bolt_gage.value)
-        us1_formula = "si nb1.x > 1 -> U.1 = 1 - 0.5*tw/((nb1.x-1)*S1.x)"
-    u1_ok = us1 is not None and us1 <= 1.0
+        u1 = 1.0 - 0.5 * tw_catalog.value / ((case.geometry.n_blt_web_x - 1) * s1x.value)
+        u1_formula = "si n_blt_web_x > 1 -> U1 = 1 - 0.5*tw_vg/((n_blt_web_x-1)*g_blt_web)"
 
-    # J3.6 Maximum spacing and edge distance.
-    # thinner connected part governs:
-    # web splice -> min(tp1, tw_beam), flange splice -> min(tp2, tf_beam)
-    t_web = min(case.geometry.web_plate_thickness.value, tw_catalog.value)
-    t_flange = min(case.geometry.flange_plate_top_thickness.value, tf_catalog.value)
-
+    # J3.6 max spacing / edge distance
+    t_web = min(case.geometry.t_plt_web.value, tw_catalog.value)
+    t_flange = min(min(case.geometry.t_plt_ftop.value, case.geometry.t_plt_fbot.value), tf_catalog.value)
     spacing_abs_max = 12.0 if case.units_system.value == "US" else 300.0
     edge_abs_max_regular = 6.0 if case.units_system.value == "US" else 150.0
     edge_abs_max_reduced = 5.0 if case.units_system.value == "US" else 125.0
-
     smax_web = min(24.0 * t_web, spacing_abs_max)
     smax_flange = min(24.0 * t_flange, spacing_abs_max)
 
-    web_surface = case.geometry.web_plate_surface_condition or "unpainted"
-    web_atm = case.geometry.web_plate_atmospheric_condition or "non_corrosive"
-    flange_surface = case.geometry.flange_plate_surface_condition or "unpainted"
-    flange_atm = case.geometry.flange_plate_atmospheric_condition or "non_corrosive"
+    web_surface = case.geometry.cond_sup_plt_web or "unpainted"
+    web_atm = case.geometry.cond_amb_plt_web or "non_corrosive"
+    flange_surface = case.geometry.cond_sup_plt_flange or "unpainted"
+    flange_atm = case.geometry.cond_amb_plt_flange or "non_corrosive"
 
     def _edge_max(t_value: float, *, atmospheric: str, surface: str) -> float:
         regular = min(12.0 * t_value, edge_abs_max_regular)
@@ -263,112 +228,110 @@ def run_step1_viga_detailing(case: BeamBeamMomentBoltedCase, rule_binding: objec
     lemax_web = _edge_max(t_web, atmospheric=web_atm, surface=web_surface)
     lemax_flange = _edge_max(t_flange, atmospheric=flange_atm, surface=flange_surface)
 
-    nb2_z = case.geometry.flange_bolt_rows_per_side
-
     rows = [
         _row(
             scope="pernos_1",
             description="Separacion minima entre pernos del alma en direccion X",
-            calculated_symbol="S1_x",
+            calculated_symbol="g_blt_web",
             limit_symbol="Smin",
             comparison_text=">=",
-            calculated=case.geometry.web_bolt_gage.model_dump(),
-            limit=s_min.model_dump(),
+            calculated=s1x.model_dump(),
+            limit=s_min_web.model_dump(),
             clause="AISC 360-22 J3.3",
-            passed=s1x_ok,
+            passed=s1x.value >= s_min_web.value,
         ),
         _row(
             scope="pernos_1",
             description="Separacion maxima entre pernos del alma en direccion X",
-            calculated_symbol="S1_x",
+            calculated_symbol="g_blt_web",
             limit_symbol="Smax",
             comparison_text="<=",
-            calculated=case.geometry.web_bolt_gage.model_dump(),
-            limit={"value": smax_web, "unit": case.geometry.web_bolt_gage.unit},
+            calculated=s1x.model_dump(),
+            limit={"value": smax_web, "unit": s1x.unit},
             clause="AISC 360-22 J3.6",
-            passed=case.geometry.web_bolt_gage.value <= smax_web,
+            passed=s1x.value <= smax_web,
         ),
         _row(
             scope="pernos_1",
-            description="Separacion minima entre pernos del alma en direccion Y",
-            calculated_symbol="S1_y",
+            description="Separacion minima entre pernos del alma en direccion Z",
+            calculated_symbol="p_blt_web",
             limit_symbol="Smin",
             comparison_text=">=",
-            calculated=case.geometry.web_bolt_pitch.model_dump(),
-            limit=s_min.model_dump(),
+            calculated=s1y.model_dump(),
+            limit=s_min_web.model_dump(),
             clause="AISC 360-22 J3.3",
-            passed=s1y_ok,
+            passed=s1y.value >= s_min_web.value,
         ),
         _row(
             scope="pernos_1",
-            description="Separacion maxima entre pernos del alma en direccion Y",
-            calculated_symbol="S1_y",
+            description="Separacion maxima entre pernos del alma en direccion Z",
+            calculated_symbol="p_blt_web",
             limit_symbol="Smax",
             comparison_text="<=",
-            calculated=case.geometry.web_bolt_pitch.model_dump(),
-            limit={"value": smax_web, "unit": case.geometry.web_bolt_pitch.unit},
+            calculated=s1y.model_dump(),
+            limit={"value": smax_web, "unit": s1y.unit},
             clause="AISC 360-22 J3.6",
-            passed=case.geometry.web_bolt_pitch.value <= smax_web,
+            passed=s1y.value <= smax_web,
         ),
         _row(
             scope="pernos_2",
             description="Separacion minima entre pernos del ala en direccion X",
-            calculated_symbol="S2_x",
+            calculated_symbol="p_blt_flange",
             limit_symbol="Smin",
             comparison_text=">=",
-            calculated=case.geometry.flange_bolt_gage.model_dump(),
+            calculated=s2x.model_dump(),
             limit=s_min_flange.model_dump(),
             clause="AISC 360-22 J3.3",
-            passed=s2x_ok,
+            passed=s2x.value >= s_min_flange.value,
         ),
         _row(
             scope="pernos_2",
             description="Separacion maxima entre pernos del ala en direccion X",
-            calculated_symbol="S2_x",
+            calculated_symbol="p_blt_flange",
             limit_symbol="Smax",
             comparison_text="<=",
-            calculated=case.geometry.flange_bolt_gage.model_dump(),
-            limit={"value": smax_flange, "unit": case.geometry.flange_bolt_gage.unit},
+            calculated=s2x.model_dump(),
+            limit={"value": smax_flange, "unit": s2x.unit},
             clause="AISC 360-22 J3.6",
-            passed=case.geometry.flange_bolt_gage.value <= smax_flange,
+            passed=s2x.value <= smax_flange,
         ),
         _row(
             scope="pernos_2",
-            description="Separacion minima entre pernos del ala en direccion Z (S2_z1)",
-            calculated_symbol="S2_z1",
+            description="Separacion minima entre pernos del ala en direccion Z",
+            calculated_symbol="g_blt_flange",
             limit_symbol="Smin",
             comparison_text=">=",
-            calculated=case.geometry.flange_bolt_pitch.model_dump(),
+            calculated=s2z1.model_dump(),
             limit=s_min_flange.model_dump(),
             clause="AISC 360-22 J3.3",
-            passed=s2z1_ok,
+            passed=s2z1.value >= s_min_flange.value,
         ),
         _row(
             scope="pernos_2",
-            description="Separacion maxima entre pernos del ala en direccion Z (S2_z1)",
-            calculated_symbol="S2_z1",
+            description="Separacion maxima entre pernos del ala en direccion Z",
+            calculated_symbol="g_blt_flange",
             limit_symbol="Smax",
             comparison_text="<=",
-            calculated=case.geometry.flange_bolt_pitch.model_dump(),
-            limit={"value": smax_flange, "unit": case.geometry.flange_bolt_pitch.unit},
+            calculated=s2z1.model_dump(),
+            limit={"value": smax_flange, "unit": s2z1.unit},
             clause="AISC 360-22 J3.6",
-            passed=case.geometry.flange_bolt_pitch.value <= smax_flange,
+            passed=s2z1.value <= smax_flange,
         ),
         _row(
             scope="viga",
-            description="Distancia minima a borde Le1_x1 para agujero estandar",
-            calculated_symbol="Le1_x1",
+            description="Distancia minima a borde Le_blt_web_x1 para agujero estandar",
+            calculated_symbol="Le_blt_web_x1",
             limit_symbol=le1_min_limit_symbol,
             comparison_text=">=",
             calculated=le1_x1.model_dump(),
             limit=le1_min_limit.model_dump(),
             clause=le1_min_clause,
-            passed=le1_x1_ok,
+            passed=le1_x1.value >= le1_min_limit.value,
         ),
         _row(
             scope="viga",
-            description="Distancia maxima a borde Le1_x1",
-            calculated_symbol="Le1_x1",
+            description="Distancia maxima a borde Le_blt_web_x1",
+            calculated_symbol="Le_blt_web_x1",
             limit_symbol="Le_max",
             comparison_text="<=",
             calculated=le1_x1.model_dump(),
@@ -378,190 +341,132 @@ def run_step1_viga_detailing(case: BeamBeamMomentBoltedCase, rule_binding: objec
         ),
         _row(
             scope="pernos_1",
-            description="Distancia minima a borde Le1_x2 para agujero estandar",
-            calculated_symbol="Le1_x2",
+            description="Distancia minima a borde Le_blt_web_x2 para agujero estandar",
+            calculated_symbol="Le_blt_web_x2",
             limit_symbol=le1_min_limit_symbol,
             comparison_text=">=",
             calculated=le1_x2.model_dump(),
             limit=le1_min_limit.model_dump(),
             clause=le1_min_clause,
-            passed=le1_x2_ok,
+            passed=le1_x2.value >= le1_min_limit.value,
         ),
         _row(
             scope="pernos_1",
-            description="Distancia maxima a borde Le1_x2",
-            calculated_symbol="Le1_x2",
-            limit_symbol="Le_max",
-            comparison_text="<=",
-            calculated=le1_x2.model_dump(),
-            limit={"value": lemax_web, "unit": le1_x2.unit},
-            clause="AISC 360-22 J3.6",
-            passed=le1_x2.value <= lemax_web,
-        ),
-        _row(
-            scope="pernos_1",
-            description="Distancia minima a borde Le1_y1 para agujero estandar",
-            calculated_symbol="Le1_y1",
+            description="Distancia minima a borde Le_blt_web_y1 para agujero estandar",
+            calculated_symbol="Le_blt_web_y1",
             limit_symbol="Le_min",
             comparison_text=">=",
             calculated=le1_y1.model_dump(),
             limit=le_min_web.model_dump(),
             clause="AISC 360-22 Tabla J3.4",
-            passed=le1_y1_ok,
+            passed=le1_y1.value >= le_min_web.value,
         ),
         _row(
             scope="pernos_1",
-            description="Distancia maxima a borde Le1_y1",
-            calculated_symbol="Le1_y1",
-            limit_symbol="Le_max",
-            comparison_text="<=",
-            calculated=le1_y1.model_dump(),
-            limit={"value": lemax_web, "unit": le1_y1.unit},
-            clause="AISC 360-22 J3.6",
-            passed=le1_y1.value <= lemax_web,
-        ),
-        _row(
-            scope="pernos_1",
-            description="Distancia minima a borde Le1_y2 para agujero estandar",
-            calculated_symbol="Le1_y2",
+            description="Distancia minima a borde Le_blt_web_y2 para agujero estandar",
+            calculated_symbol="Le_blt_web_y2",
             limit_symbol="Le_min",
             comparison_text=">=",
             calculated=le1_y2.model_dump(),
             limit=le_min_web.model_dump(),
             clause="AISC 360-22 Tabla J3.4",
-            passed=le1_y2_ok,
-        ),
-        _row(
-            scope="pernos_1",
-            description="Distancia maxima a borde Le1_y2",
-            calculated_symbol="Le1_y2",
-            limit_symbol="Le_max",
-            comparison_text="<=",
-            calculated=le1_y2.model_dump(),
-            limit={"value": lemax_web, "unit": le1_y2.unit},
-            clause="AISC 360-22 J3.6",
-            passed=le1_y2.value <= lemax_web,
+            passed=le1_y2.value >= le_min_web.value,
         ),
         _row(
             scope="pernos_2",
-            description="Distancia minima a borde Le2_x1 para agujero estandar",
-            calculated_symbol="Le2_x1",
+            description="Distancia minima a borde Le_blt_flange_x1 para agujero estandar",
+            calculated_symbol="Le_blt_flange_x1",
             limit_symbol="Le_min",
             comparison_text=">=",
             calculated=le2_x1.model_dump(),
             limit=le_min_flange.model_dump(),
             clause="AISC 360-22 Tabla J3.4",
-            passed=le2_x1_ok,
+            passed=le2_x1.value >= le_min_flange.value,
         ),
         _row(
             scope="pernos_2",
-            description="Distancia maxima a borde Le2_x1",
-            calculated_symbol="Le2_x1",
-            limit_symbol="Le_max",
-            comparison_text="<=",
-            calculated=le2_x1.model_dump(),
-            limit={"value": lemax_flange, "unit": le2_x1.unit},
-            clause="AISC 360-22 J3.6",
-            passed=le2_x1.value <= lemax_flange,
-        ),
-        _row(
-            scope="pernos_2",
-            description="Distancia minima a borde Le2_x2 para agujero estandar",
-            calculated_symbol="Le2_x2",
+            description="Distancia minima a borde Le_blt_flange_x2 para agujero estandar",
+            calculated_symbol="Le_blt_flange_x2",
             limit_symbol="Le_min",
             comparison_text=">=",
             calculated=le2_x2.model_dump(),
             limit=le_min_flange.model_dump(),
             clause="AISC 360-22 Tabla J3.4",
-            passed=le2_x2_ok,
+            passed=le2_x2.value >= le_min_flange.value,
         ),
         _row(
             scope="pernos_2",
-            description="Distancia maxima a borde Le2_x2",
-            calculated_symbol="Le2_x2",
-            limit_symbol="Le_max",
-            comparison_text="<=",
-            calculated=le2_x2.model_dump(),
-            limit={"value": lemax_flange, "unit": le2_x2.unit},
-            clause="AISC 360-22 J3.6",
-            passed=le2_x2.value <= lemax_flange,
-        ),
-        _row(
-            scope="pernos_2",
-            description="Distancia minima a borde Le2_z1 para agujero estandar",
-            calculated_symbol="Le2_z1",
+            description="Distancia minima a borde Le_blt_flange_z1 para agujero estandar",
+            calculated_symbol="Le_blt_flange_z1",
             limit_symbol="Le_min",
             comparison_text=">=",
             calculated=le2_z1.model_dump(),
             limit=le_min_flange.model_dump(),
             clause="AISC 360-22 Tabla J3.4",
-            passed=le2_z1_ok,
+            passed=le2_z1.value >= le_min_flange.value,
         ),
         _row(
             scope="pernos_2",
-            description="Distancia maxima a borde Le2_z1",
-            calculated_symbol="Le2_z1",
-            limit_symbol="Le_max",
-            comparison_text="<=",
-            calculated=le2_z1.model_dump(),
-            limit={"value": lemax_flange, "unit": le2_z1.unit},
-            clause="AISC 360-22 J3.6",
-            passed=le2_z1.value <= lemax_flange,
-        ),
-        _row(
-            scope="pernos_2",
-            description="Distancia minima a borde Le2_z2 para agujero estandar",
-            calculated_symbol="Le2_z2",
+            description="Distancia minima a borde Le_blt_flange_z2 para agujero estandar",
+            calculated_symbol="Le_blt_flange_z2",
             limit_symbol="Le_min",
             comparison_text=">=",
             calculated=le2_z2.model_dump(),
             limit=le_min_flange.model_dump(),
             clause="AISC 360-22 Tabla J3.4",
-            passed=le2_z2_ok,
+            passed=le2_z2.value >= le_min_flange.value,
         ),
         _row(
             scope="pernos_2",
-            description="Distancia maxima a borde Le2_z2",
-            calculated_symbol="Le2_z2",
-            limit_symbol="Le_max",
-            comparison_text="<=",
-            calculated=le2_z2.model_dump(),
-            limit={"value": lemax_flange, "unit": le2_z2.unit},
-            clause="AISC 360-22 J3.6",
-            passed=le2_z2.value <= lemax_flange,
+            description="Distancia minima a borde Le_blt_flange_z3 para agujero estandar",
+            calculated_symbol="Le_blt_flange_z3",
+            limit_symbol="Le_min",
+            comparison_text=">=",
+            calculated=le2_z3.model_dump(),
+            limit=le_min_flange.model_dump(),
+            clause="AISC 360-22 Tabla J3.4",
+            passed=le2_z3.value >= le_min_flange.value,
         ),
         _row(
             scope="platina_1",
-            description="Altura de platina 1 no supera T del catalogo del perfil",
-            calculated_symbol="hp1",
-            limit_symbol="T",
+            description="Altura de platina de alma no supera T_vg del catalogo",
+            calculated_symbol="B_plt_web",
+            limit_symbol="T_vg",
             comparison_text="<=",
-            calculated=case.geometry.web_plate_height.model_dump(),
+            calculated=hp1.model_dump(),
             limit=t_catalog.model_dump(),
-            clause="Indicacion de diseno del usuario (constructivo) + catalogo de secciones",
-            passed=hp1_ok,
+            clause="Criterio de detallado solicitado por usuario",
+            passed=hp1.value <= t_catalog.value,
         ),
         _row(
             scope="platina_2",
-            description="Ancho de platina 2 no supera bf del catalogo del perfil",
-            calculated_symbol="bp2",
-            limit_symbol="bf",
+            description="Ancho de platina de ala no supera bf_vg del catalogo",
+            calculated_symbol="B_plt_flange",
+            limit_symbol="bf_vg",
             comparison_text="<=",
-            calculated=case.geometry.flange_plate_top_width.model_dump(),
+            calculated=bp2.model_dump(),
             limit=bf_catalog.model_dump(),
-            clause="Indicacion de diseno del usuario (constructivo) + catalogo de secciones",
-            passed=bp2_ok,
+            clause="Criterio de detallado solicitado por usuario",
+            passed=bp2.value <= bf_catalog.value,
         ),
         _row(
             scope="viga",
-            description="Distancia Le1.y3 no menor que kdes del catalogo",
-            calculated_symbol="Le1.y3",
-            limit_symbol="kdes",
+            description="Distancia Le_blt_web_y3 no menor que kdes_vg del catalogo",
+            calculated_symbol="Le_blt_web_y3",
+            limit_symbol="kdes_vg",
             comparison_text=">=",
-            calculated=le1_y3.model_dump() if le1_y3 is not None else {"value": None, "unit": kdes_catalog.unit},
+            calculated=(
+                le1_y3.model_dump()
+                if le1_y3 is not None
+                else {"value": 0.5 * (dvg_catalog.value - (case.geometry.n_blt_web_y - 1) * s1y.value), "unit": dvg_catalog.unit}
+            ),
             limit=kdes_catalog.model_dump(),
             clause="Criterio solicitado por usuario + catalogo de secciones",
-            passed=le1_y3_kdes_ok,
+            passed=(
+                (le1_y3.value >= kdes_catalog.value)
+                if le1_y3 is not None and le1_y3.unit == kdes_catalog.unit
+                else (0.5 * (dvg_catalog.value - (case.geometry.n_blt_web_y - 1) * s1y.value) >= kdes_catalog.value)
+            ),
         ),
         _row(
             scope="viga",
@@ -569,31 +474,17 @@ def run_step1_viga_detailing(case: BeamBeamMomentBoltedCase, rule_binding: objec
             calculated_symbol="U1",
             limit_symbol="1.0",
             comparison_text="<=",
-            calculated={"value": us1, "unit": "ratio"},
+            calculated={"value": u1, "unit": "ratio"},
             limit={"value": 1.0, "unit": "ratio"},
             clause="Criterio solicitado por usuario",
-            passed=u1_ok,
+            passed=u1 is not None and u1 <= 1.0,
         ),
     ]
-    if nb2_z >= 4:
-        rows.insert(
-            len(rows) - 1,
-            _row(
-                scope="pernos_2",
-                description="Separacion minima S2_z2 respecto a 2*Smin + 2*k1",
-                calculated_symbol="S2_z2",
-                limit_symbol="2*Smin + 2*k1",
-                comparison_text=">=",
-                calculated=s2z2.model_dump(),
-                limit={"value": s2_z2_compound_limit, "unit": s2z2.unit},
-                clause="Criterio solicitado por usuario (k1 desde catalogo)",
-                passed=s2_z2_compound_ok,
-            ),
-        )
-    if case.geometry.web_bolt_tightening_type in {"pretensioned", "slip_critical"}:
+
+    if case.geometry.type_tight_blt_web in {"pretensioned", "slip_critical"}:
         tmin_web_kn = _minimum_bolt_pretension_kN(
             diameter_in=db_web_in,
-            fabrication_standard=standard_web,
+            fabrication_standard=case.materials.std_blt_web,
         )
         rows.append(
             _row(
@@ -608,10 +499,10 @@ def run_step1_viga_detailing(case: BeamBeamMomentBoltedCase, rule_binding: objec
                 passed=True,
             )
         )
-    if case.geometry.flange_bolt_tightening_type in {"pretensioned", "slip_critical"}:
+    if case.geometry.type_tight_blt_flange in {"pretensioned", "slip_critical"}:
         tmin_flange_kn = _minimum_bolt_pretension_kN(
             diameter_in=db_flange_in,
-            fabrication_standard=standard_flange,
+            fabrication_standard=case.materials.std_blt_flange,
         )
         rows.append(
             _row(
@@ -626,34 +517,37 @@ def run_step1_viga_detailing(case: BeamBeamMomentBoltedCase, rule_binding: objec
                 passed=True,
             )
         )
+
     status = CheckStatus.PASS if all(row["result"] == "PASS" for row in rows) else CheckStatus.FAIL
+
+    tlvg = case.geometry.tol_L_vg
+    le1_x1_prime = Quantity(value=le1_x1.value - tlvg.value, unit=le1_x1.unit) if le1_x1.unit == tlvg.unit else None
+    le1_y3_calc = (
+        le1_y3
+        if le1_y3 is not None
+        else Quantity(value=0.5 * (dvg_catalog.value - (case.geometry.n_blt_web_y - 1) * s1y.value), unit=dvg_catalog.unit)
+    )
+
     memory = CalculationMemory(
         inputs={
-            "beam_shape": case.sections.beam_right_shape,
-            "db_web": db_web.model_dump(),
-            "db_flange": db_flange.model_dump(),
-            "s1_x": case.geometry.web_bolt_gage.model_dump(),
-            "s1_y": case.geometry.web_bolt_pitch.model_dump(),
-            "s2_x": case.geometry.flange_bolt_gage.model_dump(),
-            "s2_z1": case.geometry.flange_bolt_pitch.model_dump(),
-            "s2_z2": s2z2.model_dump(),
-            "le1_x1": le1_x1.model_dump(),
-            "le1_x2": le1_x2.model_dump(),
-            "le1_y1": le1_y1.model_dump(),
-            "le1_y2": le1_y2.model_dump(),
-            "le2_x1": le2_x1.model_dump(),
-            "le2_x2": le2_x2.model_dump(),
-            "le2_z1": le2_z1.model_dump(),
-            "le2_z2": le2_z2.model_dump(),
-            "k1_catalog": k1_catalog.model_dump(),
-            "hp1": case.geometry.web_plate_height.model_dump(),
-            "T_catalog": t_catalog.model_dump(),
-            "bp2": case.geometry.flange_plate_top_width.model_dump(),
-            "bf_catalog": bf_catalog.model_dump(),
-            "web_plate_surface_condition": web_surface,
-            "web_plate_atmospheric_condition": web_atm,
-            "flange_plate_surface_condition": flange_surface,
-            "flange_plate_atmospheric_condition": flange_atm,
+            "shape_vg": case.sections.shape_vg,
+            "db_blt_web": db_web.model_dump(),
+            "db_blt_flange": db_flange.model_dump(),
+            "g_blt_web": s1x.model_dump(),
+            "p_blt_web": s1y.model_dump(),
+            "p_blt_flange": s2x.model_dump(),
+            "g_blt_flange": s2z1.model_dump(),
+            "Le_blt_web_x1": le1_x1.model_dump(),
+            "Le_blt_web_x2": le1_x2.model_dump(),
+            "Le_blt_web_y1": le1_y1.model_dump(),
+            "Le_blt_web_y2": le1_y2.model_dump(),
+            "Le_blt_flange_x1": le2_x1.model_dump(),
+            "Le_blt_flange_x2": le2_x2.model_dump(),
+            "Le_blt_flange_z1": le2_z1.model_dump(),
+            "Le_blt_flange_z2": le2_z2.model_dump(),
+            "Le_blt_flange_z3": le2_z3.model_dump(),
+            "T_vg": t_catalog.model_dump(),
+            "bf_vg": bf_catalog.model_dump(),
         },
         intermediates={
             "step_1_limits": rows,
@@ -663,41 +557,31 @@ def run_step1_viga_detailing(case: BeamBeamMomentBoltedCase, rule_binding: objec
                     "scope": "viga",
                     "description": "Parametros geometricos base",
                     "clause": "Criterio solicitado por usuario",
-                    "alpha_symbol": "sep",
+                    "alpha_symbol": "gap_sp",
                     "alpha": alpha.model_dump(),
-                    "beam_length_tolerance_var": "Tlvg",
-                    "beam_length_tolerance": (
-                        case.geometry.beam_length_tolerance.model_dump()
-                        if case.geometry.beam_length_tolerance is not None
-                        else {"value": 6.35, "unit": "mm"}
-                    ),
+                    "beam_length_tolerance_var": "tol_L_vg",
+                    "beam_length_tolerance": tlvg.model_dump(),
                     "beam_length_tolerance_ref": "AISC 303-22",
-                    "s1x_var": "S1.x",
-                    "s1x": case.geometry.web_bolt_gage.model_dump(),
-                    "le1x1_var": "Le1.x1",
+                    "s1x_var": "g_blt_web",
+                    "s1x": s1x.model_dump(),
+                    "le1x1_var": "Le_blt_web_x1",
                     "le1x1": le1_x1.model_dump(),
-                    "le1x1_prime_var": "Le1.x1'",
-                    "le1x1_prime_formula": "Le1.x1' = Le1.x1 - Tlvg",
+                    "le1x1_prime_var": "Le_blt_web_x1'",
+                    "le1x1_prime_formula": "Le_blt_web_x1' = Le_blt_web_x1 - tol_L_vg",
                     "le1x1_prime": le1_x1_prime.model_dump() if le1_x1_prime is not None else None,
-                    "dvg_var": "dvg",
+                    "dvg_var": "d_vg",
                     "dvg": dvg_catalog.model_dump(),
-                    "le1y3_var": "Le1.y3",
-                    "le1y3": le1_y3.model_dump() if le1_y3 is not None else None,
-                    "le1y4_var": "Le1.y4",
-                    "le1y4_formula": "Le1.y4 = dvg - Le1.y3",
+                    "le1y3_var": "Le_blt_web_y3",
+                    "le1y3": le1_y3_calc.model_dump(),
+                    "le1y4_var": "Le_blt_web_y4",
+                    "le1y4_formula": "Le_blt_web_y4 = d_vg - Le_blt_web_y3",
                     "le1y4": le1_y4.model_dump() if le1_y4 is not None else None,
-                    "anv1_formula": "Anv.y1.vg = tw*(d-nb1.y*(dh.1+1.6mm))",
+                    "anv1_formula": "Anv.y1.vg = tw_vg*(d_vg-n_blt_web_y*(dh_plt_web+1.6mm))",
                     "anv1": anv1.model_dump(),
-                    "ant1_formula": "Ant.x1.1 = tw*(d-nb1.y*(dh.1+1.6mm))",
+                    "ant1_formula": "Ant.x1.vg = tw_vg*(d_vg-n_blt_web_y*(dh_plt_web+1.6mm))",
                     "ant1": ant1.model_dump(),
-                    "us1_formula": us1_formula,
-                    "us1": us1,
-                    "nb1x": case.geometry.web_bolt_lines,
-                    "nb1y": case.geometry.web_bolt_rows_per_side,
-                    "tw": tw_catalog.model_dump(),
-                    "d": dvg_catalog.model_dump(),
-                    "s1x": case.geometry.web_bolt_gage.model_dump(),
-                    "ag": ag_catalog.model_dump() if ag_catalog is not None else None,
+                    "us1_formula": u1_formula,
+                    "us1": u1,
                     "dh_1": dh_web.model_dump(),
                     "dh_2": dh_flange.model_dump(),
                 },
@@ -705,21 +589,45 @@ def run_step1_viga_detailing(case: BeamBeamMomentBoltedCase, rule_binding: objec
                     "id": "bbmb_splice.step1.geometry_formulas_plt1_note",
                     "scope": "platina_1",
                     "description": "Formulas geometricas de platina 1",
-                    "clause": "Criterio solicitado por usuario",
-                    "hp1_formula": "hp1 = Le1.y1 + Le1.y2 + (nb1.y - 1) * S1.y",
-                    "hp1_calc": {"value": hp1_calc, "unit": le1_y1.unit},
-                    "bp1_formula": "bp1 = Le1.x1 + Le1.x2 + alpha + 2 * (nb1.x - 1) * S1.x",
-                    "bp1_calc": {"value": bp1_calc, "unit": le1_x1.unit},
+                    "clause": "Nomenclatura oficial splice",
+                    "hp1_formula": "B_plt_web = Le_blt_web_y1 + Le_blt_web_y2 + (n_blt_web_y - 1)*p_blt_web",
+                    "hp1_calc": hp1.model_dump(),
+                    "bp1_formula": "L_plt_web = 2*(Le_blt_web_x1 + (n_blt_web_x - 1)*g_blt_web + Le_blt_web_x2) + gap_sp",
+                    "bp1_calc": bp1.model_dump(),
                 },
                 {
                     "id": "bbmb_splice.step1.geometry_formulas_plt2_note",
                     "scope": "platina_2",
                     "description": "Formulas geometricas de platina 2",
-                    "clause": "Criterio solicitado por usuario",
-                    "bp2_formula": "bp2 = Le2.z2 + Le2.z1 + S2.z2 + (nb2.z - 2) * S2.z1",
-                    "bp2_calc": {"value": bp2_calc, "unit": le2_z1.unit},
-                    "lp2_formula": "lp2 = 2 * (Le2.x1 + Le2.x2) + alpha + 2 * (nb2.x - 1) * S2.x + alpha",
-                    "lp2_calc": {"value": lp2_calc, "unit": le2_x1.unit},
+                    "clause": "Nomenclatura oficial splice",
+                    "bp2_formula": "B_plt_flange = bf_vg - 2*Le_blt_flange_z3 + Le_blt_flange_z1 + Le_blt_flange_z2",
+                    "bp2_calc": bp2.model_dump(),
+                    "lp2_formula": "L_plt_flange = 2*(Le_blt_flange_x1 + (n_blt_flange_x - 1)*p_blt_flange + Le_blt_flange_x2) + gap_sp",
+                    "lp2_calc": lp2.model_dump(),
+                },
+                {
+                    "id": "bbmb_splice.step1.plate_1_hole_diameter_note",
+                    "scope": "platina_1",
+                    "description": "Diametro de perforacion estandar en platina 1",
+                    "clause": "AISC 360-22 Table J3.3",
+                    "formula": "dh_plt_web = db_blt_web + 1/16 in (db<=7/8 in) else +1/8 in",
+                    "db_var": "db_blt_web",
+                    "dh_var": "dh_plt_web",
+                    "db": db_web.model_dump(),
+                    "dh": dh_web.model_dump(),
+                    "hole_add_in": dh_web_inter["hole_add_in"],
+                },
+                {
+                    "id": "bbmb_splice.step1.plate_2_hole_diameter_note",
+                    "scope": "platina_2",
+                    "description": "Diametro de perforacion estandar en platina 2",
+                    "clause": "AISC 360-22 Table J3.3",
+                    "formula": "dh_plt_flange = db_blt_flange + 1/16 in (db<=7/8 in) else +1/8 in",
+                    "db_var": "db_blt_flange",
+                    "dh_var": "dh_plt_flange",
+                    "db": db_flange.model_dump(),
+                    "dh": dh_flange.model_dump(),
+                    "hole_add_in": dh_flange_inter["hole_add_in"],
                 },
                 {
                     "id": "bbmb_splice.step1.bolt_group_1_properties_note",
@@ -728,34 +636,26 @@ def run_step1_viga_detailing(case: BeamBeamMomentBoltedCase, rule_binding: objec
                     "clause": "Catalogo de pernos + inputs del caso",
                     "bolt_shape": str(bolt_web.get("shape", "")),
                     "classification": str(bolt_web.get("classification", "")),
-                    "fabrication_standard": standard_web,
-                    "thread_condition": case.materials.bolt_thread_condition,
-                    "tightening_type": case.geometry.web_bolt_tightening_type or "n/a",
+                    "fabrication_standard": case.materials.std_blt_web,
+                    "thread_condition": case.materials.thread_blt_web,
+                    "tightening_type": case.geometry.type_tight_blt_web or "n/a",
                     "diameter_nominal": db_web.model_dump(),
-                    "length_shank": bolt_web["length"].model_dump() if hasattr(bolt_web["length"], "model_dump") else None,
+                    "length_shank": bolt_web["length"].model_dump() if isinstance(bolt_web.get("length"), Quantity) else None,
                     "width_across_flats": (
                         bolt_web["width_across_flats"].model_dump()
-                        if hasattr(bolt_web["width_across_flats"], "model_dump")
+                        if isinstance(bolt_web.get("width_across_flats"), Quantity)
                         else None
                     ),
                     "head_diameter": (
-                        bolt_web["head_diameter"].model_dump() if hasattr(bolt_web["head_diameter"], "model_dump") else None
+                        bolt_web["head_diameter"].model_dump()
+                        if isinstance(bolt_web.get("head_diameter"), Quantity)
+                        else None
                     ),
                     "head_height": (
-                        bolt_web["head_height"].model_dump() if hasattr(bolt_web["head_height"], "model_dump") else None
+                        bolt_web["head_height"].model_dump()
+                        if isinstance(bolt_web.get("head_height"), Quantity)
+                        else None
                     ),
-                },
-                {
-                    "id": "bbmb_splice.step1.plate_1_hole_diameter_note",
-                    "scope": "platina_1",
-                    "description": "Diametro de perforacion estandar en platina 1",
-                    "clause": "AISC 360-22 Table J3.3",
-                    "formula": "dh = d + 1/16 in (db<=7/8 in) else dh = d + 1/8 in",
-                    "db_var": "db.1",
-                    "dh_var": "dh.1",
-                    "db": db_web.model_dump(),
-                    "dh": dh_web.model_dump(),
-                    "hole_add_in": dh_web_inter["hole_add_in"],
                 },
                 {
                     "id": "bbmb_splice.step1.bolt_group_2_properties_note",
@@ -764,69 +664,51 @@ def run_step1_viga_detailing(case: BeamBeamMomentBoltedCase, rule_binding: objec
                     "clause": "Catalogo de pernos + inputs del caso",
                     "bolt_shape": str(bolt_flange.get("shape", "")),
                     "classification": str(bolt_flange.get("classification", "")),
-                    "fabrication_standard": standard_flange,
-                    "thread_condition": case.materials.bolt_thread_condition,
-                    "tightening_type": case.geometry.flange_bolt_tightening_type or "n/a",
+                    "fabrication_standard": case.materials.std_blt_flange,
+                    "thread_condition": case.materials.thread_blt_flange,
+                    "tightening_type": case.geometry.type_tight_blt_flange or "n/a",
                     "diameter_nominal": db_flange.model_dump(),
                     "length_shank": (
-                        bolt_flange["length"].model_dump() if hasattr(bolt_flange["length"], "model_dump") else None
+                        bolt_flange["length"].model_dump() if isinstance(bolt_flange.get("length"), Quantity) else None
                     ),
                     "width_across_flats": (
                         bolt_flange["width_across_flats"].model_dump()
-                        if hasattr(bolt_flange["width_across_flats"], "model_dump")
+                        if isinstance(bolt_flange.get("width_across_flats"), Quantity)
                         else None
                     ),
                     "head_diameter": (
                         bolt_flange["head_diameter"].model_dump()
-                        if hasattr(bolt_flange["head_diameter"], "model_dump")
+                        if isinstance(bolt_flange.get("head_diameter"), Quantity)
                         else None
                     ),
                     "head_height": (
                         bolt_flange["head_height"].model_dump()
-                        if hasattr(bolt_flange["head_height"], "model_dump")
+                        if isinstance(bolt_flange.get("head_height"), Quantity)
                         else None
                     ),
                 },
-                {
-                    "id": "bbmb_splice.step1.plate_2_hole_diameter_note",
-                    "scope": "platina_2",
-                    "description": "Diametro de perforacion estandar en platina 2",
-                    "clause": "AISC 360-22 Table J3.3",
-                    "formula": "dh = d + 1/16 in (db<=7/8 in) else dh = d + 1/8 in",
-                    "db_var": "db.2",
-                    "dh_var": "dh.2",
-                    "db": db_flange.model_dump(),
-                    "dh": dh_flange.model_dump(),
-                    "hole_add_in": dh_flange_inter["hole_add_in"],
-                }
             ],
             "edge_distance_table_row_web": le_meta_web.get("table_row"),
             "edge_distance_table_row_flange": le_meta_flange.get("table_row"),
-            "j3_6_t_web_governing": t_web,
-            "j3_6_t_flange_governing": t_flange,
         },
         design_factors={},
-        equation="Step 1 Detailing: S>=3db (J3.3), Le>=Tabla J3.4, hp1<=T_catalog, bp2<=bf_catalog",
+        equation="Step 1 detailing splice: J3.3 + Tabla J3.4 + J3.6 + checks geometricos de proyecto",
         units_trace={
-            "db_web": db_web.unit,
-            "db_flange": db_flange.unit,
-            "s1_x": case.geometry.web_bolt_gage.unit,
-            "s1_y": case.geometry.web_bolt_pitch.unit,
-            "s2_x": case.geometry.flange_bolt_gage.unit,
-            "s2_z1": case.geometry.flange_bolt_pitch.unit,
-            "s2_z2": s2z2.unit,
-            "le1_x1": le1_x1.unit,
-            "le1_x2": le1_x2.unit,
-            "le1_y1": le1_y1.unit,
-            "le1_y2": le1_y2.unit,
-            "le2_x1": le2_x1.unit,
-            "le2_x2": le2_x2.unit,
-            "le2_z1": le2_z1.unit,
-            "le2_z2": le2_z2.unit,
-            "k1_catalog": k1_catalog.unit,
-            "hp1": case.geometry.web_plate_height.unit,
-            "T_catalog": t_catalog.unit,
-            "bf_catalog": bf_catalog.unit,
+            "db_blt_web": db_web.unit,
+            "db_blt_flange": db_flange.unit,
+            "g_blt_web": s1x.unit,
+            "p_blt_web": s1y.unit,
+            "p_blt_flange": s2x.unit,
+            "g_blt_flange": s2z1.unit,
+            "Le_blt_web_x1": le1_x1.unit,
+            "Le_blt_web_x2": le1_x2.unit,
+            "Le_blt_web_y1": le1_y1.unit,
+            "Le_blt_web_y2": le1_y2.unit,
+            "Le_blt_flange_x1": le2_x1.unit,
+            "Le_blt_flange_x2": le2_x2.unit,
+            "Le_blt_flange_z1": le2_z1.unit,
+            "Le_blt_flange_z2": le2_z2.unit,
+            "Le_blt_flange_z3": le2_z3.unit,
         },
         final_capacity=None,
     )
@@ -842,4 +724,3 @@ def run_step1_viga_detailing(case: BeamBeamMomentBoltedCase, rule_binding: objec
         calculation_memory=memory,
         notes=None,
     )
-

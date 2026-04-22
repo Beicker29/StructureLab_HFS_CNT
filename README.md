@@ -180,8 +180,8 @@ En `bbmb_splice` (Pernos 1 / Punto 2) puedes seleccionar:
 - `Instant Center of Rotation Method`
 El motor usa un nucleo matematico interno desacoplado (sin dependencia runtime de `ezbolt`).
 Para `bbmb_splice`, la excentricidad se define por convencion de detalle:
-- `ex = sep + 2*Le1.x1 + (nb1.x-1)*S1.x`
-- `ey = loads.eccentricity_ey` (default `0`)
+- `ex = gap_sp + 2*Le_blt_web_x1 + (n_blt_web_x-1)*g_blt_web`
+- `ey = loads.ey_blt_web` (default `0`)
 - `Mz = Vy*ex - Vx*ey`
 
 ## Estado de chequeo
