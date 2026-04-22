@@ -10,11 +10,8 @@ if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
 from steel_connections.domain.engine.pipeline import run_case_file
-from steel_connections.domain.engine.validate import parse_and_validate_file
-from steel_connections.models.errors import StructuredEngineException
 from steel_connections.models.output import GlobalStatus
 from steel_connections.reporting.json_writer import write_detailed_result
-from steel_connections.reporting.geometry_artifact import write_connection_geometry_artifact
 from steel_connections.reporting.markdown_writer import write_memory_markdown
 
 
@@ -67,16 +64,9 @@ def main(argv: list[str] | None = None) -> int:
     result = run_case_file(str(input_path))
     output_path = write_detailed_result(result, args.out, example_id=example_id)
     memory_path = write_memory_markdown(result, output_path.parent)
-    try:
-        case = parse_and_validate_file(str(input_path))
-    except StructuredEngineException:
-        case = None
-    geometry_path = write_connection_geometry_artifact(case, output_path.parent) if case is not None else None
 
     print(f"DETAIL FILE: {output_path}")
     print(f"MEMORY FILE: {memory_path}")
-    if geometry_path is not None:
-        print(f"GEOMETRY FILE: {geometry_path}")
     if result.global_status == GlobalStatus.ERROR:
         _print_errors_to_terminal(result)
 

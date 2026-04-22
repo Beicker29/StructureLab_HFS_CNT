@@ -35,6 +35,8 @@ def _format_quantity(value: object) -> str:
         if rendered_unit == "kN-mm":
             numeric = numeric / 1000.0
             rendered_unit = "kN-m"
+        elif rendered_unit == "ratio":
+            rendered_unit = "adim"
         return f"{_format_decimal(numeric)} {rendered_unit}"
     except (TypeError, ValueError):
         return "n/a"
@@ -170,6 +172,96 @@ def _render_result_label(raw_result: object) -> str:
     return _format_text(raw_result)
 
 
+def _render_result_plain_es(raw_result: object) -> str:
+    value = _format_text(raw_result).strip().upper()
+    if value in {"OK", "PASS"}:
+        return "Cumple"
+    if value in {"NO_OK", "FAIL", "ERROR", "NOT_IMPLEMENTED"}:
+        return "No cumple"
+    return _format_text(raw_result)
+
+
+def _translate_text_es(raw_text: object) -> str:
+    text = _format_text(raw_text)
+    replacements = {
+        "Protected zone length measured from column face": "Longitud de zona protegida medida desde la cara de la columna",
+        "End-plate connection location on column": "Ubicacion de la conexion de placa de extremo en columna",
+        "Derived end-plate height reference": "Altura derivada de placa de extremo",
+        "Derived end-plate stiffener geometry and detailing edge requirement": "Geometria derivada del rigidizador de placa de extremo y requisito de borde",
+        "Installation requirements for bolted assemblies": "Requisitos de instalacion para conjuntos empernados",
+        "Quality control and quality assurance for bolted assemblies": "Control y aseguramiento de calidad para conjuntos empernados",
+        "Beam profile family allowed for prequalification": "Familia de perfil de viga permitida para precalificacion",
+        "End-plate width vs beam flange width": "Ancho de placa de extremo vs ancho de ala de viga",
+        "Bolt gage minimum spacing": "Separacion minima de gage de pernos",
+        "Length without shear connectors from column face": "Longitud sin conectores de cortante desde la cara de columna",
+        "Beam clearance criterion using Sc and S threshold": "Criterio de despeje de viga con umbral Sc y S",
+        "Clear span-to-depth ratio by frame system": "Relacion luz libre/peralte por sistema de marco",
+        "Beam flange width-to-thickness compactness": "Compacidad ancho-espesor del ala de viga",
+        "Beam web width-to-thickness compactness": "Compacidad ancho-espesor del alma de viga",
+        "Column profile family allowed for prequalification": "Familia de perfil de columna permitida para precalificacion",
+        "Column profile depth maximum (W36/W920)": "Peralte maximo del perfil de columna (W36/W920)",
+        "End-plate fit within column flange width": "Ajuste de placa de extremo dentro del ala de la columna",
+        "Column-slab connection condition": "Condicion de conexion columna-losa",
+        "End-plate width explicit dual inequalities": "Desigualdades explicitas de ancho de placa de extremo",
+        "End-plate stiffener height derived from end-plate geometry": "Altura del rigidizador derivada de la geometria de la placa de extremo",
+        "Stiffener thickness minimum requirement": "Espesor minimo requerido del rigidizador",
+        "Stiffener local buckling width-thickness limit": "Limite de pandeo local ancho-espesor del rigidizador",
+        "Bolt gage clearance with stiffener thickness": "Despeje del gage de pernos con espesor del rigidizador",
+        "End-plate to beam-web weld type shall be an allowed category": "El tipo de soldadura entre placa de extremo y alma de viga debe ser permitido",
+        "Continuity-plate weld type shall be explicitly declared with an allowed weld category": "El tipo de soldadura de platina de continuidad debe declararse y ser permitido",
+        "Continuity-plate weld type when plate thickness is less than or equal to 3/8 in (10 mm)": "Tipo de soldadura de platina de continuidad cuando el espesor es menor o igual a 10 mm",
+        "Bolt tightening type must be one recognized category": "El tipo de apriete del perno debe ser una categoria reconocida",
+        "Bolts shall be pretensioned unless a specific connection permits otherwise": "Los pernos deben estar pretensionados salvo que una conexion especifica permita lo contrario",
+        "Bolt fabrication standard must be an allowed high-strength ASTM designation": "La norma de fabricacion de pernos debe ser una designacion ASTM de alta resistencia permitida",
+        "Vertical pitch minimum spacing": "Separacion minima vertical entre pernos",
+        "Edge distance at de": "Distancia de borde en de",
+        "Outside bolt-row distance limits": "Limites de distancia en fila exterior de pernos",
+        "Inside bolt-row distance limits": "Limites de distancia en fila interior de pernos",
+        "Beam flange thickness limits": "Limites de espesor del ala de viga",
+        "Beam flange width limits": "Limites de ancho del ala de viga",
+        "Connecting beam depth limits": "Limites de peralte de la viga conectada",
+        "End-plate thickness limits": "Limites de espesor de placa de extremo",
+        "Horizontal bolt spacing limits": "Limites de separacion horizontal de pernos",
+        "end-plate": "placa de extremo",
+    }
+    for source, target in replacements.items():
+        text = text.replace(source, target)
+    text = (
+        text.replace("uniÃ³n", "union")
+        .replace("raÃ­z", "raiz")
+        .replace("crÃ­tica", "critica")
+        .replace("Ã¡", "a")
+        .replace("Ã©", "e")
+        .replace("Ã­", "i")
+        .replace("Ã³", "o")
+        .replace("Ãº", "u")
+        .replace("Ã±", "n")
+        .replace("ratio", "adim")
+    )
+    return text
+
+
+def _render_clause_text(clause: object, source_document: object = None, rule_id: object = None) -> str:
+    clause_text = _format_text(clause)
+    clause_text = (
+        clause_text.replace("Chapter", "Capitulo")
+        .replace("Section", "Seccion")
+        .replace("Step", "Paso")
+        .replace("Table", "Tabla")
+        .replace("continuity plate weld detail", "detalle de soldadura de platina de continuidad")
+        .replace("beam clearance criterion", "criterio de despeje de viga")
+        .replace("column top clearance criterion", "criterio de despeje superior de columna")
+    )
+    source_text = _format_text(source_document)
+    if source_text != "n/a" and clause_text != "n/a":
+        return f"Documento: {source_text} | Seccion: {clause_text}"
+    if source_text != "n/a":
+        return f"Documento: {source_text}"
+    if clause_text != "n/a":
+        return f"Seccion: {clause_text}"
+    return "n/a"
+
+
 def _collect_step_1_rows(result: DetailedRunResult) -> list[dict]:
     rows: list[dict] = []
     for check in result.checks:
@@ -182,7 +274,10 @@ def _collect_step_1_rows(result: DetailedRunResult) -> list[dict]:
             continue
         for item in details:
             if isinstance(item, dict):
-                rows.append(item)
+                enriched = dict(item)
+                enriched.setdefault("source_document", check.source_document)
+                enriched.setdefault("rule_id", check.rule_id)
+                rows.append(enriched)
     return rows
 
 
@@ -196,7 +291,10 @@ def _collect_step_1_notes(result: DetailedRunResult) -> list[dict]:
             continue
         for item in details:
             if isinstance(item, dict):
-                notes.append(item)
+                enriched = dict(item)
+                enriched.setdefault("source_document", check.source_document)
+                enriched.setdefault("rule_id", check.rule_id)
+                notes.append(enriched)
     return notes
 
 def _collect_splice_step_1_rows(result: DetailedRunResult) -> list[dict]:
@@ -209,7 +307,10 @@ def _collect_splice_step_1_rows(result: DetailedRunResult) -> list[dict]:
             continue
         for item in details:
             if isinstance(item, dict):
-                rows.append(item)
+                enriched = dict(item)
+                enriched.setdefault("source_document", check.source_document)
+                enriched.setdefault("rule_id", check.rule_id)
+                rows.append(enriched)
     return rows
 
 
@@ -223,7 +324,10 @@ def _collect_splice_step_1_notes(result: DetailedRunResult) -> list[dict]:
             continue
         for item in details:
             if isinstance(item, dict):
-                notes.append(item)
+                enriched = dict(item)
+                enriched.setdefault("source_document", check.source_document)
+                enriched.setdefault("rule_id", check.rule_id)
+                notes.append(enriched)
     return notes
 
 
@@ -237,6 +341,7 @@ def _collect_splice_step_2_method(result: DetailedRunResult) -> dict | None:
         return {
             "rule_id": check.rule_id,
             "clause": check.clause,
+            "source_document": check.source_document,
             "status": check.status.value,
             "notes": check.notes,
             "report": report,
@@ -251,6 +356,7 @@ def _collect_step_2_mpr(result: DetailedRunResult) -> dict | None:
         return {
             "rule_id": check.rule_id,
             "clause": check.clause,
+            "source_document": check.source_document,
             "status": check.status.value,
             "demand": check.demand.model_dump(),
             "capacity": check.capacity.model_dump(),
@@ -268,6 +374,7 @@ def _collect_step_3_sh(result: DetailedRunResult) -> dict | None:
         return {
             "rule_id": check.rule_id,
             "clause": check.clause,
+            "source_document": check.source_document,
             "status": check.status.value,
             "demand": check.demand.model_dump(),
             "capacity": check.capacity.model_dump(),
@@ -284,6 +391,7 @@ def _collect_step_4_vh(result: DetailedRunResult) -> dict | None:
         return {
             "rule_id": check.rule_id,
             "clause": check.clause,
+            "source_document": check.source_document,
             "status": check.status.value,
             "demand": check.demand.model_dump(),
             "capacity": check.capacity.model_dump(),
@@ -301,6 +409,7 @@ def _collect_step_5_mf(result: DetailedRunResult) -> dict | None:
         return {
             "rule_id": check.rule_id,
             "clause": check.clause,
+            "source_document": check.source_document,
             "status": check.status.value,
             "demand": check.demand.model_dump(),
             "capacity": check.capacity.model_dump(),
@@ -333,6 +442,7 @@ def _collect_step_6_1_bolt_tension(result: DetailedRunResult) -> dict | None:
         return {
             "rule_id": check.rule_id,
             "clause": check.clause,
+            "source_document": check.source_document,
             "status": check.status.value,
             "demand": check.demand.model_dump(),
             "capacity": check.capacity.model_dump(),
@@ -352,6 +462,7 @@ def _collect_step_6_2_bolt_shear(result: DetailedRunResult) -> dict | None:
         return {
             "rule_id": check.rule_id,
             "clause": check.clause,
+            "source_document": check.source_document,
             "status": check.status.value,
             "demand": check.demand.model_dump(),
             "capacity": check.capacity.model_dump(),
@@ -371,6 +482,7 @@ def _collect_step_7_1_1_end_plate_flexural(result: DetailedRunResult) -> dict | 
         return {
             "rule_id": check.rule_id,
             "clause": check.clause,
+            "source_document": check.source_document,
             "status": check.status.value,
             "demand": check.demand.model_dump(),
             "capacity": check.capacity.model_dump(),
@@ -390,6 +502,7 @@ def _collect_step_7_2_1_end_plate_shear_yielding(result: DetailedRunResult) -> d
         return {
             "rule_id": check.rule_id,
             "clause": check.clause,
+            "source_document": check.source_document,
             "status": check.status.value,
             "demand": check.demand.model_dump(),
             "capacity": check.capacity.model_dump(),
@@ -409,6 +522,7 @@ def _collect_step_7_2_2_end_plate_shear_rupture(result: DetailedRunResult) -> di
         return {
             "rule_id": check.rule_id,
             "clause": check.clause,
+            "source_document": check.source_document,
             "status": check.status.value,
             "demand": check.demand.model_dump(),
             "capacity": check.capacity.model_dump(),
@@ -428,6 +542,7 @@ def _collect_step_7_3_1_end_plate_hole_tearout(result: DetailedRunResult) -> dic
         return {
             "rule_id": check.rule_id,
             "clause": check.clause,
+            "source_document": check.source_document,
             "status": check.status.value,
             "demand": check.demand.model_dump(),
             "capacity": check.capacity.model_dump(),
@@ -447,6 +562,7 @@ def _collect_step_7_3_2_end_plate_hole_bearing(result: DetailedRunResult) -> dic
         return {
             "rule_id": check.rule_id,
             "clause": check.clause,
+            "source_document": check.source_document,
             "status": check.status.value,
             "demand": check.demand.model_dump(),
             "capacity": check.capacity.model_dump(),
@@ -466,6 +582,7 @@ def _collect_step_8_1_1_stiffener_weld_tension_rupture(result: DetailedRunResult
         return {
             "rule_id": check.rule_id,
             "clause": check.clause,
+            "source_document": check.source_document,
             "status": check.status.value,
             "demand": check.demand.model_dump(),
             "capacity": check.capacity.model_dump(),
@@ -485,6 +602,7 @@ def _collect_step_9_1_1_stiffener_beam_weld_shear_rupture(result: DetailedRunRes
         return {
             "rule_id": check.rule_id,
             "clause": check.clause,
+            "source_document": check.source_document,
             "status": check.status.value,
             "demand": check.demand.model_dump(),
             "capacity": check.capacity.model_dump(),
@@ -504,6 +622,7 @@ def _collect_step_10_1_1_beam_shear_yielding(result: DetailedRunResult) -> dict 
         return {
             "rule_id": check.rule_id,
             "clause": check.clause,
+            "source_document": check.source_document,
             "status": check.status.value,
             "demand": check.demand.model_dump(),
             "capacity": check.capacity.model_dump(),
@@ -531,6 +650,7 @@ def _collect_step_12_1_1_column_flange_local_bending(result: DetailedRunResult) 
         return {
             "rule_id": check.rule_id,
             "clause": check.clause,
+            "source_document": check.source_document,
             "status": check.status.value,
             "demand": check.demand.model_dump(),
             "capacity": check.capacity.model_dump(),
@@ -544,31 +664,66 @@ def _collect_step_12_1_1_column_flange_local_bending(result: DetailedRunResult) 
 
 
 def _render_step_1_notes(notes: list[dict]) -> str:
+    if not notes:
+        return ""
     lines: list[str] = []
+    lines.append("### 1.1 Notas tecnicas")
+    lines.append("")
+    note_index = 1
     for item in notes:
         note_id = _format_text(item.get("id"))
         scope = _format_text(item.get("scope")).upper()
-        description = _format_text(item.get("description"))
-        clause = _format_text(item.get("clause"))
-        lines.append(f"### Nota tecnica - {description}")
+        description = _translate_text_es(item.get("description"))
+        clause = _render_clause_text(
+            item.get("clause"),
+            item.get("source_document"),
+            item.get("rule_id"),
+        )
+        note_label = f"1.1.{note_index}"
+        note_index += 1
+        lines.append(f"#### {note_label} Nota tecnica - {description}")
         lines.append("")
         lines.append(f"- Ambito: `{scope}`")
         lines.append(f"- Clausula: `{clause}`")
-        requirement = _format_text(item.get("requirement"))
-        if requirement != "n/a":
+        requirement = _translate_text_es(item.get("requirement"))
+        if note_id == "section_6_7.beam_flange_to_end_plate_weld_note":
+            requirement = (
+                "La union entre el ala de la viga y la placa de extremo debe ejecutarse con una soldadura "
+                "de ranura CJP sin respaldo. La soldadura de ranura CJP debe realizarse de modo que la raiz "
+                "de la soldadura quede del lado del alma de la viga respecto del ala. La cara interior del ala "
+                "debe tener una soldadura de filete de c in. (8 mm). Estas soldaduras deben ser de demanda critica."
+            )
+        if requirement != "n/a" and note_id not in {
+            "section_6_3.end_plate_height_derived",
+            "section_6_3.end_plate_height_derived_izq",
+            "section_6_3.end_plate_geometry_vgder_note",
+            "section_6_3.end_plate_geometry_vgizq_note",
+            "section_6_3.end_plate_stiffener_geometry_note",
+            "section_6_3.end_plate_stiffener_geometry_vgizq_note",
+        }:
             lines.append(f"- Requisito: `{requirement}`")
-        if note_id == "section_6_3.end_plate_stiffener_geometry_note":
+        if note_id in {
+            "section_6_3.end_plate_stiffener_geometry_note",
+            "section_6_3.end_plate_stiffener_geometry_vgizq_note",
+        }:
             formula = _format_text(item.get("formula"))
-            hst = _format_quantity(item.get("candidate_a"))
-            lst = _format_quantity(item.get("candidate_b"))
-            clip_st = _format_quantity(item.get("clip_st"))
-            edge = _format_quantity(item.get("derived_value"))
+            h_pest_vgder = _format_quantity(item.get("h_pest_vgder"))
+            l_pest_vgder = _format_quantity(item.get("l_pest_vgder"))
+            h_pest_vgizq = _format_quantity(item.get("h_pest_vgizq"))
+            l_pest_vgizq = _format_quantity(item.get("l_pest_vgizq"))
+            ed_pest_vgder = _format_quantity(item.get("ed_pest_vgder"))
+            ed_pest_vgizq = _format_quantity(item.get("ed_pest_vgizq"))
             if formula != "n/a":
                 lines.append(f"- Formula: `{formula}`")
-            lines.append(f"- stiffener_height (hst): `{hst}`")
-            lines.append(f"- stiffener_widht(Lst): `{lst}`")
-            lines.append(f"- clip_st (Cst): `{clip_st}`")
-            lines.append(f"- edge detailing: `{edge}`")
+            lines.append(f"- h_pest_vgder: `{h_pest_vgder}`")
+            lines.append(f"- L_pest_vgder: `{l_pest_vgder}`")
+            if h_pest_vgizq != "n/a":
+                lines.append(f"- h_pest_vgizq: `{h_pest_vgizq}`")
+            if l_pest_vgizq != "n/a":
+                lines.append(f"- L_pest_vgizq: `{l_pest_vgizq}`")
+            lines.append(f"- edge_detailing (Ed_pest_vgder): `{ed_pest_vgder}`")
+            if ed_pest_vgizq != "n/a":
+                lines.append(f"- edge_detailing (Ed_pest_vgizq): `{ed_pest_vgizq}`")
             lines.append("")
             continue
         if note_id == "section_6_3.end_plate_h_distances_note":
@@ -629,6 +784,33 @@ def _render_step_1_notes(notes: list[dict]) -> str:
             lines.append(f"- Incremento aplicado (in): `{hole_add_in}`")
             lines.append("")
             continue
+        if note_id in {
+            "section_6_3.end_plate_height_derived",
+            "section_6_3.end_plate_height_derived_izq",
+        }:
+            formula = _format_text(item.get("formula"))
+            hpe_der = _format_quantity(item.get("hpe_vgder"))
+            hpe_izq = _format_quantity(item.get("hpe_vgizq"))
+            if formula != "n/a":
+                lines.append(f"- Formula: `{formula}`")
+            if hpe_der != "n/a":
+                lines.append(f"- Hpe_vgder: `{hpe_der}`")
+            if hpe_izq != "n/a":
+                lines.append(f"- Hpe_vgizq: `{hpe_izq}`")
+            lines.append("")
+            continue
+        if note_id == "section_2_3_4.protected_zone_length":
+            formula = _format_text(item.get("formula"))
+            protected_zone_der = _format_quantity(item.get("protected_zone_length_vgder"))
+            protected_zone_izq = _format_quantity(item.get("protected_zone_length_vgizq"))
+            if formula != "n/a":
+                lines.append(f"- Formula: `{formula}`")
+            if protected_zone_der != "n/a":
+                lines.append(f"- Lpz_vgder: `{protected_zone_der}`")
+            if protected_zone_izq != "n/a":
+                lines.append(f"- Lpz_vgizq: `{protected_zone_izq}`")
+            lines.append("")
+            continue
         formula = _format_text(item.get("formula"))
         if formula != "n/a":
             candidate_a_label = _format_text(item.get("candidate_a_label"))
@@ -642,14 +824,6 @@ def _render_step_1_notes(notes: list[dict]) -> str:
             lines.append(f"- Formula: `{formula}`")
             lines.append(f"- Candidato A ({candidate_a_label}): `{candidate_a}`")
             lines.append(f"- Candidato B ({candidate_b_label}): `{candidate_b}`")
-            if note_id == "section_2_3_4.protected_zone_length":
-                side_mode = _format_text(item.get("beam_connection_sides")).lower()
-                if side_mode == "both_sides":
-                    lines.append("- Alcance: `aplica para viga derecha e izquierda`")
-                elif side_mode == "left_only":
-                    lines.append("- Alcance: `aplica para viga izquierda`")
-                else:
-                    lines.append("- Alcance: `aplica para viga derecha`")
             if protected_zone_der != "n/a":
                 lines.append(f"- Longitud zona protegida viga derecha: `{protected_zone_der}`")
             if protected_zone_izq != "n/a":
@@ -666,11 +840,11 @@ def _render_step_2_mpr(step_2: dict) -> str:
     inputs = step_2.get("inputs", {})
     inter = step_2.get("intermediates", {})
     lines = [
-        "## Paso 2 - Probable Maximum Moment At Plastic Hinge (Mpr)",
+        "## Paso 2 - Momento probable maximo en rotula plastica (Mpr)",
         "",
         "Calculo de momento probable segun Eq. (2.4-1) y Eq. (2.4-2), usando `Ze = Zx` del catalogo de la viga.",
         "",
-        f"- Clausula: `{_format_text(step_2.get('clause'))}`",
+        f"- Clausula: `{_render_clause_text(step_2.get('clause'), step_2.get('source_document'), step_2.get('rule_id'))}`",
         f"- Ecuacion: `{_format_text(step_2.get('equation'))}`",
         f"- Fy: `{_format_quantity(inputs.get('beam_fy'))}`",
         f"- Fu: `{_format_quantity(inputs.get('beam_fu'))}`",
@@ -686,14 +860,14 @@ def _render_step_2_mpr(step_2: dict) -> str:
 def _render_step_3_sh(step_3: dict) -> str:
     inputs = step_3.get("inputs", {})
     lines = [
-        "## Paso 3 - Distancia De Rotula Plastica Desde La Cara De Columna (Sh)",
+        "## Paso 3 - Distancia de rotula plastica desde la cara de la columna (Sh)",
         "",
         "Para 4E: `Sh = min(d/2, 3bf)`. Para 4ES/8ES: `Sh = Lst + tp`.",
         "",
-        f"- Clausula: `{_format_text(step_3.get('clause'))}`",
+        f"- Clausula: `{_render_clause_text(step_3.get('clause'), step_3.get('source_document'), step_3.get('rule_id'))}`",
         f"- Ecuacion: `{_format_text(step_3.get('equation'))}`",
         f"- Tipo de conexion: `{_format_text(inputs.get('connection_type'))}`",
-        f"- Beam shape: `{_format_text(inputs.get('beam_shape'))}`",
+        f"- Perfil de viga: `{_format_text(inputs.get('beam_shape'))}`",
         f"- Lst (si aplica): `{_format_quantity(inputs.get('stiffener_length'))}`",
         f"- tp (si aplica): `{_format_quantity(inputs.get('end_plate_thickness'))}`",
         f"- Sh calculado: `{_format_quantity(step_3.get('demand'))}`",
@@ -713,7 +887,7 @@ def _render_step_4_vh(step_4: dict) -> str:
         "",
         "Calculo segun Eq. (2.4-3): `Vhmax = 2*Mpr/Lh + Vgravity` y `Vhmin = 2*Mpr/Lh - Vgravity` (se reporta lado derecho).",
         "",
-        f"- Clausula: `{_format_text(step_4.get('clause'))}`",
+        f"- Clausula: `{_render_clause_text(step_4.get('clause'), step_4.get('source_document'), step_4.get('rule_id'))}`",
         "- Ecuacion: `Vhmax.der = 2*Mpr/Lh.der + Vgravity.der; Vhmin.der = 2*Mpr/Lh.der - Vgravity.der`",
         f"- Configuracion de vigas: `{beam_connection_sides}`",
         f"- Lado gobernante Vhmax: `{_format_text(inputs.get('governing_side_vhmax'))}`",
@@ -751,7 +925,7 @@ def _render_step_5_mf(step_5: dict) -> str:
         "",
         "Calculo segun Eq. (2.4-4): `Mfmax = Mpr + Vhmax*Sh` y `Mfmin = Mpr + Vhmin*Sh` (se reporta lado derecho).",
         "",
-        f"- Clausula: `{_format_text(step_5.get('clause'))}`",
+        f"- Clausula: `{_render_clause_text(step_5.get('clause'), step_5.get('source_document'), step_5.get('rule_id'))}`",
         "- Ecuacion: `Mfmax.der = Mpr + Vhmax.der*Sh; Mfmin.der = Mpr + Vhmin.der*Sh`",
         "- Definicion para diseno: `Mf = Mfmax gobernante`",
         f"- Configuracion de vigas: `{beam_connection_sides}`",
@@ -792,7 +966,7 @@ def _render_step_6_bolts(step_6_1: dict | None, step_6_2: dict | None) -> str:
                 "",
                 "#### 6.1.1 Estado #1: Rotura en el perno",
                 "",
-                f"- Clausula: `{_format_text(step_6_1.get('clause'))}`",
+                f"- Clausula: `{_render_clause_text(step_6_1.get('clause'), step_6_1.get('source_document'), step_6_1.get('rule_id'))}`",
                 f"- Ecuacion: `{_format_text(step_6_1.get('equation'))}`",
                 f"- phi usado: `{_format_text(design_factors.get('phi'))}`",
                 f"- h1: `{_format_quantity(inputs.get('h1'))}`",
@@ -802,7 +976,7 @@ def _render_step_6_bolts(step_6_1: dict | None, step_6_2: dict | None) -> str:
                 f"- Rut_b: `{_format_quantity(step_6_1.get('demand'))}`",
                 f"- phiRnt_b: `{_format_quantity(step_6_1.get('capacity'))}`",
                 f"- DCRbt: `{_format_text(step_6_1.get('dcr'))}`",
-                f"- Resultado: `{_format_text(step_6_1.get('status'))}`",
+                f"- Resultado: `{_render_result_plain_es(step_6_1.get('status'))}`",
                 "",
             ]
         )
@@ -815,7 +989,7 @@ def _render_step_6_bolts(step_6_1: dict | None, step_6_2: dict | None) -> str:
                 "",
                 "#### 6.2.1 ELR #1: Rotura por cortante en el perno",
                 "",
-                f"- Clausula: `{_format_text(step_6_2.get('clause'))}`",
+                f"- Clausula: `{_render_clause_text(step_6_2.get('clause'), step_6_2.get('source_document'), step_6_2.get('rule_id'))}`",
                 f"- Ecuacion: `{_format_text(step_6_2.get('equation'))}`",
                 f"- phi usado: `{_format_text(design_factors.get('phi'))}`",
                 f"- Vhmax: `{_format_quantity(inputs.get('vhmax'))}`",
@@ -823,7 +997,7 @@ def _render_step_6_bolts(step_6_1: dict | None, step_6_2: dict | None) -> str:
                 f"- Ruv2_b: `{_format_quantity(step_6_2.get('demand'))}`",
                 f"- phiRnv_b: `{_format_quantity(step_6_2.get('capacity'))}`",
                 f"- DCRbv: `{_format_text(step_6_2.get('dcr'))}`",
-                f"- Resultado: `{_format_text(step_6_2.get('status'))}`",
+                f"- Resultado: `{_render_result_plain_es(step_6_2.get('status'))}`",
                 "",
             ]
         )
@@ -851,19 +1025,19 @@ def _render_step_7_end_plate(
                 "",
                 "#### 7.1.1. ELR #1: Fluencia (AISC 358-22 .7-8)",
                 "",
-                f"- Clausula: `{_format_text(step_7_1_1.get('clause'))}`",
+                f"- Clausula: `{_render_clause_text(step_7_1_1.get('clause'), step_7_1_1.get('source_document'), step_7_1_1.get('rule_id'))}`",
                 f"- Ecuacion: `{_format_text(step_7_1_1.get('equation'))}`",
                 f"- phi usado: `{_format_text(design_factors.get('phi'))}`",
                 f"- Mup: `{_format_quantity(step_7_1_1.get('demand'))}`",
                 f"- phiMnb: `{_format_quantity(step_7_1_1.get('capacity'))}`",
                 f"- DCRpm: `{_format_text(step_7_1_1.get('dcr'))}`",
                 f"- Yp calculado: `{_format_quantity(inputs.get('yp'))}`",
-                f"- Tabla Yp aplicada: `{_format_text(inputs.get('yp_table'))}`",
+                f"- Tabla Yp aplicada: `{_format_text(inputs.get('yp_table')).replace('Table', 'Tabla')}`",
                 f"- Caso Yp: `{_format_text(inputs.get('yp_case'))}`",
                 f"- s: `{_format_quantity(inter.get('s'))}`",
                 f"- pfi de entrada: `{_format_quantity(inter.get('pfi_input'))}`",
                 f"- pfi efectivo: `{_format_quantity(inter.get('pfi_effective'))}`",
-                f"- Resultado: `{_format_text(step_7_1_1.get('status'))}`",
+                f"- Resultado: `{_render_result_plain_es(step_7_1_1.get('status'))}`",
                 "",
             ]
         )
@@ -876,14 +1050,14 @@ def _render_step_7_end_plate(
                 "",
                 "#### 7.2.1. Eje #1: Fluencia por cortante (AISC 358-22 G7-10)",
                 "",
-                f"- Clausula: `{_format_text(step_7_2_1.get('clause'))}`",
+                f"- Clausula: `{_render_clause_text(step_7_2_1.get('clause'), step_7_2_1.get('source_document'), step_7_2_1.get('rule_id'))}`",
                 f"- Ecuacion: `{_format_text(step_7_2_1.get('equation'))}`",
                 f"- phi usado: `{_format_text(design_factors.get('phi'))}`",
                 f"- Vup: `{_format_quantity(step_7_2_1.get('demand'))}`",
                 f"- phiVn1p: `{_format_quantity(step_7_2_1.get('capacity'))}`",
                 f"- DCRpv: `{_format_text(step_7_2_1.get('dcr'))}`",
                 f"- d (altura viga): `{_format_quantity(inputs.get('d'))}`",
-                f"- Resultado: `{_format_text(step_7_2_1.get('status'))}`",
+                f"- Resultado: `{_render_result_plain_es(step_7_2_1.get('status'))}`",
                 "",
             ]
         )
@@ -894,7 +1068,7 @@ def _render_step_7_end_plate(
             [
                 "#### 7.2.2. Eje #2: Rotura por cortante (AISC 358-22 G7-12)",
                 "",
-                f"- Clausula: `{_format_text(step_7_2_2.get('clause'))}`",
+                f"- Clausula: `{_render_clause_text(step_7_2_2.get('clause'), step_7_2_2.get('source_document'), step_7_2_2.get('rule_id'))}`",
                 f"- Ecuacion: `{_format_text(step_7_2_2.get('equation'))}`",
                 f"- phi usado: `{_format_text(design_factors.get('phi'))}`",
                 f"- Vup: `{_format_quantity(step_7_2_2.get('demand'))}`",
@@ -902,7 +1076,7 @@ def _render_step_7_end_plate(
                 f"- DCRpv: `{_format_text(step_7_2_2.get('dcr'))}`",
                 f"- dh (diametro agujero estandar): `{_format_quantity(inputs.get('dh'))}`",
                 f"- d (altura viga): `{_format_quantity(inputs.get('d'))}`",
-                f"- Resultado: `{_format_text(step_7_2_2.get('status'))}`",
+                f"- Resultado: `{_render_result_plain_es(step_7_2_2.get('status'))}`",
                 "",
             ]
         )
@@ -920,7 +1094,7 @@ def _render_step_7_end_plate(
             [
                 "#### 7.3.1. ELR #1: Desgarramiento en la perforacion del perno (AISC 360-22 J3.11a)",
                 "",
-                f"- Clausula: `{_format_text(step_7_3_1.get('clause'))}`",
+                f"- Clausula: `{_render_clause_text(step_7_3_1.get('clause'), step_7_3_1.get('source_document'), step_7_3_1.get('rule_id'))}`",
                 f"- Ecuacion: `{_format_text(step_7_3_1.get('equation'))}`",
                 f"- phi usado: `{_format_text(design_factors.get('phi'))}`",
                 f"- Vu2p: `{_format_quantity(step_7_3_1.get('demand'))}`",
@@ -929,7 +1103,7 @@ def _render_step_7_end_plate(
                 f"- lc: `{_format_quantity(inputs.get('lc'))}`",
                 f"- dh: `{_format_quantity(inputs.get('dh'))}`",
                 f"- db: `{_format_quantity(inputs.get('db'))}`",
-                f"- Resultado: `{_format_text(step_7_3_1.get('status'))}`",
+                f"- Resultado: `{_render_result_plain_es(step_7_3_1.get('status'))}`",
                 "",
             ]
         )
@@ -940,7 +1114,7 @@ def _render_step_7_end_plate(
             [
                 "#### 7.3.2. ELR #2: Aplastamiento en la perforacion del perno (AISC 360-22 J3.11a)",
                 "",
-                f"- Clausula: `{_format_text(step_7_3_2.get('clause'))}`",
+                f"- Clausula: `{_render_clause_text(step_7_3_2.get('clause'), step_7_3_2.get('source_document'), step_7_3_2.get('rule_id'))}`",
                 f"- Ecuacion: `{_format_text(step_7_3_2.get('equation'))}`",
                 f"- phi usado: `{_format_text(design_factors.get('phi'))}`",
                 f"- Vu2p: `{_format_quantity(step_7_3_2.get('demand'))}`",
@@ -949,7 +1123,7 @@ def _render_step_7_end_plate(
                 f"- lc: `{_format_quantity(inputs.get('lc'))}`",
                 f"- dh: `{_format_quantity(inputs.get('dh'))}`",
                 f"- db: `{_format_quantity(inputs.get('db'))}`",
-                f"- Resultado: `{_format_text(step_7_3_2.get('status'))}`",
+                f"- Resultado: `{_render_result_plain_es(step_7_3_2.get('status'))}`",
                 "",
             ]
         )
@@ -969,7 +1143,7 @@ def _render_step_8_stiffener_weld(step_8_1_1: dict | None) -> str:
         "",
         "#### 8.1.1. ELR #1: Rotura de la soldadura (AISC 360-22 J2.4)",
         "",
-        f"- Clausula: `{_format_text(step_8_1_1.get('clause'))}`",
+        f"- Clausula: `{_render_clause_text(step_8_1_1.get('clause'), step_8_1_1.get('source_document'), step_8_1_1.get('rule_id'))}`",
         f"- Ecuacion: `{_format_text(step_8_1_1.get('equation'))}`",
         f"- phi usado: `{_format_text(design_factors.get('phi'))}`",
         f"- Tipo soldadura rigidizador: `{weld_type}`",
@@ -978,7 +1152,7 @@ def _render_step_8_stiffener_weld(step_8_1_1: dict | None) -> str:
         lines.extend(
             [
                 "- CJP: `Cumple`",
-                f"- Resultado: `{_format_text(step_8_1_1.get('status'))}`",
+                f"- Resultado: `{_render_result_plain_es(step_8_1_1.get('status'))}`",
                 "",
             ]
         )
@@ -994,7 +1168,7 @@ def _render_step_8_stiffener_weld(step_8_1_1: dict | None) -> str:
             f"- hst: `{_format_quantity(inputs.get('hst'))}`",
             f"- w_st (espesor soldadura): `{_format_quantity(inputs.get('wst'))}`",
             f"- n_l (lineas soldadura): `{_format_text(inputs.get('nl'))}`",
-            f"- Resultado: `{_format_text(step_8_1_1.get('status'))}`",
+            f"- Resultado: `{_render_result_plain_es(step_8_1_1.get('status'))}`",
             "",
         ]
     )
@@ -1014,7 +1188,7 @@ def _render_step_9_stiffener_beam_weld(step_9_1_1: dict | None) -> str:
         "",
         "#### 9.1.1. ELR #1: Rotura de la soldadura (AISC 360-22 J2.4)",
         "",
-        f"- Clausula: `{_format_text(step_9_1_1.get('clause'))}`",
+        f"- Clausula: `{_render_clause_text(step_9_1_1.get('clause'), step_9_1_1.get('source_document'), step_9_1_1.get('rule_id'))}`",
         f"- Ecuacion: `{_format_text(step_9_1_1.get('equation'))}`",
         f"- phi usado: `{_format_text(design_factors.get('phi'))}`",
         f"- Tipo soldadura viga-rigidizador: `{weld_type}`",
@@ -1023,7 +1197,7 @@ def _render_step_9_stiffener_beam_weld(step_9_1_1: dict | None) -> str:
         lines.extend(
             [
                 "- CJP: `Cumple`",
-                f"- Resultado: `{_format_text(step_9_1_1.get('status'))}`",
+                f"- Resultado: `{_render_result_plain_es(step_9_1_1.get('status'))}`",
                 "",
             ]
         )
@@ -1039,7 +1213,7 @@ def _render_step_9_stiffener_beam_weld(step_9_1_1: dict | None) -> str:
             f"- clip_st: `{_format_quantity(inputs.get('clip_st'))}`",
             f"- w_st,2 (espesor soldadura): `{_format_quantity(inputs.get('wst2'))}`",
             f"- n_l,w2 (lineas soldadura): `{_format_text(inputs.get('nl_w2'))}`",
-            f"- Resultado: `{_format_text(step_9_1_1.get('status'))}`",
+            f"- Resultado: `{_render_result_plain_es(step_9_1_1.get('status'))}`",
             "",
         ]
     )
@@ -1059,7 +1233,7 @@ def _render_step_10_beam_shear(step_10_1_1: dict | None) -> str:
         "",
         "#### 10.1.1. ELR #1: Fluencia por cortante (AISC 360-22 G2.1)",
         "",
-        f"- Clausula: `{_format_text(step_10_1_1.get('clause'))}`",
+        f"- Clausula: `{_render_clause_text(step_10_1_1.get('clause'), step_10_1_1.get('source_document'), step_10_1_1.get('rule_id'))}`",
         f"- Ecuacion: `{_format_text(step_10_1_1.get('equation'))}`",
         f"- phi usado: `{_format_text(design_factors.get('phi'))}`",
         f"- Vubm: `{_format_quantity(step_10_1_1.get('demand'))}`",
@@ -1069,7 +1243,7 @@ def _render_step_10_beam_shear(step_10_1_1: dict | None) -> str:
         f"- kv: `{_format_text(inter.get('kv'))}`",
         f"- h/tw: `{_format_text(inter.get('h_over_tw'))}`",
         f"- h: `{_format_scalar_with_unit(inter.get('h_clear'), 'mm')}`",
-        f"- Resultado: `{_format_text(step_10_1_1.get('status'))}`",
+        f"- Resultado: `{_render_result_plain_es(step_10_1_1.get('status'))}`",
         "",
     ]
     return "\n".join(lines)
@@ -1160,7 +1334,7 @@ def _render_step_11_end_plate_beam_web_weld_tension(step_11_ctx: dict | None, st
         "",
         "#### 11.1.1 ELR #1: Rotura de soldadura",
         "",
-        "- Clausula: `Section 6.7 + AISC 360-22 J2.4`",
+        "- Clausula: `Documento: AISC 358-22 + AISC 360-22 | Seccion: Seccion 6.7 + AISC 360-22 J2.4`",
         "- Ecuacion: `Fillet: Puww3 = Fybm*tw*hwef; hwef = Pfi + Pb + 150 mm; phiPnww3 = phi*nl*0.6*Fexx*0.707*hwef*ww3; DCRww3p = Puww3/phiPnww3`",
         f"- phi usado: `{_format_decimal(phi)}`",
         "- Fuente de input: `geometry.welds.weld_3`",
@@ -1257,7 +1431,15 @@ def _render_step_12_column_flange_local_bending(step_12_1_1: dict | None, step_1
         result_line = "n/a"
     else:
         result_line = "Cumple" if dcr_cfm <= 1.0 else "No cumple"
-    clause_text = _format_text(step_12_1_1.get("clause")) if isinstance(step_12_1_1, dict) else "AISC 358-22 6.7.2"
+    clause_text = (
+        _render_clause_text(
+            step_12_1_1.get("clause"),
+            step_12_1_1.get("source_document"),
+            step_12_1_1.get("rule_id"),
+        )
+        if isinstance(step_12_1_1, dict)
+        else "Documento: AISC 358-22 | Seccion: 6.7.2"
+    )
 
     lines = [
         "## Paso 12 - Revision de resistencia de la aleta de la columna",
@@ -1299,7 +1481,7 @@ def _render_splice_step_1_notes(notes: list[dict], *, allowed_scopes: set[str] |
                     "### Nota tecnica - Geometria",
                     "",
                     "- Ambito: `VIGA`",
-                    f"- Clausula: `{_format_text(item.get('clause'))}`",
+                    f"- Clausula: `{_render_clause_text(item.get('clause'), item.get('source_document'), item.get('rule_id'))}`",
                     f"- Separacion entre vigas (alpha): `{_format_quantity(item.get('alpha'))}`",
                     f"- Tolerancia de fabricacion en longitud de viga ({_format_text(item.get('beam_length_tolerance_var'))}): `{_format_quantity(item.get('beam_length_tolerance'))}`",
                     f"- Referencia tolerancia: `{_format_text(item.get('beam_length_tolerance_ref'))}`",
@@ -1329,7 +1511,7 @@ def _render_splice_step_1_notes(notes: list[dict], *, allowed_scopes: set[str] |
                     "### Nota tecnica - Formulas geometricas (Platina 1)",
                     "",
                     "- Ambito: `PLATINA_1`",
-                    f"- Clausula: `{_format_text(item.get('clause'))}`",
+                    f"- Clausula: `{_render_clause_text(item.get('clause'), item.get('source_document'), item.get('rule_id'))}`",
                     f"- Formula hp1: `{_format_text(item.get('hp1_formula'))}`",
                     f"- hp1 calculado: `{_format_quantity(item.get('hp1_calc'))}`",
                     f"- Formula bp1: `{_format_text(item.get('bp1_formula'))}`",
@@ -1344,7 +1526,7 @@ def _render_splice_step_1_notes(notes: list[dict], *, allowed_scopes: set[str] |
                     "### Nota tecnica - Diametro de perforacion (Platina 1)",
                     "",
                     "- Ambito: `PLATINA_1`",
-                    f"- Clausula: `{_format_text(item.get('clause'))}`",
+                    f"- Clausula: `{_render_clause_text(item.get('clause'), item.get('source_document'), item.get('rule_id'))}`",
                     f"- Formula: `{_format_text(item.get('formula'))}`",
                     f"- {_format_text(item.get('db_var'))}: `{_format_quantity(item.get('db'))}`",
                     f"- {_format_text(item.get('dh_var'))}: `{_format_quantity(item.get('dh'))}`",
@@ -1359,7 +1541,7 @@ def _render_splice_step_1_notes(notes: list[dict], *, allowed_scopes: set[str] |
                     "### Nota tecnica - Formulas geometricas (Platina 2)",
                     "",
                     "- Ambito: `PLATINA_2`",
-                    f"- Clausula: `{_format_text(item.get('clause'))}`",
+                    f"- Clausula: `{_render_clause_text(item.get('clause'), item.get('source_document'), item.get('rule_id'))}`",
                     f"- Formula bp2: `{_format_text(item.get('bp2_formula'))}`",
                     f"- bp2 calculado: `{_format_quantity(item.get('bp2_calc'))}`",
                     f"- Formula lp2: `{_format_text(item.get('lp2_formula'))}`",
@@ -1374,7 +1556,7 @@ def _render_splice_step_1_notes(notes: list[dict], *, allowed_scopes: set[str] |
                     "### Nota tecnica - Diametro de perforacion (Platina 2)",
                     "",
                     "- Ambito: `PLATINA_2`",
-                    f"- Clausula: `{_format_text(item.get('clause'))}`",
+                    f"- Clausula: `{_render_clause_text(item.get('clause'), item.get('source_document'), item.get('rule_id'))}`",
                     f"- Formula: `{_format_text(item.get('formula'))}`",
                     f"- {_format_text(item.get('db_var'))}: `{_format_quantity(item.get('db'))}`",
                     f"- {_format_text(item.get('dh_var'))}: `{_format_quantity(item.get('dh'))}`",
@@ -1389,7 +1571,7 @@ def _render_splice_step_1_notes(notes: list[dict], *, allowed_scopes: set[str] |
                     "### Nota tecnica - Propiedades del perno (Grupo 1)",
                     "",
                     "- Ambito: `PERNOS_1`",
-                    f"- Clausula: `{_format_text(item.get('clause'))}`",
+                    f"- Clausula: `{_render_clause_text(item.get('clause'), item.get('source_document'), item.get('rule_id'))}`",
                     f"- Perno: `{_format_text(item.get('bolt_shape'))}`",
                     f"- Clasificacion: `{_format_text(item.get('classification'))}`",
                     f"- Norma de fabricacion: `{_format_text(item.get('fabrication_standard'))}`",
@@ -1410,7 +1592,7 @@ def _render_splice_step_1_notes(notes: list[dict], *, allowed_scopes: set[str] |
                     "### Nota tecnica - Propiedades del perno (Grupo 2)",
                     "",
                     "- Ambito: `PERNOS_2`",
-                    f"- Clausula: `{_format_text(item.get('clause'))}`",
+                    f"- Clausula: `{_render_clause_text(item.get('clause'), item.get('source_document'), item.get('rule_id'))}`",
                     f"- Perno: `{_format_text(item.get('bolt_shape'))}`",
                     f"- Clasificacion: `{_format_text(item.get('classification'))}`",
                     f"- Norma de fabricacion: `{_format_text(item.get('fabrication_standard'))}`",
@@ -1481,7 +1663,7 @@ def _render_splice_step_2_method_block(step2: dict | None) -> str:
         lines.append(f"- Nota: `{notes}`")
     lines.extend(
         [
-            f"- Clausula: `{_format_text(step2.get('clause'))}`",
+            f"- Clausula: `{_render_clause_text(step2.get('clause'), step2.get('source_document'), step2.get('rule_id'))}`",
             f"- Resultado: {result}",
             "",
         ]
@@ -1539,14 +1721,20 @@ def _render_fully_restrained_splice_outline(rows_viga: list[dict], notes_viga: l
 
 def _render_step_1_list(rows: list[dict]) -> str:
     lines: list[str] = []
+    lines.append("### 1.2 Revisiones de propiedades geometricas")
+    lines.append("")
     for idx, item in enumerate(rows, start=1):
         scope = str(item.get("scope", "n/a")).upper()
-        description = str(item.get("description", "n/a"))
+        description = _translate_text_es(item.get("description"))
         calculated_symbol = str(item.get("calculated_symbol", "calc"))
         limit_symbol = str(item.get("limit_symbol", "lim"))
         calculated = _format_quantity(item.get("calculated"))
         result_text = _render_result_label(item.get("result", item.get("status", "UNKNOWN")))
-        clause = str(item.get("clause", "n/a"))
+        clause = _render_clause_text(
+            item.get("clause"),
+            item.get("source_document"),
+            item.get("rule_id"),
+        )
         comparison_mode = str(item.get("comparison", ""))
 
         if comparison_mode == "range":
@@ -1602,7 +1790,7 @@ def _render_step_1_list(rows: list[dict]) -> str:
             limit = _format_quantity(item.get("limit"))
             verification = f"{calculated_symbol} {comparison} {limit_symbol}; {calculated} {comparison} {limit}"
 
-        lines.append(f"### Chequeo 1.{idx} - {description} (`{calculated_symbol}`)")
+        lines.append(f"#### Chequeo 1.2.{idx} - {description} (`{calculated_symbol}`)")
         lines.append("")
         lines.append(f"- Ambito: `{scope}`")
         lines.append(f"- Verificacion: `{verification}`")
@@ -1619,17 +1807,23 @@ def _render_step_1_list_grouped_by_scope(rows: list[dict]) -> str:
         grouped.setdefault(scope, []).append(item)
 
     lines: list[str] = []
+    lines.append("### 1.2 Revisiones de propiedades geometricas")
+    lines.append("")
     idx = 1
     for scope in sorted(grouped.keys()):
         lines.append(f"#### Ambito: `{scope}`")
         lines.append("")
         for item in grouped[scope]:
-            description = str(item.get("description", "n/a"))
+            description = _translate_text_es(item.get("description"))
             calculated_symbol = str(item.get("calculated_symbol", "calc"))
             limit_symbol = str(item.get("limit_symbol", "lim"))
             calculated = _format_quantity(item.get("calculated"))
             result_text = _render_result_label(item.get("result", item.get("status", "UNKNOWN")))
-            clause = str(item.get("clause", "n/a"))
+            clause = _render_clause_text(
+                item.get("clause"),
+                item.get("source_document"),
+                item.get("rule_id"),
+            )
             comparison_mode = str(item.get("comparison", ""))
 
             if comparison_mode == "range":
@@ -1685,7 +1879,7 @@ def _render_step_1_list_grouped_by_scope(rows: list[dict]) -> str:
                 limit = _format_quantity(item.get("limit"))
                 verification = f"{calculated_symbol} {comparison} {limit_symbol}; {calculated} {comparison} {limit}"
 
-            lines.append(f"### Chequeo 1.{idx} - {description} (`{calculated_symbol}`)")
+            lines.append(f"#### Chequeo 1.2.{idx} - {description} (`{calculated_symbol}`)")
             lines.append("")
             lines.append(f"- Ambito: `{scope}`")
             lines.append(f"- Verificacion: `{verification}`")
@@ -1725,7 +1919,7 @@ def render_memory_markdown(result: DetailedRunResult) -> str:
         f"- Caso: `{result.case_id}`",
         f"- Familia: `{result.connection_family}`",
         f"- Tipo: `{result.connection_type}`",
-        f"- Estado global: `{result.global_status.value}`",
+        f"- Estado global: `{_render_result_plain_es(result.global_status.value)}`",
         "",
     ]
     connection_family_normalized = str(result.connection_family).strip().lower()
@@ -1734,7 +1928,7 @@ def render_memory_markdown(result: DetailedRunResult) -> str:
             [
                 "## Revision conexion viga a derecha de columna",
                 "",
-                "## Paso 1 - PREQUALIFICATION LIMITS",
+                "## Paso 1 - Limites de precalificacion",
                 "",
                 "Comparacion directa de valor calculado contra limite normativo (sin formato DCR).",
                 "",

@@ -45,6 +45,8 @@ class SectionReferences(StrictModel):
 class AISC358MomentMaterials(StrictModel):
     profile_steel_type: str | None = None
     plate_steel_type: str | None = None
+    stiffener_steel_type_vgder: str | None = None
+    stiffener_steel_type_vgizq: str | None = None
     bolt_fabrication_standard: str | None = None
     bolt_description: str | None = None
     bolt_shape: str | None = None
@@ -59,12 +61,16 @@ class AISC358MomentMaterials(StrictModel):
     column_fu: Quantity | None = None
     column_fy: Quantity | None = None
     stiffener_fy: Quantity | None = None
+    stiffener_fy_vgder: Quantity | None = None
+    stiffener_fy_vgizq: Quantity | None = None
     elastic_modulus: Quantity | None = None
     bolt_grade: str | None = None
 
     @field_validator(
         "profile_steel_type",
         "plate_steel_type",
+        "stiffener_steel_type_vgder",
+        "stiffener_steel_type_vgizq",
         "bolt_fabrication_standard",
         "bolt_description",
         "bolt_shape",
@@ -376,6 +382,8 @@ class AISC358MomentCase(CaseBase):
             "column_fu",
             "column_fy",
             "stiffener_fy",
+            "stiffener_fy_vgder",
+            "stiffener_fy_vgizq",
             "elastic_modulus",
         ):
             value = getattr(self.materials, field_name)

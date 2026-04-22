@@ -112,7 +112,7 @@ Campos clave en `loads` para compactacion Chapter 6:
   - `Fy` desde `data/materials.xlsx` (hoja `HRS`)
   - `Ry` derivado automaticamente desde `data/materials.xlsx` (hoja `HRS`) segun `materials.profile_steel_type`
 
-Campos geometricos clave para artefacto tecnico (`geometry.svg`) en Chapter 6:
+Campos geometricos clave en Chapter 6:
 - Estructura agrupada recomendada:
   - `geometry.beam`
   - `geometry.column`
@@ -128,8 +128,6 @@ Campos geometricos clave para artefacto tecnico (`geometry.svg`) en Chapter 6:
 - `geometry.bolts.bolt_tightening_type`: tipo de apriete de pernos (`pretensioned` o `snug_tight`).
 - En particular: `geometry.end_plate.de`, `geometry.end_plate.pb`, `geometry.end_plate.pfo`, `geometry.end_plate.pfi`
 - La altura de platina se deriva como `hp = d + 2*pfo + 2*de` (`d` desde catalogo de la viga).
-- El artefacto muestra y traza: `bp`, `g`, `de`, `pb`, `pfo`, `pfi`, `h1`, `h2`, `h3`, `h4`
-- En el detalle, `h1..h4` se acotan desde la mitad del espesor de la aleta inferior y `tbf` corresponde al espesor de la aleta.
 
 Regla de arquitectura:
 - `d`, `bf`, `tf`, `tw` del perfil **no** se aceptan en el input.
@@ -147,7 +145,6 @@ Cada magnitud numerica usa objeto:
 - Carpeta por example (default): `results/<ruta_relativa_en_examples_sin_extension>/`.
 - Archivo detallado: `detailed.json`.
 - Memoria de presentacion: `memory.md`.
-- Artefacto grafico: `geometry.svg` (esquema de geometria de la conexion para auditoria tecnica).
 - En esta etapa (Paso 1), cada chequeo reporta subverificaciones con `calculated`, `limit`, `comparison`, `margin` y `result`.
 - El Paso 1 tambien incluye los requisitos de Section 2.3.4: `Lsc >= 1.5d` y losa `isolated`.
 

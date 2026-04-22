@@ -10,19 +10,20 @@ Objetivo:
 - Cargar por separado informacion de viga derecha, viga izquierda y columna/comunes.
 - El motor consume directamente estos 3 archivos (no se requiere archivo ensamblado intermedio).
 
-## Formato reingenierizado (referencia splice)
+## Formato reingenierizado (nomenclatura actual)
 
-- Viga derecha/izquierda usan bloques tipo:
+- Viga derecha/izquierda usan bloques:
   - `viga`
   - `placa_extremo`
   - `rigidizador`
   - `pernos`
   - `soldaduras`
-- Columna/comunes usa bloques tipo:
+  - `loads`
+- Columna/comunes usa bloques:
   - `columna`
   - `platina_continuidad`
-  - `materiales`
   - `soldaduras` (solo `weld_4`)
+  - `loads`
   - `factores_diseno`
 
 ## Reglas de consistencia
@@ -38,17 +39,26 @@ Objetivo:
   - `profile_steel_type`
   - `weld_fexx`
   - `elastic_modulus`
-- `member_ductility_demand_beam` se ingresa en ambos archivos de viga dentro de `viga`.
-- `member_ductility_demand_column` se mantiene en `case_003_column_and_common.json`.
-- En `factores_diseno` de columna se usan:
-  - `factor_reduccion_modo_no_ductil` (se mapea a `phi_n`)
-  - `factor_reduccion_modo_ductil` (se mapea a `phi_d`)
-- Los datos de material se ingresan por elemento en los archivos de viga:
-  - `viga.tipo_acero_perfil` y `viga.elastic_modulus`
-  - `placa_extremo.tipo_acero`
-  - `rigidizador.tipo_acero`
-  - `pernos.bolt_fabrication_standard` y `pernos.bolt_description`
-  - `soldaduras.weld_fexx`
+- Se usa nomenclatura con sufijo de lado:
+  - derecha: `_vgder`
+  - izquierda: `_vgizq`
+- Ejemplos en `viga`:
+  - `perfil_vgder` / `perfil_vgizq`
+  - `tipo_acero_perfil_vgder` / `tipo_acero_perfil_vgizq`
+  - `demanda_ductilidad_vgder` / `demanda_ductilidad_vgizq`
+  - `E_vgder` / `E_vgizq`
+  - `Llb_vgder` / `Llb_vgizq`
+  - `Lnc_vgder` / `Lnc_vgizq`
+- Ejemplos en `loads` de vigas:
+  - `Pu_vgder` / `Pu_vgizq`
+  - `Vg_vgder` / `Vg_vgizq`
+- Ejemplos en `factores_diseno` (columna/common):
+  - `phi_ductil` (se mapea a `phi_d`)
+  - `phi_no_ductil` (se mapea a `phi_n`)
+  - `lados_conexion`
+  - `demanda_ductilidad_col`
+  - `ratio_McMb_min`
+  - `ratio_McMb`
 
 ## Ejecutar directamente (sin ensamblar)
 

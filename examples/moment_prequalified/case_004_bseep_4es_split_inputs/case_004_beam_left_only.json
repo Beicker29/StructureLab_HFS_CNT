@@ -1,113 +1,113 @@
 {
   "viga": {
-    "perfil": "W24X76",
-    "tipo_acero_perfil": "ASTM A572 Gr 50",
-    "member_ductility_demand_beam": "high",
-    "elastic_modulus": {
+    "perfil_vgizq": "W24X76",
+    "tipo_acero_perfil_vgizq": "ASTM A572 Gr 50",
+    "demanda_ductilidad_vgizq": "high",
+    "E_vgizq": {
       "value": 199947.965,
       "unit": "MPa"
     },
-    "luz_libre": {
+    "Llb_vgizq": {
       "value": 6096.0,
       "unit": "mm"
     },
-    "longitud_sin_conectores_desde_cara_columna": {
+    "Lnc_vgizq": {
       "value": 1000.0,
       "unit": "mm"
     }
   },
   "placa_extremo": {
     "tipo_acero": "ASTM A572 Gr 50",
-    "bp": {
+    "Bpe_vgizq": {
       "value": 270,
       "unit": "mm"
     },
-    "tp": {
+    "tpe_vgizq": {
       "value": 25.4,
       "unit": "mm"
     },
-    "de": {
+    "de_pe_vgizq": {
       "value": 60.0,
       "unit": "mm"
     },
-    "pb": {
+    "pb_pe_vgizq": {
       "value": 95,
       "unit": "mm"
     },
-    "pfo": {
+    "pfo_pe_vgizq": {
       "value": 50.0,
       "unit": "mm"
     },
-    "pfi": {
+    "pfi_pe_vgizq": {
       "value": 50.0,
       "unit": "mm"
     }
   },
   "rigidizador": {
-    "tipo_acero": "ASTM A572 Gr 50",
-    "tr": {
+    "tipo_acero_pest_vgizq": "ASTM A572 Gr 50",
+    "t_pest_vgizq": {
       "value": 15.9,
       "unit": "mm"
     }
   },
   "pernos": {
-    "g": {
+    "g_b_vgizq": {
       "value": 140,
       "unit": "mm"
     },
-    "tipo_apriete": "pretensioned",
-    "clear_distance_end_plate": {
-      "value": 50.8,
-      "unit": "mm"
-    },
-    "clear_distance_column_flange": {
-      "value": 50.8,
-      "unit": "mm"
-    },
-    "bolt_fabrication_standard": "ASTM A490",
-    "bolt_description": "Grupo 150",
-    "bolt_shape": "P1\"X3\"",
-    "bolt_thread_condition": "N"
+    "tipo_apriete_b_vgizq": "pretensioned",
+    "std_b_vgizq": "ASTM A490",
+    "desc_b_vgizq": "Grupo 150",
+    "shape_b_vgizq": "P1\"X3\"",
+    "thread_b_vgizq": "N"
   },
   "soldaduras": {
-    "weld_fexx": {
-      "value": 490.0,
-      "unit": "MPa"
-    },
     "weld_1": {
       "description": "Rigidizador con end plate",
-      "weld_type": "CJP",
-      "size": {
+      "Fexx_w1_vgizq": {
+        "value": 490.0,
+        "unit": "MPa"
+      },
+      "tipo_w1_vgizq": "CJP",
+      "w_w1_vgizq": {
         "value": 9.525,
         "unit": "mm"
       },
-      "nl": 2
+      "nl_w1_vgizq": 2
     },
     "weld_2": {
       "description": "Viga con rigidizador",
-      "weld_type": "CJP",
-      "size": {
+      "Fexx_w2_vgizq": {
+        "value": 490.0,
+        "unit": "MPa"
+      },
+      "tipo_w2_vgizq": "CJP",
+      "w_w2_vgizq": {
         "value": 9.525,
         "unit": "mm"
       },
-      "nl": 2
+      "nl_w2_vgizq": 2
     },
     "weld_3": {
       "description": "Alma de viga con end plate",
-      "weld_type": "CJP",
-      "thickness": {
+      "Fexx_w3_vgizq": {
+        "value": 490.0,
+        "unit": "MPa"
+      },
+      "tipo_w3_vgizq": "CJP",
+      "t_w3_vgizq": {
         "value": 8.0,
         "unit": "mm"
       },
-      "nl": 2
+      "nl_w3_vgizq": 2
     }
   },
   "loads": {
-    "pu": {
+    "Pu_vgizq": {
       "value": 0.0,
       "unit": "kN"
     },
-    "v_gravity": {
+    "Vg_vgizq": {
       "value": 44.482,
       "unit": "kN"
     }

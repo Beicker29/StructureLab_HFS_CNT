@@ -10,46 +10,48 @@
   "connection_type": "bseep_4es",
   "load_state": "strength",
   "factores_diseno": {
-    "factor_reduccion_modo_ductil": 1.0,
-    "factor_reduccion_modo_no_ductil": 0.9,
-    "beam_connection_sides": "right_only",
-    "member_ductility_demand_column": "high",
-    "column_beam_moment_ratio_minimum": 1.0,
-    "column_beam_moment_ratio": 1.2
+    "phi_ductil": 1.0,
+    "phi_no_ductil": 0.9,
+    "lados_conexion": "right_only",
+    "demanda_ductilidad_col": "high",
+    "ratio_McMb_min": 1.0,
+    "ratio_McMb": 1.2
   },
   "columna": {
-    "perfil": "W18X175",
-    "tipo_acero_perfil": "ASTM A572 Gr 50",
-    "elastic_modulus": {
+    "perfil_col": "W18X175",
+    "tipo_acero_perfil_col": "ASTM A572 Gr 50",
+    "E_col": {
       "value": 199947.965,
       "unit": "MPa"
     },
-    "column_end_distance_to_beam_flange": {
+    "dcf_col": {
       "value": 240,
       "unit": "mm"
     },
-    "union_columna_losa": "isolated"
+    "union_col_losa": "isolated"
   },
   "platina_continuidad": {
-    "usar_platinas_continuidad": true,
-    "tipo_acero": "ASTM A572 Gr 50",
-    "tcp": {
+    "usar_pc_col": true,
+    "tipo_acero_pc_col": "ASTM A572 Gr 50",
+    "tpc_col": {
       "value": 15.9,
       "unit": "mm"
     }
   },
   "soldaduras": {
-    "weld_fexx": {
-      "value": 490.0,
-      "unit": "MPa"
-    },
     "weld_4": {
       "description": "Platina de continuidad con aleta de columna",
-      "weld_type": "CJP"
+      "Fexx_w4": {
+        "value": 490.0,
+        "unit": "MPa"
+      },
+      "tipo_w4": "CJP",
+      "t_w4": null,
+      "nl_w4": null
     }
   },
   "loads": {
-    "pu_columna": {
+    "Pu_col": {
       "value": 0.0,
       "unit": "kN"
     }

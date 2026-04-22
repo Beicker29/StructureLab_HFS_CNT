@@ -5,10 +5,7 @@ import sys
 from pathlib import Path
 
 from steel_connections.domain.engine.pipeline import run_case_file
-from steel_connections.domain.engine.validate import parse_and_validate_file
-from steel_connections.models.errors import StructuredEngineException
 from steel_connections.models.output import GlobalStatus
-from steel_connections.reporting.geometry_artifact import write_connection_geometry_artifact
 from steel_connections.reporting.json_writer import write_detailed_result
 from steel_connections.reporting.markdown_writer import write_memory_markdown
 
@@ -35,6 +32,8 @@ def _build_parser() -> argparse.ArgumentParser:
 
 
 def _run_validate(input_path: str) -> int:
+    from steel_connections.domain.engine.validate import parse_and_validate_file
+
     parse_and_validate_file(input_path)
     print(f"VALIDATION: PASS ({input_path})")
     return 0
@@ -54,15 +53,8 @@ def _run_case(input_path: str, out_root: str) -> int:
     example_id = _derive_example_id(Path(input_path))
     output_path = write_detailed_result(result, out_root, example_id=example_id)
     memory_path = write_memory_markdown(result, output_path.parent)
-    try:
-        case = parse_and_validate_file(input_path)
-    except StructuredEngineException:
-        case = None
-    geometry_path = write_connection_geometry_artifact(case, output_path.parent) if case is not None else None
     print(f"DETAIL FILE: {output_path}")
     print(f"MEMORY FILE: {memory_path}")
-    if geometry_path is not None:
-        print(f"GEOMETRY FILE: {geometry_path}")
 
     if result.global_status == GlobalStatus.PASS:
         return 0

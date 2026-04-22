@@ -111,11 +111,11 @@
             "unit": "mm"
           },
           "column_slab_connection_condition": "isolated",
-          "column_end_distance_to_beam_flange_stc": {
+          "column_end_distance_to_beam_flange_st_col": {
             "value": 762.0,
             "unit": "mm"
           },
-          "column_stc_min": {
+          "column_st_col_min": {
             "value": 122.5,
             "unit": "mm"
           },
@@ -162,18 +162,21 @@
             "value": 38.099999999999994,
             "unit": "mm"
           },
-          "clear_span_to_depth_ratio": {
+          "clear_span_to_depth_ratio_der": {
             "value": 10.042833607907744,
             "unit": "ratio"
           },
+          "clear_span_to_depth_ratio_izq": null,
           "clear_span_to_depth_limit": {
             "value": 7.0,
             "unit": "ratio"
           },
           "frame_system_for_span_ratio": "SMF",
-          "beam_flange_compactness_ratio": 6.589595375722543,
+          "beam_flange_compactness_ratio_der": 6.589595375722543,
+          "beam_flange_compactness_ratio_izq": null,
           "beam_flange_compactness_limit": 6.8861084600317,
-          "beam_web_compactness_ratio": 48.839285714285715,
+          "beam_web_compactness_ratio_der": 48.839285714285715,
+          "beam_web_compactness_ratio_izq": null,
           "beam_web_compactness_limit": 56.23655242359222,
           "column_flange_compactness_ratio": 3.589108910891089,
           "column_flange_compactness_limit": 6.8861084600317,
@@ -232,17 +235,7 @@
               "clause": "Section 2.3.4 (8)",
               "description": "Protected zone length measured from column face",
               "beam_connection_sides": "right_only",
-              "formula": "Lpz = min(d, 3bf)",
-              "candidate_a_label": "d",
-              "candidate_a": {
-                "value": 607.0,
-                "unit": "mm"
-              },
-              "candidate_b_label": "3bf",
-              "candidate_b": {
-                "value": 684.0,
-                "unit": "mm"
-              },
+              "formula": "Lpz_vgder = min(d_vgder, 3*bf_vgder); Lpz_vgizq = min(d_vgizq, 3*bf_vgizq)",
               "protected_zone_length": {
                 "value": 607.0,
                 "unit": "mm"
@@ -259,27 +252,16 @@
               "scope": "column",
               "clause": "Section 6.3 (2)",
               "description": "End-plate connection location on column",
-              "requirement": "The end plate shall be connected to the flange of the column."
+              "requirement": "La placa de extremo debe conectarse al ala de la columna."
             },
             {
               "step": "1",
               "id": "section_6_3.end_plate_height_derived",
-              "scope": "end_plate",
+              "scope": "end_plate_der",
               "clause": "Section 6.3",
-              "description": "Derived end-plate height reference",
-              "requirement": "hp = d + 2*pfo + 2*de",
-              "formula": "hp = d + 2*pfo + 2*de",
-              "candidate_a_label": "d",
-              "candidate_a": {
-                "value": 607.0,
-                "unit": "mm"
-              },
-              "candidate_b_label": "2*pfo + 2*de",
-              "candidate_b": {
-                "value": 220.0,
-                "unit": "mm"
-              },
-              "derived_value": {
+              "description": "Altura derivada de placa de extremo",
+              "formula": "Hpe_vgder = d_vgder + 2*pfo_pe_vgder + 2*de_pe_vgder",
+              "hpe_vgder": {
                 "value": 827.0,
                 "unit": "mm"
               }
@@ -287,7 +269,7 @@
             {
               "step": "1",
               "id": "section_6_3.end_plate_geometry_vgder_note",
-              "scope": "end_plate",
+              "scope": "end_plate_der",
               "clause": "Section 6.3 + AISC 360-22 Table J3.3",
               "description": "Geometria end-plate de viga a derecha",
               "requirement": "h1_vgder, h2_vgder, h3_vgder, h4_vgder y dh_vgder para trazabilidad geometrica",
@@ -316,26 +298,19 @@
             {
               "step": "1",
               "id": "section_6_3.end_plate_stiffener_geometry_note",
-              "scope": "end_plate_stiffener",
+              "scope": "end_plate_stiffener_der",
               "clause": "Section 6.3",
               "description": "Derived end-plate stiffener geometry and detailing edge requirement",
-              "requirement": "hst = pfo + de; Lst = hst/tan(30 deg); clip_st (Cst) = 25 mm; edge detailing >= 25 mm",
-              "formula": "hst = pfo + de; Lst = hst / tan(30 deg)",
-              "candidate_a_label": "hst",
-              "candidate_a": {
+              "formula": "h_pest_vgder = pfo_pe_vgder + de_pe_vgder; L_pest_vgder = h_pest_vgder/tan(30 deg); Ed_pest_vgder = 25 mm",
+              "h_pest_vgder": {
                 "value": 110.0,
                 "unit": "mm"
               },
-              "candidate_b_label": "Lst",
-              "candidate_b": {
+              "l_pest_vgder": {
                 "value": 190.52558883257652,
                 "unit": "mm"
               },
-              "clip_st": {
-                "value": 25.0,
-                "unit": "mm"
-              },
-              "derived_value": {
+              "ed_pest_vgder": {
                 "value": 25.0,
                 "unit": "mm"
               }
@@ -370,7 +345,7 @@
               "scope": "bolts",
               "clause": "Section 4.2",
               "description": "Installation requirements for bolted assemblies",
-              "requirement": "Installation requirements shall be in accordance with the AISC Seismic Provisions and the RCSC Specification, except as otherwise specifically indicated in this standard."
+              "requirement": "Los requisitos de instalacion deben cumplir con las AISC Seismic Provisions y con la especificacion RCSC, salvo que este estandar indique lo contrario."
             },
             {
               "step": "1",
@@ -378,17 +353,17 @@
               "scope": "bolts",
               "clause": "Section 4.3",
               "description": "Quality control and quality assurance for bolted assemblies",
-              "requirement": "Quality control and quality assurance shall be in accordance with the AISC Seismic Provisions."
+              "requirement": "El control de calidad y el aseguramiento de calidad deben cumplir con las AISC Seismic Provisions."
             }
           ],
           "step_1_limits": [
             {
               "step": "1",
-              "id": "beam.shape_family",
-              "scope": "beam",
+              "id": "beam_der.shape_family",
+              "scope": "beam_der",
               "clause": "Section 2.3.4",
-              "description": "Beam profile family allowed for prequalification",
-              "calculated_symbol": "shape_beam",
+              "description": "Familia de perfil de viga permitida para precalificacion (viga derecha)",
+              "calculated_symbol": "perfil_vgder",
               "limit_symbol": "{W, HEA, HEB, IPE}",
               "comparison": "family_in",
               "comparison_text": "in",
@@ -404,12 +379,12 @@
             },
             {
               "step": "1",
-              "id": "beam.bp_ge_bf_plus_margin",
-              "scope": "beam",
+              "id": "beam_der.bp_ge_bf_plus_margin",
+              "scope": "beam_der",
               "clause": "Section 6.3 / Table 6.1",
-              "description": "End-plate width vs beam flange width",
-              "calculated_symbol": "bp",
-              "limit_symbol": "bf + margin",
+              "description": "End-plate width vs beam flange width (right beam)",
+              "calculated_symbol": "bp_pe_vgder",
+              "limit_symbol": "bf_vgder + margin (25 mm)",
               "calculated": {
                 "value": 253.0,
                 "unit": "mm"
@@ -429,11 +404,11 @@
             },
             {
               "step": "1",
-              "id": "beam.bolt_gage_g_ge_3db",
-              "scope": "beam",
+              "id": "beam_der.bolt_gage_g_ge_3db",
+              "scope": "beam_der",
               "clause": "Section 6.3 / Table 6.1",
-              "description": "Bolt gage minimum spacing",
-              "calculated_symbol": "g",
+              "description": "Bolt gage minimum spacing (right beam)",
+              "calculated_symbol": "g_b_vgder",
               "limit_symbol": "3db",
               "calculated": {
                 "value": 152.4,
@@ -454,12 +429,12 @@
             },
             {
               "step": "1",
-              "id": "section_2_3_4.no_shear_connectors_zone",
-              "scope": "beam",
+              "id": "section_2_3_4.no_shear_connectors_zone_der",
+              "scope": "beam_der",
               "clause": "Section 2.3.4 (2)",
-              "description": "Length without shear connectors from column face",
-              "calculated_symbol": "Lsc",
-              "limit_symbol": "1.5d",
+              "description": "Length without shear connectors from column face (right beam)",
+              "calculated_symbol": "Lnc_vgder",
+              "limit_symbol": "1.5d_vgder",
               "calculated": {
                 "value": 1000.0,
                 "unit": "mm"
@@ -479,15 +454,15 @@
             },
             {
               "step": "1",
-              "id": "section_6_3_1.beam_sc_greater_than_s_threshold",
-              "scope": "beam",
+              "id": "section_6_3_1.beam_sc_greater_than_s_threshold_der",
+              "scope": "beam_der",
               "clause": "Section 6.3.1 (beam clearance criterion)",
-              "description": "Beam clearance criterion using Sc and S threshold",
-              "calculated_symbol": "Sc",
+              "description": "Beam clearance criterion using Sc and S threshold (right beam)",
+              "calculated_symbol": "Sc_vgder",
               "limit_symbol": "compound",
               "comparison": "compound",
               "comparison_text": "compound",
-              "verification_text": "Sc = Stc - pfo; S = 0.5*sqrt(bcf*g); Sc > S => 712.000 mm > 105.114 mm",
+              "verification_text": "Sc = St_col - pfo; S = 0.5*sqrt(bcf*g); Sc_vgder > S => 712.000 mm > 105.114 mm",
               "calculated": {
                 "value": 712.0,
                 "unit": "mm"
@@ -497,11 +472,11 @@
             },
             {
               "step": "1",
-              "id": "section_2_3_4.clear_span_to_depth_ratio",
-              "scope": "beam",
+              "id": "section_2_3_4.clear_span_to_depth_ratio_der",
+              "scope": "beam_der",
               "clause": "Section 2.3.4 (5)",
-              "description": "Clear span-to-depth ratio by frame system",
-              "calculated_symbol": "Lclear/d",
+              "description": "Clear span-to-depth ratio by frame system (right beam)",
+              "calculated_symbol": "Llb_vgder/d_vgder",
               "limit_symbol": "7 (SMF)",
               "calculated": {
                 "value": 10.042833607907744,
@@ -522,11 +497,11 @@
             },
             {
               "step": "1",
-              "id": "section_2_3_4.beam_flange_width_to_thickness",
-              "scope": "beam",
-              "clause": "Section 2.3.4 (6) + AISC Seismic Provisions",
-              "description": "Beam flange width-to-thickness compactness",
-              "calculated_symbol": "lambda_f_beam",
+              "id": "section_2_3_4.beam_flange_width_to_thickness_der",
+              "scope": "beam_der",
+              "clause": "AISC 341-22w / AISC 358-22w Section 2.3.4 (6) + AISC Seismic Provisions",
+              "description": "Beam flange width-to-thickness compactness (right beam)",
+              "calculated_symbol": "lambda_f_vgder",
               "limit_symbol": "lambda_f_limit",
               "calculated": {
                 "value": 6.589595375722543,
@@ -547,11 +522,11 @@
             },
             {
               "step": "1",
-              "id": "section_2_3_4.beam_web_width_to_thickness",
-              "scope": "beam",
-              "clause": "Section 2.3.4 (6) + AISC Seismic Provisions",
-              "description": "Beam web width-to-thickness compactness",
-              "calculated_symbol": "lambda_w_beam",
+              "id": "section_2_3_4.beam_web_width_to_thickness_der",
+              "scope": "beam_der",
+              "clause": "AISC 341-22w / AISC 358-22w Section 2.3.4 (6) + AISC Seismic Provisions",
+              "description": "Beam web width-to-thickness compactness (right beam)",
+              "calculated_symbol": "lambda_w_vgder",
               "limit_symbol": "lambda_w_limit",
               "calculated": {
                 "value": 48.839285714285715,
@@ -660,9 +635,9 @@
               "id": "section_6_3_1.column_stc_minimum_requirement",
               "scope": "column",
               "clause": "Section 6.3.1 (column top clearance criterion)",
-              "description": "Stc >= pfo + de + 12.5 mm",
-              "calculated_symbol": "Stc",
-              "limit_symbol": "Stc_min",
+              "description": "Proyeccion de columna minima por encima de las vigas",
+              "calculated_symbol": "St_col",
+              "limit_symbol": "pfo_pe_vgder + de_pe_vgder + 12.5 mm",
               "calculated": {
                 "value": 762.0,
                 "unit": "mm"
@@ -684,7 +659,7 @@
               "step": "1",
               "id": "section_2_3_4.column_flange_width_to_thickness",
               "scope": "column",
-              "clause": "Section 2.3.4 (6) + AISC Seismic Provisions",
+              "clause": "AISC 341-22w / AISC 358-22w Section 2.3.4 (6) + AISC Seismic Provisions",
               "description": "Column flange width-to-thickness compactness",
               "calculated_symbol": "lambda_f_col",
               "limit_symbol": "lambda_f_limit",
@@ -709,7 +684,7 @@
               "step": "1",
               "id": "section_2_3_4.column_web_width_to_thickness",
               "scope": "column",
-              "clause": "Section 2.3.4 (6) + AISC Seismic Provisions",
+              "clause": "AISC 341-22w / AISC 358-22w Section 2.3.4 (6) + AISC Seismic Provisions",
               "description": "Column web width-to-thickness compactness",
               "calculated_symbol": "lambda_w_col",
               "limit_symbol": "lambda_w_limit",
@@ -732,15 +707,15 @@
             },
             {
               "step": "1",
-              "id": "section_6_3.end_plate_width_dual_limit",
-              "scope": "end_plate",
+              "id": "section_6_3.end_plate_width_dual_limit_der",
+              "scope": "end_plate_der",
               "clause": "Section 6.3 / Table 6.1",
-              "description": "End-plate width explicit dual inequalities",
-              "calculated_symbol": "bp",
+              "description": "End-plate width explicit dual inequalities (right beam)",
+              "calculated_symbol": "bp_pe_vgder",
               "limit_symbol": "compound",
               "comparison": "compound",
               "comparison_text": "compound",
-              "verification_text": "bp <= bbf + 25 mm; bp <= bcf",
+              "verification_text": "bp_pe_vgder <= bbf_vgder + 25 mm; bp_pe_vgder <= bcf",
               "calculated": {
                 "value": 253.0,
                 "unit": "mm"
@@ -758,15 +733,15 @@
             },
             {
               "step": "1",
-              "id": "section_6_3.end_plate_stiffener_height_derived",
-              "scope": "end_plate_stiffener",
+              "id": "section_6_3.end_plate_stiffener_height_derived_der",
+              "scope": "end_plate_stiffener_der",
               "clause": "Section 6.3",
-              "description": "End-plate stiffener height derived from end-plate geometry",
-              "calculated_symbol": "hst",
+              "description": "End-plate stiffener height derived from end-plate geometry (right beam)",
+              "calculated_symbol": "h_pest_vgder",
               "limit_symbol": "compound",
               "comparison": "compound",
               "comparison_text": "compound",
-              "verification_text": "hst = pfo + de; 110.000 mm = 50.000 mm + 60.000 mm",
+              "verification_text": "h_pest_vgder = pfo_pe_vgder + de_pe_vgder; 110.000 mm = 50.000 mm + 60.000 mm",
               "calculated": {
                 "value": 110.0,
                 "unit": "mm"
@@ -1163,11 +1138,11 @@
           "prequalification_limits": [
             {
               "step": "1",
-              "id": "beam.shape_family",
-              "scope": "beam",
+              "id": "beam_der.shape_family",
+              "scope": "beam_der",
               "clause": "Section 2.3.4",
-              "description": "Beam profile family allowed for prequalification",
-              "calculated_symbol": "shape_beam",
+              "description": "Familia de perfil de viga permitida para precalificacion (viga derecha)",
+              "calculated_symbol": "perfil_vgder",
               "limit_symbol": "{W, HEA, HEB, IPE}",
               "comparison": "family_in",
               "comparison_text": "in",
@@ -1183,12 +1158,12 @@
             },
             {
               "step": "1",
-              "id": "beam.bp_ge_bf_plus_margin",
-              "scope": "beam",
+              "id": "beam_der.bp_ge_bf_plus_margin",
+              "scope": "beam_der",
               "clause": "Section 6.3 / Table 6.1",
-              "description": "End-plate width vs beam flange width",
-              "calculated_symbol": "bp",
-              "limit_symbol": "bf + margin",
+              "description": "End-plate width vs beam flange width (right beam)",
+              "calculated_symbol": "bp_pe_vgder",
+              "limit_symbol": "bf_vgder + margin (25 mm)",
               "calculated": {
                 "value": 253.0,
                 "unit": "mm"
@@ -1208,11 +1183,11 @@
             },
             {
               "step": "1",
-              "id": "beam.bolt_gage_g_ge_3db",
-              "scope": "beam",
+              "id": "beam_der.bolt_gage_g_ge_3db",
+              "scope": "beam_der",
               "clause": "Section 6.3 / Table 6.1",
-              "description": "Bolt gage minimum spacing",
-              "calculated_symbol": "g",
+              "description": "Bolt gage minimum spacing (right beam)",
+              "calculated_symbol": "g_b_vgder",
               "limit_symbol": "3db",
               "calculated": {
                 "value": 152.4,
@@ -1233,12 +1208,12 @@
             },
             {
               "step": "1",
-              "id": "section_2_3_4.no_shear_connectors_zone",
-              "scope": "beam",
+              "id": "section_2_3_4.no_shear_connectors_zone_der",
+              "scope": "beam_der",
               "clause": "Section 2.3.4 (2)",
-              "description": "Length without shear connectors from column face",
-              "calculated_symbol": "Lsc",
-              "limit_symbol": "1.5d",
+              "description": "Length without shear connectors from column face (right beam)",
+              "calculated_symbol": "Lnc_vgder",
+              "limit_symbol": "1.5d_vgder",
               "calculated": {
                 "value": 1000.0,
                 "unit": "mm"
@@ -1258,15 +1233,15 @@
             },
             {
               "step": "1",
-              "id": "section_6_3_1.beam_sc_greater_than_s_threshold",
-              "scope": "beam",
+              "id": "section_6_3_1.beam_sc_greater_than_s_threshold_der",
+              "scope": "beam_der",
               "clause": "Section 6.3.1 (beam clearance criterion)",
-              "description": "Beam clearance criterion using Sc and S threshold",
-              "calculated_symbol": "Sc",
+              "description": "Beam clearance criterion using Sc and S threshold (right beam)",
+              "calculated_symbol": "Sc_vgder",
               "limit_symbol": "compound",
               "comparison": "compound",
               "comparison_text": "compound",
-              "verification_text": "Sc = Stc - pfo; S = 0.5*sqrt(bcf*g); Sc > S => 712.000 mm > 105.114 mm",
+              "verification_text": "Sc = St_col - pfo; S = 0.5*sqrt(bcf*g); Sc_vgder > S => 712.000 mm > 105.114 mm",
               "calculated": {
                 "value": 712.0,
                 "unit": "mm"
@@ -1276,11 +1251,11 @@
             },
             {
               "step": "1",
-              "id": "section_2_3_4.clear_span_to_depth_ratio",
-              "scope": "beam",
+              "id": "section_2_3_4.clear_span_to_depth_ratio_der",
+              "scope": "beam_der",
               "clause": "Section 2.3.4 (5)",
-              "description": "Clear span-to-depth ratio by frame system",
-              "calculated_symbol": "Lclear/d",
+              "description": "Clear span-to-depth ratio by frame system (right beam)",
+              "calculated_symbol": "Llb_vgder/d_vgder",
               "limit_symbol": "7 (SMF)",
               "calculated": {
                 "value": 10.042833607907744,
@@ -1301,11 +1276,11 @@
             },
             {
               "step": "1",
-              "id": "section_2_3_4.beam_flange_width_to_thickness",
-              "scope": "beam",
-              "clause": "Section 2.3.4 (6) + AISC Seismic Provisions",
-              "description": "Beam flange width-to-thickness compactness",
-              "calculated_symbol": "lambda_f_beam",
+              "id": "section_2_3_4.beam_flange_width_to_thickness_der",
+              "scope": "beam_der",
+              "clause": "AISC 341-22w / AISC 358-22w Section 2.3.4 (6) + AISC Seismic Provisions",
+              "description": "Beam flange width-to-thickness compactness (right beam)",
+              "calculated_symbol": "lambda_f_vgder",
               "limit_symbol": "lambda_f_limit",
               "calculated": {
                 "value": 6.589595375722543,
@@ -1326,11 +1301,11 @@
             },
             {
               "step": "1",
-              "id": "section_2_3_4.beam_web_width_to_thickness",
-              "scope": "beam",
-              "clause": "Section 2.3.4 (6) + AISC Seismic Provisions",
-              "description": "Beam web width-to-thickness compactness",
-              "calculated_symbol": "lambda_w_beam",
+              "id": "section_2_3_4.beam_web_width_to_thickness_der",
+              "scope": "beam_der",
+              "clause": "AISC 341-22w / AISC 358-22w Section 2.3.4 (6) + AISC Seismic Provisions",
+              "description": "Beam web width-to-thickness compactness (right beam)",
+              "calculated_symbol": "lambda_w_vgder",
               "limit_symbol": "lambda_w_limit",
               "calculated": {
                 "value": 48.839285714285715,
@@ -1439,9 +1414,9 @@
               "id": "section_6_3_1.column_stc_minimum_requirement",
               "scope": "column",
               "clause": "Section 6.3.1 (column top clearance criterion)",
-              "description": "Stc >= pfo + de + 12.5 mm",
-              "calculated_symbol": "Stc",
-              "limit_symbol": "Stc_min",
+              "description": "Proyeccion de columna minima por encima de las vigas",
+              "calculated_symbol": "St_col",
+              "limit_symbol": "pfo_pe_vgder + de_pe_vgder + 12.5 mm",
               "calculated": {
                 "value": 762.0,
                 "unit": "mm"
@@ -1463,7 +1438,7 @@
               "step": "1",
               "id": "section_2_3_4.column_flange_width_to_thickness",
               "scope": "column",
-              "clause": "Section 2.3.4 (6) + AISC Seismic Provisions",
+              "clause": "AISC 341-22w / AISC 358-22w Section 2.3.4 (6) + AISC Seismic Provisions",
               "description": "Column flange width-to-thickness compactness",
               "calculated_symbol": "lambda_f_col",
               "limit_symbol": "lambda_f_limit",
@@ -1488,7 +1463,7 @@
               "step": "1",
               "id": "section_2_3_4.column_web_width_to_thickness",
               "scope": "column",
-              "clause": "Section 2.3.4 (6) + AISC Seismic Provisions",
+              "clause": "AISC 341-22w / AISC 358-22w Section 2.3.4 (6) + AISC Seismic Provisions",
               "description": "Column web width-to-thickness compactness",
               "calculated_symbol": "lambda_w_col",
               "limit_symbol": "lambda_w_limit",
@@ -1511,15 +1486,15 @@
             },
             {
               "step": "1",
-              "id": "section_6_3.end_plate_width_dual_limit",
-              "scope": "end_plate",
+              "id": "section_6_3.end_plate_width_dual_limit_der",
+              "scope": "end_plate_der",
               "clause": "Section 6.3 / Table 6.1",
-              "description": "End-plate width explicit dual inequalities",
-              "calculated_symbol": "bp",
+              "description": "End-plate width explicit dual inequalities (right beam)",
+              "calculated_symbol": "bp_pe_vgder",
               "limit_symbol": "compound",
               "comparison": "compound",
               "comparison_text": "compound",
-              "verification_text": "bp <= bbf + 25 mm; bp <= bcf",
+              "verification_text": "bp_pe_vgder <= bbf_vgder + 25 mm; bp_pe_vgder <= bcf",
               "calculated": {
                 "value": 253.0,
                 "unit": "mm"
@@ -1537,15 +1512,15 @@
             },
             {
               "step": "1",
-              "id": "section_6_3.end_plate_stiffener_height_derived",
-              "scope": "end_plate_stiffener",
+              "id": "section_6_3.end_plate_stiffener_height_derived_der",
+              "scope": "end_plate_stiffener_der",
               "clause": "Section 6.3",
-              "description": "End-plate stiffener height derived from end-plate geometry",
-              "calculated_symbol": "hst",
+              "description": "End-plate stiffener height derived from end-plate geometry (right beam)",
+              "calculated_symbol": "h_pest_vgder",
               "limit_symbol": "compound",
               "comparison": "compound",
               "comparison_text": "compound",
-              "verification_text": "hst = pfo + de; 110.000 mm = 50.000 mm + 60.000 mm",
+              "verification_text": "h_pest_vgder = pfo_pe_vgder + de_pe_vgder; 110.000 mm = 50.000 mm + 60.000 mm",
               "calculated": {
                 "value": 110.0,
                 "unit": "mm"

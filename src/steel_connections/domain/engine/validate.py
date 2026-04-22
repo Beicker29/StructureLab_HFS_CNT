@@ -13,7 +13,7 @@ from steel_connections.data.materials_repository import (
     get_hrs_steel_properties,
     get_plate_steel_properties,
 )
-from steel_connections.data.sections_repository import get_bolt_section_properties
+from steel_connections.data.sections_repository import get_beam_profile_properties, get_bolt_section_properties
 from steel_connections.data.xlsx_sheet_reader import normalize_text
 from steel_connections.models.errors import ErrorCode, Stage, StructuredEngineException, StructuredError
 from steel_connections.models.input import AISC358MomentCase, InputCase, parse_input_case
@@ -1245,6 +1245,21 @@ def _resolve_catalog_driven_properties(case: AISC358MomentCase) -> None:
     case.materials.end_plate_fy = plate_props["fy"]  # type: ignore[assignment]
     case.materials.end_plate_fu = plate_props["fu"]  # type: ignore[assignment]
     case.materials.stiffener_fy = plate_props["fy"]  # type: ignore[assignment]
+    stiffener_steel_type_vgder = case.materials.stiffener_steel_type_vgder
+    stiffener_steel_type_vgizq = case.materials.stiffener_steel_type_vgizq
+    if stiffener_steel_type_vgder is not None:
+        stiffener_props_der = get_plate_steel_properties(
+            steel_type=stiffener_steel_type_vgder,
+            unit_system=case.units_system,
+        )
+        case.materials.stiffener_fy_vgder = stiffener_props_der["fy"]  # type: ignore[assignment]
+        case.materials.stiffener_fy = stiffener_props_der["fy"]  # type: ignore[assignment]
+    if stiffener_steel_type_vgizq is not None:
+        stiffener_props_izq = get_plate_steel_properties(
+            steel_type=stiffener_steel_type_vgizq,
+            unit_system=case.units_system,
+        )
+        case.materials.stiffener_fy_vgizq = stiffener_props_izq["fy"]  # type: ignore[assignment]
 
     # Bolt strength is sourced from materials.xlsx/Pernos.
     bolt_standard = _require_text(
@@ -1321,6 +1336,63 @@ def _resolve_catalog_driven_properties(case: AISC358MomentCase) -> None:
                 source_document="data/sections.xlsx",
             )
     case.geometry.bolt_diameter = derived_db
+
+    # lc for end plate / column flange is derived from geometry under zero-guess policy when not explicitly provided.
+    if case.geometry.clear_distance_end_plate is None or case.geometry.clear_distance_column_flange is None:
+        pb = case.geometry.pb
+        pfo = case.geometry.pfo
+        pfi = case.geometry.pfi
+        if pb is None or pfo is None or pfi is None:
+            _raise_validation_error(
+                message=(
+                    "Cannot derive bolt clear distances. Required inputs are missing: "
+                    "'geometry.pb', 'geometry.pfo', 'geometry.pfi'."
+                ),
+                missing_fields=["geometry.pb", "geometry.pfo", "geometry.pfi"],
+                source_document="AISC 358-22 Section 6.7",
+            )
+        if pb.unit != pfo.unit or pb.unit != pfi.unit:
+            _raise_validation_error(
+                message=(
+                    "Cannot derive bolt clear distances due to inconsistent units in "
+                    "'geometry.pb', 'geometry.pfo', and 'geometry.pfi'."
+                ),
+                missing_fields=["geometry.pb", "geometry.pfo", "geometry.pfi"],
+                source_document="AISC 358-22 Section 6.7",
+            )
+        beam_profile_for_lc = get_beam_profile_properties(beam_shape=case.sections.beam_shape, unit_system=case.units_system)
+        tbf = beam_profile_for_lc["tf"]
+        if tbf.unit != pb.unit:
+            _raise_validation_error(
+                message=(
+                    "Cannot derive bolt clear distances due to inconsistent units between "
+                    "beam flange thickness (catalog) and end-plate geometry inputs."
+                ),
+                missing_fields=["sections.beam_shape", "geometry.pb"],
+                source_document="data/sections.xlsx",
+            )
+        is_us = str(case.units_system.value).upper() == "US"
+        db_in = derived_db.value if is_us else derived_db.value / 25.4
+        hole_add_in = 1.0 / 16.0 if db_in <= (7.0 / 8.0 + 1e-9) else 1.0 / 8.0
+        dh_value = (db_in + hole_add_in) if is_us else (db_in + hole_add_in) * 25.4
+
+        lc_1 = pb.value - dh_value
+        lc_2 = pfo.value + pfi.value + tbf.value - dh_value
+        lc_value = min(lc_1, lc_2)
+        if lc_value <= 0.0:
+            _raise_validation_error(
+                message=(
+                    "Derived bolt clear distance is not positive. "
+                    "Expected min(pb-dh, pfo+pfi+tbf-dh) > 0."
+                ),
+                missing_fields=["geometry.pb", "geometry.pfo", "geometry.pfi", "geometry.bolt_diameter"],
+                source_document="AISC 360-22 Table J3.4 / AISC 358-22 Section 6.7",
+            )
+        derived_lc = Quantity(value=lc_value, unit=pb.unit)
+        if case.geometry.clear_distance_end_plate is None:
+            case.geometry.clear_distance_end_plate = derived_lc
+        if case.geometry.clear_distance_column_flange is None:
+            case.geometry.clear_distance_column_flange = derived_lc
 
     # Maintain legacy field used by Step 5 (no hidden default because it is derived from selected standard).
     case.materials.bolt_grade = bolt_standard
@@ -1403,8 +1475,8 @@ def _normalize_moment_split_side_payload(raw_payload: dict[str, Any], *, side: s
     if isinstance(raw_payload.get("geometry"), dict):
         return deepcopy(raw_payload)
 
+    side_tag = "vgder" if side == "right" else "vgizq"
     viga = _first_dict(raw_payload, "viga", "beam")
-    materiales = _first_dict(raw_payload, "materiales", "materials")
     factores = _first_dict(raw_payload, "design_factors", "factores_diseno")
     placa_extremo = _first_dict(raw_payload, "placa_extremo", "end_plate")
     platina_cont = _first_dict(raw_payload, "platina_continuidad", "continuity_plate")
@@ -1412,74 +1484,128 @@ def _normalize_moment_split_side_payload(raw_payload: dict[str, Any], *, side: s
     pernos = _first_dict(raw_payload, "pernos", "bolts")
     soldaduras = _first_dict(raw_payload, "soldaduras", "welds")
     cargas = _first_dict(raw_payload, "loads", "cargas")
+    weld_1_raw = soldaduras.get("weld_1") if isinstance(soldaduras.get("weld_1"), dict) else {}
+    weld_2_raw = soldaduras.get("weld_2") if isinstance(soldaduras.get("weld_2"), dict) else {}
+    weld_3_raw = soldaduras.get("weld_3") if isinstance(soldaduras.get("weld_3"), dict) else {}
 
     sections = {}
-    beam_shape = _first_present(viga, "perfil", "beam_shape", "shape")
+    beam_shape = _first_present(viga, f"perfil_{side_tag}")
     if beam_shape is not None:
         sections["beam_shape"] = beam_shape
 
+    weld_fexx = _first_present(
+        weld_3_raw,
+        f"Fexx_w3_{side_tag}",
+    ) or _first_present(
+        weld_2_raw,
+        f"Fexx_w2_{side_tag}",
+    ) or _first_present(
+        weld_1_raw,
+        f"Fexx_w1_{side_tag}",
+    )
+
     materials = _compact_dict(
         {
-            "profile_steel_type": _first_present(materiales, "profile_steel_type")
-            or _first_present(viga, "tipo_acero_perfil", "tipo_acero_viga", "profile_steel_type"),
-            "plate_steel_type": _first_present(materiales, "plate_steel_type")
-            or _first_present(placa_extremo, "tipo_acero", "plate_steel_type")
+            "profile_steel_type": _first_present(viga, f"tipo_acero_perfil_{side_tag}"),
+            "plate_steel_type": _first_present(placa_extremo, "tipo_acero", "plate_steel_type")
             or _first_present(rigidizador, "tipo_acero", "plate_steel_type")
             or _first_present(platina_cont, "tipo_acero", "plate_steel_type"),
-            "bolt_fabrication_standard": _first_present(materiales, "bolt_fabrication_standard")
-            or _first_present(pernos, "bolt_fabrication_standard"),
-            "bolt_description": _first_present(materiales, "bolt_description")
-            or _first_present(pernos, "bolt_description"),
-            "weld_fexx": _first_present(materiales, "weld_fexx")
-            or _first_present(soldaduras, "weld_fexx", "fexx"),
-            "elastic_modulus": _first_present(materiales, "elastic_modulus")
-            or _first_present(viga, "elastic_modulus"),
+            f"stiffener_steel_type_{side_tag}": _first_present(
+                rigidizador,
+                f"tipo_acero_pest_{side_tag}",
+            )
+            or _first_present(rigidizador, "tipo_acero"),
+            "bolt_fabrication_standard": _first_present(pernos, f"std_b_{side_tag}"),
+            "bolt_description": _first_present(pernos, f"desc_b_{side_tag}"),
+            "weld_fexx": weld_fexx,
+            "elastic_modulus": _first_present(viga, f"E_{side_tag}"),
+            "bolt_shape": _first_present(pernos, f"shape_b_{side_tag}"),
+            "bolt_thread_condition": _first_present(pernos, f"thread_b_{side_tag}"),
         }
     )
 
     side_block = _compact_dict(
         {
-            "clear_span_length": _first_present(viga, "clear_span_length", "luz_libre"),
+            "clear_span_length": _first_present(viga, f"Llb_{side_tag}"),
             "shear_connector_free_length_from_column_face": _first_present(
                 viga,
-                "shear_connector_free_length_from_column_face",
-                "longitud_sin_conectores_desde_cara_columna",
+                f"Lnc_{side_tag}",
             ),
         }
     )
 
     end_plate = _compact_dict(
         {
-            "end_plate_width": _first_present(placa_extremo, "end_plate_width", "bp"),
-            "end_plate_thickness": _first_present(placa_extremo, "end_plate_thickness", "tp"),
-            "de": _first_present(placa_extremo, "de"),
-            "pb": _first_present(placa_extremo, "pb"),
-            "pfo": _first_present(placa_extremo, "pfo"),
-            "pfi": _first_present(placa_extremo, "pfi"),
+            "end_plate_width": _first_present(placa_extremo, f"Bpe_{side_tag}"),
+            "end_plate_thickness": _first_present(placa_extremo, f"tpe_{side_tag}"),
+            "de": _first_present(placa_extremo, f"de_pe_{side_tag}"),
+            "pb": _first_present(placa_extremo, f"pb_pe_{side_tag}"),
+            "pfo": _first_present(placa_extremo, f"pfo_pe_{side_tag}"),
+            "pfi": _first_present(placa_extremo, f"pfi_pe_{side_tag}"),
         }
     )
     continuity_plate = _compact_dict(
         {
-            "continuity_plate_thickness": _first_present(platina_cont, "continuity_plate_thickness", "tcp"),
+            "continuity_plate_thickness": _first_present(platina_cont, "tpc_col"),
             "continuity_plate_enabled": _first_present(
                 platina_cont,
-                "continuity_plate_enabled",
-                "usar_platinas_continuidad",
-                "use_continuity_plates",
+                "usar_pc_col",
             ),
         }
     )
-    stiffener = _compact_dict({"stiffener_thickness": _first_present(rigidizador, "stiffener_thickness", "tr")})
-    bolts = _compact_dict(
+    stiffener = _compact_dict(
         {
-            "bolt_gage": _first_present(pernos, "bolt_gage", "g"),
-            "bolt_tightening_type": _first_present(pernos, "bolt_tightening_type", "tipo_apriete"),
-            "clear_distance_end_plate": _first_present(pernos, "clear_distance_end_plate"),
-            "clear_distance_column_flange": _first_present(pernos, "clear_distance_column_flange"),
-            "bolt_shape": _first_present(pernos, "bolt_shape", "shape"),
-            "bolt_thread_condition": _first_present(pernos, "bolt_thread_condition", "thread_condition"),
+            "stiffener_thickness": _first_present(
+                rigidizador,
+                f"t_pest_{side_tag}",
+                "stiffener_thickness",
+            )
         }
     )
+    bolts = _compact_dict(
+        {
+            "bolt_gage": _first_present(pernos, f"g_b_{side_tag}"),
+            "bolt_tightening_type": _first_present(pernos, f"tipo_apriete_b_{side_tag}"),
+            "clear_distance_end_plate": _first_present(pernos, f"lc_pe_{side_tag}"),
+            "clear_distance_column_flange": _first_present(
+                pernos,
+                f"lc_cf_{side_tag}",
+            ),
+            "bolt_shape": _first_present(pernos, f"shape_b_{side_tag}"),
+            "bolt_thread_condition": _first_present(pernos, f"thread_b_{side_tag}"),
+        }
+    )
+    welds: dict[str, Any] = {}
+    weld_1 = _compact_dict(
+        {
+            "description": _first_present(weld_1_raw, "description"),
+            "weld_type": _first_present(weld_1_raw, f"tipo_w1_{side_tag}", "weld_type"),
+            "size": _first_present(weld_1_raw, f"w_w1_{side_tag}", "size"),
+            "nl": _first_present(weld_1_raw, f"nl_w1_{side_tag}", "nl"),
+        }
+    )
+    if weld_1:
+        welds["weld_1"] = weld_1
+    weld_2 = _compact_dict(
+        {
+            "description": _first_present(weld_2_raw, "description"),
+            "weld_type": _first_present(weld_2_raw, f"tipo_w2_{side_tag}", "weld_type"),
+            "size": _first_present(weld_2_raw, f"w_w2_{side_tag}", "size"),
+            "nl": _first_present(weld_2_raw, f"nl_w2_{side_tag}", "nl"),
+        }
+    )
+    if weld_2:
+        welds["weld_2"] = weld_2
+    weld_3 = _compact_dict(
+        {
+            "description": _first_present(weld_3_raw, "description"),
+            "weld_type": _first_present(weld_3_raw, f"tipo_w3_{side_tag}", "weld_type"),
+            "thickness": _first_present(weld_3_raw, f"t_w3_{side_tag}", "thickness"),
+            "nl": _first_present(weld_3_raw, f"nl_w3_{side_tag}", "nl"),
+        }
+    )
+    if weld_3:
+        welds["weld_3"] = weld_3
 
     geometry: dict[str, Any] = {}
     if side_block:
@@ -1492,37 +1618,21 @@ def _normalize_moment_split_side_payload(raw_payload: dict[str, Any], *, side: s
         geometry["stiffener"] = stiffener
     if bolts:
         geometry["bolts"] = bolts
-    if soldaduras:
-        geometry["welds"] = soldaduras
+    if welds:
+        geometry["welds"] = welds
 
     loads = _compact_dict(
         {
             "pu_viga_right" if side == "right" else "pu_viga_left": _first_present(
                 cargas,
-                "pu",
-                "pu_viga",
-                "pu_viga_right" if side == "right" else "pu_viga_left",
+                f"Pu_{side_tag}",
             )
-            or _first_present(
-                viga,
-                "pu",
-                "pu_viga",
-                "pu_viga_right" if side == "right" else "pu_viga_left",
-            ),
+            or _first_present(viga, f"Pu_{side_tag}"),
             "beam_right_vgravity" if side == "right" else "beam_left_vgravity": _first_present(
                 cargas,
-                "v_gravity",
-                "beam_vgravity",
-                "beam_right_vgravity" if side == "right" else "beam_left_vgravity",
-                "Beam_right_Vgravity" if side == "right" else "Beam_left_Vgravity",
+                f"Vg_{side_tag}",
             )
-            or _first_present(
-                viga,
-                "v_gravity",
-                "beam_vgravity",
-                "beam_right_vgravity" if side == "right" else "beam_left_vgravity",
-                "Beam_right_Vgravity" if side == "right" else "Beam_left_Vgravity",
-            ),
+            or _first_present(viga, f"Vg_{side_tag}"),
         }
     )
 
@@ -1537,8 +1647,8 @@ def _normalize_moment_split_side_payload(raw_payload: dict[str, Any], *, side: s
         normalized["loads"] = loads
     side_design_factors = _compact_dict(
         {
-            "member_ductility_demand_beam": _first_present(viga, "member_ductility_demand_beam")
-            or _first_present(factores, "member_ductility_demand_beam")
+            "member_ductility_demand_beam": _first_present(viga, f"demanda_ductilidad_{side_tag}")
+            or _first_present(factores, f"demanda_ductilidad_{side_tag}")
         }
     )
     if side_design_factors:
@@ -1552,10 +1662,10 @@ def _normalize_moment_split_column_payload(raw_payload: dict[str, Any]) -> dict[
 
     columna = _first_dict(raw_payload, "columna", "column")
     platina_cont = _first_dict(raw_payload, "platina_continuidad", "continuity_plate")
-    materiales = _first_dict(raw_payload, "materiales", "materials")
     soldaduras = _first_dict(raw_payload, "soldaduras", "welds")
     cargas = _first_dict(raw_payload, "loads", "cargas")
     factores = _first_dict(raw_payload, "design_factors", "factores_diseno")
+    weld_4_raw = soldaduras.get("weld_4") if isinstance(soldaduras.get("weld_4"), dict) else {}
 
     normalized: dict[str, Any] = {}
     for key in (
@@ -1570,20 +1680,17 @@ def _normalize_moment_split_column_payload(raw_payload: dict[str, Any]) -> dict[
         if key in raw_payload:
             normalized[key] = raw_payload[key]
 
-    sections = _compact_dict({"column_shape": _first_present(columna, "perfil", "column_shape")})
+    sections = _compact_dict({"column_shape": _first_present(columna, "perfil_col")})
     if sections:
         normalized["sections"] = sections
 
     materials = _compact_dict(
         {
-            "profile_steel_type": _first_present(materiales, "profile_steel_type")
-            or _first_present(columna, "tipo_acero_perfil", "profile_steel_type"),
-            "weld_fexx": _first_present(materiales, "weld_fexx")
-            or _first_present(soldaduras, "weld_fexx", "fexx"),
-            "elastic_modulus": _first_present(materiales, "elastic_modulus")
-            or _first_present(columna, "elastic_modulus"),
-            "plate_steel_type": _first_present(materiales, "plate_steel_type")
-            or _first_present(platina_cont, "tipo_acero", "plate_steel_type"),
+            "profile_steel_type": _first_present(columna, "tipo_acero_perfil_col"),
+            "weld_fexx": _first_present(weld_4_raw, "Fexx_w4")
+            or _first_present(soldaduras, "Fexx_w4"),
+            "elastic_modulus": _first_present(columna, "E_col"),
+            "plate_steel_type": _first_present(platina_cont, "tipo_acero_pc_col"),
         }
     )
     if materials:
@@ -1593,29 +1700,30 @@ def _normalize_moment_split_column_payload(raw_payload: dict[str, Any]) -> dict[
         {
             "column_end_distance_to_beam_flange": _first_present(
                 columna,
-                "column_end_distance_to_beam_flange",
-                "distancia_borde_columna_a_ala_viga",
+                "dcf_col",
             ),
             "slab_connection_condition": _first_present(
                 columna,
-                "slab_connection_condition",
-                "union_columna_losa",
+                "union_col_losa",
             ),
         }
     )
-    weld_4 = soldaduras.get("weld_4") if isinstance(soldaduras.get("weld_4"), dict) else None
+    weld_4 = _compact_dict(
+        {
+            "description": _first_present(weld_4_raw, "description"),
+            "weld_type": _first_present(weld_4_raw, "tipo_w4"),
+            "thickness": _first_present(weld_4_raw, "t_w4"),
+            "nl": _first_present(weld_4_raw, "nl_w4"),
+        }
+    )
     continuity_plate_enabled = _first_present(
         platina_cont,
-        "continuity_plate_enabled",
-        "usar_platinas_continuidad",
-        "use_continuity_plates",
+        "usar_pc_col",
     )
     if continuity_plate_enabled is None:
         continuity_plate_enabled = _first_present(
             columna,
-            "continuity_plate_enabled",
-            "usar_platinas_continuidad",
-            "use_continuity_plates",
+            "usar_pc_col",
         )
 
     geometry = _compact_dict(
@@ -1623,18 +1731,21 @@ def _normalize_moment_split_column_payload(raw_payload: dict[str, Any]) -> dict[
             "column": column_block if column_block else None,
             "continuity_plate": _compact_dict(
                 {
-                    "continuity_plate_thickness": _first_present(platina_cont, "continuity_plate_thickness", "tcp"),
+                    "continuity_plate_thickness": _first_present(
+                        platina_cont,
+                        "tpc_col",
+                    ),
                     "continuity_plate_enabled": continuity_plate_enabled,
                 }
             )
             or None,
-            "welds": {"weld_4": weld_4} if weld_4 is not None else None,
+            "welds": {"weld_4": weld_4} if weld_4 else None,
         }
     )
     if geometry:
         normalized["geometry"] = geometry
 
-    pu_columna = _first_present(cargas, "pu_columna") or _first_present(columna, "pu")
+    pu_columna = _first_present(cargas, "Pu_col") or _first_present(columna, "Pu_col")
     loads: dict[str, Any] = _compact_dict({"pu_columna": pu_columna})
     for key in (
         "probable_moment_column_face",
@@ -1655,28 +1766,29 @@ def _normalize_moment_split_column_payload(raw_payload: dict[str, Any]) -> dict[
     if loads:
         normalized["loads"] = loads
     design_factors = dict(factores) if factores else {}
-    phi_no_ductil = _first_present(
-        design_factors,
-        "factor_reduccion_modo_no_ductil",
-        "phi_no_ductil",
-        "phi_non_ductile",
-    )
-    phi_ductil = _first_present(
-        design_factors,
-        "factor_reduccion_modo_ductil",
-        "phi_ductil",
-        "phi_ductile",
-    )
+    if "lados_conexion" in design_factors and "beam_connection_sides" not in design_factors:
+        design_factors["beam_connection_sides"] = design_factors["lados_conexion"]
+    if "demanda_ductilidad_col" in design_factors and "member_ductility_demand_column" not in design_factors:
+        design_factors["member_ductility_demand_column"] = design_factors["demanda_ductilidad_col"]
+    if "ratio_McMb_min" in design_factors and "column_beam_moment_ratio_minimum" not in design_factors:
+        design_factors["column_beam_moment_ratio_minimum"] = design_factors["ratio_McMb_min"]
+    if "ratio_McMb" in design_factors and "column_beam_moment_ratio" not in design_factors:
+        design_factors["column_beam_moment_ratio"] = design_factors["ratio_McMb"]
+
+    phi_no_ductil = _first_present(design_factors, "phi_no_ductil", "phi_non_ductile")
+    phi_ductil = _first_present(design_factors, "phi_ductil", "phi_ductile")
     if phi_no_ductil is not None and "phi_n" not in design_factors:
         design_factors["phi_n"] = phi_no_ductil
     if phi_ductil is not None and "phi_d" not in design_factors:
         design_factors["phi_d"] = phi_ductil
-    design_factors.pop("factor_reduccion_modo_no_ductil", None)
-    design_factors.pop("factor_reduccion_modo_ductil", None)
     design_factors.pop("phi_no_ductil", None)
     design_factors.pop("phi_non_ductile", None)
     design_factors.pop("phi_ductil", None)
     design_factors.pop("phi_ductile", None)
+    design_factors.pop("lados_conexion", None)
+    design_factors.pop("demanda_ductilidad_col", None)
+    design_factors.pop("ratio_McMb_min", None)
+    design_factors.pop("ratio_McMb", None)
     if design_factors:
         normalized["design_factors"] = design_factors
     return normalized
@@ -1743,6 +1855,9 @@ def _compose_moment_prequalified_split_payload(
         if key in right_materials:
             _assert_same(right_materials[key], merged_value, f"materials.{key}")
     merged_materials.update(right_materials)
+    for side_specific_key in ("stiffener_steel_type_vgizq",):
+        if side_specific_key in left_materials:
+            merged_materials[side_specific_key] = left_materials[side_specific_key]
 
     merged_geometry = _require_dict_key(merged, "geometry", "column split payload")
     right_geometry = _require_dict_key(right_payload, "geometry", "right beam split payload")

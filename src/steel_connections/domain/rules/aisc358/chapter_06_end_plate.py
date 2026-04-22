@@ -290,7 +290,7 @@ def _require_geometry_by_side(
     rule_binding: object,
 ) -> tuple[Quantity, str]:
     field_name = f"{base_field}_{side}"
-    value = getattr(case.geometry, field_name)
+    value = getattr(case.geometry, field_name, None)
     if value is not None:
         return value, f"geometry.{field_name}"
     if side == "der":
@@ -575,6 +575,8 @@ def _compute_tension_bolt_line_distances(case: AISC358MomentCase, rule_binding: 
 
 def _compute_beam_available_shear_strength(case: AISC358MomentCase, rule_binding: object) -> tuple[Quantity, dict[str, Any]]:
     beam_profile = _beam_profile(case)
+    beam_profile_der = _beam_profile_by_side(case, "der")
+    beam_profile_izq = _beam_profile_by_side(case, "izq") if beam_connection_sides == "both_sides" else None
     d = beam_profile["d"]
     tw = beam_profile["tw"]
     kdes = _profile_kdes(beam_profile, role="beam", rule_binding=rule_binding)
@@ -1859,6 +1861,10 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
         rule_binding,
     )
     beam_connection_sides = _require(case, "design_factors.beam_connection_sides", rule_binding)
+    de_der = de
+    pfo_der = pfo
+    de_izq: Quantity | None = de if beam_connection_sides == "both_sides" else None
+    pfo_izq: Quantity | None = pfo if beam_connection_sides == "both_sides" else None
     beam_clear_span_length_der, _ = _require_geometry_by_side(
         case,
         base_field="beam_clear_span_length",
@@ -1889,6 +1895,8 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
     slab_connection_condition = _require(case, "geometry.column_slab_connection_condition", rule_binding)
     stc = _require(case, "geometry.column_end_distance_to_beam_flange", rule_binding)
     beam_profile = _beam_profile(case)
+    beam_profile_der = _beam_profile_by_side(case, "der")
+    beam_profile_izq = _beam_profile_by_side(case, "izq") if beam_connection_sides == "both_sides" else None
     column_profile = _column_profile(case)
     bf = beam_profile["bf"]
     bcf = column_profile["bf"]
@@ -1903,12 +1911,33 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
     pu_column = _require(case, "loads.pu_columna", rule_binding)
     beam_ag = _profile_ag(beam_profile, role="beam", rule_binding=rule_binding)
     column_ag = _profile_ag(column_profile, role="column", rule_binding=rule_binding)
-    stiffener_height = _derive_stiffener_height_from_de_pfo(de=de, pfo=pfo)
-    end_plate_height = _derive_end_plate_height(beam_depth=beam_depth, de=de, pfo=pfo)
-    stiffener_length_derived = _derive_stiffener_length_from_hst(
-        stiffener_height=stiffener_height,
+    stiffener_height_der = _derive_stiffener_height_from_de_pfo(de=de_der, pfo=pfo_der)
+    stiffener_height_izq = (
+        _derive_stiffener_height_from_de_pfo(de=de_izq, pfo=pfo_izq)
+        if (de_izq is not None and pfo_izq is not None)
+        else None
+    )
+    stiffener_height = stiffener_height_der
+    end_plate_height_der = _derive_end_plate_height(beam_depth=beam_profile_der["d"], de=de, pfo=pfo)
+    end_plate_height_izq = (
+        _derive_end_plate_height(beam_depth=beam_profile_izq["d"], de=de, pfo=pfo)
+        if beam_profile_izq is not None
+        else None
+    )
+    end_plate_height = end_plate_height_der
+    stiffener_length_derived_der = _derive_stiffener_length_from_hst(
+        stiffener_height=stiffener_height_der,
         unit_system=case.units_system,
     )
+    stiffener_length_derived_izq = (
+        _derive_stiffener_length_from_hst(
+            stiffener_height=stiffener_height_izq,
+            unit_system=case.units_system,
+        )
+        if stiffener_height_izq is not None
+        else None
+    )
+    stiffener_length_derived = stiffener_length_derived_der
     pso = pfo
     psi = Quantity(value=pfi.value + beam_profile["tf"].value - tcp.value, unit=pfi.unit)
     h1 = Quantity(
@@ -1949,6 +1978,8 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
         unit_system=case.units_system,
     )
     bp_margin = 1.0 if case.units_system.value == "US" else 25.0
+    bp_margin_mm = bp_margin * 25.4 if case.units_system.value == "US" else bp_margin
+    bp_margin_mm_label = f"{bp_margin_mm:.3f} mm" if case.units_system.value == "US" else f"{bp_margin_mm:.0f} mm"
     min_bp = Quantity(value=bf.value + bp_margin, unit=bf.unit)
     min_edge, edge_intermediate = compute_minimum_edge_distance_standard_hole(
         bolt_diameter=db,
@@ -2320,6 +2351,16 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
             d=beam_profile_izq["d"],
             bf=beam_profile_izq["bf"],
         )
+    if stiffener_length_for_pz is None:
+        pz_formula = (
+            "Lpz_vgder = min(d_vgder, 3*bf_vgder); "
+            "Lpz_vgizq = min(d_vgizq, 3*bf_vgizq)"
+        )
+    else:
+        pz_formula = (
+            "Lpz_vgder = min(L_pest_vgder + 0.5*d_vgder, 3*bf_vgder); "
+            "Lpz_vgizq = min(L_pest_vgizq + 0.5*d_vgizq, 3*bf_vgizq)"
+        )
     step_1_notes = [
         {
             "step": "1",
@@ -2328,11 +2369,7 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
             "clause": "Section 2.3.4 (8)",
             "description": "Protected zone length measured from column face",
             "beam_connection_sides": case.design_factors.beam_connection_sides,
-            "formula": str(pz_der["formula"]),
-            "candidate_a_label": str(pz_der["candidate_a_label"]),
-            "candidate_a": pz_der["candidate_a"].model_dump(),
-            "candidate_b_label": str(pz_der["candidate_b_label"]),
-            "candidate_b": pz_der["candidate_b"].model_dump(),
+            "formula": pz_formula,
             "protected_zone_length": pz_der["lpz"].model_dump(),
             "protected_zone_length_vgder": pz_der["lpz"].model_dump(),
             "protected_zone_length_vgizq": (
@@ -2345,26 +2382,21 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
             "scope": "column",
             "clause": "Section 6.3 (2)",
             "description": "End-plate connection location on column",
-            "requirement": "The end plate shall be connected to the flange of the column.",
+            "requirement": "La placa de extremo debe conectarse al ala de la columna.",
         },
         {
             "step": "1",
             "id": "section_6_3.end_plate_height_derived",
-            "scope": "end_plate",
+            "scope": "end_plate_der",
             "clause": "Section 6.3",
-            "description": "Derived end-plate height reference",
-            "requirement": "hp = d + 2*pfo + 2*de",
-            "formula": "hp = d + 2*pfo + 2*de",
-            "candidate_a_label": "d",
-            "candidate_a": beam_depth.model_dump(),
-            "candidate_b_label": "2*pfo + 2*de",
-            "candidate_b": Quantity(value=2.0 * pfo.value + 2.0 * de.value, unit=pfo.unit).model_dump(),
-            "derived_value": end_plate_height.model_dump(),
+            "description": "Altura derivada de placa de extremo",
+            "formula": "Hpe_vgder = d_vgder + 2*pfo_pe_vgder + 2*de_pe_vgder",
+            "hpe_vgder": end_plate_height_der.model_dump(),
         },
         {
             "step": "1",
             "id": "section_6_3.end_plate_geometry_vgder_note",
-            "scope": "end_plate",
+            "scope": "end_plate_der",
             "clause": "Section 6.3 + AISC 360-22 Table J3.3",
             "description": "Geometria end-plate de viga a derecha",
             "requirement": "h1_vgder, h2_vgder, h3_vgder, h4_vgder y dh_vgder para trazabilidad geometrica",
@@ -2381,17 +2413,17 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
         {
             "step": "1",
             "id": "section_6_3.end_plate_stiffener_geometry_note",
-            "scope": "end_plate_stiffener",
+            "scope": "end_plate_stiffener_der",
             "clause": "Section 6.3",
             "description": "Derived end-plate stiffener geometry and detailing edge requirement",
-            "requirement": "hst = pfo + de; Lst = hst/tan(30 deg); clip_st (Cst) = 25 mm; edge detailing >= 25 mm",
-            "formula": "hst = pfo + de; Lst = hst / tan(30 deg)",
-            "candidate_a_label": "hst",
-            "candidate_a": stiffener_height.model_dump(),
-            "candidate_b_label": "Lst",
-            "candidate_b": stiffener_length_derived.model_dump(),
-            "clip_st": _stiffener_clip_distance(case.units_system).model_dump(),
-            "derived_value": Quantity(
+            "formula": (
+                "h_pest_vgder = pfo_pe_vgder + de_pe_vgder; "
+                "L_pest_vgder = h_pest_vgder/tan(30 deg); "
+                "Ed_pest_vgder = 25 mm"
+            ),
+            "h_pest_vgder": stiffener_height_der.model_dump(),
+            "l_pest_vgder": stiffener_length_derived_der.model_dump(),
+            "ed_pest_vgder": Quantity(
                 value=25.0 if case.units_system == UnitSystem.SI else (25.0 / 25.4),
                 unit="mm" if case.units_system == UnitSystem.SI else "in",
             ).model_dump(),
@@ -2439,8 +2471,8 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
             "clause": "Section 4.2",
             "description": "Installation requirements for bolted assemblies",
             "requirement": (
-                "Installation requirements shall be in accordance with the AISC Seismic Provisions and "
-                "the RCSC Specification, except as otherwise specifically indicated in this standard."
+                "Los requisitos de instalacion deben cumplir con las AISC Seismic Provisions y con la "
+                "especificacion RCSC, salvo que este estandar indique lo contrario."
             ),
         },
         {
@@ -2450,7 +2482,7 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
             "clause": "Section 4.3",
             "description": "Quality control and quality assurance for bolted assemblies",
             "requirement": (
-                "Quality control and quality assurance shall be in accordance with the AISC Seismic Provisions."
+                "El control de calidad y el aseguramiento de calidad deben cumplir con las AISC Seismic Provisions."
             ),
         },
     ]
@@ -2460,7 +2492,7 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
             {
                 "step": "1",
                 "id": "section_6_3.end_plate_geometry_vgizq_note",
-                "scope": "end_plate",
+                "scope": "end_plate_izq",
                 "clause": "Section 6.3 + AISC 360-22 Table J3.3",
                 "description": "Geometria end-plate de viga a izquierda",
                 "requirement": "h1_vgizq, h2_vgizq, h3_vgizq, h4_vgizq y dh_vgizq para trazabilidad geometrica",
@@ -2475,23 +2507,85 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
                 "dh_vgizq": standard_hole_diameter.model_dump(),
             },
         )
+        step_1_notes.insert(
+            4,
+            {
+                "step": "1",
+                "id": "section_6_3.end_plate_height_derived_izq",
+                "scope": "end_plate_izq",
+                "clause": "Section 6.3",
+                "description": "Altura derivada de placa de extremo",
+                "formula": "Hpe_vgizq = d_vgizq + 2*pfo_pe_vgizq + 2*de_pe_vgizq",
+                "hpe_vgizq": end_plate_height_izq.model_dump(),
+            },
+        )
+        step_1_notes.insert(
+            7,
+            {
+                "step": "1",
+                "id": "section_6_3.end_plate_stiffener_geometry_vgizq_note",
+                "scope": "end_plate_stiffener_izq",
+                "clause": "Section 6.3",
+                "description": "Derived end-plate stiffener geometry and detailing edge requirement",
+                "formula": (
+                    "h_pest_vgizq = pfo_pe_vgizq + de_pe_vgizq; "
+                    "L_pest_vgizq = h_pest_vgizq/tan(30 deg); "
+                    "Ed_pest_vgizq = 25 mm"
+                ),
+                "h_pest_vgizq": stiffener_height_izq.model_dump() if stiffener_height_izq is not None else None,
+                "l_pest_vgizq": (
+                    stiffener_length_derived_izq.model_dump() if stiffener_length_derived_izq is not None else None
+                ),
+                "ed_pest_vgizq": Quantity(
+                    value=25.0 if case.units_system == UnitSystem.SI else (25.0 / 25.4),
+                    unit="mm" if case.units_system == UnitSystem.SI else "in",
+                ).model_dump(),
+            },
+        )
 
     span_to_depth_limit = 7.0 if beam_ductility == "high" else 5.0
     frame_system = "SMF" if beam_ductility == "high" else "IMF"
-    clear_span_to_depth_ratio = Quantity(
-        value=beam_clear_span_length.value / beam_depth.value,
+    clear_span_to_depth_ratio_der = Quantity(
+        value=beam_clear_span_length_der.value / beam_profile_der["d"].value,
         unit="ratio",
     )
-    beam_flange_ratio = compute_flange_slenderness_ratio(
-        flange_width=beam_profile["bf"],
-        flange_thickness=beam_profile["tf"],
+    clear_span_to_depth_ratio_izq = (
+        Quantity(
+            value=beam_clear_span_length_izq.value / beam_profile_izq["d"].value,
+            unit="ratio",
+        )
+        if (beam_clear_span_length_izq is not None and beam_profile_izq is not None)
+        else None
+    )
+    beam_flange_ratio_der = compute_flange_slenderness_ratio(
+        flange_width=beam_profile_der["bf"],
+        flange_thickness=beam_profile_der["tf"],
         unit_system=case.units_system,
     )
-    beam_web_ratio, _ = compute_web_slenderness_ratio(
-        section_depth=beam_profile["d"],
-        k_design=_profile_kdes(beam_profile, role="beam", rule_binding=rule_binding),
-        web_thickness=beam_profile["tw"],
+    beam_flange_ratio_izq = (
+        compute_flange_slenderness_ratio(
+            flange_width=beam_profile_izq["bf"],
+            flange_thickness=beam_profile_izq["tf"],
+            unit_system=case.units_system,
+        )
+        if beam_profile_izq is not None
+        else None
+    )
+    beam_web_ratio_der, _ = compute_web_slenderness_ratio(
+        section_depth=beam_profile_der["d"],
+        k_design=_profile_kdes(beam_profile_der, role="beam", rule_binding=rule_binding),
+        web_thickness=beam_profile_der["tw"],
         unit_system=case.units_system,
+    )
+    beam_web_ratio_izq, _ = (
+        compute_web_slenderness_ratio(
+            section_depth=beam_profile_izq["d"],
+            k_design=_profile_kdes(beam_profile_izq, role="beam", rule_binding=rule_binding),
+            web_thickness=beam_profile_izq["tw"],
+            unit_system=case.units_system,
+        )
+        if beam_profile_izq is not None
+        else (None, None)
     )
     beam_flange_limit = compute_flange_slenderness_limit(
         elastic_modulus=elastic_modulus,
@@ -2542,110 +2636,248 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
     )
     if case.connection_type == "bseep_8es":
         stc_min = Quantity(value=pfo.value + pb.value + de.value + stc_margin.value, unit=stc.unit)
-        stc_formula = "Stc >= pfo + pb + de + 12.5 mm"
+        stc_limit_symbol = "pfo_pe_vgder + pb_pe_vgder + de_pe_vgder + 12.5 mm"
     else:
         stc_min = Quantity(value=pfo.value + de.value + stc_margin.value, unit=stc.unit)
-        stc_formula = "Stc >= pfo + de + 12.5 mm"
+        stc_limit_symbol = "pfo_pe_vgder + de_pe_vgder + 12.5 mm"
+    stc_check_payload: dict[str, Any] | None = None
+    if beam_connection_sides == "both_sides":
+        if case.connection_type == "bseep_8es":
+            stc_verification_text = (
+                "St_col >= pfo_pe_vgder + pb_pe_vgder + de_pe_vgder + 12.5 mm; "
+                "St_col >= pfo_pe_vgizq + pb_pe_vgizq + de_pe_vgizq + 12.5 mm; "
+                f"{stc.value:.3f} {stc.unit} >= {stc_min.value:.3f} {stc.unit}; "
+                f"{stc.value:.3f} {stc.unit} >= {stc_min.value:.3f} {stc.unit}"
+            )
+        else:
+            stc_verification_text = (
+                "St_col >= pfo_pe_vgder + de_pe_vgder + 12.5 mm; "
+                "St_col >= pfo_pe_vgizq + de_pe_vgizq + 12.5 mm; "
+                f"{stc.value:.3f} {stc.unit} >= {stc_min.value:.3f} {stc.unit}; "
+                f"{stc.value:.3f} {stc.unit} >= {stc_min.value:.3f} {stc.unit}"
+            )
+        stc_check_payload = _step1_compound_limit(
+            check_id="section_6_3_1.column_stc_minimum_requirement",
+            scope="column",
+            clause="Section 6.3.1 (column top clearance criterion)",
+            description="Proyeccion de columna minima por encima de las vigas",
+            calculated_symbol="St_col",
+            verification_text=stc_verification_text,
+            passes=stc.value >= stc_min.value,
+            calculated=stc,
+            minimum=stc_min,
+        )
     s_threshold = Quantity(value=0.5 * math.sqrt(bcf.value * g.value), unit=bcf.unit)
     if case.connection_type == "bseep_8es":
         sc = Quantity(value=stc.value - pfo.value - pb.value, unit=stc.unit)
-        sc_formula = "Sc = Stc - pfo - pb"
+        sc_formula = "Sc = St_col - pfo - pb"
     else:
         sc = Quantity(value=stc.value - pfo.value, unit=stc.unit)
-        sc_formula = "Sc = Stc - pfo"
+        sc_formula = "Sc = St_col - pfo"
     sc_pass = sc.value > s_threshold.value
 
-    beam_limits = [
+    beam_shape_limits: list[dict[str, Any]] = []
+    if beam_connection_sides == "both_sides":
+        beam_shape_limits.append(
+            _step1_shape_family_limit(
+                check_id="beam_izq.shape_family",
+                scope="beam_izq",
+                clause="Section 2.3.4",
+                description="Familia de perfil de viga permitida para precalificacion (viga izquierda)",
+                calculated_symbol="perfil_vgizq",
+                limit_symbol="{W, HEA, HEB, IPE}",
+                shape_text=_beam_shape_by_side(case, "izq"),
+                allowed_families=allowed_shape_families,
+            )
+        )
+    beam_shape_limits.append(
         _step1_shape_family_limit(
-            check_id="beam.shape_family",
-            scope="beam",
+            check_id="beam_der.shape_family",
+            scope="beam_der",
             clause="Section 2.3.4",
-            description="Beam profile family allowed for prequalification",
-            calculated_symbol="shape_beam",
+            description="Familia de perfil de viga permitida para precalificacion (viga derecha)",
+            calculated_symbol="perfil_vgder",
             limit_symbol="{W, HEA, HEB, IPE}",
-            shape_text=case.sections.beam_shape,
+            shape_text=_beam_shape_by_side(case, "der"),
             allowed_families=allowed_shape_families,
-        ),
-        _step1_limit(
-            check_id="beam.bp_ge_bf_plus_margin",
-            scope="beam",
-            clause="Section 6.3 / Table 6.1",
-            description="End-plate width vs beam flange width",
-            calculated_symbol="bp",
-            limit_symbol="bf + margin",
-            calculated=bp,
-            limit=min_bp,
-            comparison="ge",
-        ),
-        _step1_limit(
-            check_id="beam.bolt_gage_g_ge_3db",
-            scope="beam",
-            clause="Section 6.3 / Table 6.1",
-            description="Bolt gage minimum spacing",
-            calculated_symbol="g",
-            limit_symbol="3db",
-            calculated=g,
-            limit=min_spacing,
-            comparison="ge",
-        ),
-        _step1_limit(
-            check_id="section_2_3_4.no_shear_connectors_zone",
-            scope="beam",
-            clause="Section 2.3.4 (2)",
-            description="Length without shear connectors from column face",
-            calculated_symbol="Lsc",
-            limit_symbol="1.5d",
-            calculated=shear_connector_free_length,
-            limit=Quantity(value=1.5 * beam_depth.value, unit=beam_depth.unit),
-            comparison="ge",
-        ),
-        _step1_compound_limit(
-            check_id="section_6_3_1.beam_sc_greater_than_s_threshold",
-            scope="beam",
-            clause="Section 6.3.1 (beam clearance criterion)",
-            description="Beam clearance criterion using Sc and S threshold",
-            calculated_symbol="Sc",
-            verification_text=(
-                f"{sc_formula}; S = 0.5*sqrt(bcf*g); "
-                f"Sc > S => {sc.value:.3f} {sc.unit} > {s_threshold.value:.3f} {s_threshold.unit}"
+        )
+    )
+
+    beam_limits: list[dict[str, Any]] = []
+    beam_limits.extend(beam_shape_limits)
+    if beam_connection_sides == "both_sides" and beam_profile_izq is not None and clear_span_to_depth_ratio_izq is not None:
+        beam_limits.extend(
+            [
+                _step1_limit(
+                    check_id="beam_izq.bp_ge_bf_plus_margin",
+                    scope="beam_izq",
+                    clause="Section 6.3 / Table 6.1",
+                    description="End-plate width vs beam flange width (left beam)",
+                    calculated_symbol="bp_pe_vgizq",
+                    limit_symbol=f"bf_vgizq + margin ({bp_margin_mm_label})",
+                    calculated=bp,
+                    limit=Quantity(
+                        value=beam_profile_izq["bf"].value + bp_margin,
+                        unit=beam_profile_izq["bf"].unit,
+                    ),
+                    comparison="ge",
+                ),
+                _step1_limit(
+                    check_id="beam_izq.bolt_gage_g_ge_3db",
+                    scope="beam_izq",
+                    clause="Section 6.3 / Table 6.1",
+                    description="Bolt gage minimum spacing (left beam)",
+                    calculated_symbol="g_b_vgizq",
+                    limit_symbol="3db",
+                    calculated=g,
+                    limit=min_spacing,
+                    comparison="ge",
+                ),
+                _step1_limit(
+                    check_id="section_2_3_4.no_shear_connectors_zone_izq",
+                    scope="beam_izq",
+                    clause="Section 2.3.4 (2)",
+                    description="Length without shear connectors from column face (left beam)",
+                    calculated_symbol="Lnc_vgizq",
+                    limit_symbol="1.5d_vgizq",
+                    calculated=shear_connector_free_length_izq,
+                    limit=Quantity(value=1.5 * beam_profile_izq["d"].value, unit=beam_profile_izq["d"].unit),
+                    comparison="ge",
+                ),
+                _step1_compound_limit(
+                    check_id="section_6_3_1.beam_sc_greater_than_s_threshold_izq",
+                    scope="beam_izq",
+                    clause="Section 6.3.1 (beam clearance criterion)",
+                    description="Beam clearance criterion using Sc and S threshold (left beam)",
+                    calculated_symbol="Sc_vgizq",
+                    verification_text=(
+                        f"{sc_formula}; S = 0.5*sqrt(bcf*g); "
+                        f"Sc_vgizq > S => {sc.value:.3f} {sc.unit} > {s_threshold.value:.3f} {s_threshold.unit}"
+                    ),
+                    passes=sc_pass,
+                    calculated=sc,
+                ),
+                _step1_limit(
+                    check_id="section_2_3_4.clear_span_to_depth_ratio_izq",
+                    scope="beam_izq",
+                    clause="Section 2.3.4 (5)",
+                    description="Clear span-to-depth ratio by frame system (left beam)",
+                    calculated_symbol="Llb_vgizq/d_vgizq",
+                    limit_symbol=f"{span_to_depth_limit:.0f} ({frame_system})",
+                    calculated=clear_span_to_depth_ratio_izq,
+                    limit=Quantity(value=span_to_depth_limit, unit="ratio"),
+                    comparison="ge",
+                ),
+                _step1_limit(
+                    check_id="section_2_3_4.beam_flange_width_to_thickness_izq",
+                    scope="beam_izq",
+                    clause="AISC 341-22w / AISC 358-22w Section 2.3.4 (6) + AISC Seismic Provisions",
+                    description="Beam flange width-to-thickness compactness (left beam)",
+                    calculated_symbol="lambda_f_vgizq",
+                    limit_symbol="lambda_f_limit",
+                    calculated=Quantity(value=beam_flange_ratio_izq, unit="ratio"),
+                    limit=Quantity(value=beam_flange_limit, unit="ratio"),
+                    comparison="le",
+                ),
+                _step1_limit(
+                    check_id="section_2_3_4.beam_web_width_to_thickness_izq",
+                    scope="beam_izq",
+                    clause="AISC 341-22w / AISC 358-22w Section 2.3.4 (6) + AISC Seismic Provisions",
+                    description="Beam web width-to-thickness compactness (left beam)",
+                    calculated_symbol="lambda_w_vgizq",
+                    limit_symbol="lambda_w_limit",
+                    calculated=Quantity(value=beam_web_ratio_izq, unit="ratio"),
+                    limit=Quantity(value=beam_web_limit, unit="ratio"),
+                    comparison="le",
+                ),
+            ]
+        )
+    beam_limits.extend(
+        [
+            _step1_limit(
+                check_id="beam_der.bp_ge_bf_plus_margin",
+                scope="beam_der",
+                clause="Section 6.3 / Table 6.1",
+                description="End-plate width vs beam flange width (right beam)",
+                calculated_symbol="bp_pe_vgder",
+                limit_symbol=f"bf_vgder + margin ({bp_margin_mm_label})",
+                calculated=bp,
+                limit=Quantity(
+                    value=beam_profile_der["bf"].value + bp_margin,
+                    unit=beam_profile_der["bf"].unit,
+                ),
+                comparison="ge",
             ),
-            passes=sc_pass,
-            calculated=sc,
-        ),
-        _step1_limit(
-            check_id="section_2_3_4.clear_span_to_depth_ratio",
-            scope="beam",
-            clause="Section 2.3.4 (5)",
-            description="Clear span-to-depth ratio by frame system",
-            calculated_symbol="Lclear/d",
-            limit_symbol=f"{span_to_depth_limit:.0f} ({frame_system})",
-            calculated=clear_span_to_depth_ratio,
-            limit=Quantity(value=span_to_depth_limit, unit="ratio"),
-            comparison="ge",
-        ),
-        _step1_limit(
-            check_id="section_2_3_4.beam_flange_width_to_thickness",
-            scope="beam",
-            clause="Section 2.3.4 (6) + AISC Seismic Provisions",
-            description="Beam flange width-to-thickness compactness",
-            calculated_symbol="lambda_f_beam",
-            limit_symbol="lambda_f_limit",
-            calculated=Quantity(value=beam_flange_ratio, unit="ratio"),
-            limit=Quantity(value=beam_flange_limit, unit="ratio"),
-            comparison="le",
-        ),
-        _step1_limit(
-            check_id="section_2_3_4.beam_web_width_to_thickness",
-            scope="beam",
-            clause="Section 2.3.4 (6) + AISC Seismic Provisions",
-            description="Beam web width-to-thickness compactness",
-            calculated_symbol="lambda_w_beam",
-            limit_symbol="lambda_w_limit",
-            calculated=Quantity(value=beam_web_ratio, unit="ratio"),
-            limit=Quantity(value=beam_web_limit, unit="ratio"),
-            comparison="le",
-        ),
-    ]
+            _step1_limit(
+                check_id="beam_der.bolt_gage_g_ge_3db",
+                scope="beam_der",
+                clause="Section 6.3 / Table 6.1",
+                description="Bolt gage minimum spacing (right beam)",
+                calculated_symbol="g_b_vgder",
+                limit_symbol="3db",
+                calculated=g,
+                limit=min_spacing,
+                comparison="ge",
+            ),
+            _step1_limit(
+                check_id="section_2_3_4.no_shear_connectors_zone_der",
+                scope="beam_der",
+                clause="Section 2.3.4 (2)",
+                description="Length without shear connectors from column face (right beam)",
+                calculated_symbol="Lnc_vgder",
+                limit_symbol="1.5d_vgder",
+                calculated=shear_connector_free_length_der,
+                limit=Quantity(value=1.5 * beam_profile_der["d"].value, unit=beam_profile_der["d"].unit),
+                comparison="ge",
+            ),
+            _step1_compound_limit(
+                check_id="section_6_3_1.beam_sc_greater_than_s_threshold_der",
+                scope="beam_der",
+                clause="Section 6.3.1 (beam clearance criterion)",
+                description="Beam clearance criterion using Sc and S threshold (right beam)",
+                calculated_symbol="Sc_vgder",
+                verification_text=(
+                    f"{sc_formula}; S = 0.5*sqrt(bcf*g); "
+                    f"Sc_vgder > S => {sc.value:.3f} {sc.unit} > {s_threshold.value:.3f} {s_threshold.unit}"
+                ),
+                passes=sc_pass,
+                calculated=sc,
+            ),
+            _step1_limit(
+                check_id="section_2_3_4.clear_span_to_depth_ratio_der",
+                scope="beam_der",
+                clause="Section 2.3.4 (5)",
+                description="Clear span-to-depth ratio by frame system (right beam)",
+                calculated_symbol="Llb_vgder/d_vgder",
+                limit_symbol=f"{span_to_depth_limit:.0f} ({frame_system})",
+                calculated=clear_span_to_depth_ratio_der,
+                limit=Quantity(value=span_to_depth_limit, unit="ratio"),
+                comparison="ge",
+            ),
+            _step1_limit(
+                check_id="section_2_3_4.beam_flange_width_to_thickness_der",
+                scope="beam_der",
+                clause="AISC 341-22w / AISC 358-22w Section 2.3.4 (6) + AISC Seismic Provisions",
+                description="Beam flange width-to-thickness compactness (right beam)",
+                calculated_symbol="lambda_f_vgder",
+                limit_symbol="lambda_f_limit",
+                calculated=Quantity(value=beam_flange_ratio_der, unit="ratio"),
+                limit=Quantity(value=beam_flange_limit, unit="ratio"),
+                comparison="le",
+            ),
+            _step1_limit(
+                check_id="section_2_3_4.beam_web_width_to_thickness_der",
+                scope="beam_der",
+                clause="AISC 341-22w / AISC 358-22w Section 2.3.4 (6) + AISC Seismic Provisions",
+                description="Beam web width-to-thickness compactness (right beam)",
+                calculated_symbol="lambda_w_vgder",
+                limit_symbol="lambda_w_limit",
+                calculated=Quantity(value=beam_web_ratio_der, unit="ratio"),
+                limit=Quantity(value=beam_web_limit, unit="ratio"),
+                comparison="le",
+            ),
+        ]
+    )
 
     column_depth_max = Quantity(
         value=36.0 if case.units_system == UnitSystem.US else 920.0,
@@ -2694,21 +2926,25 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
             calculated_text=str(slab_connection_condition),
             expected_text="isolated",
         ),
-        _step1_limit(
-            check_id="section_6_3_1.column_stc_minimum_requirement",
-            scope="column",
-            clause="Section 6.3.1 (column top clearance criterion)",
-            description=stc_formula,
-            calculated_symbol="Stc",
-            limit_symbol="Stc_min",
-            calculated=stc,
-            limit=stc_min,
-            comparison="ge",
+        (
+            stc_check_payload
+            if stc_check_payload is not None
+            else _step1_limit(
+                check_id="section_6_3_1.column_stc_minimum_requirement",
+                scope="column",
+                clause="Section 6.3.1 (column top clearance criterion)",
+                description="Proyeccion de columna minima por encima de las vigas",
+                calculated_symbol="St_col",
+                limit_symbol=stc_limit_symbol,
+                calculated=stc,
+                limit=stc_min,
+                comparison="ge",
+            )
         ),
         _step1_limit(
             check_id="section_2_3_4.column_flange_width_to_thickness",
             scope="column",
-            clause="Section 2.3.4 (6) + AISC Seismic Provisions",
+            clause="AISC 341-22w / AISC 358-22w Section 2.3.4 (6) + AISC Seismic Provisions",
             description="Column flange width-to-thickness compactness",
             calculated_symbol="lambda_f_col",
             limit_symbol="lambda_f_limit",
@@ -2719,7 +2955,7 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
         _step1_limit(
             check_id="section_2_3_4.column_web_width_to_thickness",
             scope="column",
-            clause="Section 2.3.4 (6) + AISC Seismic Provisions",
+            clause="AISC 341-22w / AISC 358-22w Section 2.3.4 (6) + AISC Seismic Provisions",
             description="Column web width-to-thickness compactness",
             calculated_symbol="lambda_w_col",
             limit_symbol="lambda_w_limit",
@@ -2733,102 +2969,207 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
     end_plate_limits: list[dict[str, Any]] = []
     if bp_bounds is not None:
         bp_min, bp_max = bp_bounds
-        bp_plus_beam_margin = Quantity(value=bf.value + bp_margin, unit=bf.unit)
-        bp_governing_max = Quantity(
-            value=min(bp_max.value, bp_plus_beam_margin.value, bcf.value),
-            unit=bp.unit,
-        )
-        bp_pass = (bp.value <= bp_plus_beam_margin.value) and (bp.value <= bcf.value) and (bp.value >= bp_min.value)
         beam_margin_label = (
             f"{bp_margin:.0f} mm" if case.units_system == UnitSystem.SI else f"{bp_margin:.3f} in"
         )
+
+        bp_plus_beam_margin_der = Quantity(value=beam_profile_der["bf"].value + bp_margin, unit=beam_profile_der["bf"].unit)
+        bp_governing_max_der = Quantity(
+            value=min(bp_max.value, bp_plus_beam_margin_der.value, bcf.value),
+            unit=bp.unit,
+        )
+        bp_pass_der = (
+            (bp.value <= bp_plus_beam_margin_der.value)
+            and (bp.value <= bcf.value)
+            and (bp.value >= bp_min.value)
+        )
         end_plate_limits.append(
             _step1_compound_limit(
-                check_id="section_6_3.end_plate_width_dual_limit",
-                scope="end_plate",
+                check_id="section_6_3.end_plate_width_dual_limit_der",
+                scope="end_plate_der",
                 clause="Section 6.3 / Table 6.1",
-                description="End-plate width explicit dual inequalities",
-                calculated_symbol="bp",
+                description="End-plate width explicit dual inequalities (right beam)",
+                calculated_symbol="bp_pe_vgder",
                 verification_text=(
-                    f"bp <= bbf + {beam_margin_label}; "
-                    "bp <= bcf"
+                    f"bp_pe_vgder <= bbf_vgder + {beam_margin_label}; "
+                    "bp_pe_vgder <= bcf"
                 ),
-                passes=bp_pass,
+                passes=bp_pass_der,
                 calculated=bp,
                 minimum=bp_min,
-                maximum=bp_governing_max,
+                maximum=bp_governing_max_der,
             )
         )
 
+        if beam_connection_sides == "both_sides" and beam_profile_izq is not None:
+            bp_plus_beam_margin_izq = Quantity(
+                value=beam_profile_izq["bf"].value + bp_margin,
+                unit=beam_profile_izq["bf"].unit,
+            )
+            bp_governing_max_izq = Quantity(
+                value=min(bp_max.value, bp_plus_beam_margin_izq.value, bcf.value),
+                unit=bp.unit,
+            )
+            bp_pass_izq = (
+                (bp.value <= bp_plus_beam_margin_izq.value)
+                and (bp.value <= bcf.value)
+                and (bp.value >= bp_min.value)
+            )
+            end_plate_limits.append(
+                _step1_compound_limit(
+                    check_id="section_6_3.end_plate_width_dual_limit_izq",
+                    scope="end_plate_izq",
+                    clause="Section 6.3 / Table 6.1",
+                    description="End-plate width explicit dual inequalities (left beam)",
+                    calculated_symbol="bp_pe_vgizq",
+                    verification_text=(
+                        f"bp_pe_vgizq <= bbf_vgizq + {beam_margin_label}; "
+                        "bp_pe_vgizq <= bcf"
+                    ),
+                    passes=bp_pass_izq,
+                    calculated=bp,
+                    minimum=bp_min,
+                    maximum=bp_governing_max_izq,
+                )
+            )
+
     end_plate_stiffener_limits = [
         _step1_compound_limit(
-            check_id="section_6_3.end_plate_stiffener_height_derived",
-            scope="end_plate_stiffener",
+            check_id="section_6_3.end_plate_stiffener_height_derived_der",
+            scope="end_plate_stiffener_der",
             clause="Section 6.3",
-                description="End-plate stiffener height derived from end-plate geometry",
-                calculated_symbol="hst",
+            description="End-plate stiffener height derived from end-plate geometry (right beam)",
+            calculated_symbol="h_pest_vgder",
+            verification_text=(
+                f"h_pest_vgder = pfo_pe_vgder + de_pe_vgder; {stiffener_height_der.value:.3f} {stiffener_height_der.unit} = "
+                f"{pfo_der.value:.3f} {pfo_der.unit} + {de_der.value:.3f} {de_der.unit}"
+            ),
+            passes=stiffener_height_der.value > 0.0,
+            calculated=stiffener_height_der,
+        )
+    ]
+    if beam_connection_sides == "both_sides" and stiffener_height_izq is not None and pfo_izq is not None and de_izq is not None:
+        end_plate_stiffener_limits.append(
+            _step1_compound_limit(
+                check_id="section_6_3.end_plate_stiffener_height_derived_izq",
+                scope="end_plate_stiffener_izq",
+                clause="Section 6.3",
+                description="End-plate stiffener height derived from end-plate geometry (left beam)",
+                calculated_symbol="h_pest_vgizq",
                 verification_text=(
-                    f"hst = pfo + de; {stiffener_height.value:.3f} {stiffener_height.unit} = "
-                    f"{pfo.value:.3f} {pfo.unit} + {de.value:.3f} {de.unit}"
+                    f"h_pest_vgizq = pfo_pe_vgizq + de_pe_vgizq; {stiffener_height_izq.value:.3f} {stiffener_height_izq.unit} = "
+                    f"{pfo_izq.value:.3f} {pfo_izq.unit} + {de_izq.value:.3f} {de_izq.unit}"
                 ),
-                passes=stiffener_height.value > 0.0,
-                calculated=stiffener_height,
+                passes=stiffener_height_izq.value > 0.0,
+                calculated=stiffener_height_izq,
             )
-        ]
+        )
     if case.connection_type in {"bseep_4es", "bseep_8es"}:
         ts = _require(case, "geometry.stiffener_thickness", rule_binding)
-        stiffener_fy = _require(case, "materials.stiffener_fy", rule_binding)
+        stiffener_fy_base = _require(case, "materials.stiffener_fy", rule_binding)
+        stiffener_fy_der = case.materials.stiffener_fy_vgder or stiffener_fy_base
+        stiffener_fy_izq = case.materials.stiffener_fy_vgizq or stiffener_fy_der
         tbw = beam_profile["tw"]
         g_min_stiffener = Quantity(value=(2.0 * min_edge.value) + ts.value, unit=g.unit)
         ts_required = compute_required_stiffener_thickness(
             beam_web_thickness=tbw,
             beam_fy=beam_fy,
-            stiffener_fy=stiffener_fy,
+            stiffener_fy=stiffener_fy_der,
             unit_system=case.units_system,
         )
         slenderness_ratio = stiffener_height.value / ts.value
         slenderness_limit = compute_stiffener_slenderness_ratio_limit(
             elastic_modulus=elastic_modulus,
-            stiffener_fy=stiffener_fy,
+            stiffener_fy=stiffener_fy_der,
             unit_system=case.units_system,
         )
         end_plate_stiffener_limits.extend(
             [
                 _step1_limit(
-                    check_id="section_6_7_1.stiffener_thickness_minimum",
-                    scope="end_plate_stiffener",
+                    check_id="section_6_7_1.stiffener_thickness_minimum_der",
+                    scope="end_plate_stiffener_der",
                     clause="Section 6.7.1 Eq. (6.7-9)",
-                    description="Stiffener thickness minimum requirement",
-                    calculated_symbol="ts",
-                    limit_symbol="tbw*(Fyb/Fys)",
+                    description="Stiffener thickness minimum requirement (right beam)",
+                    calculated_symbol="t_pest_vgder",
+                    limit_symbol="tw_vgder*(Fy_vgder/Fy_pest_vgder); Fy_pest_vgder <- tipo_acero_pest_vgder",
                     calculated=ts,
                     limit=ts_required,
                     comparison="ge",
                 ),
                 _step1_limit(
-                    check_id="section_6_7_1.stiffener_local_buckling_limit",
-                    scope="end_plate_stiffener",
+                    check_id="section_6_7_1.stiffener_local_buckling_limit_der",
+                    scope="end_plate_stiffener_der",
                     clause="Section 6.7.1 Eq. (6.7-10)",
-                    description="Stiffener local buckling width-thickness limit",
-                    calculated_symbol="hst/ts",
-                    limit_symbol="0.56*sqrt(E/Fys)",
+                    description="Stiffener local buckling width-thickness limit (right beam)",
+                    calculated_symbol="h_pest_vgder/t_pest_vgder",
+                    limit_symbol="0.56*sqrt(E_vgder/Fy_pest_vgder); Fy_pest_vgder <- tipo_acero_pest_vgder",
                     calculated=Quantity(value=slenderness_ratio, unit="ratio"),
                     limit=Quantity(value=slenderness_limit, unit="ratio"),
                     comparison="le",
                 ),
                 _step1_limit(
-                    check_id="section_6_3_1.stiffener_bolt_gage_clearance",
-                    scope="end_plate_stiffener",
+                    check_id="section_6_3_1.stiffener_bolt_gage_clearance_der",
+                    scope="end_plate_stiffener_der",
                     clause="Section 6.3 (stiffened) + AISC 360 Table J3.4",
-                    description="Bolt gage clearance with stiffener thickness",
-                    calculated_symbol="g",
-                    limit_symbol="2emin + ts",
+                    description="Bolt gage clearance with stiffener thickness (right beam)",
+                    calculated_symbol="g_b_vgder",
+                    limit_symbol="2emin + t_pest_vgder",
                     calculated=g,
                     limit=g_min_stiffener,
                     comparison="ge",
                 ),
             ]
         )
+        if beam_connection_sides == "both_sides" and beam_profile_izq is not None and stiffener_height_izq is not None:
+            ts_required_izq = compute_required_stiffener_thickness(
+                beam_web_thickness=beam_profile_izq["tw"],
+                beam_fy=beam_fy,
+                stiffener_fy=stiffener_fy_izq,
+                unit_system=case.units_system,
+            )
+            slenderness_ratio_izq = stiffener_height_izq.value / ts.value
+            slenderness_limit_izq = compute_stiffener_slenderness_ratio_limit(
+                elastic_modulus=elastic_modulus,
+                stiffener_fy=stiffener_fy_izq,
+                unit_system=case.units_system,
+            )
+            end_plate_stiffener_limits.extend(
+                [
+                    _step1_limit(
+                        check_id="section_6_7_1.stiffener_thickness_minimum_izq",
+                        scope="end_plate_stiffener_izq",
+                        clause="Section 6.7.1 Eq. (6.7-9)",
+                        description="Stiffener thickness minimum requirement (left beam)",
+                        calculated_symbol="t_pest_vgizq",
+                        limit_symbol="tw_vgizq*(Fy_vgizq/Fy_pest_vgizq); Fy_pest_vgizq <- tipo_acero_pest_vgizq",
+                        calculated=ts,
+                        limit=ts_required_izq,
+                        comparison="ge",
+                    ),
+                    _step1_limit(
+                        check_id="section_6_7_1.stiffener_local_buckling_limit_izq",
+                        scope="end_plate_stiffener_izq",
+                        clause="Section 6.7.1 Eq. (6.7-10)",
+                        description="Stiffener local buckling width-thickness limit (left beam)",
+                        calculated_symbol="h_pest_vgizq/t_pest_vgizq",
+                        limit_symbol="0.56*sqrt(E_vgizq/Fy_pest_vgizq); Fy_pest_vgizq <- tipo_acero_pest_vgizq",
+                        calculated=Quantity(value=slenderness_ratio_izq, unit="ratio"),
+                        limit=Quantity(value=slenderness_limit_izq, unit="ratio"),
+                        comparison="le",
+                    ),
+                    _step1_limit(
+                        check_id="section_6_3_1.stiffener_bolt_gage_clearance_izq",
+                        scope="end_plate_stiffener_izq",
+                        clause="Section 6.3 (stiffened) + AISC 360 Table J3.4",
+                        description="Bolt gage clearance with stiffener thickness (left beam)",
+                        calculated_symbol="g_b_vgizq",
+                        limit_symbol="2emin + t_pest_vgizq",
+                        calculated=g,
+                        limit=g_min_stiffener,
+                        comparison="ge",
+                    ),
+                ]
+            )
 
     continuity_plate_limits: list[dict[str, object]] = []
     continuity_plate_weld_thickness_limit = Quantity(
@@ -3134,8 +3475,8 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
                 "beam_clear_span_length": beam_clear_span_length.model_dump(),
                 "beam_shear_connector_free_length_from_column_face": shear_connector_free_length.model_dump(),
                 "column_slab_connection_condition": slab_connection_condition,
-                "column_end_distance_to_beam_flange_stc": stc.model_dump(),
-                "column_stc_min": stc_min.model_dump(),
+                "column_end_distance_to_beam_flange_st_col": stc.model_dump(),
+                "column_st_col_min": stc_min.model_dump(),
                 "beam_sc": sc.model_dump(),
                 "beam_s_threshold": s_threshold.model_dump(),
                 "beam_ductility_demand": beam_ductility,
@@ -3152,12 +3493,17 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
                 "minimum_bp_bf_plus_margin": min_bp.model_dump(),
                 "bp_margin": bp_margin,
                 "minimum_edge_distance_j34": min_edge.model_dump(),
-                "clear_span_to_depth_ratio": clear_span_to_depth_ratio.model_dump(),
+                "clear_span_to_depth_ratio_der": clear_span_to_depth_ratio_der.model_dump(),
+                "clear_span_to_depth_ratio_izq": (
+                    clear_span_to_depth_ratio_izq.model_dump() if clear_span_to_depth_ratio_izq is not None else None
+                ),
                 "clear_span_to_depth_limit": {"value": span_to_depth_limit, "unit": "ratio"},
                 "frame_system_for_span_ratio": frame_system,
-                "beam_flange_compactness_ratio": beam_flange_ratio,
+                "beam_flange_compactness_ratio_der": beam_flange_ratio_der,
+                "beam_flange_compactness_ratio_izq": beam_flange_ratio_izq,
                 "beam_flange_compactness_limit": beam_flange_limit,
-                "beam_web_compactness_ratio": beam_web_ratio,
+                "beam_web_compactness_ratio_der": beam_web_ratio_der,
+                "beam_web_compactness_ratio_izq": beam_web_ratio_izq,
                 "beam_web_compactness_limit": beam_web_limit,
                 "column_flange_compactness_ratio": column_flange_ratio,
                 "column_flange_compactness_limit": column_flange_limit,
