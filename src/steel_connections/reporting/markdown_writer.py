@@ -2297,6 +2297,7 @@ def render_splice_methods_table_markdown(result: DetailedRunResult) -> str:
     super_geom_rows: list[list[object]] = []
     super_force_rows: list[list[object]] = []
     super_summary_rows: list[list[object]] = []
+    super_total_force_by_tag: dict[str, tuple[float, float]] = {}
     if bolts and bolt_count is not None and ip_in2 is not None and abs(ip_in2) > 1e-12:
         fx_dir = -vx_kip / bolt_count
         fy_dir = -vy_kip / bolt_count
@@ -2315,11 +2316,12 @@ def render_splice_methods_table_markdown(result: DetailedRunResult) -> str:
             )
             super_force_rows.append([bolt.get("row"), tag, _num(fx_dir), _num(fy_dir), _num(fx_t), _num(fy_t), _num(r)])
             super_summary_rows.append([bolt.get("row"), tag, _num(fx), _num(fy), _num(r)])
+            if tag is not None:
+                super_total_force_by_tag[_format_text(tag)] = (fx, fy)
 
     ecr_geom_rows: list[list[object]] = []
     ecr_force_rows: list[list[object]] = []
-    center_x_ecr = _to_float(method_ecr.get("center_x_in"))
-    center_y_ecr = _to_float(method_ecr.get("center_y_in"))
+    ecr_summary_rows: list[list[object]] = []
     ax_ecr = None
     ay_ecr = None
     x_ecr_formula = None
@@ -2337,13 +2339,27 @@ def render_splice_methods_table_markdown(result: DetailedRunResult) -> str:
         if y_cg is not None:
             y_ecr_formula = y_cg + ay_ecr
 
-    bolt_forces_ecr = method_ecr.get("bolt_forces")
-    forces_ecr_by_tag: dict[str, dict] = {}
-    if isinstance(bolt_forces_ecr, list):
-        for bf in bolt_forces_ecr:
-            if isinstance(bf, dict):
-                forces_ecr_by_tag[_format_text(bf.get("tag"))] = bf
+    # Unico ECR reportado: el calculado por Insight #1 (formula cerrada).
+    center_x_ecr = x_ecr_formula
+    center_y_ecr = y_ecr_formula
+
     if bolts and center_x_ecr is not None and center_y_ecr is not None:
+        numerator_k = 0.0
+        denominator_k = 0.0
+        for bolt in bolts:
+            tag = _format_text(bolt.get("tag"))
+            x_i = _to_float(bolt.get("x_in")) or 0.0
+            y_i = _to_float(bolt.get("y_in")) or 0.0
+            dx_ecr = x_i - center_x_ecr
+            dy_ecr = y_i - center_y_ecr
+            super_forces = super_total_force_by_tag.get(tag)
+            if super_forces is None:
+                continue
+            fx_total, fy_total = super_forces
+            numerator_k += fx_total * dy_ecr - fy_total * dx_ecr
+            denominator_k += dx_ecr * dx_ecr + dy_ecr * dy_ecr
+        k_ecr = (numerator_k / denominator_k) if denominator_k > 1e-12 else None
+
         for bolt in bolts:
             tag = _format_text(bolt.get("tag"))
             x_i = _to_float(bolt.get("x_in")) or 0.0
@@ -2351,23 +2367,63 @@ def render_splice_methods_table_markdown(result: DetailedRunResult) -> str:
             dx_ecr = x_i - center_x_ecr
             dy_ecr = y_i - center_y_ecr
             d = math.hypot(dx_ecr, dy_ecr)
-            bf = forces_ecr_by_tag.get(tag, {})
+            if k_ecr is not None:
+                fx_ecr = k_ecr * dy_ecr
+                fy_ecr = -k_ecr * dx_ecr
+                r_ecr = math.hypot(fx_ecr, fy_ecr)
+            else:
+                fx_ecr = None
+                fy_ecr = None
+                r_ecr = None
             ecr_geom_rows.append([bolt.get("row"), tag, _num(x_i), _num(y_i), _num(dx_ecr), _num(dy_ecr), _num(d)])
             ecr_force_rows.append(
                 [
                     bolt.get("row"),
                     tag,
-                    _num(bf.get("fx_kip")),
-                    _num(bf.get("fy_kip")),
-                    _num(bf.get("resultant_kip")),
+                    _num(fx_ecr),
+                    _num(fy_ecr),
+                    _num(r_ecr),
                     _num(center_x_ecr),
                     _num(center_y_ecr),
                 ]
             )
+            ecr_summary_rows.append([bolt.get("row"), tag, _num(fx_ecr), _num(fy_ecr), _num(r_ecr)])
 
     icr_iterations = report.get("icr_iterations")
     if not isinstance(icr_iterations, list):
         icr_iterations = []
+    icr_x_final = _to_float(method_icr.get("icr_x_in"))
+    icr_y_final = _to_float(method_icr.get("icr_y_in"))
+    if (icr_x_final is None or icr_y_final is None) and icr_iterations:
+        last_valid_iter = next(
+            (it for it in reversed(icr_iterations) if isinstance(it, dict) and _to_float(it.get("icr_x")) is not None and _to_float(it.get("icr_y")) is not None),
+            None,
+        )
+        if isinstance(last_valid_iter, dict):
+            icr_x_final = _to_float(last_valid_iter.get("icr_x"))
+            icr_y_final = _to_float(last_valid_iter.get("icr_y"))
+
+    icr_coord_rows: list[list[object]] = []
+    prev_x_after = None
+    prev_y_after = None
+    for idx_it, it in enumerate(icr_iterations):
+        if not isinstance(it, dict):
+            continue
+        iteration_idx = _to_float(it.get("iteration"))
+        x_after = _to_float(it.get("icr_x"))
+        y_after = _to_float(it.get("icr_y"))
+        if iteration_idx is None or x_after is None or y_after is None:
+            continue
+        if idx_it == 0:
+            x_est = center_x_ecr if center_x_ecr is not None else x_after
+            y_est = center_y_ecr if center_y_ecr is not None else y_after
+        else:
+            x_est = prev_x_after if prev_x_after is not None else x_after
+            y_est = prev_y_after if prev_y_after is not None else y_after
+        icr_coord_rows.append([_num(iteration_idx), _num(x_est), _num(y_est), _num(x_after), _num(y_after)])
+        prev_x_after = x_after
+        prev_y_after = y_after
+
     mu = _to_float(method_icr.get("law_mu")) or 10.0
     lambda_exp = _to_float(method_icr.get("law_lambda")) or 0.55
     delta_max = _to_float(method_icr.get("law_delta_max")) or 0.34
@@ -2599,13 +2655,10 @@ def render_splice_methods_table_markdown(result: DetailedRunResult) -> str:
             f"- Muz_blt_web: `{_num(mz_kip_in)} kip-in`",
             f"- ax_blt_web: `{_num(ax_ecr)} in`",
             f"- ay_blt_web: `{_num(ay_ecr)} in`",
-            f"- x_ecr_blt_web (por formula): `{_num(x_ecr_formula)} in`",
-            f"- y_ecr_blt_web (por formula): `{_num(y_ecr_formula)} in`",
+            f"- x_ecr_blt_web: `{_num(center_x_ecr)} in`",
+            f"- y_ecr_blt_web: `{_num(center_y_ecr)} in`",
         ]
     )
-    if center_x_ecr is not None and center_y_ecr is not None:
-        lines.append(f"- x_ecr_blt_web (solver): `{_num(center_x_ecr)} in`")
-        lines.append(f"- y_ecr_blt_web (solver): `{_num(center_y_ecr)} in`")
     lines.append("")
     lines.append("### 6.3 Geometria por perno respecto al ECR")
     if not ecr_geom_rows:
@@ -2626,6 +2679,15 @@ def render_splice_methods_table_markdown(result: DetailedRunResult) -> str:
                 f"- `{tag}`: Ru_{row_n}_blt_web_v2=`{fx_val}`, Ru_{row_n}_blt_web_v3=`{fy_val}`, Ru_{row_n}_blt_web=`{r_val}`, "
                 f"x_ecr_blt_web=`{x_ecr}`, y_ecr_blt_web=`{y_ecr}`"
             )
+    lines.append("")
+    lines.append("### 6.5 Resumen de fuerzas en pernos")
+    if not ecr_summary_rows:
+        lines.append("- Sin resumen de fuerzas resultantes para ECR.")
+    else:
+        for row_n, tag, fx_total, fy_total, r_val in ecr_summary_rows:
+            lines.append(
+                f"- `{tag}`: Ru_{row_n}_blt_web_v2=`{fx_total}`, Ru_{row_n}_blt_web_v3=`{fy_total}`, Ru_{row_n}_blt_web=`{r_val}`"
+            )
 
     lines.extend(["", "## 7. Instant Center of Rotation (ICR)", ""])
     lines.append("")
@@ -2637,6 +2699,21 @@ def render_splice_methods_table_markdown(result: DetailedRunResult) -> str:
             "- `phi_i_blt_web = (1-exp(-mu_blt_web*delta_i_blt_web))^lambda_blt_web`",
             "- `sum(phi_i_blt_web*r_icr_i_blt_web)`",
             "- `Rult_blt_web = M_icr_blt_web/sum(phi_i_blt_web*r_icr_i_blt_web)`",
+            "- Coordenadas ICR:",
+            f"- `x_icr_final_blt_web = {_num(icr_x_final)} in`",
+            f"- `y_icr_final_blt_web = {_num(icr_y_final)} in`",
+            "- Coordenadas por iteracion (`estimacion -> resultado`):",
+        ]
+    )
+    if not icr_coord_rows:
+        lines.append("- Sin coordenadas iterativas ICR reportadas.")
+    else:
+        for iter_idx, x_est, y_est, x_after, y_after in icr_coord_rows:
+            lines.append(
+                f"- Iter `{iter_idx}`: estimacion=`({x_est}, {y_est}) in` -> resultado=`({x_after}, {y_after}) in`"
+            )
+    lines.extend(
+        [
             "- Iteraciones del ICR:",
         ]
     )
@@ -2661,7 +2738,7 @@ def render_splice_methods_table_markdown(result: DetailedRunResult) -> str:
                 f"Rult_blt_web=`{rmax_val}`, Cu_blt_web=`{c_val}`, M_icr_blt_web=`{mp_val}`"
             )
 
-    lines.extend(["", "## 8. Bolt Detail ICR por iteracion", ""])
+    lines.extend(["", "### 7.4 Bolt Detail ICR por iteracion", ""])
     if not icr_bolt_rows_a and not icr_bolt_rows_b:
         lines.append("- Sin datos de detalle por iteracion en ICR.")
     else:
@@ -2683,7 +2760,7 @@ def render_splice_methods_table_markdown(result: DetailedRunResult) -> str:
 
         for idx, iter_key in enumerate(iter_keys, start=1):
             lines.append("")
-            lines.append(f"### 8.{idx} Iteracion {iter_key}")
+            lines.append(f"#### 7.4.{idx} Iteracion {iter_key}")
             lines.append("")
             lines.append("- Cinematica por perno:")
             cinematic_rows = cinematic_by_iter.get(iter_key, [])
