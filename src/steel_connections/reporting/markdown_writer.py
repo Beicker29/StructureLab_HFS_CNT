@@ -2239,7 +2239,7 @@ def render_splice_methods_table_markdown(result: DetailedRunResult) -> str:
         mz_kip_in = vy_kip * ex_in - vx_kip * ey_in
 
     p_kip = math.hypot(vx_kip, vy_kip)
-    theta_deg = math.degrees(math.atan2(vy_kip, vx_kip)) if p_kip > 1e-12 else 0.0
+    theta_blt_web_deg = math.degrees(math.atan2(vy_kip, vx_kip)) if p_kip > 1e-12 else 0.0
     e_mag_in = math.hypot(ex_in, ey_in)
     dmax_cg = None
     if bolts and x_cg is not None and y_cg is not None:
@@ -2249,23 +2249,27 @@ def render_splice_methods_table_markdown(result: DetailedRunResult) -> str:
         )
 
     geometry_rows = [
-        ["P", "sqrt(Vx^2 + Vy^2)", _num(p_kip), "kip"],
-        ["theta_deg", "atan2(Vy, Vx)", _num(theta_deg), "deg"],
-        ["e_x", "ex_blt_web", _num(ex_in), "in"],
-        ["e_y", "ey_blt_web", _num(ey_in), "in"],
-        ["e", "sqrt(e_x^2 + e_y^2)", _num(e_mag_in), "in"],
-        ["n_bolts", "conteo pernos activos", _num(bolt_count), "-"],
-        ["x_cg", "sum(x_i)/n", _num(x_cg), "in"],
-        ["y_cg", "sum(y_i)/n", _num(y_cg), "in"],
-        ["I_x", "sum((y_i-y_cg)^2)", _num(ix_in2), "in2"],
-        ["I_y", "sum((x_i-x_cg)^2)", _num(iy_in2), "in2"],
-        ["J", "I_x + I_y", _num(ip_in2), "in2"],
-        ["M_z", "Vy*e_x - Vx*e_y", _num(mz_kip_in), "kip-in"],
-        ["d_max(cg)", "max(sqrt((x_i-x_cg)^2+(y_i-y_cg)^2))", _num(dmax_cg), "in"],
+        ["Ru_blt_web_v23", "sqrt(Pu_sp^2 + Vu2_sp^2)", _num(p_kip), "kip"],
+        ["theta_blt_web", "atan2(Vu2_sp, Pu_sp)", _num(theta_blt_web_deg), "deg"],
+        ["e_blt_web", "sqrt(ex_blt_web^2 + ey_blt_web^2)", _num(e_mag_in), "in"],
+        ["n_blt_web", "conteo pernos activos", _num(bolt_count), "-"],
+        ["x_cg_blt_web", "sum(x_i_blt_web)/n_blt_web", _num(x_cg), "in"],
+        ["y_cg_blt_web", "sum(y_i_blt_web)/n_blt_web", _num(y_cg), "in"],
+        ["Ix_blt_web", "sum((y_i_blt_web-y_cg_blt_web)^2)", _num(ix_in2), "in2"],
+        ["Iy_blt_web", "sum((x_i_blt_web-x_cg_blt_web)^2)", _num(iy_in2), "in2"],
+        ["J_blt_web", "Ix_blt_web + Iy_blt_web", _num(ip_in2), "in2"],
+        ["Muz_blt_web", "Vu2_sp*ex_blt_web - Pu_sp*ey_blt_web", _num(mz_kip_in), "kip-in"],
+        [
+            "dmax_blt_web",
+            "max(sqrt((x_i_blt_web-x_cg_blt_web)^2+(y_i_blt_web-y_cg_blt_web)^2))",
+            _num(dmax_cg),
+            "in",
+        ],
     ]
 
     bolts_rows = [
         [
+            bolt.get("row"),
             bolt.get("tag"),
             _num(bolt.get("x_in")),
             _num(bolt.get("y_in")),
@@ -2292,6 +2296,7 @@ def render_splice_methods_table_markdown(result: DetailedRunResult) -> str:
 
     super_geom_rows: list[list[object]] = []
     super_force_rows: list[list[object]] = []
+    super_summary_rows: list[list[object]] = []
     if bolts and bolt_count is not None and ip_in2 is not None and abs(ip_in2) > 1e-12:
         fx_dir = -vx_kip / bolt_count
         fy_dir = -vy_kip / bolt_count
@@ -2305,13 +2310,33 @@ def render_splice_methods_table_markdown(result: DetailedRunResult) -> str:
             fy = fy_dir + fy_t
             r = math.hypot(fx, fy)
             tag = bolt.get("tag")
-            super_geom_rows.append([tag, _num(bolt.get("x_in")), _num(bolt.get("y_in")), _num(dx), _num(dy), _num(d)])
-            super_force_rows.append([tag, _num(fx_dir), _num(fy_dir), _num(fx_t), _num(fy_t), _num(r)])
+            super_geom_rows.append(
+                [bolt.get("row"), tag, _num(bolt.get("x_in")), _num(bolt.get("y_in")), _num(dx), _num(dy), _num(d)]
+            )
+            super_force_rows.append([bolt.get("row"), tag, _num(fx_dir), _num(fy_dir), _num(fx_t), _num(fy_t), _num(r)])
+            super_summary_rows.append([bolt.get("row"), tag, _num(fx), _num(fy), _num(r)])
 
     ecr_geom_rows: list[list[object]] = []
     ecr_force_rows: list[list[object]] = []
     center_x_ecr = _to_float(method_ecr.get("center_x_in"))
     center_y_ecr = _to_float(method_ecr.get("center_y_in"))
+    ax_ecr = None
+    ay_ecr = None
+    x_ecr_formula = None
+    y_ecr_formula = None
+    if (
+        bolt_count is not None
+        and ip_in2 is not None
+        and mz_kip_in is not None
+        and abs(float(bolt_count) * float(mz_kip_in)) > 1e-12
+    ):
+        ax_ecr = (vy_kip * ip_in2) / (float(bolt_count) * mz_kip_in)
+        ay_ecr = (vx_kip * ip_in2) / (float(bolt_count) * mz_kip_in)
+        if x_cg is not None:
+            x_ecr_formula = x_cg + ax_ecr
+        if y_cg is not None:
+            y_ecr_formula = y_cg + ay_ecr
+
     bolt_forces_ecr = method_ecr.get("bolt_forces")
     forces_ecr_by_tag: dict[str, dict] = {}
     if isinstance(bolt_forces_ecr, list):
@@ -2327,8 +2352,18 @@ def render_splice_methods_table_markdown(result: DetailedRunResult) -> str:
             dy_ecr = y_i - center_y_ecr
             d = math.hypot(dx_ecr, dy_ecr)
             bf = forces_ecr_by_tag.get(tag, {})
-            ecr_geom_rows.append([tag, _num(x_i), _num(y_i), _num(dx_ecr), _num(dy_ecr), _num(d)])
-            ecr_force_rows.append([tag, _num(bf.get("fx_kip")), _num(bf.get("fy_kip")), _num(bf.get("resultant_kip")), _num(center_x_ecr), _num(center_y_ecr)])
+            ecr_geom_rows.append([bolt.get("row"), tag, _num(x_i), _num(y_i), _num(dx_ecr), _num(dy_ecr), _num(d)])
+            ecr_force_rows.append(
+                [
+                    bolt.get("row"),
+                    tag,
+                    _num(bf.get("fx_kip")),
+                    _num(bf.get("fy_kip")),
+                    _num(bf.get("resultant_kip")),
+                    _num(center_x_ecr),
+                    _num(center_y_ecr),
+                ]
+            )
 
     icr_iterations = report.get("icr_iterations")
     if not isinstance(icr_iterations, list):
@@ -2368,7 +2403,16 @@ def render_splice_methods_table_markdown(result: DetailedRunResult) -> str:
                 dx = x_i - x_icr
                 dy = y_i - y_icr
                 d = math.hypot(dx, dy)
-                per_bolt.append({"tag": _format_text(bolt.get("tag")), "dx": dx, "dy": dy, "d": d})
+                row_bolt = _to_float(bolt.get("row"))
+                per_bolt.append(
+                    {
+                        "row": int(row_bolt) if row_bolt is not None else 0,
+                        "tag": _format_text(bolt.get("tag")),
+                        "dx": dx,
+                        "dy": dy,
+                        "d": d,
+                    }
+                )
 
             d_max = max((item["d"] for item in per_bolt), default=0.0)
             if d_max > 1e-12:
@@ -2405,8 +2449,28 @@ def render_splice_methods_table_markdown(result: DetailedRunResult) -> str:
                 item["r_i"] = r_i
                 item["r_x"] = r_x
                 item["r_y"] = r_y
-                icr_bolt_rows_a.append([_num(iteration), item["tag"], _num(item["dx"]), _num(item["dy"]), _num(item["d"]), _num(item.get("delta"))])
-                icr_bolt_rows_b.append([_num(iteration), item["tag"], _num(item.get("phi")), _num(item.get("r_i")), _num(item.get("r_x")), _num(item.get("r_y"))])
+                icr_bolt_rows_a.append(
+                    [
+                        _num(iteration),
+                        item.get("row"),
+                        item["tag"],
+                        _num(item["dx"]),
+                        _num(item["dy"]),
+                        _num(item["d"]),
+                        _num(item.get("delta")),
+                    ]
+                )
+                icr_bolt_rows_b.append(
+                    [
+                        _num(iteration),
+                        item.get("row"),
+                        item["tag"],
+                        _num(item.get("phi")),
+                        _num(item.get("r_i")),
+                        _num(item.get("r_x")),
+                        _num(item.get("r_y")),
+                    ]
+                )
 
             icr_iter_rows_a.append([_num(iteration), _num(x_icr), _num(y_icr), _num(it.get("residual_fx")), _num(it.get("residual_fy")), _num(it.get("residual_norm"))])
             icr_iter_rows_b.append([_num(iteration), _num(d_max), _num(sum_phi_d), _num(r_max), _num(c_coeff), _num(m_p)])
@@ -2449,9 +2513,10 @@ def render_splice_methods_table_markdown(result: DetailedRunResult) -> str:
     if not bolts_rows:
         lines.append("- No hay pernos activos reportados.")
     else:
-        for tag, x_val, y_val, dx_val, dy_val, r_val in bolts_rows:
+        for row_n, tag, x_val, y_val, dx_val, dy_val, r_val in bolts_rows:
             lines.append(
-                f"- Perno `{tag}`: x=`{x_val} in`, y=`{y_val} in`, dx=`{dx_val} in`, dy=`{dy_val} in`, r=`{r_val} in`"
+                f"- Perno `{tag}`: x_{row_n}_blt_web=`{x_val} in`, y_{row_n}_blt_web=`{y_val} in`, "
+                f"dx_cg_{row_n}_blt_web=`{dx_val} in`, dy_cg_{row_n}_blt_web=`{dy_val} in`, r_cg_{row_n}_blt_web=`{r_val} in`"
             )
 
     lines.extend(["", "## 4. Resumen global por metodo", ""])
@@ -2466,11 +2531,11 @@ def render_splice_methods_table_markdown(result: DetailedRunResult) -> str:
     lines.extend(
         [
             "- Ecuaciones:",
-            "- `Fx_dir = -Vx/n`",
-            "- `Fy_dir = -Vy/n`",
-            "- `Fx_t = Mz*dy/J`",
-            "- `Fy_t = -Mz*dx/J`",
-            "- `R = sqrt((Fx_dir+Fx_t)^2 + (Fy_dir+Fy_t)^2)`",
+            "- `Ru_i_blt_web_v2 = -Pu_sp/n_blt_web`",
+            "- `Ru_i_blt_web_v3 = -Vu2_sp/n_blt_web`",
+            "- `Ru_mz_i_blt_web_v2 = Muz_blt_web*dy_cg_i_blt_web/J_blt_web`",
+            "- `Ru_mz_i_blt_web_v3 = -Muz_blt_web*dx_cg_i_blt_web/J_blt_web`",
+            "- `Ru_i_blt_web = sqrt((Ru_i_blt_web_v2+Ru_mz_i_blt_web_v2)^2 + (Ru_i_blt_web_v3+Ru_mz_i_blt_web_v3)^2)`",
             "- Geometria por perno:",
         ]
     )
@@ -2479,18 +2544,29 @@ def render_splice_methods_table_markdown(result: DetailedRunResult) -> str:
     if not super_geom_rows:
         lines.append("- Sin datos de geometria para superposition.")
     else:
-        for tag, x_val, y_val, dx_val, dy_val, d_val in super_geom_rows:
+        for row_n, tag, x_val, y_val, dx_val, dy_val, d_val in super_geom_rows:
             lines.append(
-                f"- `{tag}`: x=`{x_val}`, y=`{y_val}`, dx=`{dx_val}`, dy=`{dy_val}`, d=`{d_val}`"
+                f"- `{tag}`: x_{row_n}_blt_web=`{x_val}`, y_{row_n}_blt_web=`{y_val}`, "
+                f"dx_cg_{row_n}_blt_web=`{dx_val}`, dy_cg_{row_n}_blt_web=`{dy_val}`, r_cg_{row_n}_blt_web=`{d_val}`"
             )
     lines.append("")
     lines.append("### 5.3 Fuerzas por perno")
     if not super_force_rows:
         lines.append("- Sin datos de fuerzas para superposition.")
     else:
-        for tag, fx_dir, fy_dir, fx_t, fy_t, r_val in super_force_rows:
+        for row_n, tag, fx_dir, fy_dir, fx_t, fy_t, r_val in super_force_rows:
             lines.append(
-                f"- `{tag}`: Fx_dir=`{fx_dir}`, Fy_dir=`{fy_dir}`, Fx_t=`{fx_t}`, Fy_t=`{fy_t}`, R=`{r_val}`"
+                f"- `{tag}`: Ru_dir_{row_n}_blt_web_v2=`{fx_dir}`, Ru_dir_{row_n}_blt_web_v3=`{fy_dir}`, "
+                f"Ru_rot_{row_n}_blt_web_v2=`{fx_t}`, Ru_rot_{row_n}_blt_web_v3=`{fy_t}`, Ru_{row_n}_blt_web=`{r_val}`"
+            )
+    lines.append("")
+    lines.append("### 5.4 Resumen de fuerzas en pernos")
+    if not super_summary_rows:
+        lines.append("- Sin resumen de fuerzas resultantes para superposition.")
+    else:
+        for row_n, tag, fx_total, fy_total, r_val in super_summary_rows:
+            lines.append(
+                f"- `{tag}`: Ru_{row_n}_blt_web_v2=`{fx_total}`, Ru_{row_n}_blt_web_v3=`{fy_total}`, Ru_{row_n}_blt_web=`{r_val}`"
             )
 
     lines.extend(["", "## 6. Elastic Method - Center of Rotation (ECR)", ""])
@@ -2499,31 +2575,56 @@ def render_splice_methods_table_markdown(result: DetailedRunResult) -> str:
     lines.extend(
         [
             "- Ecuaciones:",
-            "- `dx_ECR = x - x_ECR`",
-            "- `dy_ECR = y - y_ECR`",
-            "- `d = sqrt(dx_ECR^2 + dy_ECR^2)`",
-            "- `Fx = k*dy_ECR`",
-            "- `Fy = -k*dx_ECR`",
+            "- `dx_ecr_i_blt_web = x_i_blt_web - x_ecr_blt_web`",
+            "- `dy_ecr_i_blt_web = y_i_blt_web - y_ecr_blt_web`",
+            "- `r_ecr_i_blt_web = sqrt(dx_ecr_i_blt_web^2 + dy_ecr_i_blt_web^2)`",
+            "- `Ru_i_blt_web_v2 = k_ecr_blt_web*dy_ecr_i_blt_web`",
+            "- `Ru_i_blt_web_v3 = -k_ecr_blt_web*dx_ecr_i_blt_web`",
             "- Geometria por perno respecto al ECR:",
         ]
     )
     lines.append("")
-    lines.append("### 6.2 Geometria por perno respecto al ECR")
+    lines.append("### 6.2 Calculo de ax, ay y coordenadas ECR")
+    lines.extend(
+        [
+            "- Ecuaciones:",
+            "- `ax_blt_web = (Vu2_sp*J_blt_web)/(n_blt_web*Muz_blt_web)`",
+            "- `ay_blt_web = (Pu_sp*J_blt_web)/(n_blt_web*Muz_blt_web)`",
+            "- `x_ecr_blt_web = x_cg_blt_web + ax_blt_web`",
+            "- `y_ecr_blt_web = y_cg_blt_web + ay_blt_web`",
+            f"- Pu_sp (componente aplicada en direccion v2): `{_num(vx_kip)} kip`",
+            f"- Vu2_sp (componente aplicada en direccion v3): `{_num(vy_kip)} kip`",
+            f"- n_blt_web: `{_num(bolt_count)}`",
+            f"- J_blt_web: `{_num(ip_in2)} in2`",
+            f"- Muz_blt_web: `{_num(mz_kip_in)} kip-in`",
+            f"- ax_blt_web: `{_num(ax_ecr)} in`",
+            f"- ay_blt_web: `{_num(ay_ecr)} in`",
+            f"- x_ecr_blt_web (por formula): `{_num(x_ecr_formula)} in`",
+            f"- y_ecr_blt_web (por formula): `{_num(y_ecr_formula)} in`",
+        ]
+    )
+    if center_x_ecr is not None and center_y_ecr is not None:
+        lines.append(f"- x_ecr_blt_web (solver): `{_num(center_x_ecr)} in`")
+        lines.append(f"- y_ecr_blt_web (solver): `{_num(center_y_ecr)} in`")
+    lines.append("")
+    lines.append("### 6.3 Geometria por perno respecto al ECR")
     if not ecr_geom_rows:
         lines.append("- Sin datos de geometria para ECR.")
     else:
-        for tag, x_val, y_val, dx_val, dy_val, d_val in ecr_geom_rows:
+        for row_n, tag, x_val, y_val, dx_val, dy_val, d_val in ecr_geom_rows:
             lines.append(
-                f"- `{tag}`: x=`{x_val}`, y=`{y_val}`, dx_ECR=`{dx_val}`, dy_ECR=`{dy_val}`, d=`{d_val}`"
+                f"- `{tag}`: x_{row_n}_blt_web=`{x_val}`, y_{row_n}_blt_web=`{y_val}`, "
+                f"dx_ecr_{row_n}_blt_web=`{dx_val}`, dy_ecr_{row_n}_blt_web=`{dy_val}`, r_ecr_{row_n}_blt_web=`{d_val}`"
             )
     lines.append("")
-    lines.append("### 6.3 Fuerzas por perno en ECR")
+    lines.append("### 6.4 Fuerzas por perno en ECR")
     if not ecr_force_rows:
         lines.append("- Sin datos de fuerzas para ECR.")
     else:
-        for tag, fx_val, fy_val, r_val, x_ecr, y_ecr in ecr_force_rows:
+        for row_n, tag, fx_val, fy_val, r_val, x_ecr, y_ecr in ecr_force_rows:
             lines.append(
-                f"- `{tag}`: Fx=`{fx_val}`, Fy=`{fy_val}`, R=`{r_val}`, x_ECR=`{x_ecr}`, y_ECR=`{y_ecr}`"
+                f"- `{tag}`: Ru_{row_n}_blt_web_v2=`{fx_val}`, Ru_{row_n}_blt_web_v3=`{fy_val}`, Ru_{row_n}_blt_web=`{r_val}`, "
+                f"x_ecr_blt_web=`{x_ecr}`, y_ecr_blt_web=`{y_ecr}`"
             )
 
     lines.extend(["", "## 7. Instant Center of Rotation (ICR)", ""])
@@ -2532,10 +2633,10 @@ def render_splice_methods_table_markdown(result: DetailedRunResult) -> str:
     lines.extend(
         [
             "- Ecuaciones:",
-            "- `delta_i = (d_i/d_max)*delta_max`",
-            "- `phi_i = (1-exp(-mu*delta_i))^lambda`",
-            "- `sum(phi*d) = sum(phi_i*d_i)`",
-            "- `R_max = M_p/sum(phi*d)`",
+            "- `delta_i_blt_web = (r_icr_i_blt_web/dmax_icr_blt_web)*delta_max_blt_web`",
+            "- `phi_i_blt_web = (1-exp(-mu_blt_web*delta_i_blt_web))^lambda_blt_web`",
+            "- `sum(phi_i_blt_web*r_icr_i_blt_web)`",
+            "- `Rult_blt_web = M_icr_blt_web/sum(phi_i_blt_web*r_icr_i_blt_web)`",
             "- Iteraciones del ICR:",
         ]
     )
@@ -2546,7 +2647,8 @@ def render_splice_methods_table_markdown(result: DetailedRunResult) -> str:
     else:
         for it, x_icr, y_icr, rfx, rfy, rnorm in icr_iter_rows_a:
             lines.append(
-                f"- Iter `{it}`: x_ICR=`{x_icr}`, y_ICR=`{y_icr}`, residual_Fx=`{rfx}`, residual_Fy=`{rfy}`, residual_norm=`{rnorm}`"
+                f"- Iter `{it}`: x_icr_blt_web=`{x_icr}`, y_icr_blt_web=`{y_icr}`, "
+                f"res_Ru_blt_web_v2=`{rfx}`, res_Ru_blt_web_v3=`{rfy}`, res_norm_blt_web=`{rnorm}`"
             )
     lines.append("")
     lines.append("### 7.3 Parametros auxiliares por iteracion")
@@ -2555,7 +2657,8 @@ def render_splice_methods_table_markdown(result: DetailedRunResult) -> str:
     else:
         for it, dmax_val, sum_phi_d, rmax_val, c_val, mp_val in icr_iter_rows_b:
             lines.append(
-                f"- Iter `{it}`: d_max=`{dmax_val}`, sum(phi*d)=`{sum_phi_d}`, R_max=`{rmax_val}`, C=`{c_val}`, M_p=`{mp_val}`"
+                f"- Iter `{it}`: dmax_icr_blt_web=`{dmax_val}`, sum(phi_i_blt_web*r_icr_i_blt_web)=`{sum_phi_d}`, "
+                f"Rult_blt_web=`{rmax_val}`, Cu_blt_web=`{c_val}`, M_icr_blt_web=`{mp_val}`"
             )
 
     lines.extend(["", "## 8. Bolt Detail ICR por iteracion", ""])
@@ -2565,13 +2668,13 @@ def render_splice_methods_table_markdown(result: DetailedRunResult) -> str:
         cinematic_by_iter: dict[str, list[tuple[object, object, object, object, object]]] = {}
         forces_by_iter: dict[str, list[tuple[object, object, object, object, object]]] = {}
 
-        for it, perno, dx_val, dy_val, d_val, delta_val in icr_bolt_rows_a:
+        for it, row_n, perno, dx_val, dy_val, d_val, delta_val in icr_bolt_rows_a:
             iter_key = str(it)
-            cinematic_by_iter.setdefault(iter_key, []).append((perno, dx_val, dy_val, d_val, delta_val))
+            cinematic_by_iter.setdefault(iter_key, []).append((row_n, perno, dx_val, dy_val, d_val, delta_val))
 
-        for it, perno, phi_val, ri_val, rx_val, ry_val in icr_bolt_rows_b:
+        for it, row_n, perno, phi_val, ri_val, rx_val, ry_val in icr_bolt_rows_b:
             iter_key = str(it)
-            forces_by_iter.setdefault(iter_key, []).append((perno, phi_val, ri_val, rx_val, ry_val))
+            forces_by_iter.setdefault(iter_key, []).append((row_n, perno, phi_val, ri_val, rx_val, ry_val))
 
         iter_keys = sorted(
             set(cinematic_by_iter.keys()) | set(forces_by_iter.keys()),
@@ -2587,9 +2690,10 @@ def render_splice_methods_table_markdown(result: DetailedRunResult) -> str:
             if not cinematic_rows:
                 lines.append("- Sin datos cinematicos para esta iteracion.")
             else:
-                for perno, dx_val, dy_val, d_val, delta_val in cinematic_rows:
+                for row_n, perno, dx_val, dy_val, d_val, delta_val in cinematic_rows:
                     lines.append(
-                        f"- `{perno}`: dx=`{dx_val}`, dy=`{dy_val}`, d=`{d_val}`, Delta=`{delta_val}`"
+                        f"- `{perno}`: dx_icr_{row_n}_blt_web=`{dx_val}`, dy_icr_{row_n}_blt_web=`{dy_val}`, "
+                        f"r_icr_{row_n}_blt_web=`{d_val}`, delta_{row_n}_blt_web=`{delta_val}`"
                     )
 
             lines.append("- Fuerzas por perno:")
@@ -2597,9 +2701,10 @@ def render_splice_methods_table_markdown(result: DetailedRunResult) -> str:
             if not force_rows:
                 lines.append("- Sin datos de fuerzas para esta iteracion.")
             else:
-                for perno, phi_val, ri_val, rx_val, ry_val in force_rows:
+                for row_n, perno, phi_val, ri_val, rx_val, ry_val in force_rows:
                     lines.append(
-                        f"- `{perno}`: phi=`{phi_val}`, R_i=`{ri_val}`, R_x=`{rx_val}`, R_y=`{ry_val}`"
+                        f"- `{perno}`: phi_{row_n}_blt_web=`{phi_val}`, Ru_{row_n}_blt_web=`{ri_val}`, "
+                        f"Ru_{row_n}_blt_web_v2=`{rx_val}`, Ru_{row_n}_blt_web_v3=`{ry_val}`"
                     )
 
     rendered = "\n".join(lines)
@@ -2612,7 +2717,7 @@ def write_splice_methods_table_markdown(result: DetailedRunResult, target_dir: s
         return None
     directory = Path(target_dir)
     directory.mkdir(parents=True, exist_ok=True)
-    target = directory / "tabla_metodos_pernos_1.md"
+    target = directory / "Detalle_Ru_blt_web_v23.md"
     rendered = render_splice_methods_table_markdown(result).rstrip("\n") + "\n"
     target.write_text(rendered, encoding="utf-8")
     return target
