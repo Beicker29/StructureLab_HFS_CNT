@@ -73,7 +73,8 @@
         "value": 9.525,
         "unit": "mm"
       },
-      "nl_w1_vgder": 2
+      "nl_w1_vgder": 2,
+      "kds_w1_vgder": 1.0
     },
     "weld_2": {
       "description": "Viga con rigidizador",
@@ -86,7 +87,8 @@
         "value": 9.525,
         "unit": "mm"
       },
-      "nl_w2_vgder": 2
+      "nl_w2_vgder": 2,
+      "kds_w2_vgder": 1.0
     },
     "weld_3": {
       "description": "Alma de viga con end plate",
@@ -99,7 +101,8 @@
         "value": 8.0,
         "unit": "mm"
       },
-      "nl_w3_vgder": 2
+      "nl_w3_vgder": 2,
+      "kds_w3_vgder": 1.0
     }
   },
   "loads": {

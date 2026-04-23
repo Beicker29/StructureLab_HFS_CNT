@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from steel_connections.codes.engineering.constants import AISCConstants
+from steel_connections.codes.engineering.common import compute_dcr_ratio
 from steel_connections.models.units import Quantity, UnitSystem, validate_quantity_unit
 
 
@@ -147,3 +148,50 @@ class WeldFillet:
             "weld_lines": self.weld_lines,
         }
 
+
+def compute_fillet_weld_tension_check_with_kds(
+    *,
+    demand: Quantity,
+    fexx: Quantity,
+    weld_size: Quantity,
+    weld_length: Quantity,
+    weld_lines: int,
+    kds: float,
+    unit_system: UnitSystem,
+    phi: float = AISCConstants.PHI_WELD_DEFAULT,
+) -> dict[str, Any]:
+    """Compute fillet weld tension capacity and utilization including directional factor ``kds``.
+
+    Equation:
+    ``phiRn = phi * kds * nl * 0.6 * Fexx * 0.707 * L * w``
+
+    Reference:
+    - AISC 360-22 J2.4 (project implementation with directional factor ``kds``)
+    """
+
+    if kds <= 0.0:
+        raise ValueError("kds must be > 0.")
+
+    base = WeldFillet(
+        fexx=fexx,
+        weld_size=weld_size,
+        weld_length=weld_length,
+        weld_lines=weld_lines,
+        unit_system=unit_system,
+        phi=phi,
+    ).design_strength()
+    rn = base["rn"]
+    phi_rn = Quantity(value=base["phi_rn"].value * kds, unit=base["phi_rn"].unit)
+    dcr_result = compute_dcr_ratio(demand=demand, capacity=phi_rn)
+    return {
+        "equation": "phiRn = phi * kds * nl * 0.6 * Fexx * 0.707 * L * w",
+        "reference": "AISC 360-22 J2.4",
+        "rn": rn,
+        "phi_rn": phi_rn,
+        "rn_base_force": base["rn_base_force"],
+        "phi_rn_base_force": base["phi_rn_base_force"] * kds,
+        "phi": phi,
+        "kds": kds,
+        "dcr": dcr_result["dcr"],
+        "passes": dcr_result["passes"],
+    }

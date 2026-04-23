@@ -6,8 +6,6 @@
 - Tipo: `bseep_8es`
 - Estado global: `No cumple`
 
-## Revision conexion viga a derecha de columna
-
 ## Paso 1 - Limites de precalificacion
 
 Comparacion directa de valor calculado contra limite normativo (sin formato DCR).
@@ -390,253 +388,389 @@ Comparacion directa de valor calculado contra limite normativo (sin formato DCR)
 - Clausula: `Documento: AISC 358-22 | Seccion: Seccion 4.1 FASTENER ASSEMBLIES`
 - Resultado: 🟢 Cumple
 
-#### Chequeo 1.2.40 - Separacion minima vertical entre pernos (`pb`)
+#### Chequeo 1.2.40 - Distancia de borde en de (right beam) (`de_pe_vgder`)
 
-- Ambito: `TABLE_6_1`
-- Verificacion: `pb >= 3db; pb <= 95.000 mm; pb >= 89 mm; [min,max] = [89 mm, 95 mm]`
+- Ambito: `TABLE_6_1_DER`
+- Verificacion: `de_pe_vgder >= emin; 60 mm >= 38.1 mm`
+- Clausula: `Documento: AISC 358-22 | Seccion: Tabla 6.1 + AISC 360 Tabla J3.4`
+- Resultado: 🟢 Cumple
+
+#### Chequeo 1.2.41 - Limites de distancia en fila exterior de pernos (right beam) (`pfo_pe_vgder - pso_pe_vgder`)
+
+- Ambito: `TABLE_6_1_DER`
+- Verificacion: `pso_pe_vgder (=pfo_pe_vgder) >= emin; pfo_pe_vgder <= 51 mm; pfo_pe_vgder >= 41 mm; [min,max] = [41.27 mm, 50.8 mm]`
+- Clausula: `Documento: AISC 358-22 | Seccion: Tabla 6.1 + AISC 360 Tabla J3.4`
+- Resultado: 🟢 Cumple
+
+#### Chequeo 1.2.42 - Limites de distancia en fila interior de pernos (right beam) (`pfi_pe_vgder - psi_pe_vgder`)
+
+- Ambito: `TABLE_6_1_DER`
+- Verificacion: `pfi_pe_vgder >= emin; pfi_pe_vgder <= 51 mm; pfi_pe_vgder >= 41 mm; psi_pe_vgder = pfi_pe_vgder + tf_vgder - tcp_col; psi_pe_vgder > 0; [min,max] = [41.27 mm, 50.8 mm]`
+- Clausula: `Documento: AISC 358-22 | Seccion: Tabla 6.1 + AISC 360 Tabla J3.4`
+- Resultado: 🟢 Cumple
+
+#### Chequeo 1.2.43 - Separacion minima vertical entre pernos (right beam) (`pb_pe_vgder`)
+
+- Ambito: `TABLE_6_1_DER`
+- Verificacion: `pb_pe_vgder >= 3db; pb_pe_vgder <= 95.000 mm; pb_pe_vgder >= 89 mm; [min,max] = [89 mm, 95 mm]`
 - Clausula: `Documento: AISC 358-22 | Seccion: Tabla 6.1 (BSEEP-8ES)`
 - Resultado: 🟢 Cumple
 
-#### Chequeo 1.2.41 - Distancia de borde en de (`de`)
+#### Chequeo 1.2.44 - Limites de espesor del ala de viga (right beam) (`tf_vgder`)
 
-- Ambito: `TABLE_6_1`
-- Verificacion: `de >= emin; 60 mm >= 38.1 mm`
+- Ambito: `TABLE_6_1_DER`
+- Verificacion: `tf_vgder in [tf_vgder_min, tf_vgder_max]; 14.29 mm <= 17.3 mm <= 25.4 mm`
+- Clausula: `Documento: AISC 358-22 | Seccion: Tabla 6.1`
+- Resultado: 🟢 Cumple
+
+#### Chequeo 1.2.45 - Limites de ancho del ala de viga (right beam) (`bf_vgder`)
+
+- Ambito: `TABLE_6_1_DER`
+- Verificacion: `bf_vgder in [bf_vgder_min, bf_vgder_max]; 190.5 mm <= 228 mm <= 311.15 mm`
+- Clausula: `Documento: AISC 358-22 | Seccion: Tabla 6.1`
+- Resultado: 🟢 Cumple
+
+#### Chequeo 1.2.46 - Limites de peralte de la viga conectada (right beam) (`d_vgder`)
+
+- Ambito: `TABLE_6_1_DER`
+- Verificacion: `d_vgder in [d_vgder_min, d_vgder_max]; 457.2 mm <= 607 mm <= 914.4 mm`
+- Clausula: `Documento: AISC 358-22 | Seccion: Tabla 6.1`
+- Resultado: 🟢 Cumple
+
+#### Chequeo 1.2.47 - Limites de espesor de placa de extremo (right beam) (`tpe_vgder`)
+
+- Ambito: `TABLE_6_1_DER`
+- Verificacion: `tpe_vgder in [tpe_vgder_min, tpe_vgder_max]; 19.05 mm <= 25.4 mm <= 63.5 mm`
+- Clausula: `Documento: AISC 358-22 | Seccion: Tabla 6.1`
+- Resultado: 🟢 Cumple
+
+#### Chequeo 1.2.48 - Limites de separacion horizontal de pernos (right beam) (`g_b_vgder`)
+
+- Ambito: `TABLE_6_1_DER`
+- Verificacion: `g_b_vgder in [g_b_vgder_min, g_b_vgder_max]; 127 mm <= 140 mm <= 152.4 mm`
+- Clausula: `Documento: AISC 358-22 | Seccion: Tabla 6.1`
+- Resultado: 🟢 Cumple
+
+#### Chequeo 1.2.49 - Distancia de borde en de (left beam) (`de_pe_vgizq`)
+
+- Ambito: `TABLE_6_1_IZQ`
+- Verificacion: `de_pe_vgizq >= emin; 60 mm >= 38.1 mm`
 - Clausula: `Documento: AISC 358-22 | Seccion: Tabla 6.1 + AISC 360 Tabla J3.4`
 - Resultado: 🟢 Cumple
 
-#### Chequeo 1.2.42 - Limites de distancia en fila exterior de pernos (`pfo - pso`)
+#### Chequeo 1.2.50 - Limites de distancia en fila exterior de pernos (left beam) (`pfo_pe_vgizq - pso_pe_vgizq`)
 
-- Ambito: `TABLE_6_1`
-- Verificacion: `pso (=pfo) >= emin; pfo <= 51 mm; pfo >= 41 mm; [min,max] = [41.27 mm, 50.8 mm]`
+- Ambito: `TABLE_6_1_IZQ`
+- Verificacion: `pso_pe_vgizq (=pfo_pe_vgizq) >= emin; pfo_pe_vgizq <= 51 mm; pfo_pe_vgizq >= 41 mm; [min,max] = [41.27 mm, 50.8 mm]`
 - Clausula: `Documento: AISC 358-22 | Seccion: Tabla 6.1 + AISC 360 Tabla J3.4`
 - Resultado: 🟢 Cumple
 
-#### Chequeo 1.2.43 - Limites de distancia en fila interior de pernos (`pfi - psi`)
+#### Chequeo 1.2.51 - Limites de distancia en fila interior de pernos (left beam) (`pfi_pe_vgizq - psi_pe_vgizq`)
 
-- Ambito: `TABLE_6_1`
-- Verificacion: `pfi >= emin; pfi <= 51 mm; pfi >= 41 mm; psi = pfi + tfb - tcp; psi > 0; [min,max] = [41.27 mm, 50.8 mm]`
+- Ambito: `TABLE_6_1_IZQ`
+- Verificacion: `pfi_pe_vgizq >= emin; pfi_pe_vgizq <= 51 mm; pfi_pe_vgizq >= 41 mm; psi_pe_vgizq = pfi_pe_vgizq + tf_vgizq - tcp_col; psi_pe_vgizq > 0; [min,max] = [41.27 mm, 50.8 mm]`
 - Clausula: `Documento: AISC 358-22 | Seccion: Tabla 6.1 + AISC 360 Tabla J3.4`
 - Resultado: 🟢 Cumple
 
-#### Chequeo 1.2.44 - Limites de espesor del ala de viga (`tbf`)
+#### Chequeo 1.2.52 - Separacion minima vertical entre pernos (left beam) (`pb_pe_vgizq`)
 
-- Ambito: `TABLE_6_1`
-- Verificacion: `tbf in [tbf_min, tbf_max]; 14.29 mm <= 17.3 mm <= 25.4 mm`
+- Ambito: `TABLE_6_1_IZQ`
+- Verificacion: `pb_pe_vgizq >= 3db; pb_pe_vgizq <= 95.000 mm; pb_pe_vgizq >= 89 mm; [min,max] = [89 mm, 95 mm]`
+- Clausula: `Documento: AISC 358-22 | Seccion: Tabla 6.1 (BSEEP-8ES)`
+- Resultado: 🟢 Cumple
+
+#### Chequeo 1.2.53 - Limites de espesor del ala de viga (left beam) (`tf_vgizq`)
+
+- Ambito: `TABLE_6_1_IZQ`
+- Verificacion: `tf_vgizq in [tf_vgizq_min, tf_vgizq_max]; 14.29 mm <= 17.3 mm <= 25.4 mm`
 - Clausula: `Documento: AISC 358-22 | Seccion: Tabla 6.1`
 - Resultado: 🟢 Cumple
 
-#### Chequeo 1.2.45 - Limites de ancho del ala de viga (`bbf`)
+#### Chequeo 1.2.54 - Limites de ancho del ala de viga (left beam) (`bf_vgizq`)
 
-- Ambito: `TABLE_6_1`
-- Verificacion: `bbf in [bbf_min, bbf_max]; 190.5 mm <= 228 mm <= 311.15 mm`
+- Ambito: `TABLE_6_1_IZQ`
+- Verificacion: `bf_vgizq in [bf_vgizq_min, bf_vgizq_max]; 190.5 mm <= 279 mm <= 311.15 mm`
 - Clausula: `Documento: AISC 358-22 | Seccion: Tabla 6.1`
 - Resultado: 🟢 Cumple
 
-#### Chequeo 1.2.46 - Limites de peralte de la viga conectada (`d`)
+#### Chequeo 1.2.55 - Limites de peralte de la viga conectada (left beam) (`d_vgizq`)
 
-- Ambito: `TABLE_6_1`
-- Verificacion: `d in [d_min, d_max]; 457.2 mm <= 607 mm <= 914.4 mm`
+- Ambito: `TABLE_6_1_IZQ`
+- Verificacion: `d_vgizq in [d_vgizq_min, d_vgizq_max]; 457.2 mm <= 462 mm <= 914.4 mm`
 - Clausula: `Documento: AISC 358-22 | Seccion: Tabla 6.1`
 - Resultado: 🟢 Cumple
 
-#### Chequeo 1.2.47 - Limites de espesor de placa de extremo (`tp`)
+#### Chequeo 1.2.56 - Limites de espesor de placa de extremo (left beam) (`tpe_vgizq`)
 
-- Ambito: `TABLE_6_1`
-- Verificacion: `tp in [tp_min, tp_max]; 19.05 mm <= 25.4 mm <= 63.5 mm`
+- Ambito: `TABLE_6_1_IZQ`
+- Verificacion: `tpe_vgizq in [tpe_vgizq_min, tpe_vgizq_max]; 19.05 mm <= 25.4 mm <= 63.5 mm`
 - Clausula: `Documento: AISC 358-22 | Seccion: Tabla 6.1`
 - Resultado: 🟢 Cumple
 
-#### Chequeo 1.2.48 - Limites de separacion horizontal de pernos (`g`)
+#### Chequeo 1.2.57 - Limites de separacion horizontal de pernos (left beam) (`g_b_vgizq`)
 
-- Ambito: `TABLE_6_1`
-- Verificacion: `g in [g_min, g_max]; 127 mm <= 140 mm <= 152.4 mm`
+- Ambito: `TABLE_6_1_IZQ`
+- Verificacion: `g_b_vgizq in [g_b_vgizq_min, g_b_vgizq_max]; 127 mm <= 140 mm <= 152.4 mm`
 - Clausula: `Documento: AISC 358-22 | Seccion: Tabla 6.1`
 - Resultado: 🟢 Cumple
 
 ## Paso 2 - Momento probable maximo en rotula plastica (Mpr)
 
-Calculo de momento probable segun Eq. (2.4-1) y Eq. (2.4-2), usando `Ze = Zx` del catalogo de la viga.
+Calculo de momento probable por lado usando `Mpr = Cpr * Ry * Fy * Ze` (Ze = Zx del catalogo).
+
+### 2.1 Calculo de Mpr para viga izquierda
 
 - Clausula: `Documento: AISC 358-22 | Seccion: Capitulo 6 / Seccion 6.7.1 Paso 2 + Eq. (2.4-1) and Eq. (2.4-2)`
-- Ecuacion: `Mpr = Cpr * Ry * Fy * Ze (Eq. 2.4-1 and Eq. 2.4-2)`
-- Fy: `345 MPa`
-- Fu: `450 MPa`
+- Ecuacion: `Mpr_vgizq = Cpr_vgizq * Ry * Fy * Ze_vgizq`
+- Fy_vgizq: `345 MPa`
 - Ry: `1.1`
-- Ze (catalogo): `3280000 mm3`
-- Cpr: `1.15`
-- Mpr calculado: `1434.18 kN-m`
+- Ze_vgizq (catalogo): `2670000 mm3`
+- Demanda de ductilidad_vgizq: `high`
+- Cpr_vgizq: `1.15`
+- Mpr_vgizq: `1165.25 kN-m`
+
+### 2.2 Calculo de Mpr para viga derecha
+
+- Clausula: `Documento: AISC 358-22 | Seccion: Capitulo 6 / Seccion 6.7.1 Paso 2 + Eq. (2.4-1) and Eq. (2.4-2)`
+- Ecuacion: `Mpr_vgder = Cpr_vgder * Ry * Fy * Ze_vgder`
+- Fy_vgder: `345 MPa`
+- Ry: `1.1`
+- Ze_vgder (catalogo): `3280000 mm3`
+- Demanda de ductilidad_vgder: `high`
+- Cpr_vgder: `1.15`
+- Mpr_vgder: `1431.47 kN-m`
 
 ## Paso 3 - Distancia de rotula plastica desde la cara de la columna (Sh)
 
-Para 4E: `Sh = min(d/2, 3bf)`. Para 4ES/8ES: `Sh = Lst + tp`.
+### 3.1 Calculo de Sh para viga izquierda
 
 - Clausula: `Documento: AISC 358-22 | Seccion: Capitulo 6 / Seccion 6.7.1 Paso 3 + Eq. (6.7-1) and Eq. (6.7-2)`
-- Ecuacion: `Sh from connection-specific rules (Eq. 6.7-1 or Eq. 6.7-2)`
 - Tipo de conexion: `bseep_8es`
-- Perfil de viga: `W24X76`
-- Lst (si aplica): `190.53 mm`
-- tp (si aplica): `25.4 mm`
-- Sh calculado: `215.93 mm`
+- Ecuacion: `Sh_vgizq = min(d_vgizq/2, 3*bf_vgizq) [4E] o Sh_vgizq = L_pest_vgizq + tpe_vgizq [4ES/8ES]`
+- d_vgizq: `462 mm`
+- bf_vgizq: `279 mm`
+- Sh_vgizq: `215.93 mm`
+
+### 3.2 Calculo de Sh para viga derecha
+
+- Clausula: `Documento: AISC 358-22 | Seccion: Capitulo 6 / Seccion 6.7.1 Paso 3 + Eq. (6.7-1) and Eq. (6.7-2)`
+- Tipo de conexion: `bseep_8es`
+- Ecuacion: `Sh_vgder = min(d_vgder/2, 3*bf_vgder) [4E] o Sh_vgder = L_pest_vgder + tpe_vgder [4ES/8ES]`
+- d_vgder: `607 mm`
+- bf_vgder: `228 mm`
+- Sh_vgder: `215.93 mm`
+
+- Lado gobernante Sh: `der`
+- Sh adoptado (gobernante): `215.93 mm`
 
 ## Paso 4 - Cortante Probable En Rotula Plastica (Vhmax, Vhmin)
 
-Calculo segun Eq. (2.4-3): `Vhmax = 2*Mpr/Lh + Vgravity` y `Vhmin = 2*Mpr/Lh - Vgravity` (se reporta lado derecho).
+Calculo segun Eq. (2.4-3): `Vhmax = 2*Mpr/Llb + Vg` y `Vhmin = 2*Mpr/Llb - Vg`.
+
+### 4.1 Calculo de cortante probable para viga izquierda
 
 - Clausula: `Documento: AISC 358-22 | Seccion: Capitulo 6 / Seccion 6.7.1 Paso 4 + Eq. (2.4-3)`
-- Ecuacion: `Vhmax.der = 2*Mpr/Lh.der + Vgravity.der; Vhmin.der = 2*Mpr/Lh.der - Vgravity.der`
-- Configuracion de vigas: `both_sides`
-- Lado gobernante Vhmax: `der`
-- Fuente Vhmax seleccionado: `step4_computed_vhmax_der (governing_side=der)`
-- Mpr: `1434.18 kN-m`
-- Lh.der: `6096 mm`
-- Beam_right_Vgravity: `44.48 kN`
-- 2*Mpr/Lh.der: `470.53 kN`
-- Vh.dermax: `515.01 kN`
-- Vh.dermin: `426.05 kN`
-- Vhmax gobernante: `515.01 kN`
+- Ecuacion: `Vh_vgizq_max = 2*Mpr/Llb_vgizq + Vg_vgizq; Vh_vgizq_min = 2*Mpr/Llb_vgizq - Vg_vgizq`
+- Mpr_vgizq: `1165.25 kN-m`
+- Llb_vgizq: `6096 mm`
+- Vg_vgizq: `44.48 kN`
+- Vh_vgizq_max: `426.78 kN`
+- Vh_vgizq_min: `337.82 kN`
+- Vhmax adoptado (gobernante): `426.78 kN`
+
+### 4.2 Calculo de cortante probable para viga derecha
+
+- Clausula: `Documento: AISC 358-22 | Seccion: Capitulo 6 / Seccion 6.7.1 Paso 4 + Eq. (2.4-3)`
+- Ecuacion: `Vh_vgder_max = 2*Mpr/Llb_vgder + Vg_vgder; Vh_vgder_min = 2*Mpr/Llb_vgder - Vg_vgder`
+- Mpr_vgder: `1431.47 kN-m`
+- Llb_vgder: `6096 mm`
+- Vg_vgder: `44.48 kN`
+- Vh_vgder_max: `514.13 kN`
+- Vh_vgder_min: `425.16 kN`
+- Vhmax adoptado (gobernante): `514.13 kN`
+
 
 ## Paso 5 - Momento Probable En Cara De Columna (Mfmax, Mfmin)
 
-Calculo segun Eq. (2.4-4): `Mfmax = Mpr + Vhmax*Sh` y `Mfmin = Mpr + Vhmin*Sh` (se reporta lado derecho).
+Calculo segun Eq. (2.4-4): `Mfmax = Mpr + Vhmax*Sh` y `Mfmin = Mpr + Vhmin*Sh`.
+
+### 5.1 Calculo de momento probable en cara de columna para viga izquierda
 
 - Clausula: `Documento: AISC 358-22 | Seccion: Capitulo 6 / Seccion 6.7.1 Paso 5 + Eq. (2.4-4)`
-- Ecuacion: `Mfmax.der = Mpr + Vhmax.der*Sh; Mfmin.der = Mpr + Vhmin.der*Sh`
-- Definicion para diseno: `Mf = Mfmax gobernante`
-- Configuracion de vigas: `both_sides`
-- Lado gobernante Mfmax: `der`
-- Fuente Mfmax seleccionado: `step5_computed_mf_dermax (governing_side=der)`
-- Mpr (intermedio): `1434.18 kN-m`
-- Sh (intermedio): `215.93 mm`
-- Vh.dermax (intermedio): `515.01 kN`
-- Vh.dermin (intermedio): `426.05 kN`
-- Mf.dermax: `1545.38 kN-m`
-- Mf.dermin: `1526.17 kN-m`
-- Mf (adoptado) = Mfmax gobernante: `1545.38 kN-m`
+- Ecuacion: `Mf_vgizq_max = Mpr_vgizq + Vh_vgizq_max*Sh_vgizq; Mf_vgizq_min = Mpr_vgizq + Vh_vgizq_min*Sh_vgizq`
+- Mpr_vgizq: `1165.25 kN-m`
+- Sh_vgizq: `215.93 mm`
+- Mf_vgizq_max: `1257.41 kN-m`
+- Mf_vgizq_min: `1238.2 kN-m`
 
-## Paso 6 - Revision De Resistencia Pernos
+### 5.2 Calculo de momento probable en cara de columna para viga derecha
+
+- Clausula: `Documento: AISC 358-22 | Seccion: Capitulo 6 / Seccion 6.7.1 Paso 5 + Eq. (2.4-4)`
+- Ecuacion: `Mf_vgder_max = Mpr_vgder + Vh_vgder_max*Sh_vgder; Mf_vgder_min = Mpr_vgder + Vh_vgder_min*Sh_vgder`
+- Mpr_vgder: `1431.47 kN-m`
+- Sh_vgder: `215.93 mm`
+- Mf_vgder_max: `1542.49 kN-m`
+- Mf_vgder_min: `1523.28 kN-m`
+
+## Revision de la conexion de la viga izquierda con la columna
+
+## Paso 6 - Revision De Resistencia Pernos (vg_izq)
 
 ### 6.1 Revision de capacidad a traccion
 
 #### 6.1.1 Estado #1: Rotura en el perno
 
 - Clausula: `Documento: AISC 358-22 | Seccion: Capitulo 6 / Seccion 6.7.1 Paso 6.1 + AISC 360-22 J3.7`
-- Ecuacion: `Rut_b = Mf / (2*(h1 + h2 + h3 + h4)); phiRnt_b = phi * Rnt_b, Rnt_b = Ab * Fnt, Ab = pi*db^2/4 (AISC 360-22 J3.7)`
+- Ecuacion: `Ru_b_p+_vgizq = Mf_vgizq_critico/(2*(h1_pe_vgizq + h2_pe_vgizq + h3_pe_vgizq + h4_pe_vgizq)); phi*Rn_b_p+_vgizq = phi * Rn_b_p+_vgizq, Rn_b_p+_vgizq = A_b_vgizq * Fnt_b_vgizq, A_b_vgizq = pi*db^2/4 (AISC 360-22 J3.7)`
 - phi usado: `0.9`
-- h1: `743.35 mm`
-- h2: `648.35 mm`
-- h3: `529.65 mm`
-- h4: `434.65 mm`
-- Rut_b: `327.97 kN`
-- phiRnt_b: `450.19 kN`
-- DCRbt: `0.73`
+- Mf_vgizq_critico: `1257.41 kN-m`
+- h1_pe_vgizq: `743.35 mm`
+- h2_pe_vgizq: `648.35 mm`
+- h3_pe_vgizq: `529.65 mm`
+- h4_pe_vgizq: `434.65 mm`
+- A_b_vgizq: `641.3 mm2`
+- Fnt_b_vgizq: `780 MPa`
+- Ru_b_p+_vgizq: `266.85 kN`
+- phi*Rn_b_p+_vgizq: `450.19 kN`
+- DCR_b_p+_vgizq: `0.59`
 - Resultado: `Cumple`
 
-### 6.2 Revision de capacidad a cortante
+### 6.1.2 Revision de capacidad a cortante
 
-#### 6.2.1 ELR #1: Rotura por cortante en el perno
+#### ELR #2: Rotura por cortante en el perno
 
 - Clausula: `Documento: AISC 358-22 | Seccion: Capitulo 6 / Seccion 6.7.1 Paso 6.2 + AISC 360-22 J3.7`
-- Ecuacion: `Ruv2_b = Vhmax/nb, phiRnv_b = phi * Rnv_b, Rnv_b = Ab * Fnv, Ab = pi*db^2/4, nb = 4 (4E/4ES) or 8 (8ES) (AISC 360-22 J3.7)`
+- Ecuacion: `Ru_b_v2_vgizq = Vh_vgizq_critico/n_b_vgizq, phi*Rn_b_v2_vgizq = phi * Rn_b_v2_vgizq, Rn_b_v2_vgizq = A_b_vgizq * Fnv_b_vgizq, A_b_vgizq = pi*db^2/4, n_b_vgizq = 4 (4E/4ES) or 8 (8ES) (AISC 360-22 J3.7)`
 - phi usado: `0.9`
-- Vhmax: `515.01 kN`
-- nb: `8`
-- Ruv2_b: `64.38 kN`
-- phiRnv_b: `271.27 kN`
-- DCRbv: `0.24`
+- Vh_vgizq_critico: `426.78 kN`
+- n_b_vgizq: `8`
+- A_b_vgizq: `641.3 mm2`
+- Fnt_b_vgizq: `780 MPa`
+- Ru_b_v2_vgizq: `53.35 kN`
+- phi*Rn_b_v2_vgizq: `271.27 kN`
+- DCR_b_v2_vgizq: `0.2`
 - Resultado: `Cumple`
 
-## Paso 7 - Revision de resistencia end plate
+## Paso 7 - Revision de resistencia platina extremo (vg_izq)
 
 ### 7.1. Revision de capacidad a flexion
 
-#### 7.1.1. ELR #1: Fluencia (AISC 358-22 .7-8)
+#### 7.1.1. ELR #1: Fluencia
 
 - Clausula: `Documento: AISC 358-22 | Seccion: Capitulo 6 / Seccion 6.7.1 Paso 7.1.1 + Eq. (6.7-8)`
-- Ecuacion: `Mup = Mf; phiMnb = phi * tp^2 * Fyp * Yp (AISC 358-22 Eq. 6.7-8)`
+- Ecuacion: `Ru_pe_m3_vgizq = Mf_vgizq_critico; phi*Rn_pe_m3_vgizq = phi * tpe_vgizq^2 * Fyp_pe_vgizq * Yp_pe_vgizq (AISC 358-22 Eq. 6.7-8)`
 - phi usado: `0.9`
-- Mup: `1545.38 kN-m`
-- phiMnb: `1645.5 kN-m`
-- DCRpm: `0.94`
-- Yp calculado: `8214.25 mm`
+- Mf_vgizq_critico: `1257.41 kN-m`
+- tpe_vgizq: `25.4 mm`
+- Fyp_pe_vgizq: `345 MPa`
+- Yp_pe_vgizq: `8214.25 mm`
 - Tabla Yp aplicada: `AISC 358-22 Tabla 6.4`
 - Caso Yp: `Case 1 (de <= s)`
-- s: `94.1 mm`
-- pfi de entrada: `50 mm`
-- pfi efectivo: `50 mm`
+- s_pe_vgizq: `94.1 mm`
+- pfi_pe_vgizq_entrada: `50 mm`
+- pfi_pe_vgizq_efectivo: `50 mm`
+- Ru_pe_m3_vgizq: `1257.41 kN-m`
+- phi*Rn_pe_m3_vgizq: `1645.5 kN-m`
+- DCR_pe_m3_vgizq: `0.76`
 - Resultado: `Cumple`
 
 ### 7.2. Revision de capacidad a cortante perpendicular al plano de la platina
 
-#### 7.2.1. Eje #1: Fluencia por cortante (AISC 358-22 G7-10)
+#### 7.2.1. ELR #1: Fluencia por cortante
 
 - Clausula: `Documento: AISC 358-22 | Seccion: Capitulo 6 / Seccion 6.7.1 Paso 7.2.1 + Eq. (6.7-10)`
-- Ecuacion: `Vup = Mf / (2*(d - tbf)); phiVnb = phi * 0.6 * Fyp * bp * tp (AISC 358-22 Eq. 6.7-10)`
-- phi usado: `0.9`
-- Vup: `1310.31 kN`
-- phiVn1p: `1197.2 kN`
-- DCRpv: `1.09`
-- d (altura viga): `607 mm`
+- Ecuacion: `Rn_pe_v1_vgizq = Ru_pe_m3_vgizq / (2*(d_vgizq - tf_vgizq)); phi*Rn_pe_v1_vgizq = phi * 0.6 * Fyp_pe_vgizq * bpe_vgizq * tpe_vgizq (AISC 358-22 Eq. 6.7-10)`
+- phi usado: `0.75`
+- d_vgizq: `462 mm`
+- tf_vgizq: `17.3 mm`
+- z_vgizq = d_vgizq - tf_vgizq: `444.7 mm`
+- bpe_vgizq: `253 mm`
+- tpe_vgizq: `25.4 mm`
+- Fyp_pe_vgizq: `345 MPa`
+- Ru_pe_m3_vgizq: `1257.41 kN-m`
+- Rn_pe_v1_vgizq: `1413.77 kN`
+- phi*Rn_pe_v1_vgizq: `997.67 kN`
+- DCR_pe_v1_vgizq: `1.42`
 - Resultado: `No cumple`
 
-#### 7.2.2. Eje #2: Rotura por cortante (AISC 358-22 G7-12)
+#### 7.2.2. ELR #2: Rotura por cortante
 
 - Clausula: `Documento: AISC 358-22 | Seccion: Capitulo 6 / Seccion 6.7.1 Paso 7.2.2 + Eq. (6.7-12)`
-- Ecuacion: `Vup = Mf / (2*(d - tbf)); phiVnb = phi * 0.6 * Fup * tp * (bp - 2*dh) (AISC 358-22 Eq. 6.7-12)`
-- phi usado: `0.9`
-- Vup: `1310.31 kN`
-- phiVnb: `1169.63 kN`
-- DCRpv: `1.12`
-- dh (diametro agujero estandar): `31.75 mm`
-- d (altura viga): `607 mm`
+- Ecuacion: `Rn_pe_v2_vgizq = Ru_pe_m3_vgizq / (2*(d_vgizq - tf_vgizq)); phi*Rn_pe_v2_vgizq = phi * 0.6 * Fup_pe_vgizq * tpe_vgizq * (bpe_vgizq - 2*(dh_pe_vgizq + 1.6 mm)) (AISC 358-22 Eq. 6.7-12)`
+- phi usado: `0.75`
+- Ru_pe_m3_vgizq: `1257.41 kN-m`
+- d_vgizq: `462 mm`
+- tf_vgizq: `17.3 mm`
+- z_vgizq = d_vgizq - tf_vgizq: `444.7 mm`
+- bpe_vgizq: `253 mm`
+- tpe_vgizq: `25.4 mm`
+- Fup_pe_vgizq: `450 MPa`
+- dh_pe_vgizq: `31.75 mm`
+- Rn_pe_v2_vgizq: `1413.77 kN`
+- phi*Rn_pe_v2_vgizq: `958.23 kN`
+- DCR_pe_v2_vgizq: `1.48`
 - Resultado: `No cumple`
 
 ### 7.3. Revision de capacidad a cortante paralelo al plano de la platina
 
-#### 7.3.1. ELR #1: Desgarramiento en la perforacion del perno (AISC 360-22 J3.11a)
+#### 7.3.1. ELR #1: Desgarramiento en la perforacion del perno
 
 - Clausula: `Documento: AISC 360-22 | Seccion: Capitulo 6 / Seccion 7.3.1 + AISC 360-22 J3.11(a)`
-- Ecuacion: `Vu2p = Vhmax/nb; phiVn2p = phi * 1.2 * lc * tp * Fup (AISC 360-22 J3.11a)`
-- phi usado: `0.9`
-- Vu2p: `64.38 kN`
-- phiVn2p: `780.73 kN`
-- DCRpn2: `0.08`
-- lc: `63.25 mm`
-- dh: `31.75 mm`
-- db: `28.57 mm`
+- Ecuacion: `lc_pe_vgizq = min(pb_pe_vgizq - dh_pe_vgizq, pfo_pe_vgizq + pfi_pe_vgizq + tf_vgizq - dh_pe_vgizq); Ru_pe_v2_vgizq = Vh_vgizq_critico / n_b_vgizq; phi*Rn_pe_v2_vgizq = phi * 1.2 * lc_pe_vgizq * tpe_vgizq * Fup_pe_vgizq (AISC 360-22 J3.11a)`
+- phi usado: `0.75`
+- Vh_vgizq_critico: `426.78 kN`
+- n_b_vgizq: `8`
+- pb_pe_vgizq: `95 mm`
+- pfo_pe_vgizq: `50 mm`
+- pfi_pe_vgizq: `50 mm`
+- tf_vgizq: `17.3 mm`
+- dh_pe_vgizq: `31.75 mm`
+- lc_pe_vgizq: `63.25 mm`
+- tpe_vgizq: `25.4 mm`
+- Fup_pe_vgizq: `450 MPa`
+- Ru_pe_v2_vgizq: `53.35 kN`
+- phi*Rn_pe_v2_vgizq: `650.61 kN`
+- DCR_pe_v2_vgizq: `0.08`
 - Resultado: `Cumple`
 
-#### 7.3.2. ELR #2: Aplastamiento en la perforacion del perno (AISC 360-22 J3.11a)
+#### 7.3.2. ELR #2: Aplastamiento en la perforacion del perno
 
 - Clausula: `Documento: AISC 360-22 | Seccion: Capitulo 6 / Seccion 7.3.2 + AISC 360-22 J3.11(a)`
-- Ecuacion: `Vu2p = Vhmax/nb; phiVn2p = phi * 2.4 * (db + 1.6 mm) * tp * Fup (AISC 360-22 J3.11a)`
+- Ecuacion: `Ru_pe_v2_vgizq = Vh_vgizq_critico / n_b_vgizq; phi*Rn_pe_v2_vgizq = phi * 2.4 * d_b_vgizq * tpe_vgizq * Fup_pe_vgizq (AISC 360-22 J3.11a)`
 - phi usado: `0.9`
-- Vu2p: `64.38 kN`
-- phiVn2p: `744.98 kN`
-- DCRpn2: `0.09`
-- lc: `63.25 mm`
-- dh: `31.75 mm`
-- db: `28.57 mm`
+- Vh_vgizq_critico: `426.78 kN`
+- n_b_vgizq: `8`
+- tpe_vgizq: `25.4 mm`
+- Fup_pe_vgizq: `450 MPa`
+- d_b_vgizq: `28.57 mm`
+- Ru_pe_v2_vgizq: `53.35 kN`
+- phi*Rn_pe_v2_vgizq: `705.48 kN`
+- DCR_pe_v2_vgizq: `0.08`
 - Resultado: `Cumple`
 
-## Paso 8 - Revision de Resistencia soldadura #1 (end plate con rigidizador)
+## Paso 8 - Revision de Resistencia soldadura #1 (platina extremo vg_izq - rigidizador vg_izq)
 
 ### 8.1. Revision de capacidad a traccion
 
 #### 8.1.1. ELR #1: Rotura de la soldadura (AISC 360-22 J2.4)
 
-- Clausula: `Documento: AISC 358-22 | Seccion: Capitulo 6 / Seccion 6.7.1 Paso 8.1.1 + AISC 360-22 J2.4`
-- Ecuacion: `Fillet: Pust = Fys * ts * hst; l_st = hst - clip_st - 2*w_st; phiRnst = phi * nl * 0.6 * FEXX * 0.707 * l_st * w_st (AISC 360-22 J2.4)`
-- phi usado: `0.9`
-- Tipo soldadura rigidizador: `fillet`
-- Pust: `481.96 kN`
-- phiRnst: `235.03 kN`
-- DCRst,w1,t: `2.05`
-- l_st (longitud soldadura calculada): `l_st = hst - clip_st - 2*w_st`
-- l_st: `65.95 mm`
-- clip_st: `25 mm`
-- hst: `110 mm`
-- w_st (espesor soldadura): `9.53 mm`
-- n_l (lineas soldadura): `2`
+- Clausula: `Documento: AISC 358-22 | Seccion: Capitulo 6 / Seccion 6.7.1 + AISC 360-22 J2.4`
+- Ecuacion: `Fillet: Ru_w1_p+_vgizq = Fys_pest_vgizq * t_pest_vgizq * h_pest_vgizq; l_w1_vgizq = h_pest_vgizq - c_pest_vgizq - 2*w_w1_vgizq; phi*Rn_w1_p+_vgizq = phi * kds_w1_vgizq * nl_w1_vgizq * 0.6 * Fexx_w1_vgizq * 0.707 * l_w1_vgizq * w_w1_vgizq; DCR_w1_p+_vgizq = Ru_w1_p+_vgizq / phi*Rn_w1_p+_vgizq (AISC 360-22 J2.4)`
+- phi usado: `0.75`
+- tipo_w1_vgizq: `fillet`
+- l_w1_vgizq (longitud soldadura calculada): `l_w1_vgizq = h_pest_vgizq - c_pest_vgizq - 2*w_w1_vgizq`
+- Fys_pest_vgizq: `345 MPa`
+- t_pest_vgizq: `12.7 mm`
+- h_pest_vgizq: `110 mm`
+- c_pest_vgizq: `25 mm`
+- l_w1_vgizq: `65.95 mm`
+- Fexx_w1_vgizq: `490 MPa`
+- w_w1_vgizq: `9.53 mm`
+- nl_w1_vgizq: `2`
+- kds_w1_vgizq: `1`
+- Ru_w1_p+_vgizq: `481.96 kN`
+- phi*Rn_w1_p+_vgizq: `195.86 kN`
+- DCR_w1_p+_vgizq: `2.46`
 - Resultado: `No cumple`
 
 ## Paso 9 - Revision de resistencia soldadura #2 (viga con rigidizador)
@@ -669,7 +803,7 @@ Calculo segun Eq. (2.4-4): `Mfmax = Mpr + Vhmax*Sh` y `Mfmin = Mpr + Vhmin*Sh` (
 - Clausula: `Documento: AISC 360-22 | Seccion: Capitulo 6 / Seccion 6.7.1 Paso 10.1.1 + AISC 360-22 G2.1`
 - Ecuacion: `Vubm = Vhmax; phiVnbm = phi * 0.6 * Fybm * tw,bm * d * Cv1 (AISC 360-22 G2.1, Eq. G2-3/G2-4; kv=5.34 for webs without transverse stiffeners)`
 - phi usado: `1`
-- Vubm: `515.01 kN`
+- Vubm: `514.13 kN`
 - phiVnbm: `1407.27 kN`
 - DCRbm,v: `0.37`
 - Cv1: `1`
@@ -700,7 +834,7 @@ Calculo segun Eq. (2.4-4): `Mfmax = Mpr + Vhmax*Sh` y `Mfmin = Mpr + Vhmin*Sh` (
 #### 12.1.1 ELR # 1: Flexion local de la aleta (LFB) (AISC 358-22 6.7.2)
 
 - Clausula: `Documento: AISC 358-22 | Seccion: Capitulo 6 / Seccion 6.7.2 + Eq. (6.7-13)`
-- M_ucf: `1545.38 kN-m`
+- M_ucf: `1542.49 kN-m`
 - phi usado: `1`
 - Condicion aplicable: `hay platinas de continuidad`
 - s: `94.1 mm`

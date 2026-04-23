@@ -14,6 +14,7 @@ from .bolt_group_types import BoltCoordinate
 from .bolt_group_types import BoltGroupMethod
 from .bolts import compute_bolt_tension_rupture_capacity_per_bolt
 from .bolts import compute_bolt_shear_rupture_capacity_per_bolt
+from .utilization import compute_dcr_ratio
 
 __all__ = [
     "BoltCoordinate",
@@ -26,6 +27,7 @@ __all__ = [
     "build_rectangular_bolt_pattern",
     "compute_bolt_tension_rupture_capacity_per_bolt",
     "compute_bolt_shear_rupture_capacity_per_bolt",
+    "compute_dcr_ratio",
     "solve_bolt_group_method",
     "solve_elastic_superposition",
     "solve_elastic_center_of_rotation",

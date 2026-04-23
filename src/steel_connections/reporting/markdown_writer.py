@@ -382,6 +382,7 @@ def _collect_step_3_sh(result: DetailedRunResult) -> dict | None:
             "demand": check.demand.model_dump(),
             "capacity": check.capacity.model_dump(),
             "inputs": check.calculation_memory.inputs,
+            "intermediates": check.calculation_memory.intermediates,
             "equation": check.calculation_memory.equation,
         }
     return None
@@ -842,19 +843,43 @@ def _render_step_1_notes(notes: list[dict]) -> str:
 def _render_step_2_mpr(step_2: dict) -> str:
     inputs = step_2.get("inputs", {})
     inter = step_2.get("intermediates", {})
+    clause_text = _render_clause_text(step_2.get("clause"), step_2.get("source_document"), step_2.get("rule_id"))
+    fy = _format_quantity(inputs.get("beam_fy"))
+    ry = _format_text(inputs.get("ry"))
+    ze_der = _format_quantity(inputs.get("ze_vgder"))
+    ze_izq = _format_quantity(inputs.get("ze_vgizq"))
+    dd_der = _format_text(inter.get("member_ductility_demand_beam_der") or inputs.get("member_ductility_demand_vgder"))
+    dd_izq = _format_text(inter.get("member_ductility_demand_beam_izq") or inputs.get("member_ductility_demand_vgizq"))
+    cpr_der = _format_text(inter.get("cpr_der"))
+    cpr_izq = _format_text(inter.get("cpr_izq"))
+    mpr_der = _format_scalar_with_unit(inter.get("mpr_der"), "kN-mm")
+    mpr_izq = _format_scalar_with_unit(inter.get("mpr_izq"), "kN-mm")
     lines = [
         "## Paso 2 - Momento probable maximo en rotula plastica (Mpr)",
         "",
-        "Calculo de momento probable segun Eq. (2.4-1) y Eq. (2.4-2), usando `Ze = Zx` del catalogo de la viga.",
+        "Calculo de momento probable por lado usando `Mpr = Cpr * Ry * Fy * Ze` (Ze = Zx del catalogo).",
         "",
-        f"- Clausula: `{_render_clause_text(step_2.get('clause'), step_2.get('source_document'), step_2.get('rule_id'))}`",
-        f"- Ecuacion: `{_format_text(step_2.get('equation'))}`",
-        f"- Fy: `{_format_quantity(inputs.get('beam_fy'))}`",
-        f"- Fu: `{_format_quantity(inputs.get('beam_fu'))}`",
-        f"- Ry: `{_format_text(inputs.get('ry'))}`",
-        f"- Ze (catalogo): `{_format_quantity(inputs.get('ze'))}`",
-        f"- Cpr: `{_format_text(inter.get('cpr'))}`",
-        f"- Mpr calculado: `{_format_quantity(step_2.get('demand'))}`",
+        "### 2.1 Calculo de Mpr para viga izquierda",
+        "",
+        f"- Clausula: `{clause_text}`",
+        "- Ecuacion: `Mpr_vgizq = Cpr_vgizq * Ry * Fy * Ze_vgizq`",
+        f"- Fy_vgizq: `{fy}`",
+        f"- Ry: `{ry}`",
+        f"- Ze_vgizq (catalogo): `{ze_izq}`",
+        f"- Demanda de ductilidad_vgizq: `{dd_izq}`",
+        f"- Cpr_vgizq: `{cpr_izq}`",
+        f"- Mpr_vgizq: `{mpr_izq}`",
+        "",
+        "### 2.2 Calculo de Mpr para viga derecha",
+        "",
+        f"- Clausula: `{clause_text}`",
+        "- Ecuacion: `Mpr_vgder = Cpr_vgder * Ry * Fy * Ze_vgder`",
+        f"- Fy_vgder: `{fy}`",
+        f"- Ry: `{ry}`",
+        f"- Ze_vgder (catalogo): `{ze_der}`",
+        f"- Demanda de ductilidad_vgder: `{dd_der}`",
+        f"- Cpr_vgder: `{cpr_der}`",
+        f"- Mpr_vgder: `{mpr_der}`",
         "",
     ]
     return "\n".join(lines)
@@ -862,18 +887,33 @@ def _render_step_2_mpr(step_2: dict) -> str:
 
 def _render_step_3_sh(step_3: dict) -> str:
     inputs = step_3.get("inputs", {})
+    clause_text = _render_clause_text(step_3.get("clause"), step_3.get("source_document"), step_3.get("rule_id"))
+    ctype = _format_text(inputs.get("connection_type"))
+    sh_izq = _format_scalar_with_unit(step_3.get("intermediates", {}).get("sh_izq"), "mm")
+    sh_der = _format_scalar_with_unit(step_3.get("intermediates", {}).get("sh_der"), "mm")
     lines = [
         "## Paso 3 - Distancia de rotula plastica desde la cara de la columna (Sh)",
         "",
-        "Para 4E: `Sh = min(d/2, 3bf)`. Para 4ES/8ES: `Sh = Lst + tp`.",
+        "### 3.1 Calculo de Sh para viga izquierda",
         "",
-        f"- Clausula: `{_render_clause_text(step_3.get('clause'), step_3.get('source_document'), step_3.get('rule_id'))}`",
-        f"- Ecuacion: `{_format_text(step_3.get('equation'))}`",
-        f"- Tipo de conexion: `{_format_text(inputs.get('connection_type'))}`",
-        f"- Perfil de viga: `{_format_text(inputs.get('beam_shape'))}`",
-        f"- Lst (si aplica): `{_format_quantity(inputs.get('stiffener_length'))}`",
-        f"- tp (si aplica): `{_format_quantity(inputs.get('end_plate_thickness'))}`",
-        f"- Sh calculado: `{_format_quantity(step_3.get('demand'))}`",
+        f"- Clausula: `{clause_text}`",
+        f"- Tipo de conexion: `{ctype}`",
+        "- Ecuacion: `Sh_vgizq = min(d_vgizq/2, 3*bf_vgizq) [4E] o Sh_vgizq = L_pest_vgizq + tpe_vgizq [4ES/8ES]`",
+        f"- d_vgizq: `{_format_quantity(inputs.get('d_vgizq'))}`",
+        f"- bf_vgizq: `{_format_quantity(inputs.get('bf_vgizq'))}`",
+        f"- Sh_vgizq: `{sh_izq}`",
+        "",
+        "### 3.2 Calculo de Sh para viga derecha",
+        "",
+        f"- Clausula: `{clause_text}`",
+        f"- Tipo de conexion: `{ctype}`",
+        "- Ecuacion: `Sh_vgder = min(d_vgder/2, 3*bf_vgder) [4E] o Sh_vgder = L_pest_vgder + tpe_vgder [4ES/8ES]`",
+        f"- d_vgder: `{_format_quantity(inputs.get('d_vgder'))}`",
+        f"- bf_vgder: `{_format_quantity(inputs.get('bf_vgder'))}`",
+        f"- Sh_vgder: `{sh_der}`",
+        "",
+        f"- Lado gobernante Sh: `{_format_text(inputs.get('governing_side_sh'))}`",
+        f"- Sh adoptado (gobernante): `{_format_quantity(step_3.get('demand'))}`",
         "",
     ]
     return "\n".join(lines)
@@ -883,37 +923,33 @@ def _render_step_4_vh(step_4: dict) -> str:
     inputs = step_4.get("inputs", {})
     inter = step_4.get("intermediates", {})
     beam_connection_sides = _format_text(inputs.get("beam_connection_sides"))
-    # Memory report (presentation) is intentionally restricted to right-beam output.
-    sides = ["der"]
+    sides = ["izq", "der"] if beam_connection_sides == "both_sides" else ["der"]
     lines = [
         "## Paso 4 - Cortante Probable En Rotula Plastica (Vhmax, Vhmin)",
         "",
-        "Calculo segun Eq. (2.4-3): `Vhmax = 2*Mpr/Lh + Vgravity` y `Vhmin = 2*Mpr/Lh - Vgravity` (se reporta lado derecho).",
+        "Calculo segun Eq. (2.4-3): `Vhmax = 2*Mpr/Llb + Vg` y `Vhmin = 2*Mpr/Llb - Vg`.",
         "",
-        f"- Clausula: `{_render_clause_text(step_4.get('clause'), step_4.get('source_document'), step_4.get('rule_id'))}`",
-        "- Ecuacion: `Vhmax.der = 2*Mpr/Lh.der + Vgravity.der; Vhmin.der = 2*Mpr/Lh.der - Vgravity.der`",
-        f"- Configuracion de vigas: `{beam_connection_sides}`",
-        f"- Lado gobernante Vhmax: `{_format_text(inputs.get('governing_side_vhmax'))}`",
-        f"- Fuente Vhmax seleccionado: `{_format_text(inputs.get('selected_vhmax_source'))}`",
-        f"- Mpr: `{_format_scalar_with_unit(inter.get('mpr'), 'kN-mm')}`",
     ]
+    clause_text = _render_clause_text(step_4.get("clause"), step_4.get("source_document"), step_4.get("rule_id"))
     for side in sides:
-        vgravity_label = "Beam_right_Vgravity" if side == "der" else "Beam_left_Vgravity"
+        side_suffix = f"vg{side}"
+        subtitle = "### 4.1 Calculo de cortante probable para viga izquierda" if side == "izq" else "### 4.2 Calculo de cortante probable para viga derecha"
         lines.extend(
             [
-                f"- Lh.{side}: `{_format_quantity(inputs.get(f'lh_{side}'))}`",
-                f"- {vgravity_label}: `{_format_quantity(inputs.get(f'vgravity_between_hinges_{side}'))}`",
-                f"- 2*Mpr/Lh.{side}: `{_format_scalar_with_unit(inter.get(f'2mpr_over_lh_{side}'), 'kN')}`",
-                f"- Vh.{side}max: `{_format_scalar_with_unit(inter.get(f'vh_{side}max'), 'kN')}`",
-                f"- Vh.{side}min: `{_format_scalar_with_unit(inter.get(f'vh_{side}min'), 'kN')}`",
+                subtitle,
+                "",
+                f"- Clausula: `{clause_text}`",
+                f"- Ecuacion: `Vh_{side_suffix}_max = 2*Mpr/Llb_{side_suffix} + Vg_{side_suffix}; Vh_{side_suffix}_min = 2*Mpr/Llb_{side_suffix} - Vg_{side_suffix}`",
+                f"- Mpr_{side_suffix}: `{_format_scalar_with_unit(inter.get(f'mpr_{side}'), 'kN-mm')}`",
+                f"- Llb_{side_suffix}: `{_format_quantity(inputs.get(f'lh_{side}'))}`",
+                f"- Vg_{side_suffix}: `{_format_quantity(inputs.get(f'vgravity_between_hinges_{side}'))}`",
+                f"- Vh_{side_suffix}_max: `{_format_scalar_with_unit(inter.get(f'vh_{side}max'), 'kN')}`",
+                f"- Vh_{side_suffix}_min: `{_format_scalar_with_unit(inter.get(f'vh_{side}min'), 'kN')}`",
+                f"- Vhmax adoptado (gobernante): `{_format_scalar_with_unit(inter.get(f'vh_{side}max'), 'kN')}`",
+                "",
             ]
         )
-    lines.extend(
-        [
-            f"- Vhmax gobernante: `{_format_quantity(step_4.get('demand'))}`",
-        "",
-        ]
-    )
+    lines.append("")
     return "\n".join(lines)
 
 
@@ -921,47 +957,47 @@ def _render_step_5_mf(step_5: dict) -> str:
     inputs = step_5.get("inputs", {})
     inter = step_5.get("intermediates", {})
     beam_connection_sides = _format_text(inputs.get("beam_connection_sides"))
-    # Memory report (presentation) is intentionally restricted to right-beam output.
-    sides = ["der"]
+    if beam_connection_sides == "both_sides":
+        sides = ["izq", "der"]
+    else:
+        sides = ["der"]
+    clause_text = _render_clause_text(step_5.get("clause"), step_5.get("source_document"), step_5.get("rule_id"))
     lines = [
         "## Paso 5 - Momento Probable En Cara De Columna (Mfmax, Mfmin)",
         "",
-        "Calculo segun Eq. (2.4-4): `Mfmax = Mpr + Vhmax*Sh` y `Mfmin = Mpr + Vhmin*Sh` (se reporta lado derecho).",
+        "Calculo segun Eq. (2.4-4): `Mfmax = Mpr + Vhmax*Sh` y `Mfmin = Mpr + Vhmin*Sh`.",
         "",
-        f"- Clausula: `{_render_clause_text(step_5.get('clause'), step_5.get('source_document'), step_5.get('rule_id'))}`",
-        "- Ecuacion: `Mfmax.der = Mpr + Vhmax.der*Sh; Mfmin.der = Mpr + Vhmin.der*Sh`",
-        "- Definicion para diseno: `Mf = Mfmax gobernante`",
-        f"- Configuracion de vigas: `{beam_connection_sides}`",
-        f"- Lado gobernante Mfmax: `{_format_text(inputs.get('governing_side_mfmax'))}`",
-        f"- Fuente Mfmax seleccionado: `{_format_text(inputs.get('selected_mfmax_source'))}`",
-        f"- Mpr (intermedio): `{_format_scalar_with_unit(inter.get('mpr'), 'kN-mm')}`",
-        f"- Sh (intermedio): `{_format_scalar_with_unit(inter.get('sh'), 'mm')}`",
     ]
     for side in sides:
+        side_suffix = f"vg{side}"
+        subtitle = "### 5.1 Calculo de momento probable en cara de columna para viga izquierda" if side == "izq" else "### 5.2 Calculo de momento probable en cara de columna para viga derecha"
         lines.extend(
             [
-                f"- Vh.{side}max (intermedio): `{_format_scalar_with_unit(inter.get(f'vh_{side}max'), 'kN')}`",
-                f"- Vh.{side}min (intermedio): `{_format_scalar_with_unit(inter.get(f'vh_{side}min'), 'kN')}`",
-                f"- Mf.{side}max: `{_format_scalar_with_unit(inter.get(f'mf_{side}max'), 'kN-mm')}`",
-                f"- Mf.{side}min: `{_format_scalar_with_unit(inter.get(f'mf_{side}min'), 'kN-mm')}`",
+                subtitle,
+                "",
+                f"- Clausula: `{clause_text}`",
+                (
+                    f"- Ecuacion: `Mf_{side_suffix}_max = Mpr_{side_suffix} + Vh_{side_suffix}_max*Sh_{side_suffix}; "
+                    f"Mf_{side_suffix}_min = Mpr_{side_suffix} + Vh_{side_suffix}_min*Sh_{side_suffix}`"
+                ),
+                f"- Mpr_{side_suffix}: `{_format_scalar_with_unit(inter.get(f'mpr_{side}'), 'kN-mm')}`",
+                f"- Sh_{side_suffix}: `{_format_scalar_with_unit(inter.get(f'sh_{side}'), 'mm')}`",
+                f"- Mf_{side_suffix}_max: `{_format_scalar_with_unit(inter.get(f'mf_{side}max'), 'kN-mm')}`",
+                f"- Mf_{side_suffix}_min: `{_format_scalar_with_unit(inter.get(f'mf_{side}min'), 'kN-mm')}`",
+                "",
             ]
         )
-    lines.extend(
-        [
-        f"- Mf (adoptado) = Mfmax gobernante: `{_format_quantity(step_5.get('demand'))}`",
-        "",
-        ]
-    )
     return "\n".join(lines)
 
 
 def _render_step_6_bolts(step_6_1: dict | None, step_6_2: dict | None) -> str:
     lines = [
-        "## Paso 6 - Revision De Resistencia Pernos",
+        "## Paso 6 - Revision De Resistencia Pernos (vg_izq)",
         "",
     ]
     if step_6_1 is not None:
         inputs = step_6_1.get("inputs", {})
+        inter = step_6_1.get("intermediates", {})
         design_factors = step_6_1.get("design_factors", {})
         lines.extend(
             [
@@ -972,34 +1008,40 @@ def _render_step_6_bolts(step_6_1: dict | None, step_6_2: dict | None) -> str:
                 f"- Clausula: `{_render_clause_text(step_6_1.get('clause'), step_6_1.get('source_document'), step_6_1.get('rule_id'))}`",
                 f"- Ecuacion: `{_format_text(step_6_1.get('equation'))}`",
                 f"- phi usado: `{_format_text(design_factors.get('phi'))}`",
-                f"- h1: `{_format_quantity(inputs.get('h1'))}`",
-                f"- h2: `{_format_quantity(inputs.get('h2'))}`",
-                f"- h3: `{_format_quantity(inputs.get('h3'))}`",
-                f"- h4: `{_format_quantity(inputs.get('h4'))}`",
-                f"- Rut_b: `{_format_quantity(step_6_1.get('demand'))}`",
-                f"- phiRnt_b: `{_format_quantity(step_6_1.get('capacity'))}`",
-                f"- DCRbt: `{_format_text(step_6_1.get('dcr'))}`",
+                f"- Mf_vgizq_critico: `{_format_quantity(inputs.get('mf_vgizq_critico'))}`",
+                f"- h1_pe_vgizq: `{_format_quantity(inputs.get('h1_pe_vgizq'))}`",
+                f"- h2_pe_vgizq: `{_format_quantity(inputs.get('h2_pe_vgizq'))}`",
+                f"- h3_pe_vgizq: `{_format_quantity(inputs.get('h3_pe_vgizq'))}`",
+                f"- h4_pe_vgizq: `{_format_quantity(inputs.get('h4_pe_vgizq'))}`",
+                f"- A_b_vgizq: `{_format_quantity(inter.get('a_b_vgizq'))}`",
+                f"- Fnt_b_vgizq: `{_format_quantity(inputs.get('fnt_b_vgizq'))}`",
+                f"- Ru_b_p+_vgizq: `{_format_quantity(step_6_1.get('demand'))}`",
+                f"- phi*Rn_b_p+_vgizq: `{_format_quantity(step_6_1.get('capacity'))}`",
+                f"- DCR_b_p+_vgizq: `{_format_text(step_6_1.get('dcr'))}`",
                 f"- Resultado: `{_render_result_plain_es(step_6_1.get('status'))}`",
                 "",
             ]
         )
     if step_6_2 is not None:
         inputs = step_6_2.get("inputs", {})
+        inter = step_6_2.get("intermediates", {})
         design_factors = step_6_2.get("design_factors", {})
         lines.extend(
             [
-                "### 6.2 Revision de capacidad a cortante",
+                "### 6.1.2 Revision de capacidad a cortante",
                 "",
-                "#### 6.2.1 ELR #1: Rotura por cortante en el perno",
+                "#### ELR #2: Rotura por cortante en el perno",
                 "",
                 f"- Clausula: `{_render_clause_text(step_6_2.get('clause'), step_6_2.get('source_document'), step_6_2.get('rule_id'))}`",
                 f"- Ecuacion: `{_format_text(step_6_2.get('equation'))}`",
                 f"- phi usado: `{_format_text(design_factors.get('phi'))}`",
-                f"- Vhmax: `{_format_quantity(inputs.get('vhmax'))}`",
-                f"- nb: `{_format_text(inputs.get('nb'))}`",
-                f"- Ruv2_b: `{_format_quantity(step_6_2.get('demand'))}`",
-                f"- phiRnv_b: `{_format_quantity(step_6_2.get('capacity'))}`",
-                f"- DCRbv: `{_format_text(step_6_2.get('dcr'))}`",
+                f"- Vh_vgizq_critico: `{_format_quantity(inputs.get('vh_vgizq_critico'))}`",
+                f"- n_b_vgizq: `{_format_text(inputs.get('n_b_vgizq'))}`",
+                f"- A_b_vgizq: `{_format_quantity(inter.get('a_b_vgizq'))}`",
+                f"- Fnt_b_vgizq: `{_format_quantity(inputs.get('fnt_b_vgizq'))}`",
+                f"- Ru_b_v2_vgizq: `{_format_quantity(step_6_2.get('demand'))}`",
+                f"- phi*Rn_b_v2_vgizq: `{_format_quantity(step_6_2.get('capacity'))}`",
+                f"- DCR_b_v2_vgizq: `{_format_text(step_6_2.get('dcr'))}`",
                 f"- Resultado: `{_render_result_plain_es(step_6_2.get('status'))}`",
                 "",
             ]
@@ -1015,7 +1057,7 @@ def _render_step_7_end_plate(
     step_7_3_2: dict | None,
 ) -> str:
     lines = [
-        "## Paso 7 - Revision de resistencia end plate",
+        "## Paso 7 - Revision de resistencia platina extremo (vg_izq)",
         "",
     ]
     if step_7_1_1 is not None:
@@ -1026,59 +1068,76 @@ def _render_step_7_end_plate(
             [
                 "### 7.1. Revision de capacidad a flexion",
                 "",
-                "#### 7.1.1. ELR #1: Fluencia (AISC 358-22 .7-8)",
+                "#### 7.1.1. ELR #1: Fluencia",
                 "",
                 f"- Clausula: `{_render_clause_text(step_7_1_1.get('clause'), step_7_1_1.get('source_document'), step_7_1_1.get('rule_id'))}`",
                 f"- Ecuacion: `{_format_text(step_7_1_1.get('equation'))}`",
                 f"- phi usado: `{_format_text(design_factors.get('phi'))}`",
-                f"- Mup: `{_format_quantity(step_7_1_1.get('demand'))}`",
-                f"- phiMnb: `{_format_quantity(step_7_1_1.get('capacity'))}`",
-                f"- DCRpm: `{_format_text(step_7_1_1.get('dcr'))}`",
-                f"- Yp calculado: `{_format_quantity(inputs.get('yp'))}`",
-                f"- Tabla Yp aplicada: `{_format_text(inputs.get('yp_table')).replace('Table', 'Tabla')}`",
-                f"- Caso Yp: `{_format_text(inputs.get('yp_case'))}`",
-                f"- s: `{_format_quantity(inter.get('s'))}`",
-                f"- pfi de entrada: `{_format_quantity(inter.get('pfi_input'))}`",
-                f"- pfi efectivo: `{_format_quantity(inter.get('pfi_effective'))}`",
+                f"- Mf_vgizq_critico: `{_format_quantity(inputs.get('mf_vgizq_critico'))}`",
+                f"- tpe_vgizq: `{_format_quantity(inputs.get('tpe_vgizq'))}`",
+                f"- Fyp_pe_vgizq: `{_format_quantity(inputs.get('fyp_pe_vgizq'))}`",
+                f"- Yp_pe_vgizq: `{_format_quantity(inputs.get('yp_pe_vgizq'))}`",
+                f"- Tabla Yp aplicada: `{_format_text(inputs.get('yp_pe_vgizq_table')).replace('Table', 'Tabla')}`",
+                f"- Caso Yp: `{_format_text(inputs.get('yp_pe_vgizq_case'))}`",
+                f"- s_pe_vgizq: `{_format_quantity(inter.get('s'))}`",
+                f"- pfi_pe_vgizq_entrada: `{_format_quantity(inter.get('pfi_input'))}`",
+                f"- pfi_pe_vgizq_efectivo: `{_format_quantity(inter.get('pfi_effective'))}`",
+                f"- Ru_pe_m3_vgizq: `{_format_quantity(step_7_1_1.get('demand'))}`",
+                f"- phi*Rn_pe_m3_vgizq: `{_format_quantity(step_7_1_1.get('capacity'))}`",
+                f"- DCR_pe_m3_vgizq: `{_format_text(step_7_1_1.get('dcr'))}`",
                 f"- Resultado: `{_render_result_plain_es(step_7_1_1.get('status'))}`",
                 "",
             ]
         )
     if step_7_2_1 is not None:
         inputs = step_7_2_1.get("inputs", {})
+        inter = step_7_2_1.get("intermediates", {})
         design_factors = step_7_2_1.get("design_factors", {})
         lines.extend(
             [
                 "### 7.2. Revision de capacidad a cortante perpendicular al plano de la platina",
                 "",
-                "#### 7.2.1. Eje #1: Fluencia por cortante (AISC 358-22 G7-10)",
+                "#### 7.2.1. ELR #1: Fluencia por cortante",
                 "",
                 f"- Clausula: `{_render_clause_text(step_7_2_1.get('clause'), step_7_2_1.get('source_document'), step_7_2_1.get('rule_id'))}`",
                 f"- Ecuacion: `{_format_text(step_7_2_1.get('equation'))}`",
                 f"- phi usado: `{_format_text(design_factors.get('phi'))}`",
-                f"- Vup: `{_format_quantity(step_7_2_1.get('demand'))}`",
-                f"- phiVn1p: `{_format_quantity(step_7_2_1.get('capacity'))}`",
-                f"- DCRpv: `{_format_text(step_7_2_1.get('dcr'))}`",
-                f"- d (altura viga): `{_format_quantity(inputs.get('d'))}`",
+                f"- d_vgizq: `{_format_quantity(inputs.get('d_vgizq'))}`",
+                f"- tf_vgizq: `{_format_quantity(inputs.get('tf_vgizq'))}`",
+                f"- z_vgizq = d_vgizq - tf_vgizq: `{_format_scalar_with_unit(inter.get('z_vgizq'), 'mm')}`",
+                f"- bpe_vgizq: `{_format_quantity(inputs.get('bpe_vgizq'))}`",
+                f"- tpe_vgizq: `{_format_quantity(inputs.get('tpe_vgizq'))}`",
+                f"- Fyp_pe_vgizq: `{_format_quantity(inputs.get('fyp_pe_vgizq'))}`",
+                f"- Ru_pe_m3_vgizq: `{_format_quantity(inputs.get('ru_pe_m3_vgizq'))}`",
+                f"- Rn_pe_v1_vgizq: `{_format_quantity(step_7_2_1.get('demand'))}`",
+                f"- phi*Rn_pe_v1_vgizq: `{_format_quantity(step_7_2_1.get('capacity'))}`",
+                f"- DCR_pe_v1_vgizq: `{_format_text(step_7_2_1.get('dcr'))}`",
                 f"- Resultado: `{_render_result_plain_es(step_7_2_1.get('status'))}`",
                 "",
             ]
         )
     if step_7_2_2 is not None:
         inputs = step_7_2_2.get("inputs", {})
+        inter = step_7_2_2.get("intermediates", {})
         design_factors = step_7_2_2.get("design_factors", {})
         lines.extend(
             [
-                "#### 7.2.2. Eje #2: Rotura por cortante (AISC 358-22 G7-12)",
+                "#### 7.2.2. ELR #2: Rotura por cortante",
                 "",
                 f"- Clausula: `{_render_clause_text(step_7_2_2.get('clause'), step_7_2_2.get('source_document'), step_7_2_2.get('rule_id'))}`",
                 f"- Ecuacion: `{_format_text(step_7_2_2.get('equation'))}`",
                 f"- phi usado: `{_format_text(design_factors.get('phi'))}`",
-                f"- Vup: `{_format_quantity(step_7_2_2.get('demand'))}`",
-                f"- phiVnb: `{_format_quantity(step_7_2_2.get('capacity'))}`",
-                f"- DCRpv: `{_format_text(step_7_2_2.get('dcr'))}`",
-                f"- dh (diametro agujero estandar): `{_format_quantity(inputs.get('dh'))}`",
-                f"- d (altura viga): `{_format_quantity(inputs.get('d'))}`",
+                f"- Ru_pe_m3_vgizq: `{_format_quantity(inputs.get('ru_pe_m3_vgizq'))}`",
+                f"- d_vgizq: `{_format_quantity(inputs.get('d_vgizq'))}`",
+                f"- tf_vgizq: `{_format_quantity(inputs.get('tf_vgizq'))}`",
+                f"- z_vgizq = d_vgizq - tf_vgizq: `{_format_scalar_with_unit(inter.get('z_vgizq'), 'mm')}`",
+                f"- bpe_vgizq: `{_format_quantity(inputs.get('bpe_vgizq'))}`",
+                f"- tpe_vgizq: `{_format_quantity(inputs.get('tpe_vgizq'))}`",
+                f"- Fup_pe_vgizq: `{_format_quantity(inputs.get('fup_pe_vgizq'))}`",
+                f"- dh_pe_vgizq: `{_format_quantity(inputs.get('dh_pe_vgizq'))}`",
+                f"- Rn_pe_v2_vgizq: `{_format_quantity(step_7_2_2.get('demand'))}`",
+                f"- phi*Rn_pe_v2_vgizq: `{_format_quantity(step_7_2_2.get('capacity'))}`",
+                f"- DCR_pe_v2_vgizq: `{_format_text(step_7_2_2.get('dcr'))}`",
                 f"- Resultado: `{_render_result_plain_es(step_7_2_2.get('status'))}`",
                 "",
             ]
@@ -1092,20 +1151,28 @@ def _render_step_7_end_plate(
         )
     if step_7_3_1 is not None:
         inputs = step_7_3_1.get("inputs", {})
+        inter = step_7_3_1.get("intermediates", {})
         design_factors = step_7_3_1.get("design_factors", {})
         lines.extend(
             [
-                "#### 7.3.1. ELR #1: Desgarramiento en la perforacion del perno (AISC 360-22 J3.11a)",
+                "#### 7.3.1. ELR #1: Desgarramiento en la perforacion del perno",
                 "",
                 f"- Clausula: `{_render_clause_text(step_7_3_1.get('clause'), step_7_3_1.get('source_document'), step_7_3_1.get('rule_id'))}`",
                 f"- Ecuacion: `{_format_text(step_7_3_1.get('equation'))}`",
                 f"- phi usado: `{_format_text(design_factors.get('phi'))}`",
-                f"- Vu2p: `{_format_quantity(step_7_3_1.get('demand'))}`",
-                f"- phiVn2p: `{_format_quantity(step_7_3_1.get('capacity'))}`",
-                f"- DCRpn2: `{_format_text(step_7_3_1.get('dcr'))}`",
-                f"- lc: `{_format_quantity(inputs.get('lc'))}`",
-                f"- dh: `{_format_quantity(inputs.get('dh'))}`",
-                f"- db: `{_format_quantity(inputs.get('db'))}`",
+                f"- Vh_vgizq_critico: `{_format_quantity(inputs.get('vh_vgizq_critico'))}`",
+                f"- n_b_vgizq: `{_format_text(inputs.get('n_b_vgizq'))}`",
+                f"- pb_pe_vgizq: `{_format_quantity(inputs.get('pb_pe_vgizq'))}`",
+                f"- pfo_pe_vgizq: `{_format_quantity(inputs.get('pfo_pe_vgizq'))}`",
+                f"- pfi_pe_vgizq: `{_format_quantity(inputs.get('pfi_pe_vgizq'))}`",
+                f"- tf_vgizq: `{_format_quantity(inputs.get('tf_vgizq'))}`",
+                f"- dh_pe_vgizq: `{_format_quantity(inputs.get('dh_pe_vgizq'))}`",
+                f"- lc_pe_vgizq: `{_format_quantity(inputs.get('lc_pe_vgizq'))}`",
+                f"- tpe_vgizq: `{_format_quantity(inputs.get('tpe_vgizq'))}`",
+                f"- Fup_pe_vgizq: `{_format_quantity(inputs.get('fup_pe_vgizq'))}`",
+                f"- Ru_pe_v2_vgizq: `{_format_quantity(step_7_3_1.get('demand'))}`",
+                f"- phi*Rn_pe_v2_vgizq: `{_format_quantity(step_7_3_1.get('capacity'))}`",
+                f"- DCR_pe_v2_vgizq: `{_format_text(step_7_3_1.get('dcr'))}`",
                 f"- Resultado: `{_render_result_plain_es(step_7_3_1.get('status'))}`",
                 "",
             ]
@@ -1115,17 +1182,19 @@ def _render_step_7_end_plate(
         design_factors = step_7_3_2.get("design_factors", {})
         lines.extend(
             [
-                "#### 7.3.2. ELR #2: Aplastamiento en la perforacion del perno (AISC 360-22 J3.11a)",
+                "#### 7.3.2. ELR #2: Aplastamiento en la perforacion del perno",
                 "",
                 f"- Clausula: `{_render_clause_text(step_7_3_2.get('clause'), step_7_3_2.get('source_document'), step_7_3_2.get('rule_id'))}`",
                 f"- Ecuacion: `{_format_text(step_7_3_2.get('equation'))}`",
                 f"- phi usado: `{_format_text(design_factors.get('phi'))}`",
-                f"- Vu2p: `{_format_quantity(step_7_3_2.get('demand'))}`",
-                f"- phiVn2p: `{_format_quantity(step_7_3_2.get('capacity'))}`",
-                f"- DCRpn2: `{_format_text(step_7_3_2.get('dcr'))}`",
-                f"- lc: `{_format_quantity(inputs.get('lc'))}`",
-                f"- dh: `{_format_quantity(inputs.get('dh'))}`",
-                f"- db: `{_format_quantity(inputs.get('db'))}`",
+                f"- Vh_vgizq_critico: `{_format_quantity(inputs.get('vh_vgizq_critico'))}`",
+                f"- n_b_vgizq: `{_format_text(inputs.get('n_b_vgizq'))}`",
+                f"- tpe_vgizq: `{_format_quantity(inputs.get('tpe_vgizq'))}`",
+                f"- Fup_pe_vgizq: `{_format_quantity(inputs.get('fup_pe_vgizq'))}`",
+                f"- d_b_vgizq: `{_format_quantity(inputs.get('d_b_vgizq'))}`",
+                f"- Ru_pe_v2_vgizq: `{_format_quantity(step_7_3_2.get('demand'))}`",
+                f"- phi*Rn_pe_v2_vgizq: `{_format_quantity(step_7_3_2.get('capacity'))}`",
+                f"- DCR_pe_v2_vgizq: `{_format_text(step_7_3_2.get('dcr'))}`",
                 f"- Resultado: `{_render_result_plain_es(step_7_3_2.get('status'))}`",
                 "",
             ]
@@ -1138,18 +1207,23 @@ def _render_step_8_stiffener_weld(step_8_1_1: dict | None) -> str:
         return ""
     inputs = step_8_1_1.get("inputs", {})
     design_factors = step_8_1_1.get("design_factors", {})
-    weld_type = _format_text(inputs.get("weld_type_normalized"))
+    weld_type = _format_text(inputs.get("tipo_w1_vgizq"))
+    if weld_type == "n/a":
+        weld_type = _format_text(inputs.get("weld_type_normalized"))
+    clause_text = _render_clause_text(step_8_1_1.get("clause"), step_8_1_1.get("source_document"), step_8_1_1.get("rule_id"))
+    clause_text = clause_text.replace("Paso 8.1.1 + AISC", "+ AISC")
+    clause_text = clause_text.replace("Paso 8.1.1 + ", "")
     lines = [
-        "## Paso 8 - Revision de Resistencia soldadura #1 (end plate con rigidizador)",
+        "## Paso 8 - Revision de Resistencia soldadura #1 (platina extremo vg_izq - rigidizador vg_izq)",
         "",
         "### 8.1. Revision de capacidad a traccion",
         "",
         "#### 8.1.1. ELR #1: Rotura de la soldadura (AISC 360-22 J2.4)",
         "",
-        f"- Clausula: `{_render_clause_text(step_8_1_1.get('clause'), step_8_1_1.get('source_document'), step_8_1_1.get('rule_id'))}`",
+        f"- Clausula: `{clause_text}`",
         f"- Ecuacion: `{_format_text(step_8_1_1.get('equation'))}`",
         f"- phi usado: `{_format_text(design_factors.get('phi'))}`",
-        f"- Tipo soldadura rigidizador: `{weld_type}`",
+        f"- tipo_w1_vgizq: `{weld_type}`",
     ]
     if weld_type == "cjp":
         lines.extend(
@@ -1162,15 +1236,19 @@ def _render_step_8_stiffener_weld(step_8_1_1: dict | None) -> str:
         return "\n".join(lines)
     lines.extend(
         [
-            f"- Pust: `{_format_quantity(step_8_1_1.get('demand'))}`",
-            f"- phiRnst: `{_format_quantity(step_8_1_1.get('capacity'))}`",
-            f"- DCRst,w1,t: `{_format_text(step_8_1_1.get('dcr'))}`",
-            "- l_st (longitud soldadura calculada): `l_st = hst - clip_st - 2*w_st`",
-            f"- l_st: `{_format_quantity(inputs.get('lst'))}`",
-            f"- clip_st: `{_format_quantity(inputs.get('clip_st'))}`",
-            f"- hst: `{_format_quantity(inputs.get('hst'))}`",
-            f"- w_st (espesor soldadura): `{_format_quantity(inputs.get('wst'))}`",
-            f"- n_l (lineas soldadura): `{_format_text(inputs.get('nl'))}`",
+            f"- Ru_w1_p+_vgizq: `{_format_quantity(step_8_1_1.get('demand'))}`",
+            f"- phi*Rn_w1_p+_vgizq: `{_format_quantity(step_8_1_1.get('capacity'))}`",
+            f"- DCR_w1_p+_vgizq: `{_format_text(step_8_1_1.get('dcr'))}`",
+            "- l_w1_vgizq (longitud soldadura calculada): `l_w1_vgizq = h_pest_vgizq - c_pest_vgizq - 2*w_w1_vgizq`",
+            f"- Fys_pest_vgizq: `{_format_quantity(inputs.get('fys_pest_vgizq'))}`",
+            f"- t_pest_vgizq: `{_format_quantity(inputs.get('t_pest_vgizq'))}`",
+            f"- h_pest_vgizq: `{_format_quantity(inputs.get('h_pest_vgizq'))}`",
+            f"- c_pest_vgizq: `{_format_quantity(inputs.get('c_pest_vgizq'))}`",
+            f"- l_w1_vgizq: `{_format_quantity(inputs.get('l_w1_vgizq'))}`",
+            f"- Fexx_w1_vgizq: `{_format_quantity(inputs.get('fexx_w1_vgizq') or inputs.get('fexx'))}`",
+            f"- w_w1_vgizq: `{_format_quantity(inputs.get('w_w1_vgizq') or inputs.get('wst'))}`",
+            f"- nl_w1_vgizq: `{_format_text(inputs.get('nl_w1_vgizq') if inputs.get('nl_w1_vgizq') is not None else inputs.get('nl'))}`",
+            f"- kds_w1_vgizq: `{_format_text(inputs.get('kds_w1_vgizq'))}`",
             f"- Resultado: `{_render_result_plain_es(step_8_1_1.get('status'))}`",
             "",
         ]
@@ -1929,8 +2007,6 @@ def render_memory_markdown(result: DetailedRunResult) -> str:
     if connection_family_normalized == "moment_prequalified":
         content.extend(
             [
-                "## Revision conexion viga a derecha de columna",
-                "",
                 "## Paso 1 - Limites de precalificacion",
                 "",
                 "Comparacion directa de valor calculado contra limite normativo (sin formato DCR).",
@@ -1954,6 +2030,12 @@ def render_memory_markdown(result: DetailedRunResult) -> str:
     if step_5 is not None:
         content.append(_render_step_5_mf(step_5))
     if step_6_1 is not None or step_6_2 is not None:
+        content.extend(
+            [
+                "## Revision de la conexion de la viga izquierda con la columna",
+                "",
+            ]
+        )
         content.append(_render_step_6_bolts(step_6_1, step_6_2))
     if (
         step_7_1_1 is not None

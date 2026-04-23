@@ -327,6 +327,16 @@ def _normalize_moment_geometry_payload(payload: dict[str, Any]) -> dict[str, Any
                         "lines",
                     ),
                 )
+                _assign_from_aliases(
+                    "kds_w1_vgder",
+                    weld_1,
+                    ("kds_w1_vgder",),
+                )
+                _assign_from_aliases(
+                    "kds_w1_vgizq",
+                    weld_1,
+                    ("kds_w1_vgizq",),
+                )
 
             if weld_2:
                 _assign_from_aliases(
@@ -374,6 +384,16 @@ def _normalize_moment_geometry_payload(payload: dict[str, Any]) -> dict[str, Any
                         "lines",
                     ),
                 )
+                _assign_from_aliases(
+                    "kds_w2_vgder",
+                    weld_2,
+                    ("kds_w2_vgder",),
+                )
+                _assign_from_aliases(
+                    "kds_w2_vgizq",
+                    weld_2,
+                    ("kds_w2_vgizq",),
+                )
 
             if weld_3:
                 _assign_from_aliases(
@@ -408,6 +428,16 @@ def _normalize_moment_geometry_payload(payload: dict[str, Any]) -> dict[str, Any
                         "n_l",
                         "lines",
                     ),
+                )
+                _assign_from_aliases(
+                    "kds_w3_vgder",
+                    weld_3,
+                    ("kds_w3_vgder",),
+                )
+                _assign_from_aliases(
+                    "kds_w3_vgizq",
+                    weld_3,
+                    ("kds_w3_vgizq",),
                 )
 
             if weld_4:
@@ -1445,6 +1475,7 @@ def _normalize_moment_split_side_payload(raw_payload: dict[str, Any], *, side: s
             "weld_type": _first_present(weld_1_raw, f"tipo_w1_{side_tag}", "weld_type"),
             "size": _first_present(weld_1_raw, f"w_w1_{side_tag}", "size"),
             "nl": _first_present(weld_1_raw, f"nl_w1_{side_tag}", "nl"),
+            f"kds_w1_{side_tag}": _first_present(weld_1_raw, f"kds_w1_{side_tag}", "kds"),
         }
     )
     if weld_1:
@@ -1455,6 +1486,7 @@ def _normalize_moment_split_side_payload(raw_payload: dict[str, Any], *, side: s
             "weld_type": _first_present(weld_2_raw, f"tipo_w2_{side_tag}", "weld_type"),
             "size": _first_present(weld_2_raw, f"w_w2_{side_tag}", "size"),
             "nl": _first_present(weld_2_raw, f"nl_w2_{side_tag}", "nl"),
+            f"kds_w2_{side_tag}": _first_present(weld_2_raw, f"kds_w2_{side_tag}", "kds"),
         }
     )
     if weld_2:
@@ -1465,6 +1497,7 @@ def _normalize_moment_split_side_payload(raw_payload: dict[str, Any], *, side: s
             "weld_type": _first_present(weld_3_raw, f"tipo_w3_{side_tag}", "weld_type"),
             "thickness": _first_present(weld_3_raw, f"t_w3_{side_tag}", "thickness"),
             "nl": _first_present(weld_3_raw, f"nl_w3_{side_tag}", "nl"),
+            f"kds_w3_{side_tag}": _first_present(weld_3_raw, f"kds_w3_{side_tag}", "kds"),
         }
     )
     if weld_3:
@@ -1511,7 +1544,9 @@ def _normalize_moment_split_side_payload(raw_payload: dict[str, Any], *, side: s
     side_design_factors = _compact_dict(
         {
             "member_ductility_demand_beam": _first_present(viga, f"demanda_ductilidad_{side_tag}")
-            or _first_present(factores, f"demanda_ductilidad_{side_tag}")
+            or _first_present(factores, f"demanda_ductilidad_{side_tag}"),
+            f"member_ductility_demand_beam_{side_tag}": _first_present(viga, f"demanda_ductilidad_{side_tag}")
+            or _first_present(factores, f"demanda_ductilidad_{side_tag}"),
         }
     )
     if side_design_factors:
@@ -1768,9 +1803,12 @@ def _compose_moment_prequalified_split_payload(
     for weld_name in required_weld_names:
         right_weld = _require_dict_key(right_welds, weld_name, "right beam split geometry.welds")
         left_weld = _require_dict_key(left_welds, weld_name, "left beam split geometry.welds")
-        # Left and right beam weld definitions may differ by project intent.
-        # Current canonical path keeps right-side values for shared legacy fields.
-        merged_welds[weld_name] = right_weld if right_weld is not None else left_weld
+        merged_block: dict[str, Any] = {}
+        if isinstance(left_weld, dict):
+            merged_block.update(left_weld)
+        if isinstance(right_weld, dict):
+            merged_block.update(right_weld)
+        merged_welds[weld_name] = merged_block
     merged_geometry["welds"] = merged_welds
 
     merged_loads = dict(_require_dict_key(merged, "loads", "column split payload"))

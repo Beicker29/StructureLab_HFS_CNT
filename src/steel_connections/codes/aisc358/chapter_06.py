@@ -365,6 +365,54 @@ def compute_end_plate_shear_rupture_capacity(
     }
 
 
+def compute_end_plate_hole_tearout_capacity(
+    *,
+    end_plate_fu: Quantity,
+    clear_distance_lc: Quantity,
+    end_plate_thickness: Quantity,
+    phi_n: float,
+    unit_system: UnitSystem,
+) -> tuple[Quantity, dict[str, float]]:
+    validate_quantity_unit(end_plate_fu, "stress", unit_system, "materials.end_plate_fu")
+    validate_quantity_unit(clear_distance_lc, "length", unit_system, "geometry.lc")
+    validate_quantity_unit(end_plate_thickness, "length", unit_system, "geometry.end_plate_thickness")
+
+    nominal_strength = 1.2 * clear_distance_lc.value * end_plate_thickness.value * end_plate_fu.value
+    design_strength = phi_n * nominal_strength
+    force_unit = "kip" if unit_system == UnitSystem.US else "kN"
+    if unit_system == UnitSystem.SI:
+        design_strength /= 1000.0
+        nominal_strength /= 1000.0
+    return Quantity(value=design_strength, unit=force_unit), {
+        "nominal_strength": nominal_strength,
+        "phi_n": phi_n,
+    }
+
+
+def compute_end_plate_hole_bearing_capacity(
+    *,
+    end_plate_fu: Quantity,
+    bolt_diameter: Quantity,
+    end_plate_thickness: Quantity,
+    phi_n: float,
+    unit_system: UnitSystem,
+) -> tuple[Quantity, dict[str, float]]:
+    validate_quantity_unit(end_plate_fu, "stress", unit_system, "materials.end_plate_fu")
+    validate_quantity_unit(bolt_diameter, "length", unit_system, "geometry.bolt_diameter")
+    validate_quantity_unit(end_plate_thickness, "length", unit_system, "geometry.end_plate_thickness")
+
+    nominal_strength = 2.4 * bolt_diameter.value * end_plate_thickness.value * end_plate_fu.value
+    design_strength = phi_n * nominal_strength
+    force_unit = "kip" if unit_system == UnitSystem.US else "kN"
+    if unit_system == UnitSystem.SI:
+        design_strength /= 1000.0
+        nominal_strength /= 1000.0
+    return Quantity(value=design_strength, unit=force_unit), {
+        "nominal_strength": nominal_strength,
+        "phi_n": phi_n,
+    }
+
+
 def compute_bolt_shear_rupture_capacity(
     *,
     bolt_fnv: Quantity,

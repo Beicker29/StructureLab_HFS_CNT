@@ -67,7 +67,8 @@
       },
       "tipo_w1_vgder": null,
       "w_w1_vgder": null,
-      "nl_w1_vgder": null
+      "nl_w1_vgder": null,
+      "kds_w1_vgder": 1.0
     },
     "weld_2": {
       "description": null,
@@ -77,7 +78,8 @@
       },
       "tipo_w2_vgder": null,
       "w_w2_vgder": null,
-      "nl_w2_vgder": null
+      "nl_w2_vgder": null,
+      "kds_w2_vgder": 1.0
     },
     "weld_3": {
       "description": "Alma de viga con end plate",
@@ -90,7 +92,8 @@
         "value": 8.0,
         "unit": "mm"
       },
-      "nl_w3_vgder": 2
+      "nl_w3_vgder": 2,
+      "kds_w3_vgder": 1.0
     }
   },
   "loads": {

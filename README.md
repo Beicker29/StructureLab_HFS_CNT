@@ -107,6 +107,7 @@ Campos clave en `design_factors` para Chapter 6 Step 1a:
 Campos clave en `loads` para compactacion Chapter 6:
 - `pu_viga`: carga axial `Pu` de la viga.
 - `pu_columna`: carga axial `Pu` de la columna.
+- Convencion de signo axial del repo: traccion positiva (`+`) y compresion negativa (`-`).
 - El motor calcula `Ca` automaticamente como `Ca = Pu / (Ry * Ag * Fy)`:
   - `Ag` desde `data/sections.xlsx` (catalogo de secciones)
   - `Fy` desde `data/materials.xlsx` (hoja `HRS`)

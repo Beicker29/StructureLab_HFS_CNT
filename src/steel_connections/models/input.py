@@ -132,6 +132,12 @@ class AISC358MomentGeometry(StrictModel):
     beam_stiffener_weld_length_lstw2: Quantity | None = None
     beam_stiffener_weld_size_wst2: Quantity | None = None
     beam_stiffener_weld_lines_nl_w2: int | None = None
+    kds_w1_vgder: float | None = None
+    kds_w1_vgizq: float | None = None
+    kds_w2_vgder: float | None = None
+    kds_w2_vgizq: float | None = None
+    kds_w3_vgder: float | None = None
+    kds_w3_vgizq: float | None = None
     stiffener_height: Quantity | None = None
     stiffener_thickness: Quantity | None = None
     stiffener_length: Quantity | None = None
@@ -193,6 +199,22 @@ class AISC358MomentGeometry(StrictModel):
             raise ValueError("geometry.beam_stiffener_weld_lines_nl_w2 must be >= 1.")
         return value
 
+    @field_validator(
+        "kds_w1_vgder",
+        "kds_w1_vgizq",
+        "kds_w2_vgder",
+        "kds_w2_vgizq",
+        "kds_w3_vgder",
+        "kds_w3_vgizq",
+    )
+    @classmethod
+    def validate_kds_positive(cls, value: float | None) -> float | None:
+        if value is None:
+            return None
+        if value <= 0.0:
+            raise ValueError("geometry.kds_wi_<lado> must be > 0.")
+        return value
+
     @field_validator("bolt_tightening_type")
     @classmethod
     def normalize_bolt_tightening_type(cls, value: str | None) -> str | None:
@@ -237,6 +259,8 @@ class AISC358MomentDesignFactors(StrictModel):
     ry: float | None = None
     beam_connection_sides: str | None = None
     member_ductility_demand_beam: str | None = None
+    member_ductility_demand_beam_vgder: str | None = None
+    member_ductility_demand_beam_vgizq: str | None = None
     member_ductility_demand_column: str | None = None
     column_beam_moment_ratio_minimum: float | None = None
     column_beam_moment_ratio: float | None = None
@@ -279,14 +303,19 @@ class AISC358MomentDesignFactors(StrictModel):
             "(also accepts 'derecha'/'ambas')."
         )
 
-    @field_validator("member_ductility_demand_beam", "member_ductility_demand_column")
+    @field_validator(
+        "member_ductility_demand_beam",
+        "member_ductility_demand_beam_vgder",
+        "member_ductility_demand_beam_vgizq",
+        "member_ductility_demand_column",
+    )
     @classmethod
     def validate_member_ductility_demand(cls, value: str | None) -> str | None:
         if value is None:
             return value
         normalized = value.strip().lower()
-        if normalized not in {"high", "moderate"}:
-            raise ValueError("member_ductility_demand_* must be 'high' or 'moderate'.")
+        if normalized not in {"high", "moderate", "low"}:
+            raise ValueError("member_ductility_demand_* must be 'high', 'moderate' or 'low'.")
         return normalized
 
     @field_validator("column_beam_moment_ratio_minimum", "column_beam_moment_ratio")
