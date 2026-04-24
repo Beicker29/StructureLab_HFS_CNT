@@ -4174,10 +4174,10 @@
         "unit": "kN"
       },
       "capacity": {
-        "value": 705.48246,
+        "value": 587.9020499999999,
         "unit": "kN"
       },
-      "dcr": 0.07561907123200383,
+      "dcr": 0.0907428854784046,
       "status": "PASS",
       "calculation_memory": {
         "inputs": {
@@ -4203,10 +4203,10 @@
         "intermediates": {
           "ru_pe_v2_vgizq": 53.347928395669285,
           "nominal_strength": 783.8693999999999,
-          "design_strength": 705.48246
+          "design_strength": 587.9020499999999
         },
         "design_factors": {
-          "phi": 0.9
+          "phi": 0.75
         },
         "equation": "Ru_pe_v2_vgizq = Vh_vgizq_critico / n_b_vgizq; phi*Rn_pe_v2_vgizq = phi * 2.4 * d_b_vgizq * tpe_vgizq * Fup_pe_vgizq (AISC 360-22 J3.11a)",
         "units_trace": {
@@ -4214,7 +4214,7 @@
           "phi_rn_pe_v2_vgizq": "kN"
         },
         "final_capacity": {
-          "value": 705.48246,
+          "value": 587.9020499999999,
           "unit": "kN"
         }
       },
@@ -4315,17 +4315,22 @@
         "unit": "kN"
       },
       "capacity": {
-        "value": 521.9987778673651,
+        "value": 434.9989815561376,
         "unit": "kN"
       },
-      "dcr": 0.7376830977558396,
+      "dcr": 0.8852197173070075,
       "status": "PASS",
       "calculation_memory": {
         "inputs": {
           "beam_stiffener_weld_type": "Fillet",
           "weld_type_source": "geometry.beam_stiffener_weld_type",
           "weld_type_normalized": "fillet",
+          "tipo_w2_vgizq": "fillet",
           "fys": {
+            "value": 345.0,
+            "unit": "MPa"
+          },
+          "fys_pest_vgizq": {
             "value": 345.0,
             "unit": "MPa"
           },
@@ -4333,7 +4338,15 @@
             "value": 12.7,
             "unit": "mm"
           },
+          "t_pest_vgizq": {
+            "value": 12.7,
+            "unit": "mm"
+          },
           "fexx": {
+            "value": 490.0,
+            "unit": "MPa"
+          },
+          "fexx_w2_vgizq": {
             "value": 490.0,
             "unit": "MPa"
           },
@@ -4341,7 +4354,15 @@
             "value": 110.0,
             "unit": "mm"
           },
+          "h_pest_vgizq": {
+            "value": 110.0,
+            "unit": "mm"
+          },
           "lst": {
+            "value": 190.52558883257652,
+            "unit": "mm"
+          },
+          "l_pest_vgizq": {
             "value": 190.52558883257652,
             "unit": "mm"
           },
@@ -4349,7 +4370,15 @@
             "value": 25.0,
             "unit": "mm"
           },
+          "c_pest_vgizq": {
+            "value": 25.0,
+            "unit": "mm"
+          },
           "lst_w2": {
+            "value": 146.4755888325765,
+            "unit": "mm"
+          },
+          "l_w2_vgizq": {
             "value": 146.4755888325765,
             "unit": "mm"
           },
@@ -4358,27 +4387,33 @@
             "value": 9.525,
             "unit": "mm"
           },
+          "w_w2_vgizq": {
+            "value": 9.525,
+            "unit": "mm"
+          },
           "wst2_source": "geometry.beam_stiffener_weld_size_wst2",
           "nl_w2": 2,
+          "nl_w2_vgizq": 2,
+          "kds_w2_vgizq": 1.0,
           "nl_w2_source": "geometry.beam_stiffener_weld_lines_nl_w2"
         },
         "intermediates": {
-          "vust_nominal": 385069.6754819603,
-          "vnst_nominal": 579998.6420748502,
-          "phi_vnst_nominal": 521998.77786736516,
-          "vust": 385.0696754819603,
-          "phi_vnst": 521.9987778673651
+          "ru_w2_v2_vgizq_nominal": 385069.6754819603,
+          "rn_w2_v2_vgizq_nominal": 579998.6420748502,
+          "phi_rn_w2_v2_vgizq_nominal": 434998.9815561376,
+          "ru_w2_v2_vgizq": 385.0696754819603,
+          "phi_rn_w2_v2_vgizq": 434.9989815561376
         },
         "design_factors": {
-          "phi": 0.9
+          "phi": 0.75
         },
-        "equation": "Fillet: Vust,w2 = Fys * 0.6 * ts * l_st,w2; l_st,w2 = Lst - clip_st - 2*w_st; phiVnst,w2 = phi * nl * 0.6 * FEXX * 0.707 * l_st,w2 * w_st (AISC 360-22W J2b(g))",
+        "equation": "Fillet: Ru_w2_v2_vgizq = Fys_pest_vgizq * 0.6 * t_pest_vgizq * l_w2_vgizq; l_w2_vgizq = L_pest_vgizq - c_pest_vgizq - 2*w_w2_vgizq; phi*Rn_w2_v2_vgizq = phi * kds_w2_vgizq * nl_w2_vgizq * 0.6 * Fexx_w2_vgizq * 0.707 * l_w2_vgizq * w_w2_vgizq; DCR_w2_v2_vgizq = Ru_w2_v2_vgizq / phi*Rn_w2_v2_vgizq (AISC 360-22W J2b(g))",
         "units_trace": {
-          "vust": "kN",
-          "phi_vnst": "kN"
+          "ru_w2_v2_vgizq": "kN",
+          "phi_rn_w2_v2_vgizq": "kN"
         },
         "final_capacity": {
-          "value": 521.9987778673651,
+          "value": 434.9989815561376,
           "unit": "kN"
         }
       },
@@ -4390,67 +4425,63 @@
       "clause": "Chapter 6 / Section 6.7.1 Step 10.1.1 + AISC 360-22 G2.1",
       "source_document": "AISC 360-22",
       "demand": {
-        "value": 514.1257007874015,
+        "value": 426.7834271653543,
         "unit": "kN"
       },
       "capacity": {
-        "value": 1407.2687999999998,
+        "value": 1032.8472000000002,
         "unit": "kN"
       },
-      "dcr": 0.36533581984294794,
+      "dcr": 0.4132106154379411,
       "status": "PASS",
       "calculation_memory": {
         "inputs": {
-          "vhmax": {
-            "value": 514.1257007874015,
+          "Vh_vgizq_max": {
+            "value": 426.7834271653543,
             "unit": "kN"
           },
-          "vhmax_source": "step4_computed_vhmax_der (governing_side=der)",
-          "vhmax_computed": {
-            "value": 514.1257007874015,
-            "unit": "kN"
-          },
-          "fybm": {
+          "Vh_vgizq_source": "step4_computed_vhmax_izq",
+          "Fy_vgizq": {
             "value": 345.0,
             "unit": "MPa"
           },
-          "tw_bm": {
-            "value": 11.2,
+          "tw_vgizq": {
+            "value": 10.8,
             "unit": "mm"
           },
-          "d": {
-            "value": 607.0,
+          "d_vgizq": {
+            "value": 462.0,
             "unit": "mm"
           },
-          "kdes": {
-            "value": 30.0,
+          "kdes_vgizq": {
+            "value": 27.4,
             "unit": "mm"
           },
-          "elastic_modulus": {
+          "E_vgizq": {
             "value": 200000.0,
             "unit": "MPa"
           },
           "cv1": 1.0
         },
         "intermediates": {
-          "h_clear": 547.0,
-          "h_over_tw": 48.839285714285715,
+          "h_clear": 407.2,
+          "h_over_tw": 37.7037037037037,
           "kv": 5.34,
           "lambda_r": 61.20244382730794,
           "cv1": 1.0,
-          "nominal_shear": 1407.2687999999998,
-          "design_shear": 1407.2687999999998
+          "rn_v2_vgizq": 1032.8472000000002,
+          "phi_rn_v2_vgizq": 1032.8472000000002
         },
         "design_factors": {
           "phi": 1.0
         },
-        "equation": "Vubm = Vhmax; phiVnbm = phi * 0.6 * Fybm * tw,bm * d * Cv1 (AISC 360-22 G2.1, Eq. G2-3/G2-4; kv=5.34 for webs without transverse stiffeners)",
+        "equation": "Ru_v2_vgizq = Vh_vgizq_max; Rn_v2_vgizq = 0.6 * Fy_vgizq * tw_vgizq * d_vgizq * Cv1; phi*Rn_v2_vgizq = phi * Rn_v2_vgizq; DCR_v2_vgizq = Ru_v2_vgizq / phi*Rn_v2_vgizq (AISC 360-22 G2.1, Eq. G2-3/G2-4; kv=5.34 for webs without transverse stiffeners)",
         "units_trace": {
-          "vubm": "kN",
-          "phi_vnbm": "kN"
+          "Ru_v2_vgizq": "kN",
+          "phi*Rn_v2_vgizq": "kN"
         },
         "final_capacity": {
-          "value": 1407.2687999999998,
+          "value": 1032.8472000000002,
           "unit": "kN"
         }
       },

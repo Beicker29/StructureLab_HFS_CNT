@@ -43,7 +43,7 @@ from steel_connections.codes.engineering.geometry import compute_protected_zone_
 from steel_connections.codes.engineering.shear import compute_beam_web_shear_yielding_strength
 from steel_connections.codes.engineering.weld import (
     WeldFillet,
-    compute_fillet_weld_tension_check_with_kds,
+    compute_fillet_weld_check_with_kds,
     compute_plate_shear_demand_from_yielding,
     compute_plate_tension_demand_from_yielding,
 )
@@ -1668,7 +1668,7 @@ def run_step7_3_2_end_plate_hole_bearing(case: AISC358MomentCase, rule_binding: 
     tpe_vgizq = _require(case, "geometry.end_plate_thickness", rule_binding)
     fup_pe_vgizq = _require(case, "materials.end_plate_fu", rule_binding)
     d_b_vgizq = _require(case, "geometry.bolt_diameter", rule_binding)
-    phi = 0.9
+    phi = 0.75
 
     phi_rn_pe_v2_vgizq, cap_intermediate = compute_end_plate_hole_bearing_capacity(
         end_plate_fu=fup_pe_vgizq,
@@ -1772,7 +1772,7 @@ def run_step8_1_1_stiffener_weld_tension_rupture(case: AISC358MomentCase, rule_b
     )
     ru_w1_p_pos_vgizq = demand_result["pu"]
     phi = 0.75
-    weld_check = compute_fillet_weld_tension_check_with_kds(
+    weld_check = compute_fillet_weld_check_with_kds(
         demand=ru_w1_p_pos_vgizq,
         fexx=weld_fexx,
         weld_size=wst,
@@ -1846,6 +1846,8 @@ def run_step9_1_1_stiffener_beam_weld_shear_rupture(case: AISC358MomentCase, rul
                 "beam_stiffener_weld_type": weld_type_raw,
                 "weld_type_source": weld_type_source,
                 "weld_type_normalized": weld_type,
+                "tipo_w2_vgizq": weld_type,
+                "kds_w2_vgizq": _require(case, "geometry.kds_w2_vgizq", rule_binding),
             },
             intermediates={},
             design_factors={},
@@ -1863,9 +1865,9 @@ def run_step9_1_1_stiffener_beam_weld_shear_rupture(case: AISC358MomentCase, rul
     weld_fexx = _require(case, "materials.weld_fexx", rule_binding)
     de = _require(case, "geometry.de", rule_binding)
     pfo = _require(case, "geometry.pfo", rule_binding)
-    hst = _derive_stiffener_height_from_de_pfo(de=de, pfo=pfo)
-    lst = _derive_stiffener_length_from_hst(stiffener_height=hst, unit_system=case.units_system)
-    clip_st = _stiffener_clip_distance(case.units_system)
+    h_pest_vgizq = _derive_stiffener_height_from_de_pfo(de=de, pfo=pfo)
+    l_pest_vgizq = _derive_stiffener_length_from_hst(stiffener_height=h_pest_vgizq, unit_system=case.units_system)
+    c_pest_vgizq = _stiffener_clip_distance(case.units_system)
 
     wst2 = case.geometry.beam_stiffener_weld_size_wst2
     wst2_source = "geometry.beam_stiffener_weld_size_wst2"
@@ -1883,12 +1885,12 @@ def run_step9_1_1_stiffener_beam_weld_shear_rupture(case: AISC358MomentCase, rul
             ),
         )
 
-    lst_w2 = Quantity(
-        value=lst.value - clip_st.value - (2.0 * wst2.value),
-        unit=lst.unit,
+    l_w2_vgizq = Quantity(
+        value=l_pest_vgizq.value - c_pest_vgizq.value - (2.0 * wst2.value),
+        unit=l_pest_vgizq.unit,
     )
     lst_w2_source = "derived_lst_minus_clip_st_minus_2w_st"
-    if lst_w2.value <= 0.0:
+    if l_w2_vgizq.value <= 0.0:
         raise ValueError("Derived weld_2 length (l_st,w2 = Lst - clip_st - 2*w_st) must be positive.")
 
     nl_w2 = case.geometry.beam_stiffener_weld_lines_nl_w2
@@ -1913,106 +1915,135 @@ def run_step9_1_1_stiffener_beam_weld_shear_rupture(case: AISC358MomentCase, rul
         )
     if nl_w2 <= 0:
         raise ValueError("beam_stiffener_weld_lines_nl_w2 must be >= 1 for Step 9.1.1.")
+    kds_w2_vgizq = _require(case, "geometry.kds_w2_vgizq", rule_binding)
 
     demand_result = compute_plate_shear_demand_from_yielding(
         fy=stiffener_fy,
         thickness=stiffener_thickness,
-        effective_length=lst_w2,
+        effective_length=l_w2_vgizq,
         unit_system=case.units_system,
     )
-    vust = demand_result["vu"]
-    phi = 0.9
-    weld_strength = WeldFillet(
+    ru_w2_v2_vgizq = demand_result["vu"]
+    phi = 0.75
+    weld_strength = compute_fillet_weld_check_with_kds(
+        demand=ru_w2_v2_vgizq,
         fexx=weld_fexx,
         weld_size=wst2,
-        weld_length=lst_w2,
+        weld_length=l_w2_vgizq,
         weld_lines=nl_w2,
+        kds=kds_w2_vgizq,
         unit_system=case.units_system,
         phi=phi,
-    ).design_strength()
-    phi_vnst = weld_strength["phi_rn"]
+    )
+    phi_rn_w2_v2_vgizq = weld_strength["phi_rn"]
 
     return _build_result(
         rule_binding=rule_binding,
-        demand=vust,
-        capacity=phi_vnst,
+        demand=ru_w2_v2_vgizq,
+        capacity=phi_rn_w2_v2_vgizq,
         equation=(
-            "Fillet: Vust,w2 = Fys * 0.6 * ts * l_st,w2; "
-            "l_st,w2 = Lst - clip_st - 2*w_st; "
-            "phiVnst,w2 = phi * nl * 0.6 * FEXX * 0.707 * l_st,w2 * w_st "
+            "Fillet: Ru_w2_v2_vgizq = Fys_pest_vgizq * 0.6 * t_pest_vgizq * l_w2_vgizq; "
+            "l_w2_vgizq = L_pest_vgizq - c_pest_vgizq - 2*w_w2_vgizq; "
+            "phi*Rn_w2_v2_vgizq = phi * kds_w2_vgizq * nl_w2_vgizq * 0.6 * Fexx_w2_vgizq * 0.707 * l_w2_vgizq * w_w2_vgizq; "
+            "DCR_w2_v2_vgizq = Ru_w2_v2_vgizq / phi*Rn_w2_v2_vgizq "
             "(AISC 360-22W J2b(g))"
         ),
         inputs={
             "beam_stiffener_weld_type": weld_type_raw,
             "weld_type_source": weld_type_source,
             "weld_type_normalized": weld_type,
+            "tipo_w2_vgizq": weld_type,
             "fys": stiffener_fy.model_dump(),
+            "fys_pest_vgizq": stiffener_fy.model_dump(),
             "ts": stiffener_thickness.model_dump(),
+            "t_pest_vgizq": stiffener_thickness.model_dump(),
             "fexx": weld_fexx.model_dump(),
-            "hst": hst.model_dump(),
-            "lst": lst.model_dump(),
-            "clip_st": clip_st.model_dump(),
-            "lst_w2": lst_w2.model_dump(),
+            "fexx_w2_vgizq": weld_fexx.model_dump(),
+            "hst": h_pest_vgizq.model_dump(),
+            "h_pest_vgizq": h_pest_vgizq.model_dump(),
+            "lst": l_pest_vgizq.model_dump(),
+            "l_pest_vgizq": l_pest_vgizq.model_dump(),
+            "clip_st": c_pest_vgizq.model_dump(),
+            "c_pest_vgizq": c_pest_vgizq.model_dump(),
+            "lst_w2": l_w2_vgizq.model_dump(),
+            "l_w2_vgizq": l_w2_vgizq.model_dump(),
             "lst_w2_source": lst_w2_source,
             "wst2": wst2.model_dump(),
+            "w_w2_vgizq": wst2.model_dump(),
             "wst2_source": wst2_source,
             "nl_w2": nl_w2,
+            "nl_w2_vgizq": nl_w2,
+            "kds_w2_vgizq": kds_w2_vgizq,
             "nl_w2_source": nl_w2_source,
         },
         intermediates={
-            "vust_nominal": demand_result["vu_base_force"],
-            "vnst_nominal": weld_strength["rn_base_force"],
-            "phi_vnst_nominal": weld_strength["phi_rn_base_force"],
-            "vust": vust.value,
-            "phi_vnst": phi_vnst.value,
+            "ru_w2_v2_vgizq_nominal": demand_result["vu_base_force"],
+            "rn_w2_v2_vgizq_nominal": weld_strength["rn_base_force"],
+            "phi_rn_w2_v2_vgizq_nominal": weld_strength["phi_rn_base_force"],
+            "ru_w2_v2_vgizq": ru_w2_v2_vgizq.value,
+            "phi_rn_w2_v2_vgizq": phi_rn_w2_v2_vgizq.value,
         },
         design_factors={"phi": phi},
-        units_trace={"vust": vust.unit, "phi_vnst": phi_vnst.unit},
+        units_trace={
+            "ru_w2_v2_vgizq": ru_w2_v2_vgizq.unit,
+            "phi_rn_w2_v2_vgizq": phi_rn_w2_v2_vgizq.unit,
+        },
     )
 
 
 def run_step10_1_1_beam_shear_yielding(case: AISC358MomentCase, rule_binding: object) -> CheckResult:
-    beam_profile = _beam_profile(case)
-    d = beam_profile["d"]
-    tw = beam_profile["tw"]
-    kdes = _profile_kdes(beam_profile, role="beam", rule_binding=rule_binding)
-    fybm = _require(case, "materials.beam_fy", rule_binding)
-    elastic_modulus = _require(case, "materials.elastic_modulus", rule_binding)
+    if "izq" not in _active_beam_sides(case):
+        raise missing_required_input_error(
+            rule_id=rule_binding.rule_id,
+            source_document=rule_binding.source_document,
+            missing_fields=["design_factors.beam_connection_sides"],
+            message=(
+                "Step 10.1.1 requires left-beam evaluation. "
+                "Set design_factors.beam_connection_sides = 'both_sides'."
+            ),
+        )
+    beam_profile = _beam_profile_by_side(case, "izq")
+    d_vgizq = beam_profile["d"]
+    tw_vgizq = beam_profile["tw"]
+    kdes_vgizq = _profile_kdes(beam_profile, role="beam", rule_binding=rule_binding)
+    fy_vgizq = _require(case, "materials.beam_fy", rule_binding)
+    e_vgizq = _require(case, "materials.elastic_modulus", rule_binding)
     vh_data = _compute_vh_by_side(case, rule_binding)
-    vh_computed = vh_data["governing_vhmax"]
-    vubm, vh_source = _select_stated_vhmax_for_design(case, vh_data)
+    vh_vgizq_max = vh_data["sides"]["izq"]["vhmax"]
+    ru_v2_vgizq = vh_vgizq_max
+    vh_source = "step4_computed_vhmax_izq"
 
     phi = 1.0
     shear_result = compute_beam_web_shear_yielding_strength(
-        fy=fybm,
-        tw=tw,
-        d=d,
-        kdes=kdes,
-        elastic_modulus=elastic_modulus,
+        fy=fy_vgizq,
+        tw=tw_vgizq,
+        d=d_vgizq,
+        kdes=kdes_vgizq,
+        elastic_modulus=e_vgizq,
         unit_system=case.units_system,
         phi=phi,
     )
-    phi_vnbm = shear_result["phi_vn"]
+    phi_rn_v2_vgizq = shear_result["phi_vn"]
     nominal_shear = shear_result["vn"].value
-    design_shear = phi_vnbm.value
+    design_shear = phi_rn_v2_vgizq.value
 
     return _build_result(
         rule_binding=rule_binding,
-        demand=vubm,
-        capacity=phi_vnbm,
+        demand=ru_v2_vgizq,
+        capacity=phi_rn_v2_vgizq,
         equation=(
-            "Vubm = Vhmax; phiVnbm = phi * 0.6 * Fybm * tw,bm * d * Cv1 "
+            "Ru_v2_vgizq = Vh_vgizq_max; Rn_v2_vgizq = 0.6 * Fy_vgizq * tw_vgizq * d_vgizq * Cv1; "
+            "phi*Rn_v2_vgizq = phi * Rn_v2_vgizq; DCR_v2_vgizq = Ru_v2_vgizq / phi*Rn_v2_vgizq "
             "(AISC 360-22 G2.1, Eq. G2-3/G2-4; kv=5.34 for webs without transverse stiffeners)"
         ),
         inputs={
-            "vhmax": vubm.model_dump(),
-            "vhmax_source": vh_source,
-            "vhmax_computed": vh_computed.model_dump(),
-            "fybm": fybm.model_dump(),
-            "tw_bm": tw.model_dump(),
-            "d": d.model_dump(),
-            "kdes": kdes.model_dump(),
-            "elastic_modulus": elastic_modulus.model_dump(),
+            "Vh_vgizq_max": ru_v2_vgizq.model_dump(),
+            "Vh_vgizq_source": vh_source,
+            "Fy_vgizq": fy_vgizq.model_dump(),
+            "tw_vgizq": tw_vgizq.model_dump(),
+            "d_vgizq": d_vgizq.model_dump(),
+            "kdes_vgizq": kdes_vgizq.model_dump(),
+            "E_vgizq": e_vgizq.model_dump(),
             "cv1": shear_result["cv1"],
         },
         intermediates={
@@ -2021,11 +2052,14 @@ def run_step10_1_1_beam_shear_yielding(case: AISC358MomentCase, rule_binding: ob
             "kv": shear_result["kv"],
             "lambda_r": shear_result["lambda_r"],
             "cv1": shear_result["cv1"],
-            "nominal_shear": nominal_shear,
-            "design_shear": design_shear,
+            "rn_v2_vgizq": nominal_shear,
+            "phi_rn_v2_vgizq": design_shear,
         },
         design_factors={"phi": phi},
-        units_trace={"vubm": vubm.unit, "phi_vnbm": phi_vnbm.unit},
+        units_trace={
+            "Ru_v2_vgizq": ru_v2_vgizq.unit,
+            "phi*Rn_v2_vgizq": phi_rn_v2_vgizq.unit,
+        },
     )
 
 

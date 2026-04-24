@@ -17,15 +17,20 @@ def compute_beam_web_shear_yielding_strength(
     unit_system: UnitSystem,
     phi: float = 1.0,
 ) -> dict[str, Any]:
-    """Compute beam web shear yielding strength with Cv1.
+    """Compute rolled I-shape beam web shear yielding strength with Cv1.
 
     Equation:
-    ``phiVn = phi * 0.6 * Fy * tw * d * Cv1``
+    ``Rn = 0.6 * Fy * tw * d * Cv1`` and ``phiRn = phi * Rn``
     with ``Cv1 = min(1.0, lambda_r/(h/tw))`` and
     ``lambda_r = 1.10*sqrt(kv*E/Fy)``, ``kv=5.34``.
 
     Reference:
     - AISC 360-22 G2.1 (Eq. G2-3 / G2-4, unstiffened web)
+
+    Scope:
+    - Rolled I-shapes used in this repo such as W, IPE, HEA, and HEB,
+      modeled with ``tw``, ``d``, and ``kdes`` under the unstiffened-web
+      provisions of AISC 360-22 G2.1.
     """
 
     validate_quantity_unit(fy, "stress", unit_system, "fy")
@@ -63,4 +68,3 @@ def compute_beam_web_shear_yielding_strength(
         "phi_vn_base_force": phi_vn_base,
         "phi": phi,
     }
-

@@ -149,7 +149,7 @@ class WeldFillet:
         }
 
 
-def compute_fillet_weld_tension_check_with_kds(
+def compute_fillet_weld_check_with_kds(
     *,
     demand: Quantity,
     fexx: Quantity,
@@ -160,7 +160,7 @@ def compute_fillet_weld_tension_check_with_kds(
     unit_system: UnitSystem,
     phi: float = AISCConstants.PHI_WELD_DEFAULT,
 ) -> dict[str, Any]:
-    """Compute fillet weld tension capacity and utilization including directional factor ``kds``.
+    """Compute fillet weld capacity and utilization including directional factor ``kds``.
 
     Equation:
     ``phiRn = phi * kds * nl * 0.6 * Fexx * 0.707 * L * w``

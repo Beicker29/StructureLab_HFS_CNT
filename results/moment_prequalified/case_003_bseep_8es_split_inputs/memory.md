@@ -737,15 +737,15 @@ Calculo segun Eq. (2.4-4): `Mfmax = Mpr + Vhmax*Sh` y `Mfmin = Mpr + Vhmin*Sh`.
 
 - Clausula: `Documento: AISC 360-22 | Seccion: Capitulo 6 / Seccion 7.3.2 + AISC 360-22 J3.11(a)`
 - Ecuacion: `Ru_pe_v2_vgizq = Vh_vgizq_critico / n_b_vgizq; phi*Rn_pe_v2_vgizq = phi * 2.4 * d_b_vgizq * tpe_vgizq * Fup_pe_vgizq (AISC 360-22 J3.11a)`
-- phi usado: `0.9`
+- phi usado: `0.75`
 - Vh_vgizq_critico: `426.78 kN`
 - n_b_vgizq: `8`
 - tpe_vgizq: `25.4 mm`
 - Fup_pe_vgizq: `450 MPa`
 - d_b_vgizq: `28.57 mm`
 - Ru_pe_v2_vgizq: `53.35 kN`
-- phi*Rn_pe_v2_vgizq: `705.48 kN`
-- DCR_pe_v2_vgizq: `0.08`
+- phi*Rn_pe_v2_vgizq: `587.9 kN`
+- DCR_pe_v2_vgizq: `0.09`
 - Resultado: `Cumple`
 
 ## Paso 8 - Revision de Resistencia soldadura #1 (platina extremo vg_izq - rigidizador vg_izq)
@@ -773,76 +773,93 @@ Calculo segun Eq. (2.4-4): `Mfmax = Mpr + Vhmax*Sh` y `Mfmin = Mpr + Vhmin*Sh`.
 - DCR_w1_p+_vgizq: `2.46`
 - Resultado: `No cumple`
 
-## Paso 9 - Revision de resistencia soldadura #2 (viga con rigidizador)
+## Paso 9 - Revision de Resistencia soldadura #2 (viga vg_izq - rigidizador vg_izq)
 
 ### 9.1. Revision de capacidad a cortante
 
 #### 9.1.1. ELR #1: Rotura de la soldadura (AISC 360-22 J2.4)
 
-- Clausula: `Documento: AISC 358-22 | Seccion: Capitulo 6 / Seccion 6.7.1 Paso 9.1.1 + AISC 360-22 J2.4`
-- Ecuacion: `Fillet: Vust,w2 = Fys * 0.6 * ts * l_st,w2; l_st,w2 = Lst - clip_st - 2*w_st; phiVnst,w2 = phi * nl * 0.6 * FEXX * 0.707 * l_st,w2 * w_st (AISC 360-22W J2b(g))`
-- phi usado: `0.9`
-- Tipo soldadura viga-rigidizador: `fillet`
-- Vust,w2: `385.07 kN`
-- phiVnst,w2: `522 kN`
-- DCRst,w2,v: `0.74`
-- l_st,w2 (longitud soldadura calculada): `l_st,w2 = Lst - clip_st - 2*w_st`
-- l_st,w2: `146.48 mm`
-- Lst: `190.53 mm`
-- clip_st: `25 mm`
-- w_st,2 (espesor soldadura): `9.53 mm`
-- n_l,w2 (lineas soldadura): `2`
+- Clausula: `Documento: AISC 358-22 | Seccion: Capitulo 6 / Seccion 6.7.1 + AISC 360-22 J2.4`
+- Ecuacion: `Fillet: Ru_w2_v2_vgizq = Fys_pest_vgizq * 0.6 * t_pest_vgizq * l_w2_vgizq; l_w2_vgizq = L_pest_vgizq - c_pest_vgizq - 2*w_w2_vgizq; phi*Rn_w2_v2_vgizq = phi * kds_w2_vgizq * nl_w2_vgizq * 0.6 * Fexx_w2_vgizq * 0.707 * l_w2_vgizq * w_w2_vgizq; DCR_w2_v2_vgizq = Ru_w2_v2_vgizq / phi*Rn_w2_v2_vgizq (AISC 360-22W J2b(g))`
+- phi usado: `0.75`
+- tipo_w2_vgizq: `fillet`
+- l_w2_vgizq (longitud soldadura calculada): `l_w2_vgizq = L_pest_vgizq - c_pest_vgizq - 2*w_w2_vgizq`
+- Fys_pest_vgizq: `345 MPa`
+- t_pest_vgizq: `12.7 mm`
+- h_pest_vgizq: `110 mm`
+- L_pest_vgizq: `190.53 mm`
+- c_pest_vgizq: `25 mm`
+- l_w2_vgizq: `146.48 mm`
+- Fexx_w2_vgizq: `490 MPa`
+- w_w2_vgizq: `9.53 mm`
+- nl_w2_vgizq: `2`
+- kds_w2_vgizq: `1`
+- Ru_w2_v2_vgizq: `385.07 kN`
+- phi*Rn_w2_v2_vgizq: `435 kN`
+- DCR_w2_v2_vgizq: `0.89`
 - Resultado: `Cumple`
 
-## Paso 10 - Revision de resistencia de la viga
+## Paso 10 - Revision de resistencia de la viga (vg_izq)
 
 ### 10.1. Revision de capacidad a cortante
 
 #### 10.1.1. ELR #1: Fluencia por cortante (AISC 360-22 G2.1)
 
-- Clausula: `Documento: AISC 360-22 | Seccion: Capitulo 6 / Seccion 6.7.1 Paso 10.1.1 + AISC 360-22 G2.1`
-- Ecuacion: `Vubm = Vhmax; phiVnbm = phi * 0.6 * Fybm * tw,bm * d * Cv1 (AISC 360-22 G2.1, Eq. G2-3/G2-4; kv=5.34 for webs without transverse stiffeners)`
+- Clausula: `Documento: AISC 360-22 | Seccion: Capitulo 6 / Seccion 6.7.1 + AISC 360-22 G2.1`
+- Ecuacion: `Ru_v2_vgizq = Vh_vgizq_max; Rn_v2_vgizq = 0.6 * Fy_vgizq * tw_vgizq * d_vgizq * Cv1; phi*Rn_v2_vgizq = phi * Rn_v2_vgizq; DCR_v2_vgizq = Ru_v2_vgizq / phi*Rn_v2_vgizq (AISC 360-22 G2.1, Eq. G2-3/G2-4; kv=5.34 for webs without transverse stiffeners)`
 - phi usado: `1`
-- Vubm: `514.13 kN`
-- phiVnbm: `1407.27 kN`
-- DCRbm,v: `0.37`
+- Vh_vgizq_max: `426.78 kN`
+- Fy_vgizq: `345 MPa`
+- tw_vgizq: `10.8 mm`
+- d_vgizq: `462 mm`
+- kdes_vgizq: `27.4 mm`
+- E_vgizq: `200000 MPa`
 - Cv1: `1`
 - kv: `5.34`
-- h/tw: `48.84`
-- h: `547 mm`
+- h_vgizq/tw_vgizq: `37.7`
+- h_vgizq: `407.2 mm`
+- Ru_v2_vgizq: `426.78 kN`
+- phi*Rn_v2_vgizq: `1032.85 kN`
+- DCR_v2_vgizq: `0.41`
 - Resultado: `Cumple`
 
-## Paso 11 - Revision de resistencia de soldadura viga-alma a end plate
+## Paso 11 - Revision de Resistencia soldadura #3 (viga alma vg_izq - platina extremo vg_izq)
 
 ### 11.1 Revision capacidad a traccion
 
 #### 11.1.1 ELR #1: Rotura de soldadura
 
-- Clausula: `Documento: AISC 358-22 + AISC 360-22 | Seccion: Seccion 6.7 + AISC 360-22 J2.4`
-- Ecuacion: `Fillet: Puww3 = Fybm*tw*hwef; hwef = Pfi + Pb + 150 mm; phiPnww3 = phi*nl*0.6*Fexx*0.707*hwef*ww3; DCRww3p = Puww3/phiPnww3`
-- phi usado: `0.9`
-- Fuente de input: `geometry.welds.weld_3`
-- Soldadura #3: `viga (alma) con end plate`
-- Tipo de soldadura viga-end_plate: `CJP`
+- Clausula: `Documento: AISC 358-22 | Seccion: Capitulo 6 / Seccion 6.7 + AISC 360-22 J2.4`
+- Ecuacion: `Fillet: Ru_w3_p+_vgizq = Fy_vgizq * tw_vgizq * hwef_w3_vgizq; hwef_w3_vgizq = pfi_pe_vgizq + pb_pe_vgizq + 150 mm; phi*Rn_w3_p+_vgizq = phi * kds_w3_vgizq * nl_w3_vgizq * 0.6 * Fexx_w3_vgizq * 0.707 * hwef_w3_vgizq * t_w3_vgizq; DCR_w3_p+_vgizq = Ru_w3_p+_vgizq / phi*Rn_w3_p+_vgizq`
+- phi usado: `0.75`
+- tipo_w3_vgizq: `CJP`
+- hwef_w3_vgizq (longitud efectiva calculada): `hwef_w3_vgizq = pfi_pe_vgizq + pb_pe_vgizq + 150 mm`
+- hwef_w3_vgizq: `295 mm`
+- tw_vgizq: `10.8 mm`
+- Fy_vgizq: `345 MPa`
+- Ru_w3_p+_vgizq: `n/a (CJP)`
 - CJP: `Cumple`
 - Resultado: `Cumple`
 
-## Paso 12 - Revision de resistencia de la aleta de la columna
+## Paso 12 - Revision de resistencia de la aleta de la columna (vg_izq)
 
 ### 12.1. Revision de capacidad a flexion
 
-#### 12.1.1 ELR # 1: Flexion local de la aleta (LFB) (AISC 358-22 6.7.2)
+#### 12.1.1. ELR #1: Flexion local de la aleta (LFB)
 
 - Clausula: `Documento: AISC 358-22 | Seccion: Capitulo 6 / Seccion 6.7.2 + Eq. (6.7-13)`
-- M_ucf: `1542.49 kN-m`
+- Ecuacion: `phi*Mn_cf_LFB_vgizq = phi_ductil * ((tf_col^2 * Fy_col * Y_cs)/1.11); DCR_cf_LFB_vgizq = Mf_vgizq_critico / phi*Mn_cf_LFB_vgizq`
 - phi usado: `1`
-- Condicion aplicable: `hay platinas de continuidad`
-- s: `94.1 mm`
+- Mf_vgizq_critico: `1542.49 kN-m`
+- tf_col: `40.4 mm`
+- Fy_col: `345 MPa`
 - Y_cs usado: `6985 mm`
-- Ecuacion: `phiM_ncf = phi((t_cf^2 * f_yc * Y_cs)/1.11)`
-- phiM_ncf: `3543.44 kN-m`
-- Ecuacion DCR: `DCR_cfm = M_ucf/(phiM_ncf)`
-- DCR_cfm: `0.44`
+- Tabla Y_cs aplicada: `AISC 358-22 Tablas 6.5 y 6.6`
+- Caso Y_cs: `hay platinas de continuidad`
+- s_col: `94.1 mm`
+- usar_pc_col: `hay platinas de continuidad`
+- phi*Mn_cf_LFB_vgizq: `3543.44 kN-m`
+- DCR_cf_LFB_vgizq: `0.44`
 - Resultado: `Cumple`
 
 Donde:

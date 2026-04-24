@@ -1236,9 +1236,6 @@ def _render_step_8_stiffener_weld(step_8_1_1: dict | None) -> str:
         return "\n".join(lines)
     lines.extend(
         [
-            f"- Ru_w1_p+_vgizq: `{_format_quantity(step_8_1_1.get('demand'))}`",
-            f"- phi*Rn_w1_p+_vgizq: `{_format_quantity(step_8_1_1.get('capacity'))}`",
-            f"- DCR_w1_p+_vgizq: `{_format_text(step_8_1_1.get('dcr'))}`",
             "- l_w1_vgizq (longitud soldadura calculada): `l_w1_vgizq = h_pest_vgizq - c_pest_vgizq - 2*w_w1_vgizq`",
             f"- Fys_pest_vgizq: `{_format_quantity(inputs.get('fys_pest_vgizq'))}`",
             f"- t_pest_vgizq: `{_format_quantity(inputs.get('t_pest_vgizq'))}`",
@@ -1249,6 +1246,9 @@ def _render_step_8_stiffener_weld(step_8_1_1: dict | None) -> str:
             f"- w_w1_vgizq: `{_format_quantity(inputs.get('w_w1_vgizq') or inputs.get('wst'))}`",
             f"- nl_w1_vgizq: `{_format_text(inputs.get('nl_w1_vgizq') if inputs.get('nl_w1_vgizq') is not None else inputs.get('nl'))}`",
             f"- kds_w1_vgizq: `{_format_text(inputs.get('kds_w1_vgizq'))}`",
+            f"- Ru_w1_p+_vgizq: `{_format_quantity(step_8_1_1.get('demand'))}`",
+            f"- phi*Rn_w1_p+_vgizq: `{_format_quantity(step_8_1_1.get('capacity'))}`",
+            f"- DCR_w1_p+_vgizq: `{_format_text(step_8_1_1.get('dcr'))}`",
             f"- Resultado: `{_render_result_plain_es(step_8_1_1.get('status'))}`",
             "",
         ]
@@ -1261,18 +1261,23 @@ def _render_step_9_stiffener_beam_weld(step_9_1_1: dict | None) -> str:
         return ""
     inputs = step_9_1_1.get("inputs", {})
     design_factors = step_9_1_1.get("design_factors", {})
-    weld_type = _format_text(inputs.get("weld_type_normalized"))
+    weld_type = _format_text(inputs.get("tipo_w2_vgizq"))
+    if weld_type == "n/a":
+        weld_type = _format_text(inputs.get("weld_type_normalized"))
+    clause_text = _render_clause_text(step_9_1_1.get("clause"), step_9_1_1.get("source_document"), step_9_1_1.get("rule_id"))
+    clause_text = clause_text.replace("Paso 9.1.1 + AISC", "+ AISC")
+    clause_text = clause_text.replace("Paso 9.1.1 + ", "")
     lines = [
-        "## Paso 9 - Revision de resistencia soldadura #2 (viga con rigidizador)",
+        "## Paso 9 - Revision de Resistencia soldadura #2 (viga vg_izq - rigidizador vg_izq)",
         "",
         "### 9.1. Revision de capacidad a cortante",
         "",
         "#### 9.1.1. ELR #1: Rotura de la soldadura (AISC 360-22 J2.4)",
         "",
-        f"- Clausula: `{_render_clause_text(step_9_1_1.get('clause'), step_9_1_1.get('source_document'), step_9_1_1.get('rule_id'))}`",
+        f"- Clausula: `{clause_text}`",
         f"- Ecuacion: `{_format_text(step_9_1_1.get('equation'))}`",
         f"- phi usado: `{_format_text(design_factors.get('phi'))}`",
-        f"- Tipo soldadura viga-rigidizador: `{weld_type}`",
+        f"- tipo_w2_vgizq: `{weld_type}`",
     ]
     if weld_type == "cjp":
         lines.extend(
@@ -1285,15 +1290,20 @@ def _render_step_9_stiffener_beam_weld(step_9_1_1: dict | None) -> str:
         return "\n".join(lines)
     lines.extend(
         [
-            f"- Vust,w2: `{_format_quantity(step_9_1_1.get('demand'))}`",
-            f"- phiVnst,w2: `{_format_quantity(step_9_1_1.get('capacity'))}`",
-            f"- DCRst,w2,v: `{_format_text(step_9_1_1.get('dcr'))}`",
-            "- l_st,w2 (longitud soldadura calculada): `l_st,w2 = Lst - clip_st - 2*w_st`",
-            f"- l_st,w2: `{_format_quantity(inputs.get('lst_w2'))}`",
-            f"- Lst: `{_format_quantity(inputs.get('lst'))}`",
-            f"- clip_st: `{_format_quantity(inputs.get('clip_st'))}`",
-            f"- w_st,2 (espesor soldadura): `{_format_quantity(inputs.get('wst2'))}`",
-            f"- n_l,w2 (lineas soldadura): `{_format_text(inputs.get('nl_w2'))}`",
+            "- l_w2_vgizq (longitud soldadura calculada): `l_w2_vgizq = L_pest_vgizq - c_pest_vgizq - 2*w_w2_vgizq`",
+            f"- Fys_pest_vgizq: `{_format_quantity(inputs.get('fys_pest_vgizq') or inputs.get('fys'))}`",
+            f"- t_pest_vgizq: `{_format_quantity(inputs.get('t_pest_vgizq') or inputs.get('ts'))}`",
+            f"- h_pest_vgizq: `{_format_quantity(inputs.get('h_pest_vgizq') or inputs.get('hst'))}`",
+            f"- L_pest_vgizq: `{_format_quantity(inputs.get('l_pest_vgizq') or inputs.get('lst'))}`",
+            f"- c_pest_vgizq: `{_format_quantity(inputs.get('c_pest_vgizq') or inputs.get('clip_st'))}`",
+            f"- l_w2_vgizq: `{_format_quantity(inputs.get('l_w2_vgizq') or inputs.get('lst_w2'))}`",
+            f"- Fexx_w2_vgizq: `{_format_quantity(inputs.get('fexx_w2_vgizq') or inputs.get('fexx'))}`",
+            f"- w_w2_vgizq: `{_format_quantity(inputs.get('w_w2_vgizq') or inputs.get('wst2'))}`",
+            f"- nl_w2_vgizq: `{_format_text(inputs.get('nl_w2_vgizq') if inputs.get('nl_w2_vgizq') is not None else inputs.get('nl_w2'))}`",
+            f"- kds_w2_vgizq: `{_format_text(inputs.get('kds_w2_vgizq'))}`",
+            f"- Ru_w2_v2_vgizq: `{_format_quantity(step_9_1_1.get('demand'))}`",
+            f"- phi*Rn_w2_v2_vgizq: `{_format_quantity(step_9_1_1.get('capacity'))}`",
+            f"- DCR_w2_v2_vgizq: `{_format_text(step_9_1_1.get('dcr'))}`",
             f"- Resultado: `{_render_result_plain_es(step_9_1_1.get('status'))}`",
             "",
         ]
@@ -1307,23 +1317,32 @@ def _render_step_10_beam_shear(step_10_1_1: dict | None) -> str:
     inputs = step_10_1_1.get("inputs", {})
     inter = step_10_1_1.get("intermediates", {})
     design_factors = step_10_1_1.get("design_factors", {})
+    clause_text = _render_clause_text(step_10_1_1.get("clause"), step_10_1_1.get("source_document"), step_10_1_1.get("rule_id"))
+    clause_text = clause_text.replace("Paso 10.1.1 + AISC", "+ AISC")
+    clause_text = clause_text.replace("Paso 10.1.1 + ", "")
     lines = [
-        "## Paso 10 - Revision de resistencia de la viga",
+        "## Paso 10 - Revision de resistencia de la viga (vg_izq)",
         "",
         "### 10.1. Revision de capacidad a cortante",
         "",
         "#### 10.1.1. ELR #1: Fluencia por cortante (AISC 360-22 G2.1)",
         "",
-        f"- Clausula: `{_render_clause_text(step_10_1_1.get('clause'), step_10_1_1.get('source_document'), step_10_1_1.get('rule_id'))}`",
+        f"- Clausula: `{clause_text}`",
         f"- Ecuacion: `{_format_text(step_10_1_1.get('equation'))}`",
         f"- phi usado: `{_format_text(design_factors.get('phi'))}`",
-        f"- Vubm: `{_format_quantity(step_10_1_1.get('demand'))}`",
-        f"- phiVnbm: `{_format_quantity(step_10_1_1.get('capacity'))}`",
-        f"- DCRbm,v: `{_format_text(step_10_1_1.get('dcr'))}`",
+        f"- Vh_vgizq_max: `{_format_quantity(inputs.get('Vh_vgizq_max'))}`",
+        f"- Fy_vgizq: `{_format_quantity(inputs.get('Fy_vgizq'))}`",
+        f"- tw_vgizq: `{_format_quantity(inputs.get('tw_vgizq'))}`",
+        f"- d_vgizq: `{_format_quantity(inputs.get('d_vgizq'))}`",
+        f"- kdes_vgizq: `{_format_quantity(inputs.get('kdes_vgizq'))}`",
+        f"- E_vgizq: `{_format_quantity(inputs.get('E_vgizq'))}`",
         f"- Cv1: `{_format_text(inputs.get('cv1'))}`",
         f"- kv: `{_format_text(inter.get('kv'))}`",
-        f"- h/tw: `{_format_text(inter.get('h_over_tw'))}`",
-        f"- h: `{_format_scalar_with_unit(inter.get('h_clear'), 'mm')}`",
+        f"- h_vgizq/tw_vgizq: `{_format_text(inter.get('h_over_tw'))}`",
+        f"- h_vgizq: `{_format_scalar_with_unit(inter.get('h_clear'), 'mm')}`",
+        f"- Ru_v2_vgizq: `{_format_quantity(step_10_1_1.get('demand'))}`",
+        f"- phi*Rn_v2_vgizq: `{_format_quantity(step_10_1_1.get('capacity'))}`",
+        f"- DCR_v2_vgizq: `{_format_text(step_10_1_1.get('dcr'))}`",
         f"- Resultado: `{_render_result_plain_es(step_10_1_1.get('status'))}`",
         "",
     ]
@@ -1336,47 +1355,58 @@ def _render_step_11_end_plate_beam_web_weld_tension(step_11_ctx: dict | None, st
     step_11_inputs = step_11_ctx.get("inputs", {})
     step_10_inputs = step_10_1_1.get("inputs", {}) if step_10_1_1 is not None else {}
 
-    weld_type_raw = step_11_inputs.get("end_plate_beam_web_weld_type")
-    weld_thickness_twe = step_11_inputs.get("end_plate_beam_web_weld_thickness_twe")
+    def _pick(mapping: dict, *keys: str):
+        for key in keys:
+            if key in mapping and mapping.get(key) is not None:
+                return mapping.get(key)
+        return None
+
+    weld_type_raw = _pick(step_11_inputs, "tipo_w3_vgizq", "end_plate_beam_web_weld_type")
+    weld_thickness_twe = _pick(step_11_inputs, "t_w3_vgizq", "end_plate_beam_web_weld_thickness_twe")
     weld_type = _normalize_weld_type_step11(weld_type_raw)
-    pfi_q = _as_quantity(step_11_inputs.get("edge_pfi"))
-    pb_q = _as_quantity(step_11_inputs.get("pitch_pb"))
+    pfi_q = _as_quantity(_pick(step_11_inputs, "pfi_pe_vgizq", "edge_pfi"))
+    pb_q = _as_quantity(_pick(step_11_inputs, "pb_pe_vgizq", "pitch_pb"))
     twe_q = _as_quantity(weld_thickness_twe)
-    fybm_q = _as_quantity(step_10_inputs.get("fybm"))
-    tw_bm_q = _as_quantity(step_10_inputs.get("tw_bm"))
-    fexx_q = _as_quantity(step_11_inputs.get("weld_fexx"))
-    nl_raw = step_11_inputs.get("end_plate_beam_web_weld_lines_nl")
-    unit_system = _infer_unit_system_from_quantity(step_11_inputs.get("edge_pfi"))
+    fybm_q = _as_quantity(_pick(step_10_inputs, "Fy_vgizq", "fybm"))
+    tw_bm_q = _as_quantity(_pick(step_10_inputs, "tw_vgizq", "tw_bm"))
+    fexx_q = _as_quantity(_pick(step_11_inputs, "Fexx_w3_vgizq", "weld_fexx"))
+    nl_raw = _pick(step_11_inputs, "nl_w3_vgizq", "end_plate_beam_web_weld_lines_nl")
+    kds_w3_vgizq = _pick(step_11_inputs, "kds_w3_vgizq")
+    unit_system = _infer_unit_system_from_quantity(_pick(step_11_inputs, "pfi_pe_vgizq", "edge_pfi"))
     if unit_system is None:
-        unit_system = _infer_unit_system_from_quantity(step_10_inputs.get("tw_bm"))
+        unit_system = _infer_unit_system_from_quantity(_pick(step_10_inputs, "tw_vgizq", "tw_bm"))
     try:
         nl = int(nl_raw) if nl_raw is not None else None
     except (TypeError, ValueError):
         nl = None
     if nl is not None and nl < 1:
         nl = None
-    phi = 0.9
+    try:
+        kds_factor = float(kds_w3_vgizq) if kds_w3_vgizq is not None else None
+    except (TypeError, ValueError):
+        kds_factor = None
+    phi = 0.75
 
-    hwef_q: Quantity | None = None
-    pu_q: Quantity | None = None
+    hwef_w3_vgizq_q: Quantity | None = None
+    ru_w3_p_pos_vgizq_q: Quantity | None = None
     phi_pn_q: Quantity | None = None
-    dcr_ww3p = None
+    dcr_w3_p_pos_vgizq = None
     if unit_system is not None and pfi_q is not None and pb_q is not None:
-        hwef_q = compute_effective_web_weld_length(
+        hwef_w3_vgizq_q = compute_effective_web_weld_length(
             pfi=pfi_q,
             pb=pb_q,
             unit_system=unit_system,
         )["hwef"]
-    if unit_system is not None and hwef_q is not None and fybm_q is not None and tw_bm_q is not None:
-        pu_q = compute_plate_tension_demand_from_yielding(
+    if unit_system is not None and hwef_w3_vgizq_q is not None and fybm_q is not None and tw_bm_q is not None:
+        ru_w3_p_pos_vgizq_q = compute_plate_tension_demand_from_yielding(
             fy=fybm_q,
             thickness=tw_bm_q,
-            effective_length=hwef_q,
+            effective_length=hwef_w3_vgizq_q,
             unit_system=unit_system,
         )["pu"]
     if (
         unit_system is not None
-        and hwef_q is not None
+        and hwef_w3_vgizq_q is not None
         and fexx_q is not None
         and twe_q is not None
         and nl is not None
@@ -1384,43 +1414,53 @@ def _render_step_11_end_plate_beam_web_weld_tension(step_11_ctx: dict | None, st
         phi_pn_q = WeldFillet(
             fexx=fexx_q,
             weld_size=twe_q,
-            weld_length=hwef_q,
+            weld_length=hwef_w3_vgizq_q,
             weld_lines=nl,
             unit_system=unit_system,
             phi=phi,
         ).design_strength()["phi_rn"]
-    if pu_q is not None and phi_pn_q is not None and phi_pn_q.value > 0.0:
-        dcr_ww3p = compute_dcr(demand=pu_q, capacity=phi_pn_q)["dcr"]
+        if kds_factor is not None:
+            phi_pn_q = Quantity(value=phi_pn_q.value * kds_factor, unit=phi_pn_q.unit)
+    if ru_w3_p_pos_vgizq_q is not None and phi_pn_q is not None and phi_pn_q.value > 0.0:
+        dcr_w3_p_pos_vgizq = compute_dcr(demand=ru_w3_p_pos_vgizq_q, capacity=phi_pn_q)["dcr"]
 
-    hwef_text = _format_quantity(hwef_q.model_dump()) if hwef_q is not None else "n/a"
-    puww3_text = _format_quantity(pu_q.model_dump()) if pu_q is not None else "n/a"
-    phi_pnww3_text = _format_quantity(phi_pn_q.model_dump()) if phi_pn_q is not None else "n/a"
-    dcr_text = _format_decimal(dcr_ww3p) if dcr_ww3p is not None else "n/a"
+    hwef_text = _format_quantity(hwef_w3_vgizq_q.model_dump()) if hwef_w3_vgizq_q is not None else "n/a"
+    ru_text = _format_quantity(ru_w3_p_pos_vgizq_q.model_dump()) if ru_w3_p_pos_vgizq_q is not None else "n/a"
+    phi_rn_text = _format_quantity(phi_pn_q.model_dump()) if phi_pn_q is not None else "n/a"
+    dcr_text = _format_decimal(dcr_w3_p_pos_vgizq) if dcr_w3_p_pos_vgizq is not None else "n/a"
     twe_text = _format_quantity(weld_thickness_twe)
+    fexx_text = _format_quantity(_pick(step_11_inputs, "Fexx_w3_vgizq", "weld_fexx"))
+    fy_text = _format_quantity(_pick(step_10_inputs, "Fy_vgizq", "fybm"))
+    tw_text = _format_quantity(_pick(step_10_inputs, "tw_vgizq", "tw_bm"))
+    pfi_text = _format_quantity(_pick(step_11_inputs, "pfi_pe_vgizq", "edge_pfi"))
+    pb_text = _format_quantity(_pick(step_11_inputs, "pb_pe_vgizq", "pitch_pb"))
 
     if weld_type == "cjp":
         result_line = "Cumple"
-        puww3_text = "n/a (CJP)"
-        phi_pnww3_text = "n/a (CJP)"
+        ru_text = "n/a (CJP)"
+        phi_rn_text = "n/a (CJP)"
         dcr_text = "n/a (CJP)"
-    elif weld_type == "fillet" and dcr_ww3p is not None:
-        result_line = "Cumple" if dcr_ww3p <= 1.0 else "No cumple"
+    elif weld_type == "fillet" and dcr_w3_p_pos_vgizq is not None:
+        result_line = "Cumple" if dcr_w3_p_pos_vgizq <= 1.0 else "No cumple"
     else:
         result_line = "No cumple"
 
     lines = [
-        "## Paso 11 - Revision de resistencia de soldadura viga-alma a end plate",
+        "## Paso 11 - Revision de Resistencia soldadura #3 (viga alma vg_izq - platina extremo vg_izq)",
         "",
         "### 11.1 Revision capacidad a traccion",
         "",
         "#### 11.1.1 ELR #1: Rotura de soldadura",
         "",
-        "- Clausula: `Documento: AISC 358-22 + AISC 360-22 | Seccion: Seccion 6.7 + AISC 360-22 J2.4`",
-        "- Ecuacion: `Fillet: Puww3 = Fybm*tw*hwef; hwef = Pfi + Pb + 150 mm; phiPnww3 = phi*nl*0.6*Fexx*0.707*hwef*ww3; DCRww3p = Puww3/phiPnww3`",
+        "- Clausula: `Documento: AISC 358-22 | Seccion: Capitulo 6 / Seccion 6.7 + AISC 360-22 J2.4`",
+        "- Ecuacion: `Fillet: Ru_w3_p+_vgizq = Fy_vgizq * tw_vgizq * hwef_w3_vgizq; hwef_w3_vgizq = pfi_pe_vgizq + pb_pe_vgizq + 150 mm; phi*Rn_w3_p+_vgizq = phi * kds_w3_vgizq * nl_w3_vgizq * 0.6 * Fexx_w3_vgizq * 0.707 * hwef_w3_vgizq * t_w3_vgizq; DCR_w3_p+_vgizq = Ru_w3_p+_vgizq / phi*Rn_w3_p+_vgizq`",
         f"- phi usado: `{_format_decimal(phi)}`",
-        "- Fuente de input: `geometry.welds.weld_3`",
-        "- Soldadura #3: `viga (alma) con end plate`",
-        f"- Tipo de soldadura viga-end_plate: `{_format_text(weld_type_raw)}`",
+        f"- tipo_w3_vgizq: `{_format_text(weld_type_raw)}`",
+        f"- hwef_w3_vgizq (longitud efectiva calculada): `hwef_w3_vgizq = pfi_pe_vgizq + pb_pe_vgizq + 150 mm`",
+        f"- hwef_w3_vgizq: `{hwef_text}`",
+        f"- tw_vgizq: `{tw_text}`",
+        f"- Fy_vgizq: `{fy_text}`",
+        f"- Ru_w3_p+_vgizq: `{ru_text}`",
     ]
     if weld_type == "cjp":
         lines.extend(
@@ -1433,13 +1473,14 @@ def _render_step_11_end_plate_beam_web_weld_tension(step_11_ctx: dict | None, st
         return "\n".join(lines)
     lines.extend(
         [
-            "- Longitud de soldadura: `no se usa como input en este chequeo`",
-            f"- Espesor/tamano de soldadura (twe = ww3): `{twe_text}`",
-            f"- nl (numero de cordones): `{_format_text(nl) if nl is not None else 'n/a (input requerido)'}`",
-            f"- hwef: `{hwef_text}`",
-            f"- Puww3: `{puww3_text}`",
-            f"- phiPnww3: `{phi_pnww3_text}`",
-            f"- DCRww3p: `{dcr_text}`",
+            f"- pfi_pe_vgizq: `{pfi_text}`",
+            f"- pb_pe_vgizq: `{pb_text}`",
+            f"- Fexx_w3_vgizq: `{fexx_text}`",
+            f"- t_w3_vgizq: `{twe_text}`",
+            f"- nl_w3_vgizq: `{_format_text(nl) if nl is not None else 'n/a (input requerido)'}`",
+            f"- kds_w3_vgizq: `{_format_text(kds_w3_vgizq)}`",
+            f"- phi*Rn_w3_p+_vgizq: `{phi_rn_text}`",
+            f"- DCR_w3_p+_vgizq: `{dcr_text}`",
             f"- Resultado: `{result_line}`",
             "",
         ]
@@ -1523,22 +1564,25 @@ def _render_step_12_column_flange_local_bending(step_12_1_1: dict | None, step_1
     )
 
     lines = [
-        "## Paso 12 - Revision de resistencia de la aleta de la columna",
+        "## Paso 12 - Revision de resistencia de la aleta de la columna (vg_izq)",
         "",
         "### 12.1. Revision de capacidad a flexion",
         "",
-        "#### 12.1.1 ELR # 1: Flexion local de la aleta (LFB) (AISC 358-22 6.7.2)",
+        "#### 12.1.1. ELR #1: Flexion local de la aleta (LFB)",
         "",
         f"- Clausula: `{clause_text}`",
-        f"- M_ucf: `{_format_quantity(inputs.get('mf'))}`",
+        f"- Ecuacion: `phi*Mn_cf_LFB_vgizq = phi_ductil * ((tf_col^2 * Fy_col * {y_symbol})/1.11); DCR_cf_LFB_vgizq = Mf_vgizq_critico / phi*Mn_cf_LFB_vgizq`",
         f"- phi usado: `{_format_decimal(phi)}`",
-        f"- Condicion aplicable: `{continuity_text}`",
-        f"- s: `{_format_decimal(s_mm)} mm`" if s_mm is not None else "- s: `n/a`",
+        f"- Mf_vgizq_critico: `{_format_quantity(inputs.get('mf'))}`",
+        f"- tf_col: `{_format_quantity(capacity)}`",
+        f"- Fy_col: `{_format_quantity(inputs.get('column_fy'))}`",
         f"- {y_symbol} usado: `{_format_quantity(inputs.get('yc'))}`",
-        f"- Ecuacion: `phiM_ncf = phi((t_cf^2 * f_yc * {y_symbol})/1.11)`",
-        f"- phiM_ncf: `{phi_mncf_text}`",
-        "- Ecuacion DCR: `DCR_cfm = M_ucf/(phiM_ncf)`",
-        f"- DCR_cfm: `{dcr_text}`",
+        f"- Tabla {y_symbol} aplicada: `AISC 358-22 Tablas 6.5 y 6.6`",
+        f"- Caso {y_symbol}: `{continuity_text}`",
+        f"- s_col: `{_format_decimal(s_mm)} mm`" if s_mm is not None else "- s_col: `n/a`",
+        f"- usar_pc_col: `{continuity_text}`",
+        f"- phi*Mn_cf_LFB_vgizq: `{phi_mncf_text}`",
+        f"- DCR_cf_LFB_vgizq: `{dcr_text}`",
         f"- Resultado: `{result_line}`",
         "",
         "Donde:",
