@@ -276,10 +276,17 @@ def _normalize_moment_geometry_payload(payload: dict[str, Any]) -> dict[str, Any
             # weld_1 = rigidizador con end plate
             # weld_2 = viga con rigidizador
             # weld_3 = viga (alma) con end plate
+            # weld_4 = ala de viga con end plate
             weld_1 = _get_nested_weld_block("weld_1", "weld1", "soldadura_1", "soldadura1")
             weld_2 = _get_nested_weld_block("weld_2", "weld2", "soldadura_2", "soldadura2")
             weld_3 = _get_nested_weld_block("weld_3", "weld3", "soldadura_3", "soldadura3")
             weld_4 = _get_nested_weld_block("weld_4", "weld4", "soldadura_4", "soldadura4")
+            weld_cp = _get_nested_weld_block(
+                "weld_cp",
+                "continuity_plate_weld",
+                "weld_4_column",
+                "soldadura_cp",
+            )
 
             if weld_1:
                 _assign_from_aliases(
@@ -440,10 +447,97 @@ def _normalize_moment_geometry_payload(payload: dict[str, Any]) -> dict[str, Any
                     ("kds_w3_vgizq",),
                 )
 
-            if weld_4:
+            weld_4_side_specific = any(
+                key in weld_4
+                for key in (
+                    "tipo_w4_vgder",
+                    "tipo_w4_vgizq",
+                    "t_w4_vgder",
+                    "t_w4_vgizq",
+                    "nl_w4_vgder",
+                    "nl_w4_vgizq",
+                    "t_w4_1_vgder",
+                    "t_w4_1_vgizq",
+                    "t_w4.1_vgder",
+                    "t_w4.1_vgizq",
+                    "kds_w4_vgder",
+                    "kds_w4_vgizq",
+                )
+            )
+
+            if weld_4 and weld_4_side_specific:
+                _assign_from_aliases(
+                    "tipo_w4_vgder",
+                    weld_4,
+                    (
+                        "tipo_w4_vgder",
+                        "weld_type_vgder",
+                        "weld_type",
+                        "tipo_soldadura",
+                        "type",
+                    ),
+                )
+                _assign_from_aliases(
+                    "tipo_w4_vgizq",
+                    weld_4,
+                    (
+                        "tipo_w4_vgizq",
+                        "weld_type_vgizq",
+                        "weld_type",
+                        "tipo_soldadura",
+                        "type",
+                    ),
+                )
+                _assign_from_aliases(
+                    "t_w4_vgder",
+                    weld_4,
+                    ("t_w4_vgder", "thickness_vgder", "thickness", "size", "w"),
+                )
+                _assign_from_aliases(
+                    "t_w4_vgizq",
+                    weld_4,
+                    ("t_w4_vgizq", "thickness_vgizq", "thickness", "size", "w"),
+                )
+                _assign_from_aliases(
+                    "nl_w4_vgder",
+                    weld_4,
+                    ("nl_w4_vgder", "nl_vgder", "nl", "n_l", "lines"),
+                )
+                _assign_from_aliases(
+                    "nl_w4_vgizq",
+                    weld_4,
+                    ("nl_w4_vgizq", "nl_vgizq", "nl", "n_l", "lines"),
+                )
+                _assign_from_aliases(
+                    "t_w4_1_vgder",
+                    weld_4,
+                    ("t_w4_1_vgder", "t_w4.1_vgder", "backing_thickness_vgder", "backing_thickness"),
+                )
+                _assign_from_aliases(
+                    "t_w4_1_vgizq",
+                    weld_4,
+                    ("t_w4_1_vgizq", "t_w4.1_vgizq", "backing_thickness_vgizq", "backing_thickness"),
+                )
+                _assign_from_aliases("kds_w4_vgder", weld_4, ("kds_w4_vgder",))
+                _assign_from_aliases("kds_w4_vgizq", weld_4, ("kds_w4_vgizq",))
+
+            if weld_4 and not weld_4_side_specific and not weld_cp:
                 _assign_from_aliases(
                     "continuity_plate_weld_type",
                     weld_4,
+                    (
+                        "continuity_plate_weld_type",
+                        "weld_type_continuity_plate",
+                        "weld_type",
+                        "tipo_soldadura",
+                        "type",
+                    ),
+                )
+
+            if weld_cp:
+                _assign_from_aliases(
+                    "continuity_plate_weld_type",
+                    weld_cp,
                     (
                         "continuity_plate_weld_type",
                         "weld_type_continuity_plate",
@@ -940,11 +1034,21 @@ def _resolve_catalog_driven_properties(case: AISC358MomentCase) -> None:
 
     if case.geometry.beam_clear_span_length_der is None and case.geometry.beam_clear_span_length is not None:
         case.geometry.beam_clear_span_length_der = case.geometry.beam_clear_span_length
+    if case.geometry.beam_clear_span_length_izq is None and case.geometry.beam_clear_span_length is not None:
+        case.geometry.beam_clear_span_length_izq = case.geometry.beam_clear_span_length
+
     if (
         case.geometry.beam_shear_connector_free_length_from_column_face_der is None
         and case.geometry.beam_shear_connector_free_length_from_column_face is not None
     ):
         case.geometry.beam_shear_connector_free_length_from_column_face_der = (
+            case.geometry.beam_shear_connector_free_length_from_column_face
+        )
+    if (
+        case.geometry.beam_shear_connector_free_length_from_column_face_izq is None
+        and case.geometry.beam_shear_connector_free_length_from_column_face is not None
+    ):
+        case.geometry.beam_shear_connector_free_length_from_column_face_izq = (
             case.geometry.beam_shear_connector_free_length_from_column_face
         )
 
@@ -954,50 +1058,78 @@ def _resolve_catalog_driven_properties(case: AISC358MomentCase) -> None:
         case.loads.beam_left_vgravity = case.loads.beam_gravity_shear_between_hinges_izq
     if case.loads.beam_right_vgravity is None and case.loads.beam_gravity_shear_between_hinges is not None:
         case.loads.beam_right_vgravity = case.loads.beam_gravity_shear_between_hinges
+    if case.loads.beam_left_vgravity is None and case.loads.beam_gravity_shear_between_hinges is not None:
+        case.loads.beam_left_vgravity = case.loads.beam_gravity_shear_between_hinges
     if case.loads.pu_viga_right is None and case.loads.pu_viga is not None:
         case.loads.pu_viga_right = case.loads.pu_viga
+    if case.loads.pu_viga_left is None and case.loads.pu_viga is not None:
+        case.loads.pu_viga_left = case.loads.pu_viga
     if case.loads.shear_plastic_hinge_dermax is None and case.loads.shear_plastic_hinge is not None:
         case.loads.shear_plastic_hinge_dermax = case.loads.shear_plastic_hinge
-    if case.geometry.beam_clear_span_length_der is None:
-        _raise_validation_error(
-            message="Required input 'geometry.beam_clear_span_length_der' is missing.",
-            missing_fields=["geometry.beam_clear_span_length_der"],
-            source_document="AISC 358-22 Section 2.3.4",
-        )
-    if case.geometry.beam_shear_connector_free_length_from_column_face_der is None:
-        _raise_validation_error(
-            message="Required input 'geometry.beam_shear_connector_free_length_from_column_face_der' is missing.",
-            missing_fields=["geometry.beam_shear_connector_free_length_from_column_face_der"],
-            source_document="AISC 358-22 Section 2.3.4",
-        )
-    if case.loads.beam_right_vgravity is None:
-        _raise_validation_error(
-            message="Required input 'loads.beam_right_vgravity' (Beam_right_Vgravity) is missing.",
-            missing_fields=["loads.beam_right_vgravity"],
-            source_document="AISC 358-22 Eq. 2.4-3",
-        )
-    if case.loads.pu_viga_right is None:
-        _raise_validation_error(
-            message="Required input 'loads.pu_viga_right' is missing.",
-            missing_fields=["loads.pu_viga_right"],
-            source_document="AISC 358-22 Section 2.3.4",
-        )
+    if case.loads.shear_plastic_hinge_izqmax is None and case.loads.shear_plastic_hinge is not None:
+        case.loads.shear_plastic_hinge_izqmax = case.loads.shear_plastic_hinge
 
-    if beam_connection_sides == "both_sides":
-        for field_path, value in (
-            ("geometry.beam_clear_span_length_izq", case.geometry.beam_clear_span_length_izq),
+    include_right = beam_connection_sides in {"right_only", "both_sides"}
+    include_left = beam_connection_sides in {"left_only", "both_sides"}
+
+    if include_right:
+        for field_path, value, source in (
             (
-                "geometry.beam_shear_connector_free_length_from_column_face_izq",
-                case.geometry.beam_shear_connector_free_length_from_column_face_izq,
+                "geometry.beam_clear_span_length_der",
+                case.geometry.beam_clear_span_length_der,
+                "AISC 358-22 Section 2.3.4",
             ),
-            ("loads.beam_left_vgravity", case.loads.beam_left_vgravity),
-            ("loads.pu_viga_left", case.loads.pu_viga_left),
+            (
+                "geometry.beam_shear_connector_free_length_from_column_face_der",
+                case.geometry.beam_shear_connector_free_length_from_column_face_der,
+                "AISC 358-22 Section 2.3.4",
+            ),
+            (
+                "loads.beam_right_vgravity",
+                case.loads.beam_right_vgravity,
+                "AISC 358-22 Eq. 2.4-3",
+            ),
+            (
+                "loads.pu_viga_right",
+                case.loads.pu_viga_right,
+                "AISC 358-22 Section 2.3.4",
+            ),
         ):
             if value is None:
                 _raise_validation_error(
-                    message=f"Required input '{field_path}' is missing for beam_connection_sides='both_sides'.",
+                    message=f"Required input '{field_path}' is missing for beam_connection_sides='{beam_connection_sides}'.",
                     missing_fields=[field_path],
-                    source_document="AISC 358-22",
+                    source_document=source,
+                )
+
+    if include_left:
+        for field_path, value, source in (
+            (
+                "geometry.beam_clear_span_length_izq",
+                case.geometry.beam_clear_span_length_izq,
+                "AISC 358-22 Section 2.3.4",
+            ),
+            (
+                "geometry.beam_shear_connector_free_length_from_column_face_izq",
+                case.geometry.beam_shear_connector_free_length_from_column_face_izq,
+                "AISC 358-22 Section 2.3.4",
+            ),
+            (
+                "loads.beam_left_vgravity",
+                case.loads.beam_left_vgravity,
+                "AISC 358-22 Eq. 2.4-3",
+            ),
+            (
+                "loads.pu_viga_left",
+                case.loads.pu_viga_left,
+                "AISC 358-22 Section 2.3.4",
+            ),
+        ):
+            if value is None:
+                _raise_validation_error(
+                    message=f"Required input '{field_path}' is missing for beam_connection_sides='{beam_connection_sides}'.",
+                    missing_fields=[field_path],
+                    source_document=source,
                 )
 
     def _min_quantity(first: Quantity, second: Quantity, field_name: str) -> Quantity:
@@ -1041,16 +1173,30 @@ def _resolve_catalog_driven_properties(case: AISC358MomentCase) -> None:
             case.loads.pu_viga_left,  # type: ignore[arg-type]
             "loads.pu_viga_right/left",
         )
-    else:
+    elif beam_connection_sides == "right_only":
         case.geometry.beam_clear_span_length = case.geometry.beam_clear_span_length_der
         case.geometry.beam_shear_connector_free_length_from_column_face = (
             case.geometry.beam_shear_connector_free_length_from_column_face_der
         )
         case.loads.pu_viga = case.loads.pu_viga_right
+    else:
+        case.geometry.beam_clear_span_length = case.geometry.beam_clear_span_length_izq
+        case.geometry.beam_shear_connector_free_length_from_column_face = (
+            case.geometry.beam_shear_connector_free_length_from_column_face_izq
+        )
+        case.loads.pu_viga = case.loads.pu_viga_left
+
+    if case.connection_type in {"bueep_4e", "bseep_4es"} and case.geometry.pb is None:
+        pb_reference = case.geometry.de or case.geometry.pfo or case.geometry.pfi
+        if pb_reference is not None:
+            case.geometry.pb = Quantity(value=0.0, unit=pb_reference.unit)
 
     case.loads.beam_gravity_shear_between_hinges_der = case.loads.beam_right_vgravity
     case.loads.beam_gravity_shear_between_hinges_izq = case.loads.beam_left_vgravity
-    case.loads.beam_gravity_shear_between_hinges = case.loads.beam_right_vgravity
+    if beam_connection_sides == "left_only":
+        case.loads.beam_gravity_shear_between_hinges = case.loads.beam_left_vgravity
+    else:
+        case.loads.beam_gravity_shear_between_hinges = case.loads.beam_right_vgravity
     if case.loads.shear_plastic_hinge is None:
         case.loads.shear_plastic_hinge = case.loads.shear_plastic_hinge_dermax
 
@@ -1235,16 +1381,23 @@ def _resolve_catalog_driven_properties(case: AISC358MomentCase) -> None:
         pb = case.geometry.pb
         pfo = case.geometry.pfo
         pfi = case.geometry.pfi
-        if pb is None or pfo is None or pfi is None:
+        uses_pb_in_lc = case.connection_type == "bseep_8es"
+        if pfo is None or pfi is None or (uses_pb_in_lc and pb is None):
             _raise_validation_error(
                 message=(
                     "Cannot derive bolt clear distances. Required inputs are missing: "
                     "'geometry.pb', 'geometry.pfo', 'geometry.pfi'."
+                    if uses_pb_in_lc
+                    else "'geometry.pfo', 'geometry.pfi'."
                 ),
-                missing_fields=["geometry.pb", "geometry.pfo", "geometry.pfi"],
+                missing_fields=(
+                    ["geometry.pb", "geometry.pfo", "geometry.pfi"]
+                    if uses_pb_in_lc
+                    else ["geometry.pfo", "geometry.pfi"]
+                ),
                 source_document="AISC 358-22 Section 6.7",
             )
-        if pb.unit != pfo.unit or pb.unit != pfi.unit:
+        if uses_pb_in_lc and pb is not None and (pb.unit != pfo.unit or pb.unit != pfi.unit):
             _raise_validation_error(
                 message=(
                     "Cannot derive bolt clear distances due to inconsistent units in "
@@ -1255,13 +1408,18 @@ def _resolve_catalog_driven_properties(case: AISC358MomentCase) -> None:
             )
         beam_profile_for_lc = get_beam_profile_properties(beam_shape=case.sections.beam_shape, unit_system=case.units_system)
         tbf = beam_profile_for_lc["tf"]
-        if tbf.unit != pb.unit:
+        reference_unit = pb.unit if uses_pb_in_lc and pb is not None else pfo.unit
+        if tbf.unit != reference_unit:
             _raise_validation_error(
                 message=(
                     "Cannot derive bolt clear distances due to inconsistent units between "
                     "beam flange thickness (catalog) and end-plate geometry inputs."
                 ),
-                missing_fields=["sections.beam_shape", "geometry.pb"],
+                missing_fields=(
+                    ["sections.beam_shape", "geometry.pb"]
+                    if uses_pb_in_lc
+                    else ["sections.beam_shape", "geometry.pfo"]
+                ),
                 source_document="data/sections.xlsx",
             )
         is_us = str(case.units_system.value).upper() == "US"
@@ -1269,19 +1427,25 @@ def _resolve_catalog_driven_properties(case: AISC358MomentCase) -> None:
         hole_add_in = 1.0 / 16.0 if db_in <= (7.0 / 8.0 + 1e-9) else 1.0 / 8.0
         dh_value = (db_in + hole_add_in) if is_us else (db_in + hole_add_in) * 25.4
 
-        lc_1 = pb.value - dh_value
+        lc_1 = (pb.value - dh_value) if uses_pb_in_lc and pb is not None else None
         lc_2 = pfo.value + pfi.value + tbf.value - dh_value
-        lc_value = min(lc_1, lc_2)
+        lc_value = min(lc_1, lc_2) if lc_1 is not None else lc_2
         if lc_value <= 0.0:
             _raise_validation_error(
                 message=(
                     "Derived bolt clear distance is not positive. "
                     "Expected min(pb-dh, pfo+pfi+tbf-dh) > 0."
+                    if uses_pb_in_lc
+                    else "Expected pfo+pfi+tbf-dh > 0."
                 ),
-                missing_fields=["geometry.pb", "geometry.pfo", "geometry.pfi", "geometry.bolt_diameter"],
+                missing_fields=(
+                    ["geometry.pb", "geometry.pfo", "geometry.pfi", "geometry.bolt_diameter"]
+                    if uses_pb_in_lc
+                    else ["geometry.pfo", "geometry.pfi", "geometry.bolt_diameter"]
+                ),
                 source_document="AISC 360-22 Table J3.4 / AISC 358-22 Section 6.7",
             )
-        derived_lc = Quantity(value=lc_value, unit=pb.unit)
+        derived_lc = Quantity(value=lc_value, unit=reference_unit)
         if case.geometry.clear_distance_end_plate is None:
             case.geometry.clear_distance_end_plate = derived_lc
         if case.geometry.clear_distance_column_flange is None:
@@ -1294,6 +1458,19 @@ def _resolve_catalog_driven_properties(case: AISC358MomentCase) -> None:
 _MOMENT_SPLIT_RIGHT_SUFFIX = "_beam_right_only.json"
 _MOMENT_SPLIT_LEFT_SUFFIX = "_beam_left_only.json"
 _MOMENT_SPLIT_COLUMN_SUFFIX = "_column_and_common.json"
+
+
+def _canonical_beam_connection_sides(value: Any) -> str | None:
+    if value is None:
+        return None
+    normalized = str(value).strip().lower().replace("-", "_").replace(" ", "_")
+    if normalized in {"left", "left_only", "izq", "izquierda", "solo_izquierda"}:
+        return "left_only"
+    if normalized in {"right", "right_only", "der", "derecha", "solo_derecha"}:
+        return "right_only"
+    if normalized in {"both", "both_sides", "ambas", "ambos_lados", "izq_der"}:
+        return "both_sides"
+    return None
 
 
 def _first_dict(payload: dict[str, Any], *keys: str) -> dict[str, Any]:
@@ -1323,23 +1500,25 @@ def _read_json_object(path: Path) -> dict[str, Any]:
     return payload
 
 
-def _resolve_moment_prequalified_split_paths(input_path: Path) -> tuple[Path, Path, Path] | None:
-    def _triple_from_column_file(column_path: Path) -> tuple[Path, Path, Path] | None:
+def _resolve_moment_prequalified_split_paths(input_path: Path) -> tuple[Path, Path | None, Path | None] | None:
+    def _bundle_from_column_file(column_path: Path) -> tuple[Path, Path | None, Path | None] | None:
         name = column_path.name
         if not name.endswith(_MOMENT_SPLIT_COLUMN_SUFFIX):
             return None
         prefix = name[: -len(_MOMENT_SPLIT_COLUMN_SUFFIX)]
         right = column_path.parent / f"{prefix}{_MOMENT_SPLIT_RIGHT_SUFFIX}"
         left = column_path.parent / f"{prefix}{_MOMENT_SPLIT_LEFT_SUFFIX}"
-        if right.is_file() and left.is_file():
-            return (column_path, right, left)
+        right_path = right if right.is_file() else None
+        left_path = left if left.is_file() else None
+        if right_path is not None or left_path is not None:
+            return (column_path, right_path, left_path)
         return None
 
     if input_path.is_dir():
         for column_path in sorted(input_path.glob(f"*{_MOMENT_SPLIT_COLUMN_SUFFIX}")):
-            triple = _triple_from_column_file(column_path)
-            if triple is not None:
-                return triple
+            bundle = _bundle_from_column_file(column_path)
+            if bundle is not None:
+                return bundle
         return None
 
     if not input_path.is_file():
@@ -1348,19 +1527,19 @@ def _resolve_moment_prequalified_split_paths(input_path: Path) -> tuple[Path, Pa
     name = input_path.name
     parent = input_path.parent
     if name.endswith(_MOMENT_SPLIT_COLUMN_SUFFIX):
-        return _triple_from_column_file(input_path)
+        return _bundle_from_column_file(input_path)
     if name.endswith(_MOMENT_SPLIT_RIGHT_SUFFIX):
         prefix = name[: -len(_MOMENT_SPLIT_RIGHT_SUFFIX)]
         column_path = parent / f"{prefix}{_MOMENT_SPLIT_COLUMN_SUFFIX}"
         left = parent / f"{prefix}{_MOMENT_SPLIT_LEFT_SUFFIX}"
-        if column_path.is_file() and left.is_file():
-            return (column_path, input_path, left)
+        if column_path.is_file():
+            return (column_path, input_path, left if left.is_file() else None)
     if name.endswith(_MOMENT_SPLIT_LEFT_SUFFIX):
         prefix = name[: -len(_MOMENT_SPLIT_LEFT_SUFFIX)]
         column_path = parent / f"{prefix}{_MOMENT_SPLIT_COLUMN_SUFFIX}"
         right = parent / f"{prefix}{_MOMENT_SPLIT_RIGHT_SUFFIX}"
-        if column_path.is_file() and right.is_file():
-            return (column_path, right, input_path)
+        if column_path.is_file():
+            return (column_path, right if right.is_file() else None, input_path)
     return None
 
 
@@ -1380,6 +1559,7 @@ def _normalize_moment_split_side_payload(raw_payload: dict[str, Any], *, side: s
     weld_1_raw = soldaduras.get("weld_1") if isinstance(soldaduras.get("weld_1"), dict) else {}
     weld_2_raw = soldaduras.get("weld_2") if isinstance(soldaduras.get("weld_2"), dict) else {}
     weld_3_raw = soldaduras.get("weld_3") if isinstance(soldaduras.get("weld_3"), dict) else {}
+    weld_4_raw = soldaduras.get("weld_4") if isinstance(soldaduras.get("weld_4"), dict) else {}
 
     sections = {}
     beam_shape = _first_present(viga, f"perfil_{side_tag}")
@@ -1411,6 +1591,10 @@ def _normalize_moment_split_side_payload(raw_payload: dict[str, Any], *, side: s
             "bolt_fabrication_standard": _first_present(pernos, f"std_b_{side_tag}"),
             "bolt_description": _first_present(pernos, f"desc_b_{side_tag}"),
             "weld_fexx": weld_fexx,
+            f"weld_fexx_w4_{side_tag}": _first_present(
+                weld_4_raw,
+                f"Fexx_w4_{side_tag}",
+            ),
             "elastic_modulus": _first_present(viga, f"E_{side_tag}"),
             "bolt_shape": _first_present(pernos, f"shape_b_{side_tag}"),
             "bolt_thread_condition": _first_present(pernos, f"thread_b_{side_tag}"),
@@ -1502,6 +1686,23 @@ def _normalize_moment_split_side_payload(raw_payload: dict[str, Any], *, side: s
     )
     if weld_3:
         welds["weld_3"] = weld_3
+    weld_4 = _compact_dict(
+        {
+            "description": _first_present(weld_4_raw, "description"),
+            "weld_type": _first_present(weld_4_raw, f"tipo_w4_{side_tag}", "weld_type"),
+            "thickness": _first_present(weld_4_raw, f"t_w4_{side_tag}", "thickness"),
+            "nl": _first_present(weld_4_raw, f"nl_w4_{side_tag}", "nl"),
+            "backing_thickness": _first_present(
+                weld_4_raw,
+                f"t_w4_1_{side_tag}",
+                f"t_w4.1_{side_tag}",
+                "backing_thickness",
+            ),
+            f"kds_w4_{side_tag}": _first_present(weld_4_raw, f"kds_w4_{side_tag}", "kds"),
+        }
+    )
+    if weld_4:
+        welds["weld_4"] = weld_4
 
     geometry: dict[str, Any] = {}
     if side_block:
@@ -1524,6 +1725,16 @@ def _normalize_moment_split_side_payload(raw_payload: dict[str, Any], *, side: s
                 f"Pu_{side_tag}",
             )
             or _first_present(viga, f"Pu_{side_tag}"),
+            f"Vu2_{side_tag}": _first_present(
+                cargas,
+                f"Vu2_{side_tag}",
+            )
+            or _first_present(viga, f"Vu2_{side_tag}"),
+            f"Mu3_{side_tag}": _first_present(
+                cargas,
+                f"Mu3_{side_tag}",
+            )
+            or _first_present(viga, f"Mu3_{side_tag}"),
             "beam_right_vgravity" if side == "right" else "beam_left_vgravity": _first_present(
                 cargas,
                 f"Vg_{side_tag}",
@@ -1598,20 +1809,12 @@ def _normalize_moment_split_column_payload(raw_payload: dict[str, Any]) -> dict[
         {
             "column_end_distance_to_beam_flange": _first_present(
                 columna,
-                "dcf_col",
+                "St_col",
             ),
             "slab_connection_condition": _first_present(
                 columna,
                 "union_col_losa",
             ),
-        }
-    )
-    weld_4 = _compact_dict(
-        {
-            "description": _first_present(weld_4_raw, "description"),
-            "weld_type": _first_present(weld_4_raw, "tipo_w4"),
-            "thickness": _first_present(weld_4_raw, "t_w4"),
-            "nl": _first_present(weld_4_raw, "nl_w4"),
         }
     )
     continuity_plate_enabled = _first_present(
@@ -1634,10 +1837,15 @@ def _normalize_moment_split_column_payload(raw_payload: dict[str, Any]) -> dict[
                         "tpc_col",
                     ),
                     "continuity_plate_enabled": continuity_plate_enabled,
+                    "continuity_plate_weld_type": _first_present(
+                        weld_4_raw,
+                        "tipo_w4",
+                        "weld_type",
+                        "tipo_soldadura",
+                    ),
                 }
             )
             or None,
-            "welds": {"weld_4": weld_4} if weld_4 else None,
         }
     )
     if geometry:
@@ -1710,12 +1918,21 @@ def _assert_same(right_value: Any, left_value: Any, label: str) -> None:
 def _compose_moment_prequalified_split_payload(
     *,
     column_raw: dict[str, Any],
-    right_raw: dict[str, Any],
-    left_raw: dict[str, Any],
+    right_raw: dict[str, Any] | None,
+    left_raw: dict[str, Any] | None,
+    beam_connection_sides: str,
 ) -> dict[str, Any]:
     column_payload = _normalize_moment_split_column_payload(column_raw)
-    right_payload = _normalize_moment_split_side_payload(right_raw, side="right")
-    left_payload = _normalize_moment_split_side_payload(left_raw, side="left")
+    right_payload = (
+        _normalize_moment_split_side_payload(right_raw, side="right")
+        if isinstance(right_raw, dict)
+        else None
+    )
+    left_payload = (
+        _normalize_moment_split_side_payload(left_raw, side="left")
+        if isinstance(left_raw, dict)
+        else None
+    )
 
     merged = deepcopy(column_payload)
     connection_family = merged.get("connection_family")
@@ -1731,111 +1948,228 @@ def _compose_moment_prequalified_split_payload(
             "No default value is allowed under zero-guess policy."
         )
 
+    if beam_connection_sides not in {"left_only", "right_only", "both_sides"}:
+        raise ValueError(
+            "Invalid or missing 'design_factors.beam_connection_sides' in column split payload. "
+            "Expected 'left_only', 'right_only' or 'both_sides' (aliases accepted)."
+        )
+    if beam_connection_sides == "both_sides" and (right_payload is None or left_payload is None):
+        raise ValueError(
+            "beam_connection_sides='both_sides' requires both split files: "
+            "*_beam_right_only.json and *_beam_left_only.json."
+        )
+    if beam_connection_sides == "right_only" and right_payload is None:
+        raise ValueError(
+            "beam_connection_sides='right_only' requires split file *_beam_right_only.json."
+        )
+    if beam_connection_sides == "left_only" and left_payload is None:
+        raise ValueError(
+            "beam_connection_sides='left_only' requires split file *_beam_left_only.json."
+        )
+
+    if not isinstance(merged.get("sections"), dict):
+        merged["sections"] = {}
     merged_sections = _require_dict_key(merged, "sections", "column split payload")
-    right_sections = _require_dict_key(right_payload, "sections", "right beam split payload")
-    left_sections = _require_dict_key(left_payload, "sections", "left beam split payload")
+    right_sections = (
+        _require_dict_key(right_payload, "sections", "right beam split payload")
+        if isinstance(right_payload, dict)
+        else {}
+    )
+    left_sections = (
+        _require_dict_key(left_payload, "sections", "left beam split payload")
+        if isinstance(left_payload, dict)
+        else {}
+    )
     right_beam_shape = right_sections.get("beam_shape")
     left_beam_shape = left_sections.get("beam_shape")
-    if not isinstance(right_beam_shape, str) or not right_beam_shape.strip():
-        raise ValueError("Missing text field 'sections.beam_shape' in right beam split payload.")
-    if not isinstance(left_beam_shape, str) or not left_beam_shape.strip():
-        raise ValueError("Missing text field 'sections.beam_shape' in left beam split payload.")
-    merged_sections["beam_shape_der"] = right_beam_shape
-    merged_sections["beam_shape_izq"] = left_beam_shape
-    merged_sections["beam_shape"] = right_beam_shape
+    if right_beam_shape is not None:
+        if not isinstance(right_beam_shape, str) or not right_beam_shape.strip():
+            raise ValueError("Invalid text field 'sections.beam_shape' in right beam split payload.")
+        merged_sections["beam_shape_der"] = right_beam_shape
+    if left_beam_shape is not None:
+        if not isinstance(left_beam_shape, str) or not left_beam_shape.strip():
+            raise ValueError("Invalid text field 'sections.beam_shape' in left beam split payload.")
+        merged_sections["beam_shape_izq"] = left_beam_shape
+    if beam_connection_sides in {"right_only", "both_sides"}:
+        if not isinstance(merged_sections.get("beam_shape_der"), str):
+            raise ValueError("Missing text field 'sections.beam_shape' in right beam split payload.")
+        merged_sections["beam_shape"] = merged_sections["beam_shape_der"]
+    else:
+        if not isinstance(merged_sections.get("beam_shape_izq"), str):
+            raise ValueError("Missing text field 'sections.beam_shape' in left beam split payload.")
+        merged_sections["beam_shape"] = merged_sections["beam_shape_izq"]
 
     if not isinstance(merged.get("materials"), dict):
         merged["materials"] = {}
     merged_materials = _require_dict_key(merged, "materials", "column split payload")
-    right_materials = _require_dict_key(right_payload, "materials", "right beam split payload")
-    left_materials = _require_dict_key(left_payload, "materials", "left beam split payload")
-    for key, merged_value in merged_materials.items():
-        if key in right_materials:
-            _assert_same(right_materials[key], merged_value, f"materials.{key}")
+    right_materials = (
+        _require_dict_key(right_payload, "materials", "right beam split payload")
+        if isinstance(right_payload, dict)
+        else {}
+    )
+    left_materials = (
+        _require_dict_key(left_payload, "materials", "left beam split payload")
+        if isinstance(left_payload, dict)
+        else {}
+    )
     merged_materials.update(right_materials)
-    for side_specific_key in ("stiffener_steel_type_vgizq",):
-        if side_specific_key in left_materials:
-            merged_materials[side_specific_key] = left_materials[side_specific_key]
+    merged_materials.update(left_materials)
 
+    if not isinstance(merged.get("geometry"), dict):
+        merged["geometry"] = {}
     merged_geometry = _require_dict_key(merged, "geometry", "column split payload")
-    right_geometry = _require_dict_key(right_payload, "geometry", "right beam split payload")
-    left_geometry = _require_dict_key(left_payload, "geometry", "left beam split payload")
-    merged_geometry["beam_right"] = _require_dict_key(right_geometry, "beam_right", "right beam split geometry")
-    merged_geometry["beam_left"] = _require_dict_key(left_geometry, "beam_left", "left beam split geometry")
+    right_geometry = (
+        _require_dict_key(right_payload, "geometry", "right beam split payload")
+        if isinstance(right_payload, dict)
+        else {}
+    )
+    left_geometry = (
+        _require_dict_key(left_payload, "geometry", "left beam split payload")
+        if isinstance(left_payload, dict)
+        else {}
+    )
+    if right_geometry:
+        merged_geometry["beam_right"] = _require_dict_key(right_geometry, "beam_right", "right beam split geometry")
+    if left_geometry:
+        merged_geometry["beam_left"] = _require_dict_key(left_geometry, "beam_left", "left beam split geometry")
 
     connection_type = str(merged.get("connection_type", "")).strip().lower()
     requires_stiffener = connection_type in {"bseep_4es", "bseep_8es"}
 
-    group_names = ["end_plate", "bolts"]
+    primary_side = "right" if beam_connection_sides in {"right_only", "both_sides"} else "left"
+    primary_geometry = right_geometry if primary_side == "right" else left_geometry
+
+    group_names = ["end_plate", "bolts", "continuity_plate"]
     if requires_stiffener:
         group_names.append("stiffener")
-    elif "stiffener" in right_geometry and "stiffener" in left_geometry:
+    elif "stiffener" in right_geometry or "stiffener" in left_geometry:
         group_names.append("stiffener")
 
     for group_name in group_names:
-        right_group = _require_dict_key(right_geometry, group_name, "right beam split geometry")
-        left_group = _require_dict_key(left_geometry, group_name, "left beam split geometry")
-        # Do not enforce equality between beam-right and beam-left split inputs.
-        # Current single-side canonical fields consume right-side values by design.
-        # Left-side values are allowed to differ and are kept available in side blocks.
-        merged_geometry[group_name] = right_group
+        primary_group = (
+            _require_dict_key(primary_geometry, group_name, f"{primary_side} beam split geometry")
+            if isinstance(primary_geometry, dict) and group_name in primary_geometry
+            else None
+        )
+        if primary_group is not None:
+            merged_geometry[group_name] = primary_group
 
-    if "continuity_plate" not in merged_geometry:
-        right_cont = right_geometry.get("continuity_plate")
-        left_cont = left_geometry.get("continuity_plate")
-        if isinstance(right_cont, dict) and isinstance(left_cont, dict):
-            _assert_same(right_cont, left_cont, "geometry.continuity_plate")
-            merged_geometry["continuity_plate"] = right_cont
-        else:
-            raise ValueError(
-                "Missing 'continuity_plate' input. Provide it in column/common split file "
-                "(or in both beam files for backward compatibility)."
-            )
-
-    right_welds = _require_dict_key(right_geometry, "welds", "right beam split geometry")
-    left_welds = _require_dict_key(left_geometry, "welds", "left beam split geometry")
-    base_welds = _require_dict_key(merged_geometry, "welds", "column split geometry")
-    weld_4 = _require_dict_key(base_welds, "weld_4", "column split geometry.welds")
-    merged_welds: dict[str, Any] = {"weld_4": weld_4}
-    required_weld_names = ["weld_3"]
+    right_welds = (
+        _require_dict_key(right_geometry, "welds", "right beam split geometry")
+        if isinstance(right_geometry, dict) and "welds" in right_geometry
+        else {}
+    )
+    left_welds = (
+        _require_dict_key(left_geometry, "welds", "left beam split geometry")
+        if isinstance(left_geometry, dict) and "welds" in left_geometry
+        else {}
+    )
+    merged_welds: dict[str, Any] = {}
+    required_weld_names = ["weld_3", "weld_4"]
     if requires_stiffener:
-        required_weld_names = ["weld_1", "weld_2", "weld_3"]
+        required_weld_names = ["weld_1", "weld_2", "weld_3", "weld_4"]
     for weld_name in required_weld_names:
-        right_weld = _require_dict_key(right_welds, weld_name, "right beam split geometry.welds")
-        left_weld = _require_dict_key(left_welds, weld_name, "left beam split geometry.welds")
+        right_weld = (
+            _require_dict_key(right_welds, weld_name, "right beam split geometry.welds")
+            if weld_name in right_welds
+            else {}
+        )
+        left_weld = (
+            _require_dict_key(left_welds, weld_name, "left beam split geometry.welds")
+            if weld_name in left_welds
+            else {}
+        )
+        if beam_connection_sides == "both_sides" and (not right_weld or not left_weld):
+            raise ValueError(f"Missing '{weld_name}' in split weld inputs for both_sides.")
         merged_block: dict[str, Any] = {}
-        if isinstance(left_weld, dict):
-            merged_block.update(left_weld)
-        if isinstance(right_weld, dict):
-            merged_block.update(right_weld)
-        merged_welds[weld_name] = merged_block
-    merged_geometry["welds"] = merged_welds
+        if primary_side == "left":
+            if isinstance(right_weld, dict):
+                merged_block.update(right_weld)
+            if isinstance(left_weld, dict):
+                merged_block.update(left_weld)
+        else:
+            if isinstance(left_weld, dict):
+                merged_block.update(left_weld)
+            if isinstance(right_weld, dict):
+                merged_block.update(right_weld)
+        if merged_block:
+            merged_welds[weld_name] = merged_block
+    if merged_welds:
+        merged_geometry["welds"] = merged_welds
 
     merged_loads = dict(_require_dict_key(merged, "loads", "column split payload"))
-    merged_loads.update(_require_dict_key(right_payload, "loads", "right beam split payload"))
-    merged_loads.update(_require_dict_key(left_payload, "loads", "left beam split payload"))
+    if isinstance(right_payload, dict):
+        merged_loads.update(_require_dict_key(right_payload, "loads", "right beam split payload"))
+    if isinstance(left_payload, dict):
+        merged_loads.update(_require_dict_key(left_payload, "loads", "left beam split payload"))
     merged["loads"] = merged_loads
 
     if not isinstance(merged.get("design_factors"), dict):
         merged["design_factors"] = {}
     merged_design_factors = _require_dict_key(merged, "design_factors", "column split payload")
 
-    right_design_factors = right_payload.get("design_factors")
+    right_design_factors = right_payload.get("design_factors") if isinstance(right_payload, dict) else None
     if not isinstance(right_design_factors, dict):
         right_design_factors = {}
-    left_design_factors = left_payload.get("design_factors")
+    left_design_factors = left_payload.get("design_factors") if isinstance(left_payload, dict) else None
     if not isinstance(left_design_factors, dict):
         left_design_factors = {}
 
-    shared_design_factor_keys = set(right_design_factors.keys()) | set(left_design_factors.keys())
-    for key in shared_design_factor_keys:
-        right_value = right_design_factors.get(key)
-        left_value = left_design_factors.get(key)
-        # Split side inputs are allowed to differ. Keep right-side value as canonical.
-        beam_value = right_value if right_value is not None else left_value
-        if beam_value is None:
-            continue
-        merged_design_factors[key] = beam_value
+    merged_design_factors.update(right_design_factors)
+    merged_design_factors.update(left_design_factors)
+    merged_design_factors["beam_connection_sides"] = beam_connection_sides
+
+    def _side_group(payload: dict[str, Any], group: str) -> dict[str, Any]:
+        value = payload.get(group)
+        return value if isinstance(value, dict) else {}
+
+    right_end_plate = _side_group(right_geometry, "end_plate")
+    left_end_plate = _side_group(left_geometry, "end_plate")
+    right_bolts = _side_group(right_geometry, "bolts")
+    left_bolts = _side_group(left_geometry, "bolts")
+    right_stiffener = _side_group(right_geometry, "stiffener")
+    left_stiffener = _side_group(left_geometry, "stiffener")
+
+    side_flat_map = {
+        "vgder": (right_end_plate, right_bolts, right_stiffener, right_welds),
+        "vgizq": (left_end_plate, left_bolts, left_stiffener, left_welds),
+    }
+    for side_tag, (end_plate_group, bolt_group, stiffener_group, welds_group) in side_flat_map.items():
+        if end_plate_group:
+            merged_geometry[f"end_plate_width_{side_tag}"] = end_plate_group.get("end_plate_width")
+            merged_geometry[f"end_plate_thickness_{side_tag}"] = end_plate_group.get("end_plate_thickness")
+            merged_geometry[f"de_{side_tag}"] = end_plate_group.get("de")
+            merged_geometry[f"pb_{side_tag}"] = end_plate_group.get("pb")
+            merged_geometry[f"pfo_{side_tag}"] = end_plate_group.get("pfo")
+            merged_geometry[f"pfi_{side_tag}"] = end_plate_group.get("pfi")
+        if bolt_group:
+            merged_geometry[f"bolt_gage_{side_tag}"] = bolt_group.get("bolt_gage")
+        if stiffener_group:
+            merged_geometry[f"stiffener_thickness_{side_tag}"] = stiffener_group.get("stiffener_thickness")
+        if isinstance(welds_group, dict):
+            weld_1 = _side_group(welds_group, "weld_1")
+            weld_2 = _side_group(welds_group, "weld_2")
+            weld_3 = _side_group(welds_group, "weld_3")
+            weld_4 = _side_group(welds_group, "weld_4")
+            if weld_1:
+                merged_geometry[f"end_plate_stiffener_weld_type_{side_tag}"] = weld_1.get("weld_type")
+                merged_geometry[f"end_plate_stiffener_weld_size_wst_{side_tag}"] = weld_1.get("size")
+                merged_geometry[f"end_plate_stiffener_weld_lines_nl_{side_tag}"] = weld_1.get("nl")
+            if weld_2:
+                merged_geometry[f"beam_stiffener_weld_type_{side_tag}"] = weld_2.get("weld_type")
+                merged_geometry[f"beam_stiffener_weld_size_wst2_{side_tag}"] = weld_2.get("size")
+                merged_geometry[f"beam_stiffener_weld_lines_nl_w2_{side_tag}"] = weld_2.get("nl")
+            if weld_3:
+                merged_geometry[f"end_plate_beam_web_weld_type_{side_tag}"] = weld_3.get("weld_type")
+                merged_geometry[f"end_plate_beam_web_weld_thickness_twe_{side_tag}"] = weld_3.get("thickness")
+                merged_geometry[f"end_plate_beam_web_weld_lines_nl_{side_tag}"] = weld_3.get("nl")
+            if weld_4:
+                merged_geometry[f"tipo_w4_{side_tag}"] = weld_4.get("weld_type")
+                merged_geometry[f"t_w4_{side_tag}"] = weld_4.get("thickness")
+                merged_geometry[f"nl_w4_{side_tag}"] = weld_4.get("nl")
+                merged_geometry[f"t_w4_1_{side_tag}"] = weld_4.get("backing_thickness")
+    merged["geometry"] = _compact_dict(merged_geometry)
+
     return merged
 
 
@@ -1845,12 +2179,31 @@ def _load_moment_prequalified_split_payload(input_path: Path) -> dict[str, Any] 
         return None
     column_path, right_path, left_path = split_paths
     column_raw = _read_json_object(column_path)
-    right_raw = _read_json_object(right_path)
-    left_raw = _read_json_object(left_path)
+    design_factors_raw = column_raw.get("design_factors")
+    if not isinstance(design_factors_raw, dict):
+        design_factors_raw = column_raw.get("factores_diseno")
+    if not isinstance(design_factors_raw, dict):
+        raise ValueError(
+            "Missing object 'design_factors' (or 'factores_diseno') in column split payload."
+        )
+    beam_connection_sides = _canonical_beam_connection_sides(
+        design_factors_raw.get("beam_connection_sides")
+        if design_factors_raw.get("beam_connection_sides") is not None
+        else design_factors_raw.get("lados_conexion")
+    )
+    if beam_connection_sides is None:
+        raise ValueError(
+            "Invalid or missing 'design_factors.beam_connection_sides' in column split payload. "
+            "Expected 'left_only', 'right_only' or 'both_sides' (aliases accepted)."
+        )
+
+    right_raw = _read_json_object(right_path) if right_path is not None else None
+    left_raw = _read_json_object(left_path) if left_path is not None else None
     return _compose_moment_prequalified_split_payload(
         column_raw=column_raw,
         right_raw=right_raw,
         left_raw=left_raw,
+        beam_connection_sides=beam_connection_sides,
     )
 
 
@@ -1863,7 +2216,9 @@ def load_input_payload(path: str | Path) -> dict[str, Any]:
         if input_path.is_dir():
             raise OSError(
                 "Input path is a directory but no valid split-input bundle was found. "
-                "Expected files: *_column_and_common.json, *_beam_right_only.json, *_beam_left_only.json."
+                "Expected files: *_column_and_common.json plus active side files according to "
+                "design_factors.beam_connection_sides "
+                "(*_beam_right_only.json, *_beam_left_only.json, or both)."
             )
         with input_path.open("r", encoding="utf-8") as stream:
             return json.load(stream)

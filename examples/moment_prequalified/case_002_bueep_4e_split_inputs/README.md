@@ -6,6 +6,11 @@ Esta carpeta separa la entrada en 3 archivos:
 2. `case_002_beam_left_only.json`
 3. `case_002_column_and_common.json`
 
+Notas:
+- `soldaduras.weld_4` se define por lado en los archivos de viga.
+- `soldaduras.weld_4` corresponde a la soldadura #4 entre ala de viga y platina extremo.
+- La soldadura de platina de continuidad permanece en `case_002_column_and_common.json`.
+
 Uso directo (sin ensamblar):
 
 ```powershell

@@ -1,7 +1,11 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
+import pytest
+
+from steel_connections.domain.engine.validate import load_input_payload
 from steel_connections.domain.engine.validate import parse_and_validate_file
 
 
@@ -47,3 +51,48 @@ def test_parse_moment_prequalified_split_bundle_4es_directory() -> None:
     assert case.sections.beam_shape_izq == "W24X76"
     assert case.geometry.stiffener_thickness is not None
     assert case.geometry.stiffener_thickness.value == 15.9
+
+
+def _write_json(path: Path, payload: dict) -> None:
+    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def test_parse_moment_prequalified_split_bundle_left_only_two_files(tmp_path: Path) -> None:
+    column = json.loads((SPLIT_ROOT / "case_003_column_and_common.json").read_text(encoding="utf-8"))
+    column["factores_diseno"]["lados_conexion"] = "left_only"
+    left = json.loads((SPLIT_ROOT / "case_003_beam_left_only.json").read_text(encoding="utf-8"))
+
+    _write_json(tmp_path / "case_003_column_and_common.json", column)
+    _write_json(tmp_path / "case_003_beam_left_only.json", left)
+
+    case = parse_and_validate_file(tmp_path)
+    assert case.design_factors.beam_connection_sides == "left_only"
+    assert case.sections.beam_shape_izq == "W18X76"
+    assert case.sections.beam_shape == "W18X76"
+
+
+def test_parse_moment_prequalified_split_bundle_right_only_two_files(tmp_path: Path) -> None:
+    column = json.loads((SPLIT_ROOT / "case_003_column_and_common.json").read_text(encoding="utf-8"))
+    column["factores_diseno"]["lados_conexion"] = "right_only"
+    right = json.loads((SPLIT_ROOT / "case_003_beam_right_only.json").read_text(encoding="utf-8"))
+
+    _write_json(tmp_path / "case_003_column_and_common.json", column)
+    _write_json(tmp_path / "case_003_beam_right_only.json", right)
+
+    case = parse_and_validate_file(tmp_path)
+    assert case.design_factors.beam_connection_sides == "right_only"
+    assert case.sections.beam_shape_der == "W24X76"
+    assert case.sections.beam_shape == "W24X76"
+
+
+def test_parse_moment_prequalified_split_bundle_both_sides_missing_beam_file_fails(tmp_path: Path) -> None:
+    column = json.loads((SPLIT_ROOT / "case_003_column_and_common.json").read_text(encoding="utf-8"))
+    column["factores_diseno"]["lados_conexion"] = "both_sides"
+    left = json.loads((SPLIT_ROOT / "case_003_beam_left_only.json").read_text(encoding="utf-8"))
+
+    _write_json(tmp_path / "case_003_column_and_common.json", column)
+    _write_json(tmp_path / "case_003_beam_left_only.json", left)
+
+    with pytest.raises(Exception) as exc:
+        load_input_payload(tmp_path)
+    assert "requires both split files" in str(exc.value).lower()

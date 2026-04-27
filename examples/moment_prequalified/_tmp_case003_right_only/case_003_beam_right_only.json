@@ -4,7 +4,7 @@
     "tipo_acero_perfil_vgder": "ASTM A572 Gr 50",
     "demanda_ductilidad_vgder": "high",
     "E_vgder": {
-      "value": 199947.965,
+      "value": 200000,
       "unit": "MPa"
     },
     "Llb_vgder": {
@@ -30,6 +30,10 @@
       "value": 60.0,
       "unit": "mm"
     },
+    "pb_pe_vgder": {
+      "value": 94.996,
+      "unit": "mm"
+    },
     "pfo_pe_vgder": {
       "value": 50.0,
       "unit": "mm"
@@ -41,11 +45,14 @@
   },
   "rigidizador": {
     "tipo_acero_pest_vgder": "ASTM A572 Gr 50",
-    "t_pest_vgder": null
+    "t_pest_vgder": {
+      "value": 12.7,
+      "unit": "mm"
+    }
   },
   "pernos": {
     "g_b_vgder": {
-      "value": 152.4,
+      "value": 140,
       "unit": "mm"
     },
     "tipo_apriete_b_vgder": "pretensioned",
@@ -56,25 +63,31 @@
   },
   "soldaduras": {
     "weld_1": {
-      "description": null,
+      "description": "Rigidizador con end plate",
       "Fexx_w1_vgder": {
         "value": 490.0,
         "unit": "MPa"
       },
-      "tipo_w1_vgder": null,
-      "w_w1_vgder": null,
-      "nl_w1_vgder": null,
+      "tipo_w1_vgder": "Fillet",
+      "w_w1_vgder": {
+        "value": 9.525,
+        "unit": "mm"
+      },
+      "nl_w1_vgder": 2,
       "kds_w1_vgder": 1.0
     },
     "weld_2": {
-      "description": null,
+      "description": "Viga con rigidizador",
       "Fexx_w2_vgder": {
         "value": 490.0,
         "unit": "MPa"
       },
-      "tipo_w2_vgder": null,
-      "w_w2_vgder": null,
-      "nl_w2_vgder": null,
+      "tipo_w2_vgder": "Fillet",
+      "w_w2_vgder": {
+        "value": 9.525,
+        "unit": "mm"
+      },
+      "nl_w2_vgder": 2,
       "kds_w2_vgder": 1.0
     },
     "weld_3": {
@@ -114,6 +127,14 @@
     "Pu_vgder": {
       "value": 0.0,
       "unit": "kN"
+    },
+    "Vu2_vgder": {
+      "value": 514.13,
+      "unit": "kN"
+    },
+    "Mu3_vgder": {
+      "value": 1542490.0,
+      "unit": "kN-mm"
     },
     "Vg_vgder": {
       "value": 44.482,

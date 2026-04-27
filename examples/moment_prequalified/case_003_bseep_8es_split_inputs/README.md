@@ -22,7 +22,6 @@ Objetivo:
 - Columna/comunes usa bloques:
   - `columna`
   - `platina_continuidad`
-  - `soldaduras` (solo `weld_4`)
   - `loads`
   - `factores_diseno`
 
@@ -32,8 +31,11 @@ Objetivo:
   - `placa_extremo`
   - `rigidizador`
   - `pernos`
-  - `soldaduras.weld_1`, `soldaduras.weld_2`, `soldaduras.weld_3`
+  - `soldaduras.weld_1`, `soldaduras.weld_2`, `soldaduras.weld_3`, `soldaduras.weld_4`
 - `platina_continuidad` ahora se ingresa en `case_003_column_and_common.json`.
+- `soldaduras.weld_4` se ingresa por lado en los archivos de viga:
+  - soldadura #4 = ala de viga con platina extremo
+  - incluye `tipo_w4_<lado>`, `Fexx_w4_<lado>`, `t_w4_<lado>`, `nl_w4_<lado>`, `kds_w4_<lado>`, `t_w4.1_<lado>`
 - `beam_shape` (desde `viga.perfil`) debe coincidir en derecha e izquierda.
 - En columna/comunes, `materiales` mantiene:
   - `profile_steel_type`
@@ -52,6 +54,8 @@ Objetivo:
 - Ejemplos en `loads` de vigas:
   - `Pu_vgder` / `Pu_vgizq`
   - `Vg_vgder` / `Vg_vgizq`
+  - `Vu2_vgder` / `Vu2_vgizq`
+  - `Mu3_vgder` / `Mu3_vgizq`
 - Ejemplos en `factores_diseno` (columna/common):
   - `phi_ductil` (se mapea a `phi_d`)
   - `phi_no_ductil` (se mapea a `phi_n`)

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import math
+from typing import Any
 
 from steel_connections.models.units import Quantity, UnitSystem, validate_quantity_unit
 
@@ -164,6 +165,277 @@ def compute_mf(
     if mpr.unit != moment_unit:
         raise ValueError(f"Invalid Mpr unit. Expected '{moment_unit}'.")
     return Quantity(value=mpr.value + vh.value * sh.value, unit=moment_unit)
+
+
+def compute_end_plate_yield_line_parameter(
+    *,
+    connection_type: str,
+    bp: Quantity,
+    g: Quantity,
+    pfi: Quantity,
+    pfo: Quantity,
+    de: Quantity,
+    pb: Quantity | None,
+    h1: Quantity,
+    h2: Quantity,
+    h3: Quantity | None,
+    h4: Quantity | None,
+    unit_system: UnitSystem,
+) -> tuple[Quantity, dict[str, Any]]:
+    """Compute end-plate yield-line parameter ``Yp``.
+
+    Equation source:
+    - AISC 358-22 Tables 6.2, 6.3 and 6.4
+    """
+
+    for name, value in {
+        "bp": bp,
+        "g": g,
+        "pfi": pfi,
+        "pfo": pfo,
+        "de": de,
+        "h1": h1,
+        "h2": h2,
+    }.items():
+        validate_quantity_unit(value, "length", unit_system, name)
+        if value.value <= 0.0:
+            raise ValueError(f"{name} must be positive.")
+    if pb is not None:
+        validate_quantity_unit(pb, "length", unit_system, "pb")
+        if connection_type == "bseep_8es" and pb.value <= 0.0:
+            raise ValueError("pb must be positive.")
+    if h3 is not None:
+        validate_quantity_unit(h3, "length", unit_system, "h3")
+    if h4 is not None:
+        validate_quantity_unit(h4, "length", unit_system, "h4")
+
+    s = Quantity(value=0.5 * math.sqrt(bp.value * g.value), unit=bp.unit)
+    pfi_eff = Quantity(value=min(pfi.value, s.value), unit=pfi.unit)
+    de_le_s = de.value <= s.value + 1e-9
+    case_ref = "N/A"
+
+    if connection_type == "bueep_4e":
+        yp_value = (
+            (bp.value / 2.0)
+            * (
+                h2.value * ((1.0 / pfi_eff.value) + (1.0 / s.value))
+                + h1.value * (1.0 / pfo.value)
+                - 0.5
+            )
+            + (2.0 / g.value) * (h2.value * (pfi_eff.value + s.value))
+        )
+        table_ref = "AISC 358-22 Table 6.2"
+        formula_text = (
+            "Yp = bp/2*[h2*(1/pfi + 1/s) + h1*(1/pfo) - 1/2] + (2/g)*[h2*(pfi + s)]"
+        )
+    elif connection_type == "bseep_4es":
+        yp_value = (
+            (bp.value / 2.0)
+            * (
+                h2.value * ((1.0 / pfi_eff.value) + (1.0 / s.value))
+                + h1.value * (
+                    (1.0 / pfo.value) + (1.0 / (2.0 * de.value))
+                    if de_le_s
+                    else (1.0 / s.value) + (1.0 / pfo.value)
+                )
+            )
+            + (2.0 / g.value)
+            * (
+                h2.value * (pfi_eff.value + s.value)
+                + h1.value * ((de.value + pfo.value) if de_le_s else (s.value + pfo.value))
+            )
+        )
+        case_ref = "Case 1 (de <= s)" if de_le_s else "Case 2 (de > s)"
+        table_ref = "AISC 358-22 Table 6.3"
+        formula_text = (
+            "Yp = bp/2*[h2*(1/pfi + 1/s) + h1*(1/pfo + 1/(2de))] + "
+            "(2/g)*[h2*(pfi + s) + h1*(de + pfo)]"
+            if de_le_s
+            else "Yp = bp/2*[h2*(1/pfi + 1/s) + h1*(1/s + 1/pfo)] + "
+            "(2/g)*[h2*(pfi + s) + h1*(s + pfo)]"
+        )
+    elif connection_type == "bseep_8es":
+        if pb is None or h3 is None or h4 is None:
+            raise ValueError("bseep_8es requires pb, h3 and h4 to compute Yp.")
+        yp_value = (
+            (bp.value / 2.0)
+            * (
+                h1.value * ((1.0 / (2.0 * de.value)) if de_le_s else (1.0 / s.value))
+                + h2.value * (1.0 / pfo.value)
+                + h3.value * (1.0 / pfi_eff.value)
+                + h4.value * (1.0 / s.value)
+            )
+            + (2.0 / g.value)
+            * (
+                h1.value * ((de.value + 3.0 * pb.value / 4.0) if de_le_s else (s.value + pb.value / 4.0))
+                + h2.value * (pfo.value + (pb.value / 4.0 if de_le_s else 3.0 * pb.value / 4.0))
+                + h3.value * (pfi_eff.value + (3.0 * pb.value / 4.0 if de_le_s else pb.value / 4.0))
+                + h4.value * (s.value + (pb.value / 4.0 if de_le_s else 3.0 * pb.value / 4.0))
+            )
+            + g.value
+        )
+        case_ref = "Case 1 (de <= s)" if de_le_s else "Case 2 (de > s)"
+        table_ref = "AISC 358-22 Table 6.4"
+        formula_text = (
+            "Yp = bp/2*[h1*(1/(2de)) + h2*(1/pfo) + h3*(1/pfi) + h4*(1/s)] + "
+            "(2/g)*[h1*(de + 3pb/4) + h2*(pfo + pb/4) + h3*(pfi + 3pb/4) + h4*(s + pb/4)] + g"
+            if de_le_s
+            else "Yp = bp/2*[h1*(1/s) + h2*(1/pfo) + h3*(1/pfi) + h4*(1/s)] + "
+            "(2/g)*[h1*(s + pb/4) + h2*(pfo + 3pb/4) + h3*(pfi + pb/4) + h4*(s + 3pb/4)] + g"
+        )
+    else:
+        raise ValueError(f"Unsupported connection_type '{connection_type}' for Yp.")
+
+    return Quantity(value=yp_value, unit=bp.unit), {
+        "table_reference": table_ref,
+        "case_reference": case_ref,
+        "formula": formula_text,
+        "s": s.model_dump(),
+        "pfi_input": pfi.model_dump(),
+        "pfi_effective": pfi_eff.model_dump(),
+        "de": de.model_dump(),
+        "de_le_s": de_le_s,
+        "is_hardcoded": False,
+    }
+
+
+def compute_column_flange_yield_line_parameter(
+    *,
+    connection_type: str,
+    is_stiffened: bool,
+    bcf: Quantity,
+    g: Quantity,
+    h1: Quantity,
+    h2: Quantity,
+    unit_system: UnitSystem,
+    c: Quantity | None = None,
+    pso: Quantity | None = None,
+    psi: Quantity | None = None,
+    pb: Quantity | None = None,
+    h3: Quantity | None = None,
+    h4: Quantity | None = None,
+) -> tuple[Quantity, dict[str, Any]]:
+    """Compute column-flange yield-line parameter ``Yc`` or ``Ycs``.
+
+    Equation source:
+    - AISC 358-22 Table 6.5 for four-bolt extended end-plate connections
+    - AISC 358-22 Table 6.6 for eight-bolt extended end-plate connections
+    """
+
+    for name, value in {"bcf": bcf, "g": g, "h1": h1, "h2": h2}.items():
+        validate_quantity_unit(value, "length", unit_system, name)
+        if value.value <= 0.0:
+            raise ValueError(f"{name} must be positive.")
+
+    s = Quantity(value=0.5 * math.sqrt(bcf.value * g.value), unit=bcf.unit)
+    case_ref = "N/A"
+
+    if connection_type in {"bueep_4e", "bseep_4es"}:
+        if is_stiffened:
+            if pso is None or psi is None:
+                raise ValueError("Stiffened four-bolt column flange requires pso and psi.")
+            validate_quantity_unit(pso, "length", unit_system, "pso")
+            validate_quantity_unit(psi, "length", unit_system, "psi")
+            psi_eff = Quantity(value=min(psi.value, s.value), unit=psi.unit)
+            y_value = (
+                (bcf.value / 2.0)
+                * (
+                    h2.value * ((1.0 / s.value) + (1.0 / psi_eff.value))
+                    + h1.value * ((1.0 / s.value) + (1.0 / pso.value))
+                )
+                + (2.0 / g.value) * (h2.value * (s.value + psi_eff.value) + h1.value * (s.value + pso.value))
+            )
+            table_ref = "AISC 358-22 Table 6.5"
+            formula_text = (
+                "Y_cs = bcf/2*[h2*(1/s + 1/psi) + h1*(1/s + 1/pso)] + "
+                "(2/g)*[h2*(s + psi) + h1*(s + pso)]"
+            )
+            case_ref = "Case 1 (psi <= s)" if psi.value <= s.value + 1e-9 else "Case 2 (psi > s)"
+            metadata = {"pso": pso.model_dump(), "psi_input": psi.model_dump(), "psi_effective": psi_eff.model_dump()}
+        else:
+            if c is None:
+                raise ValueError("Unstiffened four-bolt column flange requires c.")
+            validate_quantity_unit(c, "length", unit_system, "c")
+            y_value = (
+                (bcf.value / 2.0) * (h2.value * (1.0 / s.value) + h1.value * (1.0 / s.value))
+                + (2.0 / g.value) * (h2.value * (s.value + 3.0 * c.value / 4.0) + h1.value * (s.value + c.value / 4.0) + (c.value**2) / 2.0)
+                + g.value
+            )
+            table_ref = "AISC 358-22 Table 6.5"
+            formula_text = (
+                "Y_c = bcf/2*[h2*(1/s) + h1*(1/s)] + "
+                "(2/g)*[h2*(s + 3c/4) + h1*(s + c/4) + c^2/2] + g"
+            )
+            metadata = {"c": c.model_dump()}
+    elif connection_type == "bseep_8es":
+        if h3 is None or h4 is None or pb is None:
+            raise ValueError("Eight-bolt column flange requires pb, h3 and h4.")
+        validate_quantity_unit(pb, "length", unit_system, "pb")
+        validate_quantity_unit(h3, "length", unit_system, "h3")
+        validate_quantity_unit(h4, "length", unit_system, "h4")
+        if is_stiffened:
+            if pso is None or psi is None:
+                raise ValueError("Stiffened eight-bolt column flange requires pso and psi.")
+            validate_quantity_unit(pso, "length", unit_system, "pso")
+            validate_quantity_unit(psi, "length", unit_system, "psi")
+            psi_eff = Quantity(value=min(psi.value, s.value), unit=psi.unit)
+            y_value = (
+                (bcf.value / 2.0)
+                * (
+                    h1.value * (1.0 / s.value)
+                    + h2.value * (1.0 / pso.value)
+                    + h3.value * (1.0 / psi_eff.value)
+                    + h4.value * (1.0 / s.value)
+                )
+                + (2.0 / g.value)
+                * (
+                    h1.value * (s.value + pb.value / 4.0)
+                    + h2.value * (pso.value + 3.0 * pb.value / 4.0)
+                    + h3.value * (psi_eff.value + pb.value / 4.0)
+                    + h4.value * (s.value + 3.0 * pb.value / 4.0)
+                    + (pb.value**2) / 2.0
+                )
+                + g.value
+            )
+            table_ref = "AISC 358-22 Table 6.6"
+            formula_text = (
+                "Y_cs = bcf/2*[h1*(1/s) + h2*(1/pso) + h3*(1/psi) + h4*(1/s)] + "
+                "(2/g)*[h1*(s + pb/4) + h2*(pso + 3pb/4) + h3*(psi + pb/4) + h4*(s + 3pb/4) + pb^2/2] + g"
+            )
+            case_ref = "Case 1 (psi <= s)" if psi.value <= s.value + 1e-9 else "Case 2 (psi > s)"
+            metadata = {"pso": pso.model_dump(), "psi_input": psi.model_dump(), "psi_effective": psi_eff.model_dump(), "pb": pb.model_dump()}
+        else:
+            if c is None:
+                raise ValueError("Unstiffened eight-bolt column flange requires c.")
+            validate_quantity_unit(c, "length", unit_system, "c")
+            y_value = (
+                (bcf.value / 2.0) * (h1.value * (1.0 / s.value) + h4.value * (1.0 / s.value))
+                + (2.0 / g.value)
+                * (
+                    h1.value * (pb.value + c.value / 2.0 + s.value)
+                    + h2.value * (pb.value / 2.0 + c.value / 4.0)
+                    + h3.value * (pb.value / 2.0 + c.value / 2.0)
+                    + h4.value * s.value
+                )
+                + g.value / 2.0
+            )
+            table_ref = "AISC 358-22 Table 6.6"
+            formula_text = (
+                "Y_c = bcf/2*[h1*(1/s) + h4*(1/s)] + "
+                "(2/g)*[h1*(pb + c/2 + s) + h2*(pb/2 + c/4) + h3*(pb/2 + c/2) + h4*(s)] + g/2"
+            )
+            metadata = {"c": c.model_dump(), "pb": pb.model_dump()}
+    else:
+        raise ValueError(f"Unsupported connection_type '{connection_type}' for column flange Y parameter.")
+
+    return Quantity(value=y_value, unit=bcf.unit), {
+        "table_reference": table_ref,
+        "case_reference": case_ref,
+        "formula": formula_text,
+        "s": s.model_dump(),
+        "is_hardcoded": False,
+        **metadata,
+    }
 
 
 def compute_beam_flange_force_from_mf(
@@ -574,6 +846,41 @@ def compute_column_web_local_yielding_strength(
     return Quantity(value=rn_design, unit=force_unit), {"rn_nominal": rn_nominal, "ct": ct}
 
 
+def compute_column_web_local_yielding_strength_eq_2_2_11(
+    *,
+    ct: float,
+    kc: Quantity,
+    tp: Quantity,
+    n: Quantity,
+    column_fy: Quantity,
+    column_web_thickness: Quantity,
+    phi_d: float,
+    unit_system: UnitSystem,
+) -> tuple[Quantity, dict[str, float]]:
+    """Compute design strength for local web yielding using Eq. (2.2-11)-style form.
+
+    Equation:
+    ``phiRn = phi * [Ct*(6*k + 2*tp) + N] * Fy * tw``
+
+    Reference:
+    - User-provided Eq. (2.2-11) format for Chapter 6 column-web check adaptation.
+    """
+
+    validate_quantity_unit(kc, "length", unit_system, "kc")
+    validate_quantity_unit(tp, "length", unit_system, "tp")
+    validate_quantity_unit(n, "length", unit_system, "n")
+    validate_quantity_unit(column_fy, "stress", unit_system, "column_fy")
+    validate_quantity_unit(column_web_thickness, "length", unit_system, "column_web_thickness")
+
+    rn_nominal = (ct * (6.0 * kc.value + 2.0 * tp.value) + n.value) * column_fy.value * column_web_thickness.value
+    rn_design = phi_d * rn_nominal
+    force_unit = "kip" if unit_system == UnitSystem.US else "kN"
+    if unit_system == UnitSystem.SI:
+        rn_nominal /= 1000.0
+        rn_design /= 1000.0
+    return Quantity(value=rn_design, unit=force_unit), {"rn_nominal": rn_nominal, "ct": ct}
+
+
 def compute_column_web_local_crippling_strength(
     *,
     lb: Quantity,
@@ -623,3 +930,49 @@ def compute_column_web_local_crippling_strength(
         rn_nominal /= 1000.0
         rn_design /= 1000.0
     return Quantity(value=rn_design, unit=force_unit), {"rn_nominal": rn_nominal, "phi": phi, "case": case_name}
+
+
+def compute_column_web_local_buckling_strength(
+    *,
+    ct: float,
+    column_web_thickness: Quantity,
+    clear_web_depth: Quantity,
+    elastic_modulus: Quantity,
+    column_fy: Quantity,
+    phi: float,
+    unit_system: UnitSystem,
+) -> tuple[Quantity, dict[str, float]]:
+    """Compute design strength for column web local buckling (WCB).
+
+    Equation:
+    ``phiRn = phi * Ct * 24 * tw^3 * sqrt(E*Fy) / h``
+    where ``h = d_col - 2*kc``.
+
+    Reference:
+    - AISC 358-22 Chapter 6, web local buckling (WCB) format.
+    """
+
+    validate_quantity_unit(column_web_thickness, "length", unit_system, "column_web_thickness")
+    validate_quantity_unit(clear_web_depth, "length", unit_system, "clear_web_depth")
+    validate_quantity_unit(elastic_modulus, "stress", unit_system, "elastic_modulus")
+    validate_quantity_unit(column_fy, "stress", unit_system, "column_fy")
+    if clear_web_depth.value <= 0.0:
+        raise ValueError("Computed clear web depth h = d_col - 2*kc must be positive.")
+    if ct <= 0.0:
+        raise ValueError("Ct factor must be positive.")
+    if phi <= 0.0:
+        raise ValueError("Resistance factor phi must be positive.")
+
+    rn_nominal = (
+        ct
+        * 24.0
+        * (column_web_thickness.value**3)
+        * math.sqrt(elastic_modulus.value * column_fy.value)
+        / clear_web_depth.value
+    )
+    rn_design = phi * rn_nominal
+    force_unit = "kip" if unit_system == UnitSystem.US else "kN"
+    if unit_system == UnitSystem.SI:
+        rn_nominal /= 1000.0
+        rn_design /= 1000.0
+    return Quantity(value=rn_design, unit=force_unit), {"rn_nominal": rn_nominal, "ct": ct, "phi": phi}

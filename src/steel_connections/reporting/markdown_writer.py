@@ -1,6 +1,7 @@
 ﻿from __future__ import annotations
 
 import math
+import re
 from pathlib import Path
 
 from steel_connections.codes.engineering.flexure import (
@@ -175,10 +176,10 @@ def _render_result_label(raw_result: object) -> str:
 
 def _render_result_plain_es(raw_result: object) -> str:
     value = _format_text(raw_result).strip().upper()
-    if value in {"OK", "PASS"}:
-        return "Cumple"
-    if value in {"NO_OK", "FAIL", "ERROR", "NOT_IMPLEMENTED"}:
-        return "No cumple"
+    if value in {"OK", "PASS", "CUMPLE"}:
+        return "🟢 Cumple"
+    if value in {"NO_OK", "FAIL", "ERROR", "NOT_IMPLEMENTED", "NO CUMPLE"}:
+        return "🔴 No cumple"
     return _format_text(raw_result)
 
 
@@ -361,8 +362,8 @@ def _collect_step_2_mpr(result: DetailedRunResult) -> dict | None:
             "clause": check.clause,
             "source_document": check.source_document,
             "status": check.status.value,
-            "demand": check.demand.model_dump(),
-            "capacity": check.capacity.model_dump(),
+            "demand": check.demand.model_dump() if check.demand is not None else None,
+            "capacity": check.capacity.model_dump() if check.capacity is not None else None,
             "inputs": check.calculation_memory.inputs,
             "intermediates": check.calculation_memory.intermediates,
             "equation": check.calculation_memory.equation,
@@ -379,8 +380,8 @@ def _collect_step_3_sh(result: DetailedRunResult) -> dict | None:
             "clause": check.clause,
             "source_document": check.source_document,
             "status": check.status.value,
-            "demand": check.demand.model_dump(),
-            "capacity": check.capacity.model_dump(),
+            "demand": check.demand.model_dump() if check.demand is not None else None,
+            "capacity": check.capacity.model_dump() if check.capacity is not None else None,
             "inputs": check.calculation_memory.inputs,
             "intermediates": check.calculation_memory.intermediates,
             "equation": check.calculation_memory.equation,
@@ -397,8 +398,8 @@ def _collect_step_4_vh(result: DetailedRunResult) -> dict | None:
             "clause": check.clause,
             "source_document": check.source_document,
             "status": check.status.value,
-            "demand": check.demand.model_dump(),
-            "capacity": check.capacity.model_dump(),
+            "demand": check.demand.model_dump() if check.demand is not None else None,
+            "capacity": check.capacity.model_dump() if check.capacity is not None else None,
             "inputs": check.calculation_memory.inputs,
             "intermediates": check.calculation_memory.intermediates,
             "equation": check.calculation_memory.equation,
@@ -415,10 +416,11 @@ def _collect_step_5_mf(result: DetailedRunResult) -> dict | None:
             "clause": check.clause,
             "source_document": check.source_document,
             "status": check.status.value,
-            "demand": check.demand.model_dump(),
-            "capacity": check.capacity.model_dump(),
+            "demand": check.demand.model_dump() if check.demand is not None else None,
+            "capacity": check.capacity.model_dump() if check.capacity is not None else None,
             "inputs": check.calculation_memory.inputs,
             "intermediates": check.calculation_memory.intermediates,
+            "units_trace": check.calculation_memory.units_trace,
             "equation": check.calculation_memory.equation,
         }
     return None
@@ -426,14 +428,24 @@ def _collect_step_5_mf(result: DetailedRunResult) -> dict | None:
 
 def _collect_step_11_web_weld_tension_context(result: DetailedRunResult) -> dict | None:
     prequal_inputs: dict = {}
+    beam_left_inputs: dict = {}
     for check in result.checks:
-        if ".06.3." not in check.rule_id:
-            continue
         if isinstance(check.calculation_memory.inputs, dict):
-            prequal_inputs = check.calculation_memory.inputs
-            break
+            maybe_inputs = check.calculation_memory.inputs
+            if "d_vgizq" in maybe_inputs or "tf_vgizq" in maybe_inputs:
+                beam_left_inputs.update(
+                    {
+                        key: maybe_inputs.get(key)
+                        for key in ("d_vgizq", "tf_vgizq")
+                        if maybe_inputs.get(key) is not None
+                    }
+                )
+            if ".06.3." in check.rule_id and not prequal_inputs:
+                prequal_inputs = maybe_inputs
     if not prequal_inputs:
         return None
+    if beam_left_inputs:
+        prequal_inputs = {**prequal_inputs, **beam_left_inputs}
     return {
         "inputs": prequal_inputs,
     }
@@ -448,8 +460,8 @@ def _collect_step_6_1_bolt_tension(result: DetailedRunResult) -> dict | None:
             "clause": check.clause,
             "source_document": check.source_document,
             "status": check.status.value,
-            "demand": check.demand.model_dump(),
-            "capacity": check.capacity.model_dump(),
+            "demand": check.demand.model_dump() if check.demand is not None else None if check.demand is not None else None,
+            "capacity": check.capacity.model_dump() if check.capacity is not None else None if check.capacity is not None else None,
             "inputs": check.calculation_memory.inputs,
             "intermediates": check.calculation_memory.intermediates,
             "design_factors": check.calculation_memory.design_factors,
@@ -468,8 +480,8 @@ def _collect_step_6_2_bolt_shear(result: DetailedRunResult) -> dict | None:
             "clause": check.clause,
             "source_document": check.source_document,
             "status": check.status.value,
-            "demand": check.demand.model_dump(),
-            "capacity": check.capacity.model_dump(),
+            "demand": check.demand.model_dump() if check.demand is not None else None,
+            "capacity": check.capacity.model_dump() if check.capacity is not None else None,
             "inputs": check.calculation_memory.inputs,
             "intermediates": check.calculation_memory.intermediates,
             "design_factors": check.calculation_memory.design_factors,
@@ -488,8 +500,8 @@ def _collect_step_7_1_1_end_plate_flexural(result: DetailedRunResult) -> dict | 
             "clause": check.clause,
             "source_document": check.source_document,
             "status": check.status.value,
-            "demand": check.demand.model_dump(),
-            "capacity": check.capacity.model_dump(),
+            "demand": check.demand.model_dump() if check.demand is not None else None,
+            "capacity": check.capacity.model_dump() if check.capacity is not None else None,
             "inputs": check.calculation_memory.inputs,
             "intermediates": check.calculation_memory.intermediates,
             "design_factors": check.calculation_memory.design_factors,
@@ -508,8 +520,8 @@ def _collect_step_7_2_1_end_plate_shear_yielding(result: DetailedRunResult) -> d
             "clause": check.clause,
             "source_document": check.source_document,
             "status": check.status.value,
-            "demand": check.demand.model_dump(),
-            "capacity": check.capacity.model_dump(),
+            "demand": check.demand.model_dump() if check.demand is not None else None,
+            "capacity": check.capacity.model_dump() if check.capacity is not None else None,
             "inputs": check.calculation_memory.inputs,
             "intermediates": check.calculation_memory.intermediates,
             "design_factors": check.calculation_memory.design_factors,
@@ -528,8 +540,8 @@ def _collect_step_7_2_2_end_plate_shear_rupture(result: DetailedRunResult) -> di
             "clause": check.clause,
             "source_document": check.source_document,
             "status": check.status.value,
-            "demand": check.demand.model_dump(),
-            "capacity": check.capacity.model_dump(),
+            "demand": check.demand.model_dump() if check.demand is not None else None,
+            "capacity": check.capacity.model_dump() if check.capacity is not None else None,
             "inputs": check.calculation_memory.inputs,
             "intermediates": check.calculation_memory.intermediates,
             "design_factors": check.calculation_memory.design_factors,
@@ -548,8 +560,8 @@ def _collect_step_7_3_1_end_plate_hole_tearout(result: DetailedRunResult) -> dic
             "clause": check.clause,
             "source_document": check.source_document,
             "status": check.status.value,
-            "demand": check.demand.model_dump(),
-            "capacity": check.capacity.model_dump(),
+            "demand": check.demand.model_dump() if check.demand is not None else None,
+            "capacity": check.capacity.model_dump() if check.capacity is not None else None,
             "inputs": check.calculation_memory.inputs,
             "intermediates": check.calculation_memory.intermediates,
             "design_factors": check.calculation_memory.design_factors,
@@ -568,8 +580,8 @@ def _collect_step_7_3_2_end_plate_hole_bearing(result: DetailedRunResult) -> dic
             "clause": check.clause,
             "source_document": check.source_document,
             "status": check.status.value,
-            "demand": check.demand.model_dump(),
-            "capacity": check.capacity.model_dump(),
+            "demand": check.demand.model_dump() if check.demand is not None else None,
+            "capacity": check.capacity.model_dump() if check.capacity is not None else None,
             "inputs": check.calculation_memory.inputs,
             "intermediates": check.calculation_memory.intermediates,
             "design_factors": check.calculation_memory.design_factors,
@@ -588,8 +600,8 @@ def _collect_step_8_1_1_stiffener_weld_tension_rupture(result: DetailedRunResult
             "clause": check.clause,
             "source_document": check.source_document,
             "status": check.status.value,
-            "demand": check.demand.model_dump(),
-            "capacity": check.capacity.model_dump(),
+            "demand": check.demand.model_dump() if check.demand is not None else None,
+            "capacity": check.capacity.model_dump() if check.capacity is not None else None,
             "inputs": check.calculation_memory.inputs,
             "intermediates": check.calculation_memory.intermediates,
             "design_factors": check.calculation_memory.design_factors,
@@ -608,8 +620,28 @@ def _collect_step_9_1_1_stiffener_beam_weld_shear_rupture(result: DetailedRunRes
             "clause": check.clause,
             "source_document": check.source_document,
             "status": check.status.value,
-            "demand": check.demand.model_dump(),
-            "capacity": check.capacity.model_dump(),
+            "demand": check.demand.model_dump() if check.demand is not None else None,
+            "capacity": check.capacity.model_dump() if check.capacity is not None else None,
+            "inputs": check.calculation_memory.inputs,
+            "intermediates": check.calculation_memory.intermediates,
+            "design_factors": check.calculation_memory.design_factors,
+            "equation": check.calculation_memory.equation,
+            "dcr": check.dcr,
+        }
+    return None
+
+
+def _collect_step_10_1_1_beam_flange_end_plate_weld_tension_rupture(result: DetailedRunResult) -> dict | None:
+    for check in result.checks:
+        if ".step10_1_1_beam_flange_end_plate_weld_tension_rupture" not in check.rule_id:
+            continue
+        return {
+            "rule_id": check.rule_id,
+            "clause": check.clause,
+            "source_document": check.source_document,
+            "status": check.status.value,
+            "demand": check.demand.model_dump() if check.demand is not None else None,
+            "capacity": check.capacity.model_dump() if check.capacity is not None else None,
             "inputs": check.calculation_memory.inputs,
             "intermediates": check.calculation_memory.intermediates,
             "design_factors": check.calculation_memory.design_factors,
@@ -621,15 +653,15 @@ def _collect_step_9_1_1_stiffener_beam_weld_shear_rupture(result: DetailedRunRes
 
 def _collect_step_10_1_1_beam_shear_yielding(result: DetailedRunResult) -> dict | None:
     for check in result.checks:
-        if ".step10_1_1_beam_shear_yielding" not in check.rule_id:
+        if ".step11_1_1_beam_shear_yielding" not in check.rule_id:
             continue
         return {
             "rule_id": check.rule_id,
             "clause": check.clause,
             "source_document": check.source_document,
             "status": check.status.value,
-            "demand": check.demand.model_dump(),
-            "capacity": check.capacity.model_dump(),
+            "demand": check.demand.model_dump() if check.demand is not None else None,
+            "capacity": check.capacity.model_dump() if check.capacity is not None else None,
             "inputs": check.calculation_memory.inputs,
             "intermediates": check.calculation_memory.intermediates,
             "design_factors": check.calculation_memory.design_factors,
@@ -656,8 +688,8 @@ def _collect_step_12_1_1_column_flange_local_bending(result: DetailedRunResult) 
             "clause": check.clause,
             "source_document": check.source_document,
             "status": check.status.value,
-            "demand": check.demand.model_dump(),
-            "capacity": check.capacity.model_dump(),
+            "demand": check.demand.model_dump() if check.demand is not None else None,
+            "capacity": check.capacity.model_dump() if check.capacity is not None else None,
             "inputs": check.calculation_memory.inputs,
             "intermediates": check.calculation_memory.intermediates,
             "design_factors": check.calculation_memory.design_factors,
@@ -665,6 +697,296 @@ def _collect_step_12_1_1_column_flange_local_bending(result: DetailedRunResult) 
             "dcr": check.dcr,
         }
     return None
+
+
+def _collect_step_13_1_1_column_web_local_yielding(result: DetailedRunResult) -> dict | None:
+    for check in result.checks:
+        rule_id = str(check.rule_id).lower()
+        clause = str(check.clause).lower()
+        name = str(check.name).lower()
+        if (
+            ".step13_1_1_column_web_local_yielding" not in rule_id
+            and "web_local_yielding" not in rule_id
+            and "6.7-17" not in clause
+            and "column web" not in name
+        ):
+            continue
+        return {
+            "rule_id": check.rule_id,
+            "clause": check.clause,
+            "source_document": check.source_document,
+            "status": check.status.value,
+            "demand": check.demand.model_dump() if check.demand is not None else None if check.demand is not None else None,
+            "capacity": check.capacity.model_dump() if check.capacity is not None else None if check.capacity is not None else None,
+            "inputs": check.calculation_memory.inputs,
+            "intermediates": check.calculation_memory.intermediates,
+            "design_factors": check.calculation_memory.design_factors,
+            "equation": check.calculation_memory.equation,
+            "dcr": check.dcr,
+        }
+    return None
+
+
+def _collect_step_14_2_1_column_web_local_crippling(result: DetailedRunResult) -> dict | None:
+    for check in result.checks:
+        rule_id = str(check.rule_id).lower()
+        clause = str(check.clause).lower()
+        name = str(check.name).lower()
+        if (
+            ".step14_2_1_column_web_local_crippling" not in rule_id
+            and "web_local_crippling" not in rule_id
+            and "6.7-19" not in clause
+            and "6.7-20" not in clause
+            and "6.7-21" not in clause
+            and "crippling" not in name
+        ):
+            continue
+        return {
+            "rule_id": check.rule_id,
+            "clause": check.clause,
+            "source_document": check.source_document,
+            "status": check.status.value,
+            "demand": check.demand.model_dump() if check.demand is not None else None,
+            "capacity": check.capacity.model_dump() if check.capacity is not None else None,
+            "inputs": check.calculation_memory.inputs,
+            "intermediates": check.calculation_memory.intermediates,
+            "design_factors": check.calculation_memory.design_factors,
+            "equation": check.calculation_memory.equation,
+            "dcr": check.dcr,
+        }
+    return None
+
+
+def _collect_step_14_2_2_column_web_local_buckling(result: DetailedRunResult) -> dict | None:
+    for check in result.checks:
+        rule_id = str(check.rule_id).lower()
+        clause = str(check.clause).lower()
+        name = str(check.name).lower()
+        if (
+            ".step14_2_2_column_web_local_buckling" not in rule_id
+            and "web_local_buckling" not in rule_id
+            and "6.7-18" not in clause
+            and "buckling" not in name
+        ):
+            continue
+        return {
+            "rule_id": check.rule_id,
+            "clause": check.clause,
+            "source_document": check.source_document,
+            "status": check.status.value,
+            "demand": check.demand.model_dump() if check.demand is not None else None,
+            "capacity": check.capacity.model_dump() if check.capacity is not None else None,
+            "inputs": check.calculation_memory.inputs,
+            "intermediates": check.calculation_memory.intermediates,
+            "design_factors": check.calculation_memory.design_factors,
+            "equation": check.calculation_memory.equation,
+            "dcr": check.dcr,
+            "notes": check.notes,
+        }
+    return None
+
+
+def _canonical_side_mode(value: object) -> str | None:
+    text = _format_text(value).strip().lower()
+    if text in {"left", "left_only", "izq", "izquierda", "solo_izquierda"}:
+        return "left_only"
+    if text in {"right", "right_only", "der", "derecha", "solo_derecha"}:
+        return "right_only"
+    if text in {"both", "both_sides", "ambas", "ambos_lados", "izq_der"}:
+        return "both_sides"
+    return None
+
+
+def _collect_active_sides(result: DetailedRunResult) -> list[str]:
+    for check in result.checks:
+        design_factors = check.calculation_memory.design_factors
+        if not isinstance(design_factors, dict):
+            continue
+        mode = _canonical_side_mode(
+            design_factors.get("beam_connection_sides")
+            if design_factors.get("beam_connection_sides") is not None
+            else design_factors.get("lados_conexion")
+        )
+        if mode == "left_only":
+            return ["izq"]
+        if mode == "right_only":
+            return ["der"]
+        if mode == "both_sides":
+            return ["izq", "der"]
+
+    has_izq = any(str(check.rule_id).lower().endswith("_vgizq") for check in result.checks)
+    has_der = any(str(check.rule_id).lower().endswith("_vgder") for check in result.checks)
+    if has_izq and has_der:
+        return ["izq", "der"]
+    if has_der:
+        return ["der"]
+    return ["izq"]
+
+
+def _collect_check_by_step_and_side(
+    result: DetailedRunResult,
+    *,
+    step_fragment: str,
+    side: str,
+) -> dict | None:
+    side_suffix = "vgizq" if side == "izq" else "vgder"
+    token = f"_{side_suffix}"
+    for check in result.checks:
+        rule_id = str(check.rule_id)
+        if step_fragment not in rule_id:
+            continue
+        if not rule_id.lower().endswith(token):
+            continue
+        return {
+            "rule_id": check.rule_id,
+            "clause": check.clause,
+            "source_document": check.source_document,
+            "status": check.status.value,
+            "demand": check.demand.model_dump() if check.demand is not None else None,
+            "capacity": check.capacity.model_dump() if check.capacity is not None else None,
+            "inputs": check.calculation_memory.inputs,
+            "intermediates": check.calculation_memory.intermediates,
+            "design_factors": check.calculation_memory.design_factors,
+            "equation": check.calculation_memory.equation,
+            "dcr": check.dcr,
+            "notes": check.notes,
+        }
+    return None
+
+
+def _swap_side_tokens(value: object, *, to_side: str) -> object:
+    if isinstance(value, dict):
+        return {
+            _swap_side_tokens(key, to_side=to_side): _swap_side_tokens(item, to_side=to_side)
+            for key, item in value.items()
+        }
+    if isinstance(value, list):
+        return [_swap_side_tokens(item, to_side=to_side) for item in value]
+    if isinstance(value, str):
+        if to_side == "der":
+            text = value.replace("vgizq", "vgder")
+            text = text.replace("_izq", "_der")
+            text = text.replace("(vg_izq)", "(vg_der)")
+            text = text.replace("viga izquierda", "viga derecha")
+            text = text.replace(" izquierda", " derecha")
+            return text
+        text = value.replace("vgder", "vgizq")
+        text = text.replace("_der", "_izq")
+        text = text.replace("(vg_der)", "(vg_izq)")
+        text = text.replace("viga derecha", "viga izquierda")
+        text = text.replace(" derecha", " izquierda")
+        return text
+    return value
+
+
+def _prepare_payload_for_left_renderer(payload: dict | None, *, side: str) -> dict | None:
+    if payload is None or side == "izq":
+        return payload
+    converted = _swap_side_tokens(payload, to_side="izq")
+    return converted if isinstance(converted, dict) else payload
+
+
+def _render_block_for_side(renderer: object, *payloads: object, side: str) -> str:
+    prepared_args: list[object] = []
+    for payload in payloads:
+        if isinstance(payload, dict) or payload is None:
+            prepared_args.append(_prepare_payload_for_left_renderer(payload, side=side))
+        else:
+            prepared_args.append(payload)
+    if all(arg is None for arg in prepared_args):
+        return ""
+    text = renderer(*prepared_args)
+    if side == "der":
+        converted = _swap_side_tokens(text, to_side="der")
+        return str(converted)
+    return text
+
+
+def _strip_first_h2(block: str) -> str:
+    lines = block.splitlines()
+    if lines and lines[0].startswith("## "):
+        lines = lines[1:]
+        if lines and lines[0].strip() == "":
+            lines = lines[1:]
+    return "\n".join(lines).strip()
+
+
+def _tag_side_subheadings(block: str, *, side: str) -> str:
+    side_tag = "vg_izq" if side == "izq" else "vg_der"
+    tagged_lines: list[str] = []
+    for line in block.splitlines():
+        stripped = line.lstrip()
+        if stripped.startswith("### ") or stripped.startswith("#### "):
+            if f"({side_tag})" not in stripped:
+                line = f"{line} ({side_tag})"
+        tagged_lines.append(line)
+    return "\n".join(tagged_lines)
+
+
+def _normalize_markdown_spacing(text: str) -> str:
+    raw_lines = text.splitlines()
+    lines: list[str] = []
+
+    def _is_heading(value: str) -> bool:
+        stripped = value.strip()
+        return stripped.startswith("#")
+
+    def _is_list_item(value: str) -> bool:
+        return value.strip().startswith("- ")
+
+    for raw in raw_lines:
+        current = raw.rstrip()
+        if _is_heading(current):
+            while lines and lines[-1] == "":
+                lines.pop()
+            if lines:
+                lines.append("")
+            lines.append(current)
+            lines.append("")
+            continue
+
+        if _is_list_item(current):
+            if lines and lines[-1] != "" and not _is_list_item(lines[-1]):
+                lines.append("")
+            lines.append(current)
+            continue
+
+        if current == "":
+            if lines and lines[-1] != "":
+                lines.append("")
+            continue
+
+        if lines and _is_list_item(lines[-1]):
+            lines.append("")
+        lines.append(current)
+
+    while lines and lines[-1] == "":
+        lines.pop()
+    return "\n".join(lines)
+
+
+def _replace_first_step_heading_number(block: str, *, step_number: int) -> str:
+    lines = block.splitlines()
+    for idx, line in enumerate(lines):
+        match = re.match(r"^(##\s+Paso)\s+\d+\s+-(.*)$", line)
+        if match:
+            lines[idx] = f"{match.group(1)} {step_number} -{match.group(2)}"
+            break
+    return "\n".join(lines)
+
+
+def _align_nested_heading_numbers_with_step(block: str, *, step_number: int) -> str:
+    lines = block.splitlines()
+    aligned: list[str] = []
+    for line in lines:
+        match = re.match(r"^(\s*#{3,4}\s+)(\d+)((?:\.\d+)*)(\.?)(\s+)(.*)$", line)
+        if match:
+            aligned.append(
+                f"{match.group(1)}{step_number}{match.group(3)}{match.group(4)}{match.group(5)}{match.group(6)}"
+            )
+            continue
+        aligned.append(line)
+    return "\n".join(aligned)
 
 
 def _render_step_1_notes(notes: list[dict]) -> str:
@@ -678,6 +1000,8 @@ def _render_step_1_notes(notes: list[dict]) -> str:
         note_id = _format_text(item.get("id"))
         scope = _format_text(item.get("scope")).upper()
         description = _translate_text_es(item.get("description"))
+        if note_id == "section_6_7.beam_flange_to_end_plate_weld_note":
+            continue
         clause = _render_clause_text(
             item.get("clause"),
             item.get("source_document"),
@@ -1028,9 +1352,9 @@ def _render_step_6_bolts(step_6_1: dict | None, step_6_2: dict | None) -> str:
         design_factors = step_6_2.get("design_factors", {})
         lines.extend(
             [
-                "### 6.1.2 Revision de capacidad a cortante",
+                "### 6.2 Revision de capacidad a cortante",
                 "",
-                "#### ELR #2: Rotura por cortante en el perno",
+                "#### 6.2.1 ELR #2: Rotura por cortante en el perno",
                 "",
                 f"- Clausula: `{_render_clause_text(step_6_2.get('clause'), step_6_2.get('source_document'), step_6_2.get('rule_id'))}`",
                 f"- Ecuacion: `{_format_text(step_6_2.get('equation'))}`",
@@ -1079,6 +1403,11 @@ def _render_step_7_end_plate(
                 f"- Yp_pe_vgizq: `{_format_quantity(inputs.get('yp_pe_vgizq'))}`",
                 f"- Tabla Yp aplicada: `{_format_text(inputs.get('yp_pe_vgizq_table')).replace('Table', 'Tabla')}`",
                 f"- Caso Yp: `{_format_text(inputs.get('yp_pe_vgizq_case'))}`",
+                *(
+                    ["- Advertencia: `Yp_pe_vgizq esta hardcodeado`"]
+                    if bool(inputs.get("yp_pe_vgizq_is_hardcoded"))
+                    else []
+                ),
                 f"- s_pe_vgizq: `{_format_quantity(inter.get('s'))}`",
                 f"- pfi_pe_vgizq_entrada: `{_format_quantity(inter.get('pfi_input'))}`",
                 f"- pfi_pe_vgizq_efectivo: `{_format_quantity(inter.get('pfi_effective'))}`",
@@ -1222,7 +1551,6 @@ def _render_step_8_stiffener_weld(step_8_1_1: dict | None) -> str:
         "",
         f"- Clausula: `{clause_text}`",
         f"- Ecuacion: `{_format_text(step_8_1_1.get('equation'))}`",
-        f"- phi usado: `{_format_text(design_factors.get('phi'))}`",
         f"- tipo_w1_vgizq: `{weld_type}`",
     ]
     if weld_type == "cjp":
@@ -1236,6 +1564,7 @@ def _render_step_8_stiffener_weld(step_8_1_1: dict | None) -> str:
         return "\n".join(lines)
     lines.extend(
         [
+            f"- phi usado: `{_format_text(design_factors.get('phi'))}`",
             "- l_w1_vgizq (longitud soldadura calculada): `l_w1_vgizq = h_pest_vgizq - c_pest_vgizq - 2*w_w1_vgizq`",
             f"- Fys_pest_vgizq: `{_format_quantity(inputs.get('fys_pest_vgizq'))}`",
             f"- t_pest_vgizq: `{_format_quantity(inputs.get('t_pest_vgizq'))}`",
@@ -1276,7 +1605,6 @@ def _render_step_9_stiffener_beam_weld(step_9_1_1: dict | None) -> str:
         "",
         f"- Clausula: `{clause_text}`",
         f"- Ecuacion: `{_format_text(step_9_1_1.get('equation'))}`",
-        f"- phi usado: `{_format_text(design_factors.get('phi'))}`",
         f"- tipo_w2_vgizq: `{weld_type}`",
     ]
     if weld_type == "cjp":
@@ -1290,6 +1618,7 @@ def _render_step_9_stiffener_beam_weld(step_9_1_1: dict | None) -> str:
         return "\n".join(lines)
     lines.extend(
         [
+            f"- phi usado: `{_format_text(design_factors.get('phi'))}`",
             "- l_w2_vgizq (longitud soldadura calculada): `l_w2_vgizq = L_pest_vgizq - c_pest_vgizq - 2*w_w2_vgizq`",
             f"- Fys_pest_vgizq: `{_format_quantity(inputs.get('fys_pest_vgizq') or inputs.get('fys'))}`",
             f"- t_pest_vgizq: `{_format_quantity(inputs.get('t_pest_vgizq') or inputs.get('ts'))}`",
@@ -1311,6 +1640,61 @@ def _render_step_9_stiffener_beam_weld(step_9_1_1: dict | None) -> str:
     return "\n".join(lines)
 
 
+def _render_step_10_beam_flange_end_plate_weld(step_10_1_1: dict | None) -> str:
+    if step_10_1_1 is None:
+        return ""
+    inputs = step_10_1_1.get("inputs", {})
+    design_factors = step_10_1_1.get("design_factors", {})
+    weld_type = _format_text(inputs.get("tipo_w4_vgizq"))
+    clause_text = _render_clause_text(step_10_1_1.get("clause"), step_10_1_1.get("source_document"), step_10_1_1.get("rule_id"))
+    clause_text = clause_text.replace("Paso 10.1.1 + AISC", "+ AISC")
+    clause_text = clause_text.replace("Paso 10.1.1 + ", "")
+    clause_text = clause_text.replace("Paso 11.1.1 + AISC", "+ AISC")
+    clause_text = clause_text.replace("Paso 11.1.1 + ", "")
+    lines = [
+        "## Paso 10 - Revision de Resistencia soldadura #4 (ala vg_izq - platina extremo vg_izq)",
+        "",
+        "### 10.1. Revision de capacidad a traccion",
+        "",
+        "#### 10.1.1. ELR #1: Rotura de la soldadura (AISC 360-22 J2.4)",
+        "",
+        f"- Clausula: `{clause_text}`",
+        f"- Ecuacion: `{_format_text(step_10_1_1.get('equation'))}`",
+        f"- tipo_w4_vgizq: `{weld_type}`",
+    ]
+    if weld_type == "cjp":
+        lines.extend(
+            [
+                "- CJP: `Cumple`",
+                f"- Resultado: `{_render_result_plain_es(step_10_1_1.get('status'))}`",
+                "",
+            ]
+        )
+        return "\n".join(lines)
+    lines.extend(
+        [
+            f"- phi usado: `{_format_text(design_factors.get('phi'))}`",
+            "- l_w4_vgizq (longitud soldadura calculada): `l_w4_vgizq = bf_vgizq`",
+            f"- Mf_vgizq_critico: `{_format_quantity(inputs.get('mf_vgizq_critico'))}`",
+            f"- d_vgizq: `{_format_quantity(inputs.get('d_vgizq'))}`",
+            f"- tf_vgizq: `{_format_quantity(inputs.get('tf_vgizq'))}`",
+            f"- bf_vgizq: `{_format_quantity(inputs.get('bf_vgizq'))}`",
+            f"- l_w4_vgizq: `{_format_quantity(inputs.get('l_w4_vgizq'))}`",
+            f"- Fexx_w4_vgizq: `{_format_quantity(inputs.get('Fexx_w4_vgizq'))}`",
+            f"- t_w4_vgizq: `{_format_quantity(inputs.get('t_w4_vgizq'))}`",
+            f"- nl_w4_vgizq: `{_format_text(inputs.get('nl_w4_vgizq'))}`",
+            f"- kds_w4_vgizq: `{_format_text(inputs.get('kds_w4_vgizq'))}`",
+            f"- t_w4_1_vgizq: `{_format_quantity(inputs.get('t_w4_1_vgizq'))}`",
+            f"- Ru_w4_p+_vgizq: `{_format_quantity(step_10_1_1.get('demand'))}`",
+            f"- phi*Rn_w4_p+_vgizq: `{_format_quantity(step_10_1_1.get('capacity'))}`",
+            f"- DCR_w4_p+_vgizq: `{_format_text(step_10_1_1.get('dcr'))}`",
+            f"- Resultado: `{_render_result_plain_es(step_10_1_1.get('status'))}`",
+            "",
+        ]
+    )
+    return "\n".join(lines)
+
+
 def _render_step_10_beam_shear(step_10_1_1: dict | None) -> str:
     if step_10_1_1 is None:
         return ""
@@ -1321,11 +1705,11 @@ def _render_step_10_beam_shear(step_10_1_1: dict | None) -> str:
     clause_text = clause_text.replace("Paso 10.1.1 + AISC", "+ AISC")
     clause_text = clause_text.replace("Paso 10.1.1 + ", "")
     lines = [
-        "## Paso 10 - Revision de resistencia de la viga (vg_izq)",
+        "## Paso 11 - Revision de resistencia de la viga (vg_izq)",
         "",
-        "### 10.1. Revision de capacidad a cortante",
+        "### 11.1. Revision de capacidad a cortante",
         "",
-        "#### 10.1.1. ELR #1: Fluencia por cortante (AISC 360-22 G2.1)",
+        "#### 11.1.1. ELR #1: Fluencia por cortante (AISC 360-22 G2.1)",
         "",
         f"- Clausula: `{clause_text}`",
         f"- Ecuacion: `{_format_text(step_10_1_1.get('equation'))}`",
@@ -1446,33 +1830,33 @@ def _render_step_11_end_plate_beam_web_weld_tension(step_11_ctx: dict | None, st
         result_line = "No cumple"
 
     lines = [
-        "## Paso 11 - Revision de Resistencia soldadura #3 (viga alma vg_izq - platina extremo vg_izq)",
+        "## Paso 12 - Revision de Resistencia soldadura #3 (viga alma vg_izq - platina extremo vg_izq)",
         "",
-        "### 11.1 Revision capacidad a traccion",
+        "### 12.1 Revision capacidad a traccion",
         "",
-        "#### 11.1.1 ELR #1: Rotura de soldadura",
+        "#### 12.1.1 ELR #1: Rotura de soldadura",
         "",
         "- Clausula: `Documento: AISC 358-22 | Seccion: Capitulo 6 / Seccion 6.7 + AISC 360-22 J2.4`",
         "- Ecuacion: `Fillet: Ru_w3_p+_vgizq = Fy_vgizq * tw_vgizq * hwef_w3_vgizq; hwef_w3_vgizq = pfi_pe_vgizq + pb_pe_vgizq + 150 mm; phi*Rn_w3_p+_vgizq = phi * kds_w3_vgizq * nl_w3_vgizq * 0.6 * Fexx_w3_vgizq * 0.707 * hwef_w3_vgizq * t_w3_vgizq; DCR_w3_p+_vgizq = Ru_w3_p+_vgizq / phi*Rn_w3_p+_vgizq`",
-        f"- phi usado: `{_format_decimal(phi)}`",
         f"- tipo_w3_vgizq: `{_format_text(weld_type_raw)}`",
-        f"- hwef_w3_vgizq (longitud efectiva calculada): `hwef_w3_vgizq = pfi_pe_vgizq + pb_pe_vgizq + 150 mm`",
-        f"- hwef_w3_vgizq: `{hwef_text}`",
-        f"- tw_vgizq: `{tw_text}`",
-        f"- Fy_vgizq: `{fy_text}`",
-        f"- Ru_w3_p+_vgizq: `{ru_text}`",
     ]
     if weld_type == "cjp":
         lines.extend(
             [
                 "- CJP: `Cumple`",
-                f"- Resultado: `{result_line}`",
+                f"- Resultado: `{_render_result_plain_es(result_line)}`",
                 "",
             ]
         )
         return "\n".join(lines)
     lines.extend(
         [
+            f"- phi usado: `{_format_decimal(phi)}`",
+            f"- hwef_w3_vgizq (longitud efectiva calculada): `hwef_w3_vgizq = pfi_pe_vgizq + pb_pe_vgizq + 150 mm`",
+            f"- hwef_w3_vgizq: `{hwef_text}`",
+            f"- tw_vgizq: `{tw_text}`",
+            f"- Fy_vgizq: `{fy_text}`",
+            f"- Ru_w3_p+_vgizq: `{ru_text}`",
             f"- pfi_pe_vgizq: `{pfi_text}`",
             f"- pb_pe_vgizq: `{pb_text}`",
             f"- Fexx_w3_vgizq: `{fexx_text}`",
@@ -1481,18 +1865,24 @@ def _render_step_11_end_plate_beam_web_weld_tension(step_11_ctx: dict | None, st
             f"- kds_w3_vgizq: `{_format_text(kds_w3_vgizq)}`",
             f"- phi*Rn_w3_p+_vgizq: `{phi_rn_text}`",
             f"- DCR_w3_p+_vgizq: `{dcr_text}`",
-            f"- Resultado: `{result_line}`",
+            f"- Resultado: `{_render_result_plain_es(result_line)}`",
             "",
         ]
     )
     return "\n".join(lines)
 
 
-def _render_step_12_column_flange_local_bending(step_12_1_1: dict | None, step_11_ctx: dict | None) -> str:
+def _render_step_12_column_flange_local_bending(
+    step_12_1_1: dict | None,
+    step_11_ctx: dict | None,
+    step_5: dict | None,
+    step_10_1_1: dict | None,
+) -> str:
     inputs = step_12_1_1.get("inputs", {}) if isinstance(step_12_1_1, dict) else {}
     capacity = step_12_1_1.get("capacity") if isinstance(step_12_1_1, dict) else None
     design_factors = step_12_1_1.get("design_factors", {}) if isinstance(step_12_1_1, dict) else {}
     prequal_inputs = step_11_ctx.get("inputs", {}) if isinstance(step_11_ctx, dict) else {}
+    step_10_inputs = step_10_1_1.get("inputs", {}) if isinstance(step_10_1_1, dict) else {}
 
     tcp_mm = _quantity_to_mm(prequal_inputs.get("continuity_plate_thickness_tcp"))
     enabled_raw = prequal_inputs.get("continuity_plate_enabled")
@@ -1506,11 +1896,12 @@ def _render_step_12_column_flange_local_bending(step_12_1_1: dict | None, step_1
         elif normalized in {"false", "no", "0"}:
             enabled_flag = False
     has_continuity_plate = enabled_flag if enabled_flag is not None else (tcp_mm is not None and tcp_mm > 0.0)
-    bp_mm = _quantity_to_mm(prequal_inputs.get("end_plate_width_bp"))
+    bcf_mm = _quantity_to_mm(prequal_inputs.get("column_flange_width_bcf"))
     g_mm = _quantity_to_mm(prequal_inputs.get("bolt_gage_g"))
     s_mm = None
-    if bp_mm is not None and g_mm is not None and bp_mm > 0.0 and g_mm > 0.0:
-        s_mm = 0.5 * ((bp_mm * g_mm) ** 0.5)
+    if bcf_mm is not None and g_mm is not None and bcf_mm > 0.0 and g_mm > 0.0:
+        s_mm = 0.5 * ((bcf_mm * g_mm) ** 0.5)
+    pfi_mm = _quantity_to_mm(prequal_inputs.get("pfi_pe_vgizq") or prequal_inputs.get("edge_pfi"))
 
     tcf_q = _as_quantity(capacity)
     yc_q = _as_quantity(inputs.get("yc"))
@@ -1546,13 +1937,59 @@ def _render_step_12_column_flange_local_bending(step_12_1_1: dict | None, step_1
 
     y_symbol = "Y_cs" if has_continuity_plate else "Y_c"
     continuity_text = "hay platinas de continuidad" if has_continuity_plate else "no hay platinas de continuidad"
-    phi_mncf_text = _format_quantity(phi_mn_q.model_dump()) if phi_mn_q is not None else "n/a"
+    y_table_text = _format_text(inputs.get("yc_table_reference")).replace("Table", "Tabla")
+    y_is_hardcoded = bool(inputs.get("yc_is_hardcoded"))
+    d_vgizq_q = _as_quantity(step_10_inputs.get("d_vgizq") or prequal_inputs.get("d_vgizq"))
+    tf_vgizq_q = _as_quantity(step_10_inputs.get("tf_vgizq") or prequal_inputs.get("tf_vgizq"))
+    z_vgizq_q: Quantity | None = None
+    if d_vgizq_q is not None and tf_vgizq_q is not None:
+        z_value = d_vgizq_q.value - tf_vgizq_q.value
+        if z_value > 0.0:
+            z_vgizq_q = Quantity(value=z_value, unit=d_vgizq_q.unit)
+    mf_vgizq_max_q = None
+    if isinstance(step_5, dict):
+        step5_inter = step_5.get("intermediates", {})
+        mf_izqmax_value = step5_inter.get("mf_izqmax")
+        units_trace = step_5.get("units_trace", {})
+        mf_unit = units_trace.get("mfmax_governing") if isinstance(units_trace, dict) else None
+        if mf_unit is None:
+            capacity_q = step_5.get("capacity", {})
+            if isinstance(capacity_q, dict):
+                mf_unit = capacity_q.get("unit")
+        if mf_izqmax_value is not None and mf_unit is not None:
+            mf_vgizq_max_q = {"value": mf_izqmax_value, "unit": mf_unit}
+    if mf_vgizq_max_q is None:
+        mf_vgizq_max_q = inputs.get("mf")
+    mf_vgizq_max_quantity = _as_quantity(mf_vgizq_max_q)
 
-    dcr_text = _format_decimal(dcr_cfm) if dcr_cfm is not None else "n/a"
-    if dcr_cfm is None:
+    ru_cf_v2_col_q: Quantity | None = None
+    phi_rn_cf_v2_col_q: Quantity | None = None
+    dcr_cf_v2_col = None
+    if mf_vgizq_max_quantity is not None and z_vgizq_q is not None:
+        converted_mf = _convert_moment_to_unit(mf_vgizq_max_quantity, "kN-mm" if z_vgizq_q.unit == "mm" else "kip-in")
+        if converted_mf is not None:
+            force_unit = "kN" if z_vgizq_q.unit == "mm" else "kip"
+            ru_cf_v2_col_q = Quantity(value=converted_mf.value / z_vgizq_q.value, unit=force_unit)
+    if phi_mn_q is not None and z_vgizq_q is not None:
+        converted_phi_mn = _convert_moment_to_unit(phi_mn_q, "kN-mm" if z_vgizq_q.unit == "mm" else "kip-in")
+        if converted_phi_mn is not None:
+            force_unit = "kN" if z_vgizq_q.unit == "mm" else "kip"
+            phi_rn_cf_v2_col_q = Quantity(value=converted_phi_mn.value / z_vgizq_q.value, unit=force_unit)
+    if ru_cf_v2_col_q is not None and phi_rn_cf_v2_col_q is not None:
+        try:
+            dcr_cf_v2_col = compute_dcr(demand=ru_cf_v2_col_q, capacity=phi_rn_cf_v2_col_q)["dcr"]
+        except ValueError:
+            dcr_cf_v2_col = None
+
+    case_y = "n/a"
+    if pfi_mm is not None and s_mm is not None:
+        case_y = "Case 1 (pfi <= s)" if pfi_mm <= s_mm else "Case 2 (pfi > s)"
+
+    dcr_text = _format_decimal(dcr_cf_v2_col) if dcr_cf_v2_col is not None else "n/a"
+    if dcr_cf_v2_col is None:
         result_line = "n/a"
     else:
-        result_line = "Cumple" if dcr_cfm <= 1.0 else "No cumple"
+        result_line = "Cumple" if dcr_cf_v2_col <= 1.0 else "No cumple"
     clause_text = (
         _render_clause_text(
             step_12_1_1.get("clause"),
@@ -1564,32 +2001,206 @@ def _render_step_12_column_flange_local_bending(step_12_1_1: dict | None, step_1
     )
 
     lines = [
-        "## Paso 12 - Revision de resistencia de la aleta de la columna (vg_izq)",
+        "## Paso 13 - Revision de resistencia de la aleta de la columna (vg_izq)",
         "",
-        "### 12.1. Revision de capacidad a flexion",
+        "### 13.1. Revision de capacidad a flexion",
         "",
-        "#### 12.1.1. ELR #1: Flexion local de la aleta (LFB)",
+        "#### 13.1.1. ELR #1: Flexion local de la aleta (LFB)",
         "",
         f"- Clausula: `{clause_text}`",
-        f"- Ecuacion: `phi*Mn_cf_LFB_vgizq = phi_ductil * ((tf_col^2 * Fy_col * {y_symbol})/1.11); DCR_cf_LFB_vgizq = Mf_vgizq_critico / phi*Mn_cf_LFB_vgizq`",
+        f"- Ecuacion: `Ru_cf_v2_col_vgizq = Mf_vgizq_critico/(d_vgizq - tf_vgizq); phi*Rn_cf_v2_col_vgizq = phi_ductil * ((tf_col^2 * Fy_col * {y_symbol})/(1.11 * (d_vgizq - tf_vgizq))); DCR_cf_v2_col_vgizq = Ru_cf_v2_col_vgizq / phi*Rn_cf_v2_col_vgizq`",
         f"- phi usado: `{_format_decimal(phi)}`",
-        f"- Mf_vgizq_critico: `{_format_quantity(inputs.get('mf'))}`",
-        f"- tf_col: `{_format_quantity(capacity)}`",
+        f"- Mf_vgizq_critico: `{_format_quantity(mf_vgizq_max_q)}`",
+        f"- d_vgizq: `{_format_quantity((step_10_inputs.get('d_vgizq') or prequal_inputs.get('d_vgizq')) if isinstance(step_10_inputs, dict) else prequal_inputs.get('d_vgizq'))}`",
+        f"- tf_vgizq: `{_format_quantity((step_10_inputs.get('tf_vgizq') or prequal_inputs.get('tf_vgizq')) if isinstance(step_10_inputs, dict) else prequal_inputs.get('tf_vgizq'))}`",
+        f"- z_vgizq = d_vgizq - tf_vgizq: `{_format_quantity(z_vgizq_q.model_dump()) if z_vgizq_q is not None else 'n/a'}`",
+        f"- tf_col: `{_format_quantity(inputs.get('column_flange_thickness_from_sections'))}`",
         f"- Fy_col: `{_format_quantity(inputs.get('column_fy'))}`",
         f"- {y_symbol} usado: `{_format_quantity(inputs.get('yc'))}`",
-        f"- Tabla {y_symbol} aplicada: `AISC 358-22 Tablas 6.5 y 6.6`",
-        f"- Caso {y_symbol}: `{continuity_text}`",
+        f"- Tabla {y_symbol} aplicada: `{y_table_text}`",
+        f"- Caso {y_symbol}: `{case_y}`",
+        *([f"- Advertencia: `{y_symbol} esta hardcodeado`"] if y_is_hardcoded else []),
+        f"- Ecuacion s_col: `s_col = 0.5 * sqrt(bcf_col * g_b_vgizq)`",
         f"- s_col: `{_format_decimal(s_mm)} mm`" if s_mm is not None else "- s_col: `n/a`",
         f"- usar_pc_col: `{continuity_text}`",
-        f"- phi*Mn_cf_LFB_vgizq: `{phi_mncf_text}`",
-        f"- DCR_cf_LFB_vgizq: `{dcr_text}`",
-        f"- Resultado: `{result_line}`",
+        f"- Ru_cf_v2_col_vgizq: `{_format_quantity(ru_cf_v2_col_q.model_dump()) if ru_cf_v2_col_q is not None else 'n/a'}`",
+        f"- phi*Rn_cf_v2_col_vgizq: `{_format_quantity(phi_rn_cf_v2_col_q.model_dump()) if phi_rn_cf_v2_col_q is not None else 'n/a'}`",
+        f"- DCR_cf_v2_col_vgizq: `{dcr_text}`",
+        f"- Resultado: `{_render_result_plain_es(result_line)}`",
         "",
         "Donde:",
+        "",
+        f"- Ecuacion {y_symbol}: `{_format_text(inputs.get('yc_formula'))}`",
         "- `Y_c`: no hay platinas de continuidad -> Tablas 6.5 y 6.6 (unstiffened column flange).",
         "- `Y_cs`: hay platinas de continuidad -> Tablas 6.5 y 6.6 (stiffened column flange).",
+        "- Nota: `se renderiza Y_c o Y_cs segun usar_pc_col`",
         "",
     ]
+    return "\n".join(lines)
+
+
+def _render_step_13_column_web_local_yielding(
+    step_13_1_1: dict | None,
+    step_14_2_1: dict | None,
+    step_14_2_2: dict | None,
+) -> str:
+    if not isinstance(step_13_1_1, dict):
+        return "\n".join(
+            [
+                "## Paso 14 - Revision de resistencia del alma de la columna (vg_izq)",
+                "",
+                "Sin resultados para el Paso 14.",
+                "",
+            ]
+        )
+    inputs = step_13_1_1.get("inputs", {})
+    inter = step_13_1_1.get("intermediates", {})
+    design_factors = step_13_1_1.get("design_factors", {})
+    lines = [
+        "## Paso 14 - Revision de resistencia del alma de la columna (vg_izq)",
+        "",
+        "### 14.1. Revision de capacidad a traccion",
+        "",
+        "#### 14.1.1. ELR #1: Fluencia local del alma (WLY)",
+        "",
+        f"- Clausula: `{_render_clause_text(step_13_1_1.get('clause'), step_13_1_1.get('source_document'), step_13_1_1.get('rule_id'))}`",
+        "- Ecuacion: `Ru_cf_v2_col_vgizq = Mf_vgizq_critico/(d_vgizq - tf_vgizq); lb_col = tf_vgizq + 2w_w4_vgizq + 2*tpe_vgizq; phi*Rn_cf_v2_col_vgizq = phi_ductil * (6*Ct_col*kc_col + lb_col) * Fy_col * tw_col; DCR_cf_v2_col_vgizq = Ru_cf_v2_col_vgizq / phi*Rn_cf_v2_col_vgizq`",
+        f"- phi usado (phi_ductil): `{_format_text(design_factors.get('phi_d'))}`",
+        f"- Mf_vgizq_critico: `{_format_quantity(inputs.get('mf_vgizq_critico'))}`",
+        f"- St_col: `{_format_quantity(inputs.get('st_col'))}`",
+        f"- d_col: `{_format_quantity(inputs.get('d_col'))}`",
+        f"- Ct_col: `{_format_text(inputs.get('ct_col'))}`",
+        f"- kc_col: `{_format_quantity(inputs.get('kc_col'))}`",
+        f"- lb_col: `{_format_quantity(inputs.get('lb_col'))}`",
+        f"- Ecuacion lb_col: `{_format_text(inputs.get('lb_col_formula'))}`",
+        f"- Fy_col: `{_format_quantity(inputs.get('fy_col') or inputs.get('column_fy'))}`",
+        f"- tw_col: `{_format_quantity(inputs.get('tw_col'))}`",
+        f"- d_vgizq: `{_format_quantity(inputs.get('d_vgizq'))}`",
+        f"- tf_vgizq: `{_format_quantity(inputs.get('tf_vgizq'))}`",
+        f"- tpe_vgizq: `{_format_quantity(inputs.get('tpe_vgizq'))}`",
+        f"- t_w4_1_vgizq: `{_format_quantity(inputs.get('t_w4_1_vgizq'))}`",
+        f"- nl_w4_vgizq: `{_format_text(inputs.get('nl_w4_vgizq'))}`",
+        f"- demanda_ductilidad_vgizq: `{_format_text(inputs.get('ductility_vgizq'))}`",
+        f"- 2w_w4_vgizq: `{_format_quantity(inputs.get('total_weld_thickness_w4_vgizq'))}`",
+        f"- Ecuacion 2w_w4_vgizq: `{_format_text(inputs.get('total_weld_thickness_w4_formula'))}`",
+        f"- Ru_cf_v2_col_vgizq: `{_format_quantity(step_13_1_1.get('demand'))}`",
+        f"- phi*Rn_cf_v2_col_vgizq: `{_format_quantity(step_13_1_1.get('capacity'))}`",
+        f"- DCR_cf_v2_col_vgizq: `{_format_text(step_13_1_1.get('dcr'))}`",
+        f"- Resultado: `{_render_result_plain_es(step_13_1_1.get('status'))}`",
+        "",
+    ]
+    if isinstance(step_14_2_1, dict):
+        wlc_inputs = step_14_2_1.get("inputs", {})
+        wlc_inter = step_14_2_1.get("intermediates", {})
+        wlc_design = step_14_2_1.get("design_factors", {})
+        lines.extend(
+            [
+                "### 14.2. Revision de capacidad a compresion",
+                "",
+                "#### 14.2.1. ELR #1: Arrugamiento local del alma (WLC)",
+                "",
+                f"- Clausula: `{_render_clause_text(step_14_2_1.get('clause'), step_14_2_1.get('source_document'), step_14_2_1.get('rule_id'))}`",
+                "- Ecuacion: `Ru_cw_v2_col_vgizq = Mf_vgizq_critico/(d_vgizq - tf_vgizq); lb_col = tf_vgizq + 2w_w4_vgizq + 2*tpe_vgizq; phi*Rn_cw_v2_col_vgizq = phi_wlc * Rn_eq(6.7-19/6.7-20/6.7-21); DCR_cw_v2_col_vgizq = Ru_cw_v2_col_vgizq / phi*Rn_cw_v2_col_vgizq`",
+                f"- phi usado: `{_format_text(wlc_design.get('phi_wlc'))}`",
+                f"- Mf_vgizq_critico: `{_format_quantity(wlc_inputs.get('mf_vgizq_critico'))}`",
+                f"- St_col: `{_format_quantity(wlc_inputs.get('st_col'))}`",
+                f"- d_col (dc): `{_format_quantity(wlc_inputs.get('d_col'))}`",
+                f"- lb_col: `{_format_quantity(wlc_inputs.get('lb_col'))}`",
+                f"- Ecuacion lb_col: `{_format_text(wlc_inputs.get('lb_col_formula'))}`",
+                f"- Fy_col: `{_format_quantity(wlc_inputs.get('fy_col'))}`",
+                f"- E_col: `{_format_quantity(wlc_inputs.get('e_col'))}`",
+                f"- tw_col: `{_format_quantity(wlc_inputs.get('tw_col'))}`",
+                f"- tf_col: `{_format_quantity(wlc_inputs.get('tf_col'))}`",
+                f"- d_vgizq: `{_format_quantity(wlc_inputs.get('d_vgizq'))}`",
+                f"- tf_vgizq: `{_format_quantity(wlc_inputs.get('tf_vgizq'))}`",
+                f"- tpe_vgizq: `{_format_quantity(wlc_inputs.get('tpe_vgizq'))}`",
+                f"- t_w4_1_vgizq: `{_format_quantity(wlc_inputs.get('t_w4_1_vgizq'))}`",
+                f"- nl_w4_vgizq: `{_format_text(wlc_inputs.get('nl_w4_vgizq'))}`",
+                f"- demanda_ductilidad_vgizq: `{_format_text(wlc_inputs.get('ductility_vgizq'))}`",
+                f"- 2w_w4_vgizq: `{_format_quantity(wlc_inputs.get('total_weld_thickness_w4_vgizq'))}`",
+                f"- Ecuacion 2w_w4_vgizq: `{_format_text(wlc_inputs.get('total_weld_thickness_w4_formula'))}`",
+                f"- Ecuacion Rn aplicada: `{_format_text(wlc_inter.get('case'))}`",
+                f"- Ru_cw_v2_col_vgizq: `{_format_quantity(step_14_2_1.get('demand'))}`",
+                f"- phi*Rn_cw_v2_col_vgizq: `{_format_quantity(step_14_2_1.get('capacity'))}`",
+                f"- DCR_cw_v2_col_vgizq: `{_format_text(step_14_2_1.get('dcr'))}`",
+                f"- Resultado: `{_render_result_plain_es(step_14_2_1.get('status'))}`",
+                "",
+            ]
+        )
+    else:
+        lines.extend(
+            [
+                "### 14.2. Revision de capacidad a compresion",
+                "",
+                "#### 14.2.1. ELR #1: Arrugamiento local del alma (WLC)",
+                "",
+                "- Resultado: `n/a`",
+                "",
+            ]
+        )
+    if isinstance(step_14_2_2, dict):
+        wcb_inputs = step_14_2_2.get("inputs", {})
+        wcb_inter = step_14_2_2.get("intermediates", {})
+        wcb_design = step_14_2_2.get("design_factors", {})
+        applies = bool(wcb_inter.get("applicability_condition_met"))
+        lines.extend(
+            [
+                "#### 14.2.2. ELR #2: Pandeo local del alma (WCB)",
+                "",
+                f"- Clausula: `{_render_clause_text(step_14_2_2.get('clause'), step_14_2_2.get('source_document'), step_14_2_2.get('rule_id'))}`",
+                "- Ecuacion: `Condicion aplicabilidad: same_sign(F_left, F_right), con F_left = -Mu3_vgizq/(d_vgizq - tf_vgizq) + 0.5*Pu_vgizq y F_right = -Mu3_vgder/(d_vgder - tf_vgder) + 0.5*Pu_vgder; Ru_cw_v2_col_vgizq = max(|-Mu3_vgizq/(d_vgizq - tf_vgizq) + Pu_vgizq|, |Mu3_vgizq/(d_vgizq - tf_vgizq) + Pu_vgizq|); h_col = d_col - 2*kc_col; phi*Rn_cw_v2_col_vgizq = phi_wcb * Ct_col * 24 * tw_col^3 * sqrt(E_col * Fy_col) / h_col`",
+                f"- Condicion aplicabilidad cumplida: `{_format_text(applies)}`",
+                f"- phi usado: `{_format_text(wcb_design.get('phi_wcb'))}`",
+                f"- Mu3_vgizq: `{_format_quantity(wcb_inputs.get('mu3_vgizq'))}`",
+                f"- Mu3_vgder: `{_format_quantity(wcb_inputs.get('mu3_vgder'))}`",
+                f"- Pu_vgizq: `{_format_quantity(wcb_inputs.get('pu_vgizq'))}`",
+                f"- Pu_vgder: `{_format_quantity(wcb_inputs.get('pu_vgder'))}`",
+                f"- d_vgizq: `{_format_quantity(wcb_inputs.get('d_vgizq'))}`",
+                f"- tf_vgizq: `{_format_quantity(wcb_inputs.get('tf_vgizq'))}`",
+                f"- d_vgder: `{_format_quantity(wcb_inputs.get('d_vgder'))}`",
+                f"- tf_vgder: `{_format_quantity(wcb_inputs.get('tf_vgder'))}`",
+                f"- termino_condicion_izq: `{_format_scalar_with_unit(wcb_inter.get('cond_left_force'), (step_14_2_2.get('demand') or {}).get('unit', 'kN'))}`",
+                f"- termino_condicion_der: `{_format_scalar_with_unit(wcb_inter.get('cond_right_force'), (step_14_2_2.get('demand') or {}).get('unit', 'kN'))}`",
+                f"- tolerancia_condicion: `{_format_text(wcb_inter.get('cond_tolerance'))}`",
+                f"- same_sign: `{_format_text(wcb_inter.get('same_sign'))}`",
+                f"- St_col: `{_format_quantity(wcb_inputs.get('st_col'))}`",
+                f"- d_col: `{_format_quantity(wcb_inputs.get('d_col'))}`",
+                f"- Ct_col: `{_format_text(wcb_inter.get('ct'))}`",
+                f"- kc_col: `{_format_quantity(wcb_inputs.get('kc_col'))}`",
+                f"- h_col: `{_format_quantity(wcb_inputs.get('h_col'))}`",
+                f"- E_col: `{_format_quantity(wcb_inputs.get('e_col'))}`",
+                f"- Fy_col: `{_format_quantity(wcb_inputs.get('fy_col'))}`",
+                f"- tw_col: `{_format_quantity(wcb_inputs.get('tw_col'))}`",
+                f"- 2w_w4_vgizq: `{_format_quantity(wcb_inputs.get('total_weld_thickness_w4_vgizq'))}`",
+                f"- Ecuacion 2w_w4_vgizq: `{_format_text(wcb_inputs.get('total_weld_thickness_w4_formula'))}`",
+            ]
+        )
+        if applies:
+            lines.extend(
+                [
+                    f"- Ru_cw_v2_col_vgizq: `{_format_quantity(step_14_2_2.get('demand'))}`",
+                    f"- phi*Rn_cw_v2_col_vgizq: `{_format_quantity(step_14_2_2.get('capacity'))}`",
+                    f"- DCR_cw_v2_col_vgizq: `{_format_text(step_14_2_2.get('dcr'))}`",
+                    f"- Resultado: `{_render_result_plain_es(step_14_2_2.get('status'))}`",
+                    "",
+                ]
+            )
+        else:
+            lines.extend(
+                [
+                    "- Resultado: `No aplica`",
+                    "",
+                ]
+            )
+    else:
+        lines.extend(
+            [
+                "#### 14.2.2. ELR #2: Pandeo local del alma (WCB)",
+                "",
+                "- Resultado: `n/a`",
+                "",
+            ]
+        )
     return "\n".join(lines)
 
 
@@ -2025,18 +2636,38 @@ def render_memory_markdown(result: DetailedRunResult) -> str:
     step_3 = _collect_step_3_sh(result)
     step_4 = _collect_step_4_vh(result)
     step_5 = _collect_step_5_mf(result)
-    step_6_1 = _collect_step_6_1_bolt_tension(result)
-    step_6_2 = _collect_step_6_2_bolt_shear(result)
-    step_7_1_1 = _collect_step_7_1_1_end_plate_flexural(result)
-    step_7_2_1 = _collect_step_7_2_1_end_plate_shear_yielding(result)
-    step_7_2_2 = _collect_step_7_2_2_end_plate_shear_rupture(result)
-    step_7_3_1 = _collect_step_7_3_1_end_plate_hole_tearout(result)
-    step_7_3_2 = _collect_step_7_3_2_end_plate_hole_bearing(result)
-    step_8_1_1 = _collect_step_8_1_1_stiffener_weld_tension_rupture(result)
-    step_9_1_1 = _collect_step_9_1_1_stiffener_beam_weld_shear_rupture(result)
-    step_10_1_1 = _collect_step_10_1_1_beam_shear_yielding(result)
-    step_11_ctx = _collect_step_11_web_weld_tension_context(result)
-    step_12_1_1 = _collect_step_12_1_1_column_flange_local_bending(result)
+    active_sides = _collect_active_sides(result)
+
+    def _map_step(step_fragment: str) -> dict[str, dict | None]:
+        return {
+            side: _collect_check_by_step_and_side(
+                result,
+                step_fragment=step_fragment,
+                side=side,
+            )
+            for side in active_sides
+        }
+
+    step_6_1_by_side = _map_step("step6_1_bolt_tension_rupture")
+    step_6_2_by_side = _map_step("step6_2_bolt_shear_rupture")
+    step_7_1_1_by_side = _map_step("step7_1_1_end_plate_flexural_yielding")
+    step_7_2_1_by_side = _map_step("step7_2_1_end_plate_shear_yielding")
+    step_7_2_2_by_side = _map_step("step7_2_2_end_plate_shear_rupture")
+    step_7_3_1_by_side = _map_step("step7_3_1_end_plate_hole_tearout")
+    step_7_3_2_by_side = _map_step("step7_3_2_end_plate_hole_bearing")
+    step_8_1_1_by_side = _map_step("step8_1_1_stiffener_weld_tension_rupture")
+    step_9_1_1_by_side = _map_step("step9_1_1_stiffener_beam_weld_shear_rupture")
+    step_10_w4_1_1_by_side = _map_step("step10_1_1_beam_flange_end_plate_weld_tension_rupture")
+    step_11_beam_shear_by_side = _map_step("step11_1_1_beam_shear_yielding")
+    step_11_w3_check_by_side = _map_step("step11_1_1_beam_web_end_plate_weld_tension_rupture")
+    step_11_ctx_by_side = {
+        side: {"inputs": check_payload.get("inputs", {})} if isinstance(check_payload, dict) else None
+        for side, check_payload in step_11_w3_check_by_side.items()
+    }
+    step_12_1_1_by_side = _map_step("step12_1_1_column_flange_local_bending")
+    step_13_1_1_by_side = _map_step("step13_1_1_column_web_local_yielding")
+    step_14_2_1_by_side = _map_step("step14_2_1_column_web_local_crippling")
+    step_14_2_2_by_side = _map_step("step14_2_2_column_web_local_buckling")
     content = [
         "# Memoria de Calculo",
         "",
@@ -2073,34 +2704,132 @@ def render_memory_markdown(result: DetailedRunResult) -> str:
         content.append(_render_step_4_vh(step_4))
     if step_5 is not None:
         content.append(_render_step_5_mf(step_5))
-    if step_6_1 is not None or step_6_2 is not None:
-        content.extend(
-            [
-                "## Revision de la conexion de la viga izquierda con la columna",
-                "",
-            ]
-        )
-        content.append(_render_step_6_bolts(step_6_1, step_6_2))
-    if (
-        step_7_1_1 is not None
-        or step_7_2_1 is not None
-        or step_7_2_2 is not None
-        or step_7_3_1 is not None
-        or step_7_3_2 is not None
-    ):
-        content.append(_render_step_7_end_plate(step_7_1_1, step_7_2_1, step_7_2_2, step_7_3_1, step_7_3_2))
-    if step_8_1_1 is not None:
-        content.append(_render_step_8_stiffener_weld(step_8_1_1))
-    if step_9_1_1 is not None:
-        content.append(_render_step_9_stiffener_beam_weld(step_9_1_1))
-    if step_10_1_1 is not None:
-        content.append(_render_step_10_beam_shear(step_10_1_1))
-    if step_11_ctx is not None:
-        content.append(_render_step_11_end_plate_beam_web_weld_tension(step_11_ctx, step_10_1_1))
+    step_numbers_in_content: list[int] = []
+    for item in content:
+        for line in str(item).splitlines():
+            match = re.match(r"^##\s+Paso\s+(\d+)\s+-", line.strip())
+            if match:
+                step_numbers_in_content.append(int(match.group(1)))
+    next_step_number = (max(step_numbers_in_content) + 1) if step_numbers_in_content else 1
     if connection_family_normalized == "moment_prequalified":
-        content.append(_render_step_12_column_flange_local_bending(step_12_1_1, step_11_ctx))
+        step_groups: list[tuple[object, list[dict[str, dict | None]]]] = [
+            (_render_step_6_bolts, [step_6_1_by_side, step_6_2_by_side]),
+            (
+                _render_step_7_end_plate,
+                [
+                    step_7_1_1_by_side,
+                    step_7_2_1_by_side,
+                    step_7_2_2_by_side,
+                    step_7_3_1_by_side,
+                    step_7_3_2_by_side,
+                ],
+            ),
+            (_render_step_8_stiffener_weld, [step_8_1_1_by_side]),
+            (_render_step_9_stiffener_beam_weld, [step_9_1_1_by_side]),
+            (_render_step_10_beam_flange_end_plate_weld, [step_10_w4_1_1_by_side]),
+            (_render_step_10_beam_shear, [step_11_beam_shear_by_side]),
+            (_render_step_11_end_plate_beam_web_weld_tension, [step_11_ctx_by_side, step_11_beam_shear_by_side]),
+        ]
+        for renderer, payload_maps in step_groups:
+            for side in active_sides:
+                args = [payload_map.get(side) for payload_map in payload_maps]
+                block = _render_block_for_side(renderer, *args, side=side).strip()
+                if block:
+                    block = _tag_side_subheadings(block, side=side)
+                    assigned_step_number = next_step_number
+                    block = _replace_first_step_heading_number(block, step_number=assigned_step_number)
+                    block = _align_nested_heading_numbers_with_step(block, step_number=assigned_step_number)
+                    next_step_number += 1
+                    content.append(block)
+
+    if connection_family_normalized == "moment_prequalified":
+        side_sections_13: list[str] = []
+        side_index_13 = {side: idx for idx, side in enumerate(active_sides, start=1)}
+        for side in active_sides:
+            side_tag = "vg_izq" if side == "izq" else "vg_der"
+            heading_index = side_index_13[side]
+            block = _render_block_for_side(
+                _render_step_12_column_flange_local_bending,
+                step_12_1_1_by_side.get(side),
+                step_11_ctx_by_side.get(side),
+                step_5,
+                step_11_beam_shear_by_side.get(side),
+                side=side,
+            ).strip()
+            if not block:
+                continue
+            body = _strip_first_h2(block)
+            body = body.replace(
+                "### 13.1. Revision de capacidad a flexion",
+                f"### 13.{heading_index}. Revision de capacidad a flexion ({side_tag})",
+            )
+            body = body.replace("#### 13.1.1. ", f"#### 13.{heading_index}.1. ")
+            side_sections_13.append(body)
+        if side_sections_13:
+            assigned_step_number = next_step_number
+            block_13 = "\n".join(
+                [
+                    f"## Paso {assigned_step_number} - Revision de resistencia de la aleta de la columna",
+                    "",
+                    "\n\n".join(side_sections_13),
+                ]
+            )
+            block_13 = _align_nested_heading_numbers_with_step(block_13, step_number=assigned_step_number)
+            content.append(block_13)
+            next_step_number += 1
+
+    if connection_family_normalized == "moment_prequalified":
+        side_sections_14: list[str] = []
+        traction_heading_index_by_side: dict[str, int] = {}
+        compression_heading_index_by_side: dict[str, int] = {}
+        heading_counter = 1
+        for side in active_sides:
+            traction_heading_index_by_side[side] = heading_counter
+            heading_counter += 1
+            compression_heading_index_by_side[side] = heading_counter
+            heading_counter += 1
+
+        for side in active_sides:
+            side_tag = "vg_izq" if side == "izq" else "vg_der"
+            traction_idx = traction_heading_index_by_side[side]
+            compression_idx = compression_heading_index_by_side[side]
+            block = _render_block_for_side(
+                _render_step_13_column_web_local_yielding,
+                step_13_1_1_by_side.get(side),
+                step_14_2_1_by_side.get(side),
+                step_14_2_2_by_side.get(side),
+                side=side,
+            ).strip()
+            if not block:
+                continue
+            body = _strip_first_h2(block)
+            body = body.replace(
+                "### 14.1. Revision de capacidad a traccion",
+                f"### 14.{traction_idx}. Revision de capacidad a traccion ({side_tag})",
+            )
+            body = body.replace("#### 14.1.1. ", f"#### 14.{traction_idx}.1. ")
+            body = body.replace(
+                "### 14.2. Revision de capacidad a compresion",
+                f"### 14.{compression_idx}. Revision de capacidad a compresion ({side_tag})",
+            )
+            body = body.replace("#### 14.2.1. ", f"#### 14.{compression_idx}.1. ")
+            body = body.replace("#### 14.2.2. ", f"#### 14.{compression_idx}.2. ")
+            side_sections_14.append(body)
+        if side_sections_14:
+            assigned_step_number = next_step_number
+            block_14 = "\n".join(
+                [
+                    f"## Paso {assigned_step_number} - Revision de resistencia del alma de la columna",
+                    "",
+                    "\n\n".join(side_sections_14),
+                ]
+            )
+            block_14 = _align_nested_heading_numbers_with_step(block_14, step_number=assigned_step_number)
+            content.append(block_14)
+            next_step_number += 1
     content.append("")
-    return "\n".join(content)
+    rendered = "\n".join(content)
+    return _normalize_markdown_spacing(rendered) + "\n"
 
 
 def write_memory_markdown(result: DetailedRunResult, target_dir: str | Path) -> Path:
@@ -2842,4 +3571,5 @@ def write_splice_methods_table_markdown(result: DetailedRunResult, target_dir: s
     rendered = render_splice_methods_table_markdown(result).rstrip("\n") + "\n"
     target.write_text(rendered, encoding="utf-8")
     return target
+
 

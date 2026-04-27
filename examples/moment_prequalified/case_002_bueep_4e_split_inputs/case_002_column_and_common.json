@@ -12,7 +12,7 @@
   "factores_diseno": {
     "phi_ductil": 1.0,
     "phi_no_ductil": 0.9,
-    "lados_conexion": "right_only",
+    "lados_conexion": "both_sides",
     "demanda_ductilidad_col": "high",
     "ratio_McMb_min": 1.0,
     "ratio_McMb": 1.2
@@ -24,7 +24,7 @@
       "value": 199947.965,
       "unit": "MPa"
     },
-    "dcf_col": {
+    "St_col": {
       "value": 762.0,
       "unit": "mm"
     },

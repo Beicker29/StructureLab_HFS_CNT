@@ -48,7 +48,7 @@ def _bind(
 
 
 def _chapter6_common_steps(connection_type: str) -> list[RuleBinding]:
-    return [
+    common: list[RuleBinding] = [
         _bind(
             rule_id=f"AISC358.06.3.{connection_type}.prequalification_limits",
             name=f"{connection_type} Section 6.3 prequalification limits",
@@ -89,73 +89,147 @@ def _chapter6_common_steps(connection_type: str) -> list[RuleBinding]:
             connection_type=connection_type,
             evaluator=chapter_06_end_plate.run_step4_probable_moment_face_column,
         ),
-        _bind(
-            rule_id=f"AISC358.06.7.{connection_type}.step12_1_1_column_flange_local_bending",
-            name=f"{connection_type} Step 12.1.1 column flange local bending (LFB)",
-            clause="Chapter 6 / Section 6.7.2 + Eq. (6.7-13)",
-            page="9.2-25",
-            connection_type=connection_type,
-            evaluator=chapter_06_end_plate.run_column_step1_flange_yielding,
-        ),
-        _bind(
-            rule_id=f"AISC358.06.7.{connection_type}.step6_1_bolt_tension_rupture",
-            name=f"{connection_type} Step 6.1 bolt tension rupture capacity",
-            clause="Chapter 6 / Section 6.7.1 Step 6.1 + AISC 360-22 J3.7",
-            page="9.2-24",
-            connection_type=connection_type,
-            evaluator=chapter_06_end_plate.run_step6_1_bolt_tension_rupture,
-        ),
-        _bind(
-            rule_id=f"AISC358.06.7.{connection_type}.step6_2_bolt_shear_rupture",
-            name=f"{connection_type} Step 6.2 bolt shear rupture capacity",
-            clause="Chapter 6 / Section 6.7.1 Step 6.2 + AISC 360-22 J3.7",
-            page="9.2-24",
-            connection_type=connection_type,
-            evaluator=chapter_06_end_plate.run_step6_2_bolt_shear_rupture,
-        ),
-        _bind(
-            rule_id=f"AISC358.06.7.{connection_type}.step7_1_1_end_plate_flexural_yielding",
-            name=f"{connection_type} Step 7.1.1 end-plate flexural yielding",
-            clause="Chapter 6 / Section 6.7.1 Step 7.1.1 + Eq. (6.7-8)",
-            page="9.2-24",
-            connection_type=connection_type,
-            evaluator=chapter_06_end_plate.run_step7_1_1_end_plate_flexural_yielding,
-        ),
-        _bind(
-            rule_id=f"AISC358.06.7.{connection_type}.step7_2_1_end_plate_shear_yielding",
-            name=f"{connection_type} Step 7.2.1 end-plate shear yielding",
-            clause="Chapter 6 / Section 6.7.1 Step 7.2.1 + Eq. (6.7-10)",
-            page="9.2-24",
-            connection_type=connection_type,
-            evaluator=chapter_06_end_plate.run_step7_2_1_end_plate_shear_yielding,
-        ),
-        _bind(
-            rule_id=f"AISC358.06.7.{connection_type}.step7_2_2_end_plate_shear_rupture",
-            name=f"{connection_type} Step 7.2.2 end-plate shear rupture",
-            clause="Chapter 6 / Section 6.7.1 Step 7.2.2 + Eq. (6.7-12)",
-            page="9.2-24",
-            connection_type=connection_type,
-            evaluator=chapter_06_end_plate.run_step7_2_2_end_plate_shear_rupture,
-        ),
-        _bind(
-            rule_id=f"AISC358.06.7.{connection_type}.step7_3_1_end_plate_hole_tearout",
-            name=f"{connection_type} Step 7.3.1 end-plate hole tearout",
-            clause="Chapter 6 / Section 7.3.1 + AISC 360-22 J3.11(a)",
-            page="16.1-113",
-            connection_type=connection_type,
-            evaluator=chapter_06_end_plate.run_step7_3_1_end_plate_hole_tearout,
-            source_document="AISC 360-22",
-        ),
-        _bind(
-            rule_id=f"AISC358.06.7.{connection_type}.step7_3_2_end_plate_hole_bearing",
-            name=f"{connection_type} Step 7.3.2 end-plate hole bearing",
-            clause="Chapter 6 / Section 7.3.2 + AISC 360-22 J3.11(a)",
-            page="16.1-113",
-            connection_type=connection_type,
-            evaluator=chapter_06_end_plate.run_step7_3_2_end_plate_hole_bearing,
-            source_document="AISC 360-22",
-        ),
     ]
+    for side_suffix, side_label, eval_6_1, eval_6_2, eval_7_1_1, eval_7_2_1, eval_7_2_2, eval_7_3_1, eval_7_3_2, eval_12, eval_13, eval_14_2_1, eval_14_2_2 in (
+        (
+            "vgizq",
+            "left",
+            chapter_06_end_plate.run_step6_1_bolt_tension_rupture,
+            chapter_06_end_plate.run_step6_2_bolt_shear_rupture,
+            chapter_06_end_plate.run_step7_1_1_end_plate_flexural_yielding,
+            chapter_06_end_plate.run_step7_2_1_end_plate_shear_yielding,
+            chapter_06_end_plate.run_step7_2_2_end_plate_shear_rupture,
+            chapter_06_end_plate.run_step7_3_1_end_plate_hole_tearout,
+            chapter_06_end_plate.run_step7_3_2_end_plate_hole_bearing,
+            chapter_06_end_plate.run_column_step1_flange_yielding,
+            chapter_06_end_plate.run_column_step3_web_local_yielding,
+            chapter_06_end_plate.run_column_step4_web_local_crippling,
+            chapter_06_end_plate.run_column_step4_2_web_local_buckling,
+        ),
+        (
+            "vgder",
+            "right",
+            chapter_06_end_plate.run_step6_1_bolt_tension_rupture_vgder,
+            chapter_06_end_plate.run_step6_2_bolt_shear_rupture_vgder,
+            chapter_06_end_plate.run_step7_1_1_end_plate_flexural_yielding_vgder,
+            chapter_06_end_plate.run_step7_2_1_end_plate_shear_yielding_vgder,
+            chapter_06_end_plate.run_step7_2_2_end_plate_shear_rupture_vgder,
+            chapter_06_end_plate.run_step7_3_1_end_plate_hole_tearout_vgder,
+            chapter_06_end_plate.run_step7_3_2_end_plate_hole_bearing_vgder,
+            chapter_06_end_plate.run_column_step1_flange_yielding_vgder,
+            chapter_06_end_plate.run_column_step3_web_local_yielding_vgder,
+            chapter_06_end_plate.run_column_step4_web_local_crippling_vgder,
+            chapter_06_end_plate.run_column_step4_2_web_local_buckling_vgder,
+        ),
+    ):
+        common.extend(
+            [
+                _bind(
+                    rule_id=f"AISC358.06.7.{connection_type}.step6_1_bolt_tension_rupture_{side_suffix}",
+                    name=f"{connection_type} Step 6.1 bolt tension rupture capacity ({side_label})",
+                    clause="Chapter 6 / Section 6.7.1 Step 6.1 + AISC 360-22 J3.7",
+                    page="9.2-24",
+                    connection_type=connection_type,
+                    evaluator=eval_6_1,
+                ),
+                _bind(
+                    rule_id=f"AISC358.06.7.{connection_type}.step6_2_bolt_shear_rupture_{side_suffix}",
+                    name=f"{connection_type} Step 6.2 bolt shear rupture capacity ({side_label})",
+                    clause="Chapter 6 / Section 6.7.1 Step 6.2 + AISC 360-22 J3.7",
+                    page="9.2-24",
+                    connection_type=connection_type,
+                    evaluator=eval_6_2,
+                ),
+                _bind(
+                    rule_id=f"AISC358.06.7.{connection_type}.step7_1_1_end_plate_flexural_yielding_{side_suffix}",
+                    name=f"{connection_type} Step 7.1.1 end-plate flexural yielding ({side_label})",
+                    clause="Chapter 6 / Section 6.7.1 Step 7.1.1 + Eq. (6.7-8)",
+                    page="9.2-24",
+                    connection_type=connection_type,
+                    evaluator=eval_7_1_1,
+                ),
+                _bind(
+                    rule_id=f"AISC358.06.7.{connection_type}.step7_2_1_end_plate_shear_yielding_{side_suffix}",
+                    name=f"{connection_type} Step 7.2.1 end-plate shear yielding ({side_label})",
+                    clause="Chapter 6 / Section 6.7.1 Step 7.2.1 + Eq. (6.7-10)",
+                    page="9.2-24",
+                    connection_type=connection_type,
+                    evaluator=eval_7_2_1,
+                ),
+                _bind(
+                    rule_id=f"AISC358.06.7.{connection_type}.step7_2_2_end_plate_shear_rupture_{side_suffix}",
+                    name=f"{connection_type} Step 7.2.2 end-plate shear rupture ({side_label})",
+                    clause="Chapter 6 / Section 6.7.1 Step 7.2.2 + Eq. (6.7-12)",
+                    page="9.2-24",
+                    connection_type=connection_type,
+                    evaluator=eval_7_2_2,
+                ),
+                _bind(
+                    rule_id=f"AISC358.06.7.{connection_type}.step7_3_1_end_plate_hole_tearout_{side_suffix}",
+                    name=f"{connection_type} Step 7.3.1 end-plate hole tearout ({side_label})",
+                    clause="Chapter 6 / Section 7.3.1 + AISC 360-22 J3.11(a)",
+                    page="16.1-113",
+                    connection_type=connection_type,
+                    evaluator=eval_7_3_1,
+                    source_document="AISC 360-22",
+                ),
+                _bind(
+                    rule_id=f"AISC358.06.7.{connection_type}.step7_3_2_end_plate_hole_bearing_{side_suffix}",
+                    name=f"{connection_type} Step 7.3.2 end-plate hole bearing ({side_label})",
+                    clause="Chapter 6 / Section 7.3.2 + AISC 360-22 J3.11(a)",
+                    page="16.1-113",
+                    connection_type=connection_type,
+                    evaluator=eval_7_3_2,
+                    source_document="AISC 360-22",
+                ),
+                _bind(
+                    rule_id=f"AISC358.06.7.{connection_type}.step12_1_1_column_flange_local_bending_{side_suffix}",
+                    name=f"{connection_type} Step 12.1.1 column flange local bending (LFB) ({side_label})",
+                    clause="Chapter 6 / Section 6.7.2 + Eq. (6.7-13)",
+                    page="9.2-25",
+                    connection_type=connection_type,
+                    evaluator=eval_12,
+                ),
+                _bind(
+                    rule_id=f"AISC358.06.7.{connection_type}.step13_1_1_column_web_local_yielding_{side_suffix}",
+                    name=f"{connection_type} Step 13.1.1 column web local yielding (WLY) ({side_label})",
+                    clause="Chapter 6 / Section 6.7.2 + Eq. (6.7-17)",
+                    page="9.2-25",
+                    connection_type=connection_type,
+                    evaluator=eval_13,
+                ),
+                _bind(
+                    rule_id=f"AISC358.06.7.{connection_type}.step14_2_1_column_web_local_crippling_{side_suffix}",
+                    name=f"{connection_type} Step 14.2.1 column web local crippling (WLC) ({side_label})",
+                    clause="Chapter 6 / Section 6.7.2 + Eq. (6.7-19) to Eq. (6.7-21)",
+                    page="9.2-25",
+                    connection_type=connection_type,
+                    evaluator=eval_14_2_1,
+                ),
+                _bind(
+                    rule_id=f"AISC358.06.7.{connection_type}.step14_2_2_column_web_local_buckling_{side_suffix}",
+                    name=f"{connection_type} Step 14.2.2 column web local buckling (WCB) ({side_label})",
+                    clause="Chapter 6 / Section 6.7.2 + Eq. (6.7-18)",
+                    page="9.2-25",
+                    connection_type=connection_type,
+                    evaluator=eval_14_2_2,
+                ),
+                _bind(
+                    rule_id=f"AISC358.06.7.{connection_type}.step11_1_1_beam_web_end_plate_weld_tension_rupture_{side_suffix}",
+                    name=f"{connection_type} Step 11.1.1 beam web-to-end-plate weld tension rupture ({side_label})",
+                    clause="Chapter 6 / Section 6.7.1 + AISC 360-22 J2.4",
+                    page="16.1-66",
+                    connection_type=connection_type,
+                    evaluator=(
+                        chapter_06_end_plate.run_step11_1_1_beam_web_end_plate_weld_tension_rupture
+                        if side_suffix == "vgizq"
+                        else chapter_06_end_plate.run_step11_1_1_beam_web_end_plate_weld_tension_rupture_vgder
+                    ),
+                    source_document="AISC 360-22",
+                ),
+            ]
+        )
+    return common
 
 
 def _chapter6_4e_specific_steps() -> list[RuleBinding]:
@@ -163,33 +237,64 @@ def _chapter6_4e_specific_steps() -> list[RuleBinding]:
 
 
 def _chapter6_stiffened_specific_steps(connection_type: str) -> list[RuleBinding]:
-    return [
-        _bind(
-            rule_id=f"AISC358.06.7.{connection_type}.step8_1_1_stiffener_weld_tension_rupture",
-            name=f"{connection_type} Step 8.1.1 stiffener weld tension rupture",
-            clause="Chapter 6 / Section 6.7.1 Step 8.1.1 + AISC 360-22 J2.4",
-            page="9.2-24",
-            connection_type=connection_type,
-            evaluator=chapter_06_end_plate.run_step8_1_1_stiffener_weld_tension_rupture,
+    steps: list[RuleBinding] = []
+    for side_suffix, side_label, eval_8, eval_9, eval_10, eval_11 in (
+        (
+            "vgizq",
+            "left",
+            chapter_06_end_plate.run_step8_1_1_stiffener_weld_tension_rupture,
+            chapter_06_end_plate.run_step9_1_1_stiffener_beam_weld_shear_rupture,
+            chapter_06_end_plate.run_step10_1_1_beam_flange_end_plate_weld_tension_rupture,
+            chapter_06_end_plate.run_step10_1_1_beam_shear_yielding,
         ),
-        _bind(
-            rule_id=f"AISC358.06.7.{connection_type}.step9_1_1_stiffener_beam_weld_shear_rupture",
-            name=f"{connection_type} Step 9.1.1 stiffener-beam weld shear rupture",
-            clause="Chapter 6 / Section 6.7.1 Step 9.1.1 + AISC 360-22 J2.4",
-            page="9.2-24",
-            connection_type=connection_type,
-            evaluator=chapter_06_end_plate.run_step9_1_1_stiffener_beam_weld_shear_rupture,
+        (
+            "vgder",
+            "right",
+            chapter_06_end_plate.run_step8_1_1_stiffener_weld_tension_rupture_vgder,
+            chapter_06_end_plate.run_step9_1_1_stiffener_beam_weld_shear_rupture_vgder,
+            chapter_06_end_plate.run_step10_1_1_beam_flange_end_plate_weld_tension_rupture_vgder,
+            chapter_06_end_plate.run_step11_1_1_beam_shear_yielding_vgder,
         ),
-        _bind(
-            rule_id=f"AISC358.06.7.{connection_type}.step10_1_1_beam_shear_yielding",
-            name=f"{connection_type} Step 10.1.1 beam shear yielding",
-            clause="Chapter 6 / Section 6.7.1 Step 10.1.1 + AISC 360-22 G2.1",
-            page="16.1-77",
-            connection_type=connection_type,
-            evaluator=chapter_06_end_plate.run_step10_1_1_beam_shear_yielding,
-            source_document="AISC 360-22",
-        ),
-    ]
+    ):
+        steps.extend(
+            [
+                _bind(
+                    rule_id=f"AISC358.06.7.{connection_type}.step8_1_1_stiffener_weld_tension_rupture_{side_suffix}",
+                    name=f"{connection_type} Step 8.1.1 stiffener weld tension rupture ({side_label})",
+                    clause="Chapter 6 / Section 6.7.1 Step 8.1.1 + AISC 360-22 J2.4",
+                    page="9.2-24",
+                    connection_type=connection_type,
+                    evaluator=eval_8,
+                ),
+                _bind(
+                    rule_id=f"AISC358.06.7.{connection_type}.step9_1_1_stiffener_beam_weld_shear_rupture_{side_suffix}",
+                    name=f"{connection_type} Step 9.1.1 stiffener-beam weld shear rupture ({side_label})",
+                    clause="Chapter 6 / Section 6.7.1 Step 9.1.1 + AISC 360-22 J2.4",
+                    page="9.2-24",
+                    connection_type=connection_type,
+                    evaluator=eval_9,
+                ),
+                _bind(
+                    rule_id=f"AISC358.06.7.{connection_type}.step10_1_1_beam_flange_end_plate_weld_tension_rupture_{side_suffix}",
+                    name=f"{connection_type} Step 10.1.1 beam flange-to-end-plate weld rupture ({side_label})",
+                    clause="Chapter 6 / Section 6.7.1 Step 10.1.1 + AISC 360-22 J2.4",
+                    page="16.1-66",
+                    connection_type=connection_type,
+                    evaluator=eval_10,
+                    source_document="AISC 360-22",
+                ),
+                _bind(
+                    rule_id=f"AISC358.06.7.{connection_type}.step11_1_1_beam_shear_yielding_{side_suffix}",
+                    name=f"{connection_type} Step 11.1.1 beam shear yielding ({side_label})",
+                    clause="Chapter 6 / Section 6.7.1 Step 11.1.1 + AISC 360-22 G2.1",
+                    page="16.1-77",
+                    connection_type=connection_type,
+                    evaluator=eval_11,
+                    source_document="AISC 360-22",
+                ),
+            ]
+        )
+    return steps
 
 
 APPLICABILITY_MATRIX: list[RuleBinding] = [

@@ -1,6 +1,6 @@
 {
   "viga": {
-    "perfil_vgizq": "W18X76",
+    "perfil_vgizq": "W24X84",
     "tipo_acero_perfil_vgizq": "ASTM A572 Gr 50",
     "demanda_ductilidad_vgizq": "high",
     "E_vgizq": {
@@ -19,7 +19,7 @@
   "placa_extremo": {
     "tipo_acero": "ASTM A572 Gr 50",
     "Bpe_vgizq": {
-      "value": 253.0,
+      "value": 230.0,
       "unit": "mm"
     },
     "tpe_vgizq": {
@@ -103,12 +103,38 @@
       },
       "nl_w3_vgizq": 2,
       "kds_w3_vgizq": 1.0
+    },
+    "weld_4": {
+      "description": "Ala de viga con end plate",
+      "Fexx_w4_vgizq": {
+        "value": 490.0,
+        "unit": "MPa"
+      },
+      "tipo_w4_vgizq": "CJP",
+      "t_w4_vgizq": {
+        "value": 8.0,
+        "unit": "mm"
+      },
+      "t_w4.1_vgizq": {
+        "value": 0.0,
+        "unit": "mm"
+      },
+      "nl_w4_vgizq": 2,
+      "kds_w4_vgizq": 1.0
     }
   },
   "loads": {
     "Pu_vgizq": {
       "value": 0.0,
       "unit": "kN"
+    },
+    "Vu2_vgizq": {
+      "value": 426.78,
+      "unit": "kN"
+    },
+    "Mu3_vgizq": {
+      "value": 1257410.0,
+      "unit": "kN-mm"
     },
     "Vg_vgizq": {
       "value": 44.482,

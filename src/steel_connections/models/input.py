@@ -54,6 +54,8 @@ class AISC358MomentMaterials(StrictModel):
     beam_fy: Quantity | None = None
     beam_fu: Quantity | None = None
     weld_fexx: Quantity | None = None
+    weld_fexx_w4_vgder: Quantity | None = None
+    weld_fexx_w4_vgizq: Quantity | None = None
     end_plate_fy: Quantity | None = None
     end_plate_fu: Quantity | None = None
     bolt_fnt: Quantity | None = None
@@ -105,6 +107,22 @@ class AISC358MomentGeometry(StrictModel):
     beam_shear_connector_free_length_from_column_face_izq: Quantity | None = None
     beam_clear_span_length: Quantity | None = None
     beam_shear_connector_free_length_from_column_face: Quantity | None = None
+    end_plate_width_vgder: Quantity | None = None
+    end_plate_width_vgizq: Quantity | None = None
+    end_plate_thickness_vgder: Quantity | None = None
+    end_plate_thickness_vgizq: Quantity | None = None
+    de_vgder: Quantity | None = None
+    de_vgizq: Quantity | None = None
+    pb_vgder: Quantity | None = None
+    pb_vgizq: Quantity | None = None
+    pfo_vgder: Quantity | None = None
+    pfo_vgizq: Quantity | None = None
+    pfi_vgder: Quantity | None = None
+    pfi_vgizq: Quantity | None = None
+    bolt_gage_vgder: Quantity | None = None
+    bolt_gage_vgizq: Quantity | None = None
+    stiffener_thickness_vgder: Quantity | None = None
+    stiffener_thickness_vgizq: Quantity | None = None
     column_slab_connection_condition: str | None = None
     end_plate_width: Quantity | None = None
     end_plate_thickness: Quantity | None = None
@@ -122,22 +140,50 @@ class AISC358MomentGeometry(StrictModel):
     clear_distance_column_flange: Quantity | None = None
     column_end_distance_to_beam_flange: Quantity | None = None
     end_plate_beam_web_weld_type: str | None = None
+    end_plate_beam_web_weld_type_vgder: str | None = None
+    end_plate_beam_web_weld_type_vgizq: str | None = None
     end_plate_beam_web_weld_thickness_twe: Quantity | None = None
+    end_plate_beam_web_weld_thickness_twe_vgder: Quantity | None = None
+    end_plate_beam_web_weld_thickness_twe_vgizq: Quantity | None = None
     end_plate_beam_web_weld_lines_nl: int | None = None
+    end_plate_beam_web_weld_lines_nl_vgder: int | None = None
+    end_plate_beam_web_weld_lines_nl_vgizq: int | None = None
     end_plate_stiffener_weld_type: str | None = None
+    end_plate_stiffener_weld_type_vgder: str | None = None
+    end_plate_stiffener_weld_type_vgizq: str | None = None
     end_plate_stiffener_weld_length_lst: Quantity | None = None
     end_plate_stiffener_weld_size_wst: Quantity | None = None
+    end_plate_stiffener_weld_size_wst_vgder: Quantity | None = None
+    end_plate_stiffener_weld_size_wst_vgizq: Quantity | None = None
     end_plate_stiffener_weld_lines_nl: int | None = None
+    end_plate_stiffener_weld_lines_nl_vgder: int | None = None
+    end_plate_stiffener_weld_lines_nl_vgizq: int | None = None
     beam_stiffener_weld_type: str | None = None
+    beam_stiffener_weld_type_vgder: str | None = None
+    beam_stiffener_weld_type_vgizq: str | None = None
     beam_stiffener_weld_length_lstw2: Quantity | None = None
     beam_stiffener_weld_size_wst2: Quantity | None = None
+    beam_stiffener_weld_size_wst2_vgder: Quantity | None = None
+    beam_stiffener_weld_size_wst2_vgizq: Quantity | None = None
     beam_stiffener_weld_lines_nl_w2: int | None = None
+    beam_stiffener_weld_lines_nl_w2_vgder: int | None = None
+    beam_stiffener_weld_lines_nl_w2_vgizq: int | None = None
     kds_w1_vgder: float | None = None
     kds_w1_vgizq: float | None = None
     kds_w2_vgder: float | None = None
     kds_w2_vgizq: float | None = None
     kds_w3_vgder: float | None = None
     kds_w3_vgizq: float | None = None
+    tipo_w4_vgder: str | None = None
+    tipo_w4_vgizq: str | None = None
+    t_w4_vgder: Quantity | None = None
+    t_w4_vgizq: Quantity | None = None
+    nl_w4_vgder: int | None = None
+    nl_w4_vgizq: int | None = None
+    t_w4_1_vgder: Quantity | None = None
+    t_w4_1_vgizq: Quantity | None = None
+    kds_w4_vgder: float | None = None
+    kds_w4_vgizq: float | None = None
     stiffener_height: Quantity | None = None
     stiffener_thickness: Quantity | None = None
     stiffener_length: Quantity | None = None
@@ -160,8 +206,16 @@ class AISC358MomentGeometry(StrictModel):
     @field_validator(
         "continuity_plate_weld_type",
         "end_plate_beam_web_weld_type",
+        "end_plate_beam_web_weld_type_vgder",
+        "end_plate_beam_web_weld_type_vgizq",
         "end_plate_stiffener_weld_type",
+        "end_plate_stiffener_weld_type_vgder",
+        "end_plate_stiffener_weld_type_vgizq",
         "beam_stiffener_weld_type",
+        "beam_stiffener_weld_type_vgder",
+        "beam_stiffener_weld_type_vgizq",
+        "tipo_w4_vgder",
+        "tipo_w4_vgizq",
     )
     @classmethod
     def normalize_weld_type_fields(cls, value: str | None) -> str | None:
@@ -181,6 +235,15 @@ class AISC358MomentGeometry(StrictModel):
             raise ValueError("geometry.end_plate_beam_web_weld_lines_nl must be >= 1.")
         return value
 
+    @field_validator("end_plate_beam_web_weld_lines_nl_vgder", "end_plate_beam_web_weld_lines_nl_vgizq")
+    @classmethod
+    def validate_end_plate_beam_web_weld_lines_nl_side(cls, value: int | None) -> int | None:
+        if value is None:
+            return None
+        if value <= 0:
+            raise ValueError("geometry.end_plate_beam_web_weld_lines_nl_vg<lado> must be >= 1.")
+        return value
+
     @field_validator("end_plate_stiffener_weld_lines_nl")
     @classmethod
     def validate_end_plate_stiffener_weld_lines_nl(cls, value: int | None) -> int | None:
@@ -188,6 +251,15 @@ class AISC358MomentGeometry(StrictModel):
             return None
         if value <= 0:
             raise ValueError("geometry.end_plate_stiffener_weld_lines_nl must be >= 1.")
+        return value
+
+    @field_validator("end_plate_stiffener_weld_lines_nl_vgder", "end_plate_stiffener_weld_lines_nl_vgizq")
+    @classmethod
+    def validate_end_plate_stiffener_weld_lines_nl_side(cls, value: int | None) -> int | None:
+        if value is None:
+            return None
+        if value <= 0:
+            raise ValueError("geometry.end_plate_stiffener_weld_lines_nl_vg<lado> must be >= 1.")
         return value
 
     @field_validator("beam_stiffener_weld_lines_nl_w2")
@@ -199,6 +271,24 @@ class AISC358MomentGeometry(StrictModel):
             raise ValueError("geometry.beam_stiffener_weld_lines_nl_w2 must be >= 1.")
         return value
 
+    @field_validator("beam_stiffener_weld_lines_nl_w2_vgder", "beam_stiffener_weld_lines_nl_w2_vgizq")
+    @classmethod
+    def validate_beam_stiffener_weld_lines_nl_w2_side(cls, value: int | None) -> int | None:
+        if value is None:
+            return None
+        if value <= 0:
+            raise ValueError("geometry.beam_stiffener_weld_lines_nl_w2_vg<lado> must be >= 1.")
+        return value
+
+    @field_validator("nl_w4_vgder", "nl_w4_vgizq")
+    @classmethod
+    def validate_weld_4_lines(cls, value: int | None) -> int | None:
+        if value is None:
+            return None
+        if value <= 0:
+            raise ValueError("geometry.nl_w4_<lado> must be >= 1.")
+        return value
+
     @field_validator(
         "kds_w1_vgder",
         "kds_w1_vgizq",
@@ -206,6 +296,8 @@ class AISC358MomentGeometry(StrictModel):
         "kds_w2_vgizq",
         "kds_w3_vgder",
         "kds_w3_vgizq",
+        "kds_w4_vgder",
+        "kds_w4_vgizq",
     )
     @classmethod
     def validate_kds_positive(cls, value: float | None) -> float | None:
@@ -235,6 +327,10 @@ class AISC358MomentLoads(StrictModel):
     pu_viga_right: Quantity | None = None
     pu_viga_left: Quantity | None = None
     pu_viga: Quantity | None = None
+    Vu2_vgder: Quantity | None = None
+    Vu2_vgizq: Quantity | None = None
+    Mu3_vgder: Quantity | None = None
+    Mu3_vgizq: Quantity | None = None
     pu_columna: Quantity | None = None
     probable_moment_column_face: Quantity | None = None
     probable_moment_plastic_hinge: Quantity | None = None
@@ -294,13 +390,15 @@ class AISC358MomentDesignFactors(StrictModel):
         if value is None:
             return None
         normalized = value.strip().lower().replace("-", "_").replace(" ", "_")
+        if normalized in {"left", "left_only", "izq", "izquierda", "solo_izquierda"}:
+            return "left_only"
         if normalized in {"right", "right_only", "der", "derecha", "solo_derecha"}:
             return "right_only"
         if normalized in {"both", "both_sides", "ambas", "ambos_lados", "izq_der"}:
             return "both_sides"
         raise ValueError(
-            "design_factors.beam_connection_sides must be 'right_only' or 'both_sides' "
-            "(also accepts 'derecha'/'ambas')."
+            "design_factors.beam_connection_sides must be 'left_only', 'right_only' or 'both_sides' "
+            "(also accepts 'izquierda'/'derecha'/'ambas')."
         )
 
     @field_validator(
@@ -451,6 +549,22 @@ class AISC358MomentCase(CaseBase):
             "beam_shear_connector_free_length_from_column_face_izq",
             "beam_clear_span_length",
             "beam_shear_connector_free_length_from_column_face",
+            "end_plate_width_vgder",
+            "end_plate_width_vgizq",
+            "end_plate_thickness_vgder",
+            "end_plate_thickness_vgizq",
+            "de_vgder",
+            "de_vgizq",
+            "pb_vgder",
+            "pb_vgizq",
+            "pfo_vgder",
+            "pfo_vgizq",
+            "pfi_vgder",
+            "pfi_vgizq",
+            "bolt_gage_vgder",
+            "bolt_gage_vgizq",
+            "stiffener_thickness_vgder",
+            "stiffener_thickness_vgizq",
             "end_plate_width",
             "end_plate_thickness",
             "de",
@@ -464,13 +578,23 @@ class AISC358MomentCase(CaseBase):
             "clear_distance_column_flange",
             "column_end_distance_to_beam_flange",
             "end_plate_beam_web_weld_thickness_twe",
+            "end_plate_beam_web_weld_thickness_twe_vgder",
+            "end_plate_beam_web_weld_thickness_twe_vgizq",
             "end_plate_stiffener_weld_length_lst",
             "end_plate_stiffener_weld_size_wst",
+            "end_plate_stiffener_weld_size_wst_vgder",
+            "end_plate_stiffener_weld_size_wst_vgizq",
             "beam_stiffener_weld_length_lstw2",
             "beam_stiffener_weld_size_wst2",
+            "beam_stiffener_weld_size_wst2_vgder",
+            "beam_stiffener_weld_size_wst2_vgizq",
             "stiffener_height",
             "stiffener_thickness",
             "stiffener_length",
+            "t_w4_vgder",
+            "t_w4_vgizq",
+            "t_w4_1_vgder",
+            "t_w4_1_vgizq",
         ):
             value = getattr(self.geometry, field_name)
             if value is not None:
@@ -484,6 +608,8 @@ class AISC358MomentCase(CaseBase):
             "pu_viga_right",
             "pu_viga_left",
             "pu_viga",
+            "Vu2_vgder",
+            "Vu2_vgizq",
             "pu_columna",
             "shear_plastic_hinge_dermax",
             "shear_plastic_hinge_dermin",
@@ -505,6 +631,15 @@ class AISC358MomentCase(CaseBase):
                     self.units_system,
                     f"loads.{field_name}",
                 )
+        for field_name in ("Mu3_vgder", "Mu3_vgizq"):
+            value = getattr(self.loads, field_name)
+            if value is not None:
+                expected_unit = "kip-in" if self.units_system == UnitSystem.US else "kN-mm"
+                if value.unit != expected_unit:
+                    raise ValueError(
+                        f"Invalid unit at 'loads.{field_name}'. "
+                        f"Expected '{expected_unit}' for {self.units_system.value}."
+                    )
         if self.loads.probable_moment_column_face is not None:
             expected_unit = "kip-in" if self.units_system == UnitSystem.US else "kN-mm"
             if self.loads.probable_moment_column_face.unit != expected_unit:

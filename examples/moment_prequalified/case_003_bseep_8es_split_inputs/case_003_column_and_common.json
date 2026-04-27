@@ -18,13 +18,13 @@
     "ratio_McMb": 1.2
   },
   "columna": {
-    "perfil_col": "W18X175",
+    "perfil_col": "HEB 400",
     "tipo_acero_perfil_col": "ASTM A572 Gr 50",
     "E_col": {
       "value": 200000,
       "unit": "MPa"
     },
-    "dcf_col": {
+    "St_col": {
       "value": 762.0,
       "unit": "mm"
     },

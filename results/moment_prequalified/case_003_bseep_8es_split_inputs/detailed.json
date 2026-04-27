@@ -22,15 +22,15 @@
             "unit": "mm"
           },
           "beam_flange_width_bf": {
-            "value": 228.0,
+            "value": 210.0,
             "unit": "mm"
           },
           "column_flange_width_bcf": {
-            "value": 290.0,
+            "value": 300.0,
             "unit": "mm"
           },
           "column_depth_d_col": {
-            "value": 508.0,
+            "value": 400.0,
             "unit": "mm"
           },
           "column_depth_limit_max": {
@@ -56,7 +56,7 @@
           "bolt_tightening_type": "pretensioned",
           "bolt_fabrication_standard": "ASTM A490",
           "end_plate_width_bp": {
-            "value": 253.0,
+            "value": 230.0,
             "unit": "mm"
           },
           "bolt_gage_g": {
@@ -80,7 +80,7 @@
             "unit": "mm"
           },
           "end_plate_height": {
-            "value": 827.0,
+            "value": 756.0,
             "unit": "mm"
           },
           "stiffener_height": {
@@ -130,7 +130,7 @@
             "unit": "mm"
           },
           "beam_s_threshold": {
-            "value": 100.74720839804942,
+            "value": 102.46950765959599,
             "unit": "mm"
           },
           "beam_ductility_demand": "high",
@@ -144,15 +144,15 @@
             "unit": "kN"
           },
           "ag_viga": {
-            "value": 14500.0,
+            "value": 12900.0,
             "unit": "mm2"
           },
           "ag_columna": {
-            "value": 33200.0,
+            "value": 19778.0,
             "unit": "mm2"
           },
           "compactness_ca_beam_calculated": 0.0,
-          "compactness_ca_column_calculated": 0.05529263298252298
+          "compactness_ca_column_calculated": 0.09281602866921643
         },
         "intermediates": {
           "minimum_spacing_3db": {
@@ -160,7 +160,7 @@
             "unit": "mm"
           },
           "minimum_bp_bf_plus_margin": {
-            "value": 253.0,
+            "value": 235.0,
             "unit": "mm"
           },
           "bp_margin": 25.0,
@@ -169,11 +169,11 @@
             "unit": "mm"
           },
           "clear_span_to_depth_ratio_der": {
-            "value": 10.042833607907744,
+            "value": 11.373134328358208,
             "unit": "ratio"
           },
           "clear_span_to_depth_ratio_izq": {
-            "value": 13.194805194805195,
+            "value": 9.96078431372549,
             "unit": "ratio"
           },
           "clear_span_to_depth_limit": {
@@ -181,16 +181,16 @@
             "unit": "ratio"
           },
           "frame_system_for_span_ratio": "SMF",
-          "beam_flange_compactness_ratio_der": 6.589595375722543,
-          "beam_flange_compactness_ratio_izq": 8.0635838150289,
+          "beam_flange_compactness_ratio_der": 6.03448275862069,
+          "beam_flange_compactness_ratio_izq": 5.841836734693877,
           "beam_flange_compactness_limit": 6.887004431501818,
-          "beam_web_compactness_ratio_der": 48.839285714285715,
-          "beam_web_compactness_ratio_izq": 37.7037037037037,
+          "beam_web_compactness_ratio_der": 43.633027522935784,
+          "beam_web_compactness_ratio_izq": 46.0,
           "beam_web_compactness_limit": 56.24386952393152,
-          "column_flange_compactness_ratio": 3.589108910891089,
+          "column_flange_compactness_ratio": 6.25,
           "column_flange_compactness_limit": 6.887004431501818,
-          "column_web_compactness_ratio": 18.008849557522122,
-          "column_web_compactness_limit": 53.00960302342372,
+          "column_web_compactness_ratio": 22.074074074074073,
+          "column_web_compactness_limit": 50.81472361348259,
           "ca_beam_trace": {
             "pu": {
               "value": 0.0,
@@ -198,7 +198,7 @@
             },
             "ry": 1.1,
             "ag": {
-              "value": 14500.0,
+              "value": 12900.0,
               "unit": "mm2"
             },
             "fy": {
@@ -206,8 +206,8 @@
               "unit": "MPa"
             },
             "formula": "Ca = Pu / (Ry * Ag * Fy)",
-            "denominator_base": 5502750.000000001,
-            "denominator_force_units": 5502.750000000001
+            "denominator_base": 4895550.000000001,
+            "denominator_force_units": 4895.550000000001
           },
           "ca_column_trace": {
             "pu": {
@@ -216,7 +216,7 @@
             },
             "ry": 1.1,
             "ag": {
-              "value": 33200.0,
+              "value": 19778.0,
               "unit": "mm2"
             },
             "fy": {
@@ -224,8 +224,8 @@
               "unit": "MPa"
             },
             "formula": "Ca = Pu / (Ry * Ag * Fy)",
-            "denominator_base": 12599400.0,
-            "denominator_force_units": 12599.4
+            "denominator_base": 7505751.000000001,
+            "denominator_force_units": 7505.751000000001
           },
           "continuity_plate_weld_thickness_limit": {
             "value": 10.0,
@@ -246,15 +246,15 @@
               "beam_connection_sides": "both_sides",
               "formula": "Lpz_vgder = min(L_pest_vgder + 0.5*d_vgder, 3*bf_vgder); Lpz_vgizq = min(L_pest_vgizq + 0.5*d_vgizq, 3*bf_vgizq)",
               "protected_zone_length": {
-                "value": 494.02558883257655,
+                "value": 458.52558883257655,
                 "unit": "mm"
               },
               "protected_zone_length_vgder": {
-                "value": 494.02558883257655,
+                "value": 458.52558883257655,
                 "unit": "mm"
               },
               "protected_zone_length_vgizq": {
-                "value": 421.52558883257655,
+                "value": 496.52558883257655,
                 "unit": "mm"
               }
             },
@@ -274,7 +274,7 @@
               "description": "Altura derivada de placa de extremo",
               "formula": "Hpe_vgder = d_vgder + 2*pfo_pe_vgder + 2*de_pe_vgder",
               "hpe_vgder": {
-                "value": 827.0,
+                "value": 756.0,
                 "unit": "mm"
               }
             },
@@ -287,19 +287,19 @@
               "requirement": "h1_vgder, h2_vgder, h3_vgder, h4_vgder y dh_vgder para trazabilidad geometrica",
               "formula": "h1=d-0.5tf+pso+pb; h2=d-0.5tf+pso; h3=d-1.5tf-psi; h4=d-1.5tf-psi-pb; dh=d+1/16 in (db<=7/8 in) else dh=d+1/8 in",
               "h1_vgder": {
-                "value": 743.346,
+                "value": 672.2959999999999,
                 "unit": "mm"
               },
               "h2_vgder": {
-                "value": 648.35,
+                "value": 577.3,
                 "unit": "mm"
               },
               "h3_vgder": {
-                "value": 529.65,
+                "value": 458.4,
                 "unit": "mm"
               },
               "h4_vgder": {
-                "value": 434.654,
+                "value": 363.404,
                 "unit": "mm"
               },
               "dh_vgder": {
@@ -315,7 +315,7 @@
               "description": "Altura derivada de placa de extremo",
               "formula": "Hpe_vgizq = d_vgizq + 2*pfo_pe_vgizq + 2*de_pe_vgizq",
               "hpe_vgizq": {
-                "value": 682.0,
+                "value": 832.0,
                 "unit": "mm"
               }
             },
@@ -328,19 +328,19 @@
               "requirement": "h1_vgizq, h2_vgizq, h3_vgizq, h4_vgizq y dh_vgizq para trazabilidad geometrica",
               "formula": "h1=d-0.5tf+pso+pb; h2=d-0.5tf+pso; h3=d-1.5tf-psi; h4=d-1.5tf-psi-pb; dh=d+1/16 in (db<=7/8 in) else dh=d+1/8 in",
               "h1_vgizq": {
-                "value": 743.346,
+                "value": 672.2959999999999,
                 "unit": "mm"
               },
               "h2_vgizq": {
-                "value": 648.35,
+                "value": 577.3,
                 "unit": "mm"
               },
               "h3_vgizq": {
-                "value": 529.65,
+                "value": 458.4,
                 "unit": "mm"
               },
               "h4_vgizq": {
-                "value": 434.654,
+                "value": 363.404,
                 "unit": "mm"
               },
               "dh_vgizq": {
@@ -390,14 +390,6 @@
             },
             {
               "step": "1",
-              "id": "section_6_7.beam_flange_to_end_plate_weld_note",
-              "scope": "welds",
-              "clause": "Section 6.7",
-              "description": "Requisitos de soldadura entre ala de viga y placa de extremo",
-              "requirement": "La unión entre el ala de la viga y la placa de extremo debe ejecutarse con una soldadura de ranura CJP sin respaldo. La soldadura de ranura CJP debe realizarse de modo que la raíz de la soldadura quede del lado del alma de la viga respecto del ala. La cara interior del ala debe tener una soldadura de filete de c in. (8 mm). Estas soldaduras deben ser de demanda crítica."
-            },
-            {
-              "step": "1",
               "id": "section_6_7.stiffened_end_plate_weld_sequence_note",
               "scope": "welds",
               "clause": "Section 6.7",
@@ -440,7 +432,7 @@
               "limit_symbol": "{W, HEA, HEB, IPE}",
               "comparison": "family_in",
               "comparison_text": "in",
-              "calculated_text": "W18X76",
+              "calculated_text": "W24X84",
               "allowed_families": [
                 "W",
                 "HEA",
@@ -460,7 +452,7 @@
               "limit_symbol": "{W, HEA, HEB, IPE}",
               "comparison": "family_in",
               "comparison_text": "in",
-              "calculated_text": "W24X76",
+              "calculated_text": "W21X68",
               "allowed_families": [
                 "W",
                 "HEA",
@@ -479,17 +471,17 @@
               "calculated_symbol": "bp_pe_vgizq",
               "limit_symbol": "bf_vgizq + margin (25 mm)",
               "calculated": {
-                "value": 253.0,
+                "value": 230.0,
                 "unit": "mm"
               },
               "limit": {
-                "value": 304.0,
+                "value": 254.0,
                 "unit": "mm"
               },
               "comparison": "ge",
               "comparison_text": ">=",
               "margin": {
-                "value": -51.0,
+                "value": -24.0,
                 "unit": "mm"
               },
               "status": "FAIL",
@@ -533,13 +525,13 @@
                 "unit": "mm"
               },
               "limit": {
-                "value": 693.0,
+                "value": 918.0,
                 "unit": "mm"
               },
               "comparison": "ge",
               "comparison_text": ">=",
               "margin": {
-                "value": 307.0,
+                "value": 82.0,
                 "unit": "mm"
               },
               "status": "PASS",
@@ -555,7 +547,7 @@
               "limit_symbol": "compound",
               "comparison": "compound",
               "comparison_text": "compound",
-              "verification_text": "Sc = St_col - pfo - pb; S = 0.5*sqrt(bcf*g); Sc_vgizq > S => 617.004 mm > 100.747 mm",
+              "verification_text": "Sc = St_col - pfo - pb; S = 0.5*sqrt(bcf*g); Sc_vgizq > S => 617.004 mm > 102.470 mm",
               "calculated": {
                 "value": 617.004,
                 "unit": "mm"
@@ -572,7 +564,7 @@
               "calculated_symbol": "Llb_vgizq/d_vgizq",
               "limit_symbol": "7 (SMF)",
               "calculated": {
-                "value": 13.194805194805195,
+                "value": 9.96078431372549,
                 "unit": "ratio"
               },
               "limit": {
@@ -582,7 +574,7 @@
               "comparison": "ge",
               "comparison_text": ">=",
               "margin": {
-                "value": 6.194805194805195,
+                "value": 2.9607843137254903,
                 "unit": "ratio"
               },
               "status": "PASS",
@@ -597,7 +589,7 @@
               "calculated_symbol": "lambda_f_vgizq",
               "limit_symbol": "lambda_f_limit",
               "calculated": {
-                "value": 8.0635838150289,
+                "value": 5.841836734693877,
                 "unit": "ratio"
               },
               "limit": {
@@ -607,11 +599,11 @@
               "comparison": "le",
               "comparison_text": "<=",
               "margin": {
-                "value": -1.1765793835270824,
+                "value": 1.0451676968079413,
                 "unit": "ratio"
               },
-              "status": "FAIL",
-              "result": "NO_OK"
+              "status": "PASS",
+              "result": "OK"
             },
             {
               "step": "1",
@@ -622,7 +614,7 @@
               "calculated_symbol": "lambda_w_vgizq",
               "limit_symbol": "lambda_w_limit",
               "calculated": {
-                "value": 37.7037037037037,
+                "value": 46.0,
                 "unit": "ratio"
               },
               "limit": {
@@ -632,7 +624,7 @@
               "comparison": "le",
               "comparison_text": "<=",
               "margin": {
-                "value": 18.54016582022782,
+                "value": 10.243869523931522,
                 "unit": "ratio"
               },
               "status": "PASS",
@@ -647,21 +639,21 @@
               "calculated_symbol": "bp_pe_vgder",
               "limit_symbol": "bf_vgder + margin (25 mm)",
               "calculated": {
-                "value": 253.0,
+                "value": 230.0,
                 "unit": "mm"
               },
               "limit": {
-                "value": 253.0,
+                "value": 235.0,
                 "unit": "mm"
               },
               "comparison": "ge",
               "comparison_text": ">=",
               "margin": {
-                "value": 0.0,
+                "value": -5.0,
                 "unit": "mm"
               },
-              "status": "PASS",
-              "result": "OK"
+              "status": "FAIL",
+              "result": "NO_OK"
             },
             {
               "step": "1",
@@ -701,13 +693,13 @@
                 "unit": "mm"
               },
               "limit": {
-                "value": 910.5,
+                "value": 804.0,
                 "unit": "mm"
               },
               "comparison": "ge",
               "comparison_text": ">=",
               "margin": {
-                "value": 89.5,
+                "value": 196.0,
                 "unit": "mm"
               },
               "status": "PASS",
@@ -723,7 +715,7 @@
               "limit_symbol": "compound",
               "comparison": "compound",
               "comparison_text": "compound",
-              "verification_text": "Sc = St_col - pfo - pb; S = 0.5*sqrt(bcf*g); Sc_vgder > S => 617.004 mm > 100.747 mm",
+              "verification_text": "Sc = St_col - pfo - pb; S = 0.5*sqrt(bcf*g); Sc_vgder > S => 617.004 mm > 102.470 mm",
               "calculated": {
                 "value": 617.004,
                 "unit": "mm"
@@ -740,7 +732,7 @@
               "calculated_symbol": "Llb_vgder/d_vgder",
               "limit_symbol": "7 (SMF)",
               "calculated": {
-                "value": 10.042833607907744,
+                "value": 11.373134328358208,
                 "unit": "ratio"
               },
               "limit": {
@@ -750,7 +742,7 @@
               "comparison": "ge",
               "comparison_text": ">=",
               "margin": {
-                "value": 3.0428336079077436,
+                "value": 4.3731343283582085,
                 "unit": "ratio"
               },
               "status": "PASS",
@@ -765,7 +757,7 @@
               "calculated_symbol": "lambda_f_vgder",
               "limit_symbol": "lambda_f_limit",
               "calculated": {
-                "value": 6.589595375722543,
+                "value": 6.03448275862069,
                 "unit": "ratio"
               },
               "limit": {
@@ -775,7 +767,7 @@
               "comparison": "le",
               "comparison_text": "<=",
               "margin": {
-                "value": 0.29740905577927546,
+                "value": 0.852521672881128,
                 "unit": "ratio"
               },
               "status": "PASS",
@@ -790,7 +782,7 @@
               "calculated_symbol": "lambda_w_vgder",
               "limit_symbol": "lambda_w_limit",
               "calculated": {
-                "value": 48.839285714285715,
+                "value": 43.633027522935784,
                 "unit": "ratio"
               },
               "limit": {
@@ -800,7 +792,7 @@
               "comparison": "le",
               "comparison_text": "<=",
               "margin": {
-                "value": 7.404583809645807,
+                "value": 12.610842000995738,
                 "unit": "ratio"
               },
               "status": "PASS",
@@ -816,7 +808,7 @@
               "limit_symbol": "{W, HEA, HEB, IPE}",
               "comparison": "family_in",
               "comparison_text": "in",
-              "calculated_text": "W18X175",
+              "calculated_text": "HEB 400",
               "allowed_families": [
                 "W",
                 "HEA",
@@ -835,7 +827,7 @@
               "calculated_symbol": "d_col",
               "limit_symbol": "W36/W920",
               "calculated": {
-                "value": 508.0,
+                "value": 400.0,
                 "unit": "mm"
               },
               "limit": {
@@ -845,7 +837,7 @@
               "comparison": "le",
               "comparison_text": "<=",
               "margin": {
-                "value": 412.0,
+                "value": 520.0,
                 "unit": "mm"
               },
               "status": "PASS",
@@ -860,17 +852,17 @@
               "calculated_symbol": "bp",
               "limit_symbol": "bcf",
               "calculated": {
-                "value": 253.0,
+                "value": 230.0,
                 "unit": "mm"
               },
               "limit": {
-                "value": 290.0,
+                "value": 300.0,
                 "unit": "mm"
               },
               "comparison": "le",
               "comparison_text": "<=",
               "margin": {
-                "value": 37.0,
+                "value": 70.0,
                 "unit": "mm"
               },
               "status": "PASS",
@@ -922,7 +914,7 @@
               "calculated_symbol": "lambda_f_col",
               "limit_symbol": "lambda_f_limit",
               "calculated": {
-                "value": 3.589108910891089,
+                "value": 6.25,
                 "unit": "ratio"
               },
               "limit": {
@@ -932,7 +924,7 @@
               "comparison": "le",
               "comparison_text": "<=",
               "margin": {
-                "value": 3.297895520610729,
+                "value": 0.6370044315018184,
                 "unit": "ratio"
               },
               "status": "PASS",
@@ -947,17 +939,17 @@
               "calculated_symbol": "lambda_w_col",
               "limit_symbol": "lambda_w_limit",
               "calculated": {
-                "value": 18.008849557522122,
+                "value": 22.074074074074073,
                 "unit": "ratio"
               },
               "limit": {
-                "value": 53.00960302342372,
+                "value": 50.81472361348259,
                 "unit": "ratio"
               },
               "comparison": "le",
               "comparison_text": "<=",
               "margin": {
-                "value": 35.000753465901596,
+                "value": 28.74064953940852,
                 "unit": "ratio"
               },
               "status": "PASS",
@@ -975,7 +967,7 @@
               "comparison_text": "compound",
               "verification_text": "bp_pe_vgder <= bbf_vgder + 25 mm; bp_pe_vgder <= bcf",
               "calculated": {
-                "value": 253.0,
+                "value": 230.0,
                 "unit": "mm"
               },
               "status": "PASS",
@@ -985,7 +977,7 @@
                 "unit": "mm"
               },
               "maximum": {
-                "value": 253.0,
+                "value": 235.0,
                 "unit": "mm"
               }
             },
@@ -1001,7 +993,7 @@
               "comparison_text": "compound",
               "verification_text": "bp_pe_vgizq <= bbf_vgizq + 25 mm; bp_pe_vgizq <= bcf",
               "calculated": {
-                "value": 253.0,
+                "value": 230.0,
                 "unit": "mm"
               },
               "status": "PASS",
@@ -1011,7 +1003,7 @@
                 "unit": "mm"
               },
               "maximum": {
-                "value": 290.0,
+                "value": 254.0,
                 "unit": "mm"
               }
             },
@@ -1064,13 +1056,13 @@
                 "unit": "mm"
               },
               "limit": {
-                "value": 11.2,
+                "value": 10.9,
                 "unit": "mm"
               },
               "comparison": "ge",
               "comparison_text": ">=",
               "margin": {
-                "value": 1.5,
+                "value": 1.799999999999999,
                 "unit": "mm"
               },
               "status": "PASS",
@@ -1139,13 +1131,13 @@
                 "unit": "mm"
               },
               "limit": {
-                "value": 10.8,
+                "value": 11.9,
                 "unit": "mm"
               },
               "comparison": "ge",
               "comparison_text": ">=",
               "margin": {
-                "value": 1.8999999999999986,
+                "value": 0.7999999999999989,
                 "unit": "mm"
               },
               "status": "PASS",
@@ -1217,6 +1209,390 @@
                 "double_sided_fillet",
                 "single_sided_fillet"
               ],
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "section_6_7.beam_flange_to_end_plate_weld_requirement_vgder",
+              "scope": "welds_der",
+              "clause": "Section 6.7",
+              "description": "Requisitos de soldadura entre ala de viga y placa de extremo (viga derecha)",
+              "calculated_symbol": "tipo_w4_vgder",
+              "limit_symbol": "verification_only",
+              "comparison": "compound",
+              "comparison_text": "compound",
+              "verification_text": "si demanda_ductilidad_vgder in {high, moderate}: tipo_w4_vgder == cjp; t_w4_1_vgder == 0 mm; demanda_ductilidad_vgder = high; tipo_w4_vgder = cjp; t_w4_1_vgder = 0.000 mm",
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "section_6_7.beam_flange_to_end_plate_weld_requirement_vgizq",
+              "scope": "welds_izq",
+              "clause": "Section 6.7",
+              "description": "Requisitos de soldadura entre ala de viga y placa de extremo (viga izquierda)",
+              "calculated_symbol": "tipo_w4_vgizq",
+              "limit_symbol": "verification_only",
+              "comparison": "compound",
+              "comparison_text": "compound",
+              "verification_text": "si demanda_ductilidad_vgizq in {high, moderate}: tipo_w4_vgizq == cjp; t_w4_1_vgizq == 0 mm; demanda_ductilidad_vgizq = high; tipo_w4_vgizq = cjp; t_w4_1_vgizq = 0.000 mm",
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "section_j2_4.weld_1_minimum_size_vgder",
+              "scope": "welds_der",
+              "clause": "AISC 360-22 Table J2.4",
+              "description": "Tamano minimo de soldadura de filete (#1, viga derecha)",
+              "calculated_symbol": "w_w1_vgder",
+              "limit_symbol": "wmin_j24_w1_vgder",
+              "calculated": {
+                "value": 9.525,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 5.0,
+                "unit": "mm"
+              },
+              "comparison": "ge",
+              "comparison_text": ">=",
+              "margin": {
+                "value": 4.525,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "section_j2_b.weld_1_maximum_size_vgder",
+              "scope": "welds_der",
+              "clause": "AISC 360-22 Section J2b",
+              "description": "Tamano maximo de soldadura de filete (#1, viga derecha)",
+              "calculated_symbol": "w_w1_vgder",
+              "limit_symbol": "wmax_j2b_w1_vgder",
+              "calculated": {
+                "value": 9.525,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 10.7,
+                "unit": "mm"
+              },
+              "comparison": "le",
+              "comparison_text": "<=",
+              "margin": {
+                "value": 1.174999999999999,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "section_j2_2_c.weld_1_minimum_length_vgder",
+              "scope": "welds_der",
+              "clause": "AISC 360-22 Section J2.2(c)",
+              "description": "Longitud minima de soldadura de filete para diseno por resistencia (#1, viga derecha)",
+              "calculated_symbol": "l_w1_vgder",
+              "limit_symbol": "4*w_w1_vgder",
+              "calculated": {
+                "value": 65.95,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 38.1,
+                "unit": "mm"
+              },
+              "comparison": "ge",
+              "comparison_text": ">=",
+              "margin": {
+                "value": 27.85,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "section_j2_2_d.weld_1_effective_length_vgder",
+              "scope": "welds_der",
+              "clause": "AISC 360-22 Section J2.2(d) + Eq. (J2-1)",
+              "description": "Longitud efectiva de soldadura de filete cargada en el extremo (#1, viga derecha)",
+              "calculated_symbol": "l_w1_vgder",
+              "limit_symbol": "verification_only",
+              "comparison": "compound",
+              "comparison_text": "compound",
+              "verification_text": "l/w = 6.924; beta = 1.000; l_eff_w1_vgder = 65.950 mm; si l/w<=100 => l_eff=l; si 100<l/w<=300 => l_eff=beta*l; si l/w>300 => l_eff=180w",
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "section_j2_4.weld_2_minimum_size_vgder",
+              "scope": "welds_der",
+              "clause": "AISC 360-22 Table J2.4",
+              "description": "Tamano minimo de soldadura de filete (#2, viga derecha)",
+              "calculated_symbol": "w_w2_vgder",
+              "limit_symbol": "wmin_j24_w2_vgder",
+              "calculated": {
+                "value": 9.525,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 5.0,
+                "unit": "mm"
+              },
+              "comparison": "ge",
+              "comparison_text": ">=",
+              "margin": {
+                "value": 4.525,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "section_j2_b.weld_2_maximum_size_vgder",
+              "scope": "welds_der",
+              "clause": "AISC 360-22 Section J2b",
+              "description": "Tamano maximo de soldadura de filete (#2, viga derecha)",
+              "calculated_symbol": "w_w2_vgder",
+              "limit_symbol": "wmax_j2b_w2_vgder",
+              "calculated": {
+                "value": 9.525,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 8.9,
+                "unit": "mm"
+              },
+              "comparison": "le",
+              "comparison_text": "<=",
+              "margin": {
+                "value": -0.625,
+                "unit": "mm"
+              },
+              "status": "FAIL",
+              "result": "NO_OK"
+            },
+            {
+              "step": "1",
+              "id": "section_j2_2_c.weld_2_minimum_length_vgder",
+              "scope": "welds_der",
+              "clause": "AISC 360-22 Section J2.2(c)",
+              "description": "Longitud minima de soldadura de filete para diseno por resistencia (#2, viga derecha)",
+              "calculated_symbol": "l_w2_vgder",
+              "limit_symbol": "4*w_w2_vgder",
+              "calculated": {
+                "value": 146.4755888325765,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 38.1,
+                "unit": "mm"
+              },
+              "comparison": "ge",
+              "comparison_text": ">=",
+              "margin": {
+                "value": 108.37558883257651,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "section_j2_2_d.weld_2_effective_length_vgder",
+              "scope": "welds_der",
+              "clause": "AISC 360-22 Section J2.2(d) + Eq. (J2-1)",
+              "description": "Longitud efectiva de soldadura de filete cargada en el extremo (#2, viga derecha)",
+              "calculated_symbol": "l_w2_vgder",
+              "limit_symbol": "verification_only",
+              "comparison": "compound",
+              "comparison_text": "compound",
+              "verification_text": "l/w = 15.378; beta = 1.000; l_eff_w2_vgder = 146.476 mm; si l/w<=100 => l_eff=l; si 100<l/w<=300 => l_eff=beta*l; si l/w>300 => l_eff=180w",
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "section_j2_4.weld_1_minimum_size_vgizq",
+              "scope": "welds_izq",
+              "clause": "AISC 360-22 Table J2.4",
+              "description": "Tamano minimo de soldadura de filete (#1, viga izquierda)",
+              "calculated_symbol": "w_w1_vgizq",
+              "limit_symbol": "wmin_j24_w1_vgizq",
+              "calculated": {
+                "value": 9.525,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 5.0,
+                "unit": "mm"
+              },
+              "comparison": "ge",
+              "comparison_text": ">=",
+              "margin": {
+                "value": 4.525,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "section_j2_b.weld_1_maximum_size_vgizq",
+              "scope": "welds_izq",
+              "clause": "AISC 360-22 Section J2b",
+              "description": "Tamano maximo de soldadura de filete (#1, viga izquierda)",
+              "calculated_symbol": "w_w1_vgizq",
+              "limit_symbol": "wmax_j2b_w1_vgizq",
+              "calculated": {
+                "value": 9.525,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 10.7,
+                "unit": "mm"
+              },
+              "comparison": "le",
+              "comparison_text": "<=",
+              "margin": {
+                "value": 1.174999999999999,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "section_j2_2_c.weld_1_minimum_length_vgizq",
+              "scope": "welds_izq",
+              "clause": "AISC 360-22 Section J2.2(c)",
+              "description": "Longitud minima de soldadura de filete para diseno por resistencia (#1, viga izquierda)",
+              "calculated_symbol": "l_w1_vgizq",
+              "limit_symbol": "4*w_w1_vgizq",
+              "calculated": {
+                "value": 65.95,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 38.1,
+                "unit": "mm"
+              },
+              "comparison": "ge",
+              "comparison_text": ">=",
+              "margin": {
+                "value": 27.85,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "section_j2_2_d.weld_1_effective_length_vgizq",
+              "scope": "welds_izq",
+              "clause": "AISC 360-22 Section J2.2(d) + Eq. (J2-1)",
+              "description": "Longitud efectiva de soldadura de filete cargada en el extremo (#1, viga izquierda)",
+              "calculated_symbol": "l_w1_vgizq",
+              "limit_symbol": "verification_only",
+              "comparison": "compound",
+              "comparison_text": "compound",
+              "verification_text": "l/w = 6.924; beta = 1.000; l_eff_w1_vgizq = 65.950 mm; si l/w<=100 => l_eff=l; si 100<l/w<=300 => l_eff=beta*l; si l/w>300 => l_eff=180w",
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "section_j2_4.weld_2_minimum_size_vgizq",
+              "scope": "welds_izq",
+              "clause": "AISC 360-22 Table J2.4",
+              "description": "Tamano minimo de soldadura de filete (#2, viga izquierda)",
+              "calculated_symbol": "w_w2_vgizq",
+              "limit_symbol": "wmin_j24_w2_vgizq",
+              "calculated": {
+                "value": 9.525,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 5.0,
+                "unit": "mm"
+              },
+              "comparison": "ge",
+              "comparison_text": ">=",
+              "margin": {
+                "value": 4.525,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "section_j2_b.weld_2_maximum_size_vgizq",
+              "scope": "welds_izq",
+              "clause": "AISC 360-22 Section J2b",
+              "description": "Tamano maximo de soldadura de filete (#2, viga izquierda)",
+              "calculated_symbol": "w_w2_vgizq",
+              "limit_symbol": "wmax_j2b_w2_vgizq",
+              "calculated": {
+                "value": 9.525,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 9.9,
+                "unit": "mm"
+              },
+              "comparison": "le",
+              "comparison_text": "<=",
+              "margin": {
+                "value": 0.375,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "section_j2_2_c.weld_2_minimum_length_vgizq",
+              "scope": "welds_izq",
+              "clause": "AISC 360-22 Section J2.2(c)",
+              "description": "Longitud minima de soldadura de filete para diseno por resistencia (#2, viga izquierda)",
+              "calculated_symbol": "l_w2_vgizq",
+              "limit_symbol": "4*w_w2_vgizq",
+              "calculated": {
+                "value": 146.4755888325765,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 38.1,
+                "unit": "mm"
+              },
+              "comparison": "ge",
+              "comparison_text": ">=",
+              "margin": {
+                "value": 108.37558883257651,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "section_j2_2_d.weld_2_effective_length_vgizq",
+              "scope": "welds_izq",
+              "clause": "AISC 360-22 Section J2.2(d) + Eq. (J2-1)",
+              "description": "Longitud efectiva de soldadura de filete cargada en el extremo (#2, viga izquierda)",
+              "calculated_symbol": "l_w2_vgizq",
+              "limit_symbol": "verification_only",
+              "comparison": "compound",
+              "comparison_text": "compound",
+              "verification_text": "l/w = 15.378; beta = 1.000; l_eff_w2_vgizq = 146.476 mm; si l/w<=100 => l_eff=l; si 100<l/w<=300 => l_eff=beta*l; si l/w>300 => l_eff=180w",
               "status": "PASS",
               "result": "OK"
             },
@@ -1440,7 +1816,7 @@
               "calculated_symbol": "tf_vgder",
               "limit_symbol": "[tf_vgder_min, tf_vgder_max]",
               "calculated": {
-                "value": 17.3,
+                "value": 17.4,
                 "unit": "mm"
               },
               "minimum": {
@@ -1454,15 +1830,15 @@
               "comparison": "range",
               "comparison_text": "in",
               "margin_to_min": {
-                "value": 3.012500000000001,
+                "value": 3.112499999999999,
                 "unit": "mm"
               },
               "margin_to_max": {
-                "value": 8.099999999999998,
+                "value": 8.0,
                 "unit": "mm"
               },
               "margin": {
-                "value": 3.012500000000001,
+                "value": 3.112499999999999,
                 "unit": "mm"
               },
               "status": "PASS",
@@ -1477,7 +1853,7 @@
               "calculated_symbol": "bf_vgder",
               "limit_symbol": "[bf_vgder_min, bf_vgder_max]",
               "calculated": {
-                "value": 228.0,
+                "value": 210.0,
                 "unit": "mm"
               },
               "minimum": {
@@ -1491,15 +1867,15 @@
               "comparison": "range",
               "comparison_text": "in",
               "margin_to_min": {
-                "value": 37.5,
+                "value": 19.5,
                 "unit": "mm"
               },
               "margin_to_max": {
-                "value": 83.14999999999998,
+                "value": 101.14999999999998,
                 "unit": "mm"
               },
               "margin": {
-                "value": 37.5,
+                "value": 19.5,
                 "unit": "mm"
               },
               "status": "PASS",
@@ -1514,7 +1890,7 @@
               "calculated_symbol": "d_vgder",
               "limit_symbol": "[d_vgder_min, d_vgder_max]",
               "calculated": {
-                "value": 607.0,
+                "value": 536.0,
                 "unit": "mm"
               },
               "minimum": {
@@ -1528,15 +1904,15 @@
               "comparison": "range",
               "comparison_text": "in",
               "margin_to_min": {
-                "value": 149.8,
+                "value": 78.80000000000001,
                 "unit": "mm"
               },
               "margin_to_max": {
-                "value": 307.4,
+                "value": 378.4,
                 "unit": "mm"
               },
               "margin": {
-                "value": 149.8,
+                "value": 78.80000000000001,
                 "unit": "mm"
               },
               "status": "PASS",
@@ -1732,7 +2108,7 @@
               "calculated_symbol": "tf_vgizq",
               "limit_symbol": "[tf_vgizq_min, tf_vgizq_max]",
               "calculated": {
-                "value": 17.3,
+                "value": 19.6,
                 "unit": "mm"
               },
               "minimum": {
@@ -1746,15 +2122,15 @@
               "comparison": "range",
               "comparison_text": "in",
               "margin_to_min": {
-                "value": 3.012500000000001,
+                "value": 5.312500000000002,
                 "unit": "mm"
               },
               "margin_to_max": {
-                "value": 8.099999999999998,
+                "value": 5.799999999999997,
                 "unit": "mm"
               },
               "margin": {
-                "value": 3.012500000000001,
+                "value": 5.312500000000002,
                 "unit": "mm"
               },
               "status": "PASS",
@@ -1769,7 +2145,7 @@
               "calculated_symbol": "bf_vgizq",
               "limit_symbol": "[bf_vgizq_min, bf_vgizq_max]",
               "calculated": {
-                "value": 279.0,
+                "value": 229.0,
                 "unit": "mm"
               },
               "minimum": {
@@ -1783,15 +2159,15 @@
               "comparison": "range",
               "comparison_text": "in",
               "margin_to_min": {
-                "value": 88.5,
+                "value": 38.5,
                 "unit": "mm"
               },
               "margin_to_max": {
-                "value": 32.14999999999998,
+                "value": 82.14999999999998,
                 "unit": "mm"
               },
               "margin": {
-                "value": 32.14999999999998,
+                "value": 38.5,
                 "unit": "mm"
               },
               "status": "PASS",
@@ -1806,7 +2182,7 @@
               "calculated_symbol": "d_vgizq",
               "limit_symbol": "[d_vgizq_min, d_vgizq_max]",
               "calculated": {
-                "value": 462.0,
+                "value": 612.0,
                 "unit": "mm"
               },
               "minimum": {
@@ -1820,15 +2196,15 @@
               "comparison": "range",
               "comparison_text": "in",
               "margin_to_min": {
-                "value": 4.800000000000011,
+                "value": 154.8,
                 "unit": "mm"
               },
               "margin_to_max": {
-                "value": 452.4,
+                "value": 302.4,
                 "unit": "mm"
               },
               "margin": {
-                "value": 4.800000000000011,
+                "value": 154.8,
                 "unit": "mm"
               },
               "status": "PASS",
@@ -1920,7 +2296,7 @@
               "limit_symbol": "{W, HEA, HEB, IPE}",
               "comparison": "family_in",
               "comparison_text": "in",
-              "calculated_text": "W18X76",
+              "calculated_text": "W24X84",
               "allowed_families": [
                 "W",
                 "HEA",
@@ -1940,7 +2316,7 @@
               "limit_symbol": "{W, HEA, HEB, IPE}",
               "comparison": "family_in",
               "comparison_text": "in",
-              "calculated_text": "W24X76",
+              "calculated_text": "W21X68",
               "allowed_families": [
                 "W",
                 "HEA",
@@ -1959,17 +2335,17 @@
               "calculated_symbol": "bp_pe_vgizq",
               "limit_symbol": "bf_vgizq + margin (25 mm)",
               "calculated": {
-                "value": 253.0,
+                "value": 230.0,
                 "unit": "mm"
               },
               "limit": {
-                "value": 304.0,
+                "value": 254.0,
                 "unit": "mm"
               },
               "comparison": "ge",
               "comparison_text": ">=",
               "margin": {
-                "value": -51.0,
+                "value": -24.0,
                 "unit": "mm"
               },
               "status": "FAIL",
@@ -2013,13 +2389,13 @@
                 "unit": "mm"
               },
               "limit": {
-                "value": 693.0,
+                "value": 918.0,
                 "unit": "mm"
               },
               "comparison": "ge",
               "comparison_text": ">=",
               "margin": {
-                "value": 307.0,
+                "value": 82.0,
                 "unit": "mm"
               },
               "status": "PASS",
@@ -2035,7 +2411,7 @@
               "limit_symbol": "compound",
               "comparison": "compound",
               "comparison_text": "compound",
-              "verification_text": "Sc = St_col - pfo - pb; S = 0.5*sqrt(bcf*g); Sc_vgizq > S => 617.004 mm > 100.747 mm",
+              "verification_text": "Sc = St_col - pfo - pb; S = 0.5*sqrt(bcf*g); Sc_vgizq > S => 617.004 mm > 102.470 mm",
               "calculated": {
                 "value": 617.004,
                 "unit": "mm"
@@ -2052,7 +2428,7 @@
               "calculated_symbol": "Llb_vgizq/d_vgizq",
               "limit_symbol": "7 (SMF)",
               "calculated": {
-                "value": 13.194805194805195,
+                "value": 9.96078431372549,
                 "unit": "ratio"
               },
               "limit": {
@@ -2062,7 +2438,7 @@
               "comparison": "ge",
               "comparison_text": ">=",
               "margin": {
-                "value": 6.194805194805195,
+                "value": 2.9607843137254903,
                 "unit": "ratio"
               },
               "status": "PASS",
@@ -2077,7 +2453,7 @@
               "calculated_symbol": "lambda_f_vgizq",
               "limit_symbol": "lambda_f_limit",
               "calculated": {
-                "value": 8.0635838150289,
+                "value": 5.841836734693877,
                 "unit": "ratio"
               },
               "limit": {
@@ -2087,11 +2463,11 @@
               "comparison": "le",
               "comparison_text": "<=",
               "margin": {
-                "value": -1.1765793835270824,
+                "value": 1.0451676968079413,
                 "unit": "ratio"
               },
-              "status": "FAIL",
-              "result": "NO_OK"
+              "status": "PASS",
+              "result": "OK"
             },
             {
               "step": "1",
@@ -2102,7 +2478,7 @@
               "calculated_symbol": "lambda_w_vgizq",
               "limit_symbol": "lambda_w_limit",
               "calculated": {
-                "value": 37.7037037037037,
+                "value": 46.0,
                 "unit": "ratio"
               },
               "limit": {
@@ -2112,7 +2488,7 @@
               "comparison": "le",
               "comparison_text": "<=",
               "margin": {
-                "value": 18.54016582022782,
+                "value": 10.243869523931522,
                 "unit": "ratio"
               },
               "status": "PASS",
@@ -2127,21 +2503,21 @@
               "calculated_symbol": "bp_pe_vgder",
               "limit_symbol": "bf_vgder + margin (25 mm)",
               "calculated": {
-                "value": 253.0,
+                "value": 230.0,
                 "unit": "mm"
               },
               "limit": {
-                "value": 253.0,
+                "value": 235.0,
                 "unit": "mm"
               },
               "comparison": "ge",
               "comparison_text": ">=",
               "margin": {
-                "value": 0.0,
+                "value": -5.0,
                 "unit": "mm"
               },
-              "status": "PASS",
-              "result": "OK"
+              "status": "FAIL",
+              "result": "NO_OK"
             },
             {
               "step": "1",
@@ -2181,13 +2557,13 @@
                 "unit": "mm"
               },
               "limit": {
-                "value": 910.5,
+                "value": 804.0,
                 "unit": "mm"
               },
               "comparison": "ge",
               "comparison_text": ">=",
               "margin": {
-                "value": 89.5,
+                "value": 196.0,
                 "unit": "mm"
               },
               "status": "PASS",
@@ -2203,7 +2579,7 @@
               "limit_symbol": "compound",
               "comparison": "compound",
               "comparison_text": "compound",
-              "verification_text": "Sc = St_col - pfo - pb; S = 0.5*sqrt(bcf*g); Sc_vgder > S => 617.004 mm > 100.747 mm",
+              "verification_text": "Sc = St_col - pfo - pb; S = 0.5*sqrt(bcf*g); Sc_vgder > S => 617.004 mm > 102.470 mm",
               "calculated": {
                 "value": 617.004,
                 "unit": "mm"
@@ -2220,7 +2596,7 @@
               "calculated_symbol": "Llb_vgder/d_vgder",
               "limit_symbol": "7 (SMF)",
               "calculated": {
-                "value": 10.042833607907744,
+                "value": 11.373134328358208,
                 "unit": "ratio"
               },
               "limit": {
@@ -2230,7 +2606,7 @@
               "comparison": "ge",
               "comparison_text": ">=",
               "margin": {
-                "value": 3.0428336079077436,
+                "value": 4.3731343283582085,
                 "unit": "ratio"
               },
               "status": "PASS",
@@ -2245,7 +2621,7 @@
               "calculated_symbol": "lambda_f_vgder",
               "limit_symbol": "lambda_f_limit",
               "calculated": {
-                "value": 6.589595375722543,
+                "value": 6.03448275862069,
                 "unit": "ratio"
               },
               "limit": {
@@ -2255,7 +2631,7 @@
               "comparison": "le",
               "comparison_text": "<=",
               "margin": {
-                "value": 0.29740905577927546,
+                "value": 0.852521672881128,
                 "unit": "ratio"
               },
               "status": "PASS",
@@ -2270,7 +2646,7 @@
               "calculated_symbol": "lambda_w_vgder",
               "limit_symbol": "lambda_w_limit",
               "calculated": {
-                "value": 48.839285714285715,
+                "value": 43.633027522935784,
                 "unit": "ratio"
               },
               "limit": {
@@ -2280,7 +2656,7 @@
               "comparison": "le",
               "comparison_text": "<=",
               "margin": {
-                "value": 7.404583809645807,
+                "value": 12.610842000995738,
                 "unit": "ratio"
               },
               "status": "PASS",
@@ -2296,7 +2672,7 @@
               "limit_symbol": "{W, HEA, HEB, IPE}",
               "comparison": "family_in",
               "comparison_text": "in",
-              "calculated_text": "W18X175",
+              "calculated_text": "HEB 400",
               "allowed_families": [
                 "W",
                 "HEA",
@@ -2315,7 +2691,7 @@
               "calculated_symbol": "d_col",
               "limit_symbol": "W36/W920",
               "calculated": {
-                "value": 508.0,
+                "value": 400.0,
                 "unit": "mm"
               },
               "limit": {
@@ -2325,7 +2701,7 @@
               "comparison": "le",
               "comparison_text": "<=",
               "margin": {
-                "value": 412.0,
+                "value": 520.0,
                 "unit": "mm"
               },
               "status": "PASS",
@@ -2340,17 +2716,17 @@
               "calculated_symbol": "bp",
               "limit_symbol": "bcf",
               "calculated": {
-                "value": 253.0,
+                "value": 230.0,
                 "unit": "mm"
               },
               "limit": {
-                "value": 290.0,
+                "value": 300.0,
                 "unit": "mm"
               },
               "comparison": "le",
               "comparison_text": "<=",
               "margin": {
-                "value": 37.0,
+                "value": 70.0,
                 "unit": "mm"
               },
               "status": "PASS",
@@ -2402,7 +2778,7 @@
               "calculated_symbol": "lambda_f_col",
               "limit_symbol": "lambda_f_limit",
               "calculated": {
-                "value": 3.589108910891089,
+                "value": 6.25,
                 "unit": "ratio"
               },
               "limit": {
@@ -2412,7 +2788,7 @@
               "comparison": "le",
               "comparison_text": "<=",
               "margin": {
-                "value": 3.297895520610729,
+                "value": 0.6370044315018184,
                 "unit": "ratio"
               },
               "status": "PASS",
@@ -2427,17 +2803,17 @@
               "calculated_symbol": "lambda_w_col",
               "limit_symbol": "lambda_w_limit",
               "calculated": {
-                "value": 18.008849557522122,
+                "value": 22.074074074074073,
                 "unit": "ratio"
               },
               "limit": {
-                "value": 53.00960302342372,
+                "value": 50.81472361348259,
                 "unit": "ratio"
               },
               "comparison": "le",
               "comparison_text": "<=",
               "margin": {
-                "value": 35.000753465901596,
+                "value": 28.74064953940852,
                 "unit": "ratio"
               },
               "status": "PASS",
@@ -2455,7 +2831,7 @@
               "comparison_text": "compound",
               "verification_text": "bp_pe_vgder <= bbf_vgder + 25 mm; bp_pe_vgder <= bcf",
               "calculated": {
-                "value": 253.0,
+                "value": 230.0,
                 "unit": "mm"
               },
               "status": "PASS",
@@ -2465,7 +2841,7 @@
                 "unit": "mm"
               },
               "maximum": {
-                "value": 253.0,
+                "value": 235.0,
                 "unit": "mm"
               }
             },
@@ -2481,7 +2857,7 @@
               "comparison_text": "compound",
               "verification_text": "bp_pe_vgizq <= bbf_vgizq + 25 mm; bp_pe_vgizq <= bcf",
               "calculated": {
-                "value": 253.0,
+                "value": 230.0,
                 "unit": "mm"
               },
               "status": "PASS",
@@ -2491,7 +2867,7 @@
                 "unit": "mm"
               },
               "maximum": {
-                "value": 290.0,
+                "value": 254.0,
                 "unit": "mm"
               }
             },
@@ -2544,13 +2920,13 @@
                 "unit": "mm"
               },
               "limit": {
-                "value": 11.2,
+                "value": 10.9,
                 "unit": "mm"
               },
               "comparison": "ge",
               "comparison_text": ">=",
               "margin": {
-                "value": 1.5,
+                "value": 1.799999999999999,
                 "unit": "mm"
               },
               "status": "PASS",
@@ -2619,13 +2995,13 @@
                 "unit": "mm"
               },
               "limit": {
-                "value": 10.8,
+                "value": 11.9,
                 "unit": "mm"
               },
               "comparison": "ge",
               "comparison_text": ">=",
               "margin": {
-                "value": 1.8999999999999986,
+                "value": 0.7999999999999989,
                 "unit": "mm"
               },
               "status": "PASS",
@@ -2697,6 +3073,390 @@
                 "double_sided_fillet",
                 "single_sided_fillet"
               ],
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "section_6_7.beam_flange_to_end_plate_weld_requirement_vgder",
+              "scope": "welds_der",
+              "clause": "Section 6.7",
+              "description": "Requisitos de soldadura entre ala de viga y placa de extremo (viga derecha)",
+              "calculated_symbol": "tipo_w4_vgder",
+              "limit_symbol": "verification_only",
+              "comparison": "compound",
+              "comparison_text": "compound",
+              "verification_text": "si demanda_ductilidad_vgder in {high, moderate}: tipo_w4_vgder == cjp; t_w4_1_vgder == 0 mm; demanda_ductilidad_vgder = high; tipo_w4_vgder = cjp; t_w4_1_vgder = 0.000 mm",
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "section_6_7.beam_flange_to_end_plate_weld_requirement_vgizq",
+              "scope": "welds_izq",
+              "clause": "Section 6.7",
+              "description": "Requisitos de soldadura entre ala de viga y placa de extremo (viga izquierda)",
+              "calculated_symbol": "tipo_w4_vgizq",
+              "limit_symbol": "verification_only",
+              "comparison": "compound",
+              "comparison_text": "compound",
+              "verification_text": "si demanda_ductilidad_vgizq in {high, moderate}: tipo_w4_vgizq == cjp; t_w4_1_vgizq == 0 mm; demanda_ductilidad_vgizq = high; tipo_w4_vgizq = cjp; t_w4_1_vgizq = 0.000 mm",
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "section_j2_4.weld_1_minimum_size_vgder",
+              "scope": "welds_der",
+              "clause": "AISC 360-22 Table J2.4",
+              "description": "Tamano minimo de soldadura de filete (#1, viga derecha)",
+              "calculated_symbol": "w_w1_vgder",
+              "limit_symbol": "wmin_j24_w1_vgder",
+              "calculated": {
+                "value": 9.525,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 5.0,
+                "unit": "mm"
+              },
+              "comparison": "ge",
+              "comparison_text": ">=",
+              "margin": {
+                "value": 4.525,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "section_j2_b.weld_1_maximum_size_vgder",
+              "scope": "welds_der",
+              "clause": "AISC 360-22 Section J2b",
+              "description": "Tamano maximo de soldadura de filete (#1, viga derecha)",
+              "calculated_symbol": "w_w1_vgder",
+              "limit_symbol": "wmax_j2b_w1_vgder",
+              "calculated": {
+                "value": 9.525,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 10.7,
+                "unit": "mm"
+              },
+              "comparison": "le",
+              "comparison_text": "<=",
+              "margin": {
+                "value": 1.174999999999999,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "section_j2_2_c.weld_1_minimum_length_vgder",
+              "scope": "welds_der",
+              "clause": "AISC 360-22 Section J2.2(c)",
+              "description": "Longitud minima de soldadura de filete para diseno por resistencia (#1, viga derecha)",
+              "calculated_symbol": "l_w1_vgder",
+              "limit_symbol": "4*w_w1_vgder",
+              "calculated": {
+                "value": 65.95,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 38.1,
+                "unit": "mm"
+              },
+              "comparison": "ge",
+              "comparison_text": ">=",
+              "margin": {
+                "value": 27.85,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "section_j2_2_d.weld_1_effective_length_vgder",
+              "scope": "welds_der",
+              "clause": "AISC 360-22 Section J2.2(d) + Eq. (J2-1)",
+              "description": "Longitud efectiva de soldadura de filete cargada en el extremo (#1, viga derecha)",
+              "calculated_symbol": "l_w1_vgder",
+              "limit_symbol": "verification_only",
+              "comparison": "compound",
+              "comparison_text": "compound",
+              "verification_text": "l/w = 6.924; beta = 1.000; l_eff_w1_vgder = 65.950 mm; si l/w<=100 => l_eff=l; si 100<l/w<=300 => l_eff=beta*l; si l/w>300 => l_eff=180w",
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "section_j2_4.weld_2_minimum_size_vgder",
+              "scope": "welds_der",
+              "clause": "AISC 360-22 Table J2.4",
+              "description": "Tamano minimo de soldadura de filete (#2, viga derecha)",
+              "calculated_symbol": "w_w2_vgder",
+              "limit_symbol": "wmin_j24_w2_vgder",
+              "calculated": {
+                "value": 9.525,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 5.0,
+                "unit": "mm"
+              },
+              "comparison": "ge",
+              "comparison_text": ">=",
+              "margin": {
+                "value": 4.525,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "section_j2_b.weld_2_maximum_size_vgder",
+              "scope": "welds_der",
+              "clause": "AISC 360-22 Section J2b",
+              "description": "Tamano maximo de soldadura de filete (#2, viga derecha)",
+              "calculated_symbol": "w_w2_vgder",
+              "limit_symbol": "wmax_j2b_w2_vgder",
+              "calculated": {
+                "value": 9.525,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 8.9,
+                "unit": "mm"
+              },
+              "comparison": "le",
+              "comparison_text": "<=",
+              "margin": {
+                "value": -0.625,
+                "unit": "mm"
+              },
+              "status": "FAIL",
+              "result": "NO_OK"
+            },
+            {
+              "step": "1",
+              "id": "section_j2_2_c.weld_2_minimum_length_vgder",
+              "scope": "welds_der",
+              "clause": "AISC 360-22 Section J2.2(c)",
+              "description": "Longitud minima de soldadura de filete para diseno por resistencia (#2, viga derecha)",
+              "calculated_symbol": "l_w2_vgder",
+              "limit_symbol": "4*w_w2_vgder",
+              "calculated": {
+                "value": 146.4755888325765,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 38.1,
+                "unit": "mm"
+              },
+              "comparison": "ge",
+              "comparison_text": ">=",
+              "margin": {
+                "value": 108.37558883257651,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "section_j2_2_d.weld_2_effective_length_vgder",
+              "scope": "welds_der",
+              "clause": "AISC 360-22 Section J2.2(d) + Eq. (J2-1)",
+              "description": "Longitud efectiva de soldadura de filete cargada en el extremo (#2, viga derecha)",
+              "calculated_symbol": "l_w2_vgder",
+              "limit_symbol": "verification_only",
+              "comparison": "compound",
+              "comparison_text": "compound",
+              "verification_text": "l/w = 15.378; beta = 1.000; l_eff_w2_vgder = 146.476 mm; si l/w<=100 => l_eff=l; si 100<l/w<=300 => l_eff=beta*l; si l/w>300 => l_eff=180w",
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "section_j2_4.weld_1_minimum_size_vgizq",
+              "scope": "welds_izq",
+              "clause": "AISC 360-22 Table J2.4",
+              "description": "Tamano minimo de soldadura de filete (#1, viga izquierda)",
+              "calculated_symbol": "w_w1_vgizq",
+              "limit_symbol": "wmin_j24_w1_vgizq",
+              "calculated": {
+                "value": 9.525,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 5.0,
+                "unit": "mm"
+              },
+              "comparison": "ge",
+              "comparison_text": ">=",
+              "margin": {
+                "value": 4.525,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "section_j2_b.weld_1_maximum_size_vgizq",
+              "scope": "welds_izq",
+              "clause": "AISC 360-22 Section J2b",
+              "description": "Tamano maximo de soldadura de filete (#1, viga izquierda)",
+              "calculated_symbol": "w_w1_vgizq",
+              "limit_symbol": "wmax_j2b_w1_vgizq",
+              "calculated": {
+                "value": 9.525,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 10.7,
+                "unit": "mm"
+              },
+              "comparison": "le",
+              "comparison_text": "<=",
+              "margin": {
+                "value": 1.174999999999999,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "section_j2_2_c.weld_1_minimum_length_vgizq",
+              "scope": "welds_izq",
+              "clause": "AISC 360-22 Section J2.2(c)",
+              "description": "Longitud minima de soldadura de filete para diseno por resistencia (#1, viga izquierda)",
+              "calculated_symbol": "l_w1_vgizq",
+              "limit_symbol": "4*w_w1_vgizq",
+              "calculated": {
+                "value": 65.95,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 38.1,
+                "unit": "mm"
+              },
+              "comparison": "ge",
+              "comparison_text": ">=",
+              "margin": {
+                "value": 27.85,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "section_j2_2_d.weld_1_effective_length_vgizq",
+              "scope": "welds_izq",
+              "clause": "AISC 360-22 Section J2.2(d) + Eq. (J2-1)",
+              "description": "Longitud efectiva de soldadura de filete cargada en el extremo (#1, viga izquierda)",
+              "calculated_symbol": "l_w1_vgizq",
+              "limit_symbol": "verification_only",
+              "comparison": "compound",
+              "comparison_text": "compound",
+              "verification_text": "l/w = 6.924; beta = 1.000; l_eff_w1_vgizq = 65.950 mm; si l/w<=100 => l_eff=l; si 100<l/w<=300 => l_eff=beta*l; si l/w>300 => l_eff=180w",
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "section_j2_4.weld_2_minimum_size_vgizq",
+              "scope": "welds_izq",
+              "clause": "AISC 360-22 Table J2.4",
+              "description": "Tamano minimo de soldadura de filete (#2, viga izquierda)",
+              "calculated_symbol": "w_w2_vgizq",
+              "limit_symbol": "wmin_j24_w2_vgizq",
+              "calculated": {
+                "value": 9.525,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 5.0,
+                "unit": "mm"
+              },
+              "comparison": "ge",
+              "comparison_text": ">=",
+              "margin": {
+                "value": 4.525,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "section_j2_b.weld_2_maximum_size_vgizq",
+              "scope": "welds_izq",
+              "clause": "AISC 360-22 Section J2b",
+              "description": "Tamano maximo de soldadura de filete (#2, viga izquierda)",
+              "calculated_symbol": "w_w2_vgizq",
+              "limit_symbol": "wmax_j2b_w2_vgizq",
+              "calculated": {
+                "value": 9.525,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 9.9,
+                "unit": "mm"
+              },
+              "comparison": "le",
+              "comparison_text": "<=",
+              "margin": {
+                "value": 0.375,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "section_j2_2_c.weld_2_minimum_length_vgizq",
+              "scope": "welds_izq",
+              "clause": "AISC 360-22 Section J2.2(c)",
+              "description": "Longitud minima de soldadura de filete para diseno por resistencia (#2, viga izquierda)",
+              "calculated_symbol": "l_w2_vgizq",
+              "limit_symbol": "4*w_w2_vgizq",
+              "calculated": {
+                "value": 146.4755888325765,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 38.1,
+                "unit": "mm"
+              },
+              "comparison": "ge",
+              "comparison_text": ">=",
+              "margin": {
+                "value": 108.37558883257651,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "section_j2_2_d.weld_2_effective_length_vgizq",
+              "scope": "welds_izq",
+              "clause": "AISC 360-22 Section J2.2(d) + Eq. (J2-1)",
+              "description": "Longitud efectiva de soldadura de filete cargada en el extremo (#2, viga izquierda)",
+              "calculated_symbol": "l_w2_vgizq",
+              "limit_symbol": "verification_only",
+              "comparison": "compound",
+              "comparison_text": "compound",
+              "verification_text": "l/w = 15.378; beta = 1.000; l_eff_w2_vgizq = 146.476 mm; si l/w<=100 => l_eff=l; si 100<l/w<=300 => l_eff=beta*l; si l/w>300 => l_eff=180w",
               "status": "PASS",
               "result": "OK"
             },
@@ -2920,7 +3680,7 @@
               "calculated_symbol": "tf_vgder",
               "limit_symbol": "[tf_vgder_min, tf_vgder_max]",
               "calculated": {
-                "value": 17.3,
+                "value": 17.4,
                 "unit": "mm"
               },
               "minimum": {
@@ -2934,15 +3694,15 @@
               "comparison": "range",
               "comparison_text": "in",
               "margin_to_min": {
-                "value": 3.012500000000001,
+                "value": 3.112499999999999,
                 "unit": "mm"
               },
               "margin_to_max": {
-                "value": 8.099999999999998,
+                "value": 8.0,
                 "unit": "mm"
               },
               "margin": {
-                "value": 3.012500000000001,
+                "value": 3.112499999999999,
                 "unit": "mm"
               },
               "status": "PASS",
@@ -2957,7 +3717,7 @@
               "calculated_symbol": "bf_vgder",
               "limit_symbol": "[bf_vgder_min, bf_vgder_max]",
               "calculated": {
-                "value": 228.0,
+                "value": 210.0,
                 "unit": "mm"
               },
               "minimum": {
@@ -2971,15 +3731,15 @@
               "comparison": "range",
               "comparison_text": "in",
               "margin_to_min": {
-                "value": 37.5,
+                "value": 19.5,
                 "unit": "mm"
               },
               "margin_to_max": {
-                "value": 83.14999999999998,
+                "value": 101.14999999999998,
                 "unit": "mm"
               },
               "margin": {
-                "value": 37.5,
+                "value": 19.5,
                 "unit": "mm"
               },
               "status": "PASS",
@@ -2994,7 +3754,7 @@
               "calculated_symbol": "d_vgder",
               "limit_symbol": "[d_vgder_min, d_vgder_max]",
               "calculated": {
-                "value": 607.0,
+                "value": 536.0,
                 "unit": "mm"
               },
               "minimum": {
@@ -3008,15 +3768,15 @@
               "comparison": "range",
               "comparison_text": "in",
               "margin_to_min": {
-                "value": 149.8,
+                "value": 78.80000000000001,
                 "unit": "mm"
               },
               "margin_to_max": {
-                "value": 307.4,
+                "value": 378.4,
                 "unit": "mm"
               },
               "margin": {
-                "value": 149.8,
+                "value": 78.80000000000001,
                 "unit": "mm"
               },
               "status": "PASS",
@@ -3212,7 +3972,7 @@
               "calculated_symbol": "tf_vgizq",
               "limit_symbol": "[tf_vgizq_min, tf_vgizq_max]",
               "calculated": {
-                "value": 17.3,
+                "value": 19.6,
                 "unit": "mm"
               },
               "minimum": {
@@ -3226,15 +3986,15 @@
               "comparison": "range",
               "comparison_text": "in",
               "margin_to_min": {
-                "value": 3.012500000000001,
+                "value": 5.312500000000002,
                 "unit": "mm"
               },
               "margin_to_max": {
-                "value": 8.099999999999998,
+                "value": 5.799999999999997,
                 "unit": "mm"
               },
               "margin": {
-                "value": 3.012500000000001,
+                "value": 5.312500000000002,
                 "unit": "mm"
               },
               "status": "PASS",
@@ -3249,7 +4009,7 @@
               "calculated_symbol": "bf_vgizq",
               "limit_symbol": "[bf_vgizq_min, bf_vgizq_max]",
               "calculated": {
-                "value": 279.0,
+                "value": 229.0,
                 "unit": "mm"
               },
               "minimum": {
@@ -3263,15 +4023,15 @@
               "comparison": "range",
               "comparison_text": "in",
               "margin_to_min": {
-                "value": 88.5,
+                "value": 38.5,
                 "unit": "mm"
               },
               "margin_to_max": {
-                "value": 32.14999999999998,
+                "value": 82.14999999999998,
                 "unit": "mm"
               },
               "margin": {
-                "value": 32.14999999999998,
+                "value": 38.5,
                 "unit": "mm"
               },
               "status": "PASS",
@@ -3286,7 +4046,7 @@
               "calculated_symbol": "d_vgizq",
               "limit_symbol": "[d_vgizq_min, d_vgizq_max]",
               "calculated": {
-                "value": 462.0,
+                "value": 612.0,
                 "unit": "mm"
               },
               "minimum": {
@@ -3300,15 +4060,15 @@
               "comparison": "range",
               "comparison_text": "in",
               "margin_to_min": {
-                "value": 4.800000000000011,
+                "value": 154.8,
                 "unit": "mm"
               },
               "margin_to_max": {
-                "value": 452.4,
+                "value": 302.4,
                 "unit": "mm"
               },
               "margin": {
-                "value": 4.800000000000011,
+                "value": 154.8,
                 "unit": "mm"
               },
               "status": "PASS",
@@ -3413,11 +4173,11 @@
       "clause": "Chapter 6 / Section 6.7.1 Step 2 + Eq. (2.4-1) and Eq. (2.4-2)",
       "source_document": "AISC 358-22",
       "demand": {
-        "value": 1431473.9999999998,
+        "value": 1601679.7499999998,
         "unit": "kN-mm"
       },
       "capacity": {
-        "value": 1431473.9999999998,
+        "value": 1601679.7499999998,
         "unit": "kN-mm"
       },
       "dcr": 1.0,
@@ -3433,23 +4193,23 @@
           "ze_input": null,
           "stated_mpr": null,
           "ze_vgder": {
-            "value": 3280000.0,
+            "value": 2620000.0,
             "unit": "mm3"
           },
           "member_ductility_demand_vgder": "high",
           "ze_vgizq": {
-            "value": 2670000.0,
+            "value": 3670000.0,
             "unit": "mm3"
           },
           "member_ductility_demand_vgizq": "high"
         },
         "intermediates": {
-          "governing_side_mpr": "der",
+          "governing_side_mpr": "izq",
           "cpr_der": 1.15,
-          "mpr_der": 1431473.9999999998,
+          "mpr_der": 1143433.5,
           "member_ductility_demand_beam_der": "high",
           "cpr_izq": 1.15,
-          "mpr_izq": 1165254.7499999998,
+          "mpr_izq": 1601679.7499999998,
           "member_ductility_demand_beam_izq": "high"
         },
         "design_factors": {},
@@ -3459,7 +4219,7 @@
           "mpr_stated": "kN-mm"
         },
         "final_capacity": {
-          "value": 1431473.9999999998,
+          "value": 1601679.7499999998,
           "unit": "kN-mm"
         }
       },
@@ -3485,11 +4245,11 @@
           "connection_type": "bseep_8es",
           "governing_side_sh": "der",
           "d_vgizq": {
-            "value": 462.0,
+            "value": 612.0,
             "unit": "mm"
           },
           "bf_vgizq": {
-            "value": 279.0,
+            "value": 229.0,
             "unit": "mm"
           },
           "L_pest_vgizq": {
@@ -3501,11 +4261,11 @@
             "unit": "mm"
           },
           "d_vgder": {
-            "value": 607.0,
+            "value": 536.0,
             "unit": "mm"
           },
           "bf_vgder": {
-            "value": 228.0,
+            "value": 210.0,
             "unit": "mm"
           },
           "L_pest_vgder": {
@@ -3539,11 +4299,11 @@
       "clause": "Chapter 6 / Section 6.7.1 Step 4 + Eq. (2.4-3)",
       "source_document": "AISC 358-22",
       "demand": {
-        "value": 514.1257007874015,
+        "value": 569.9674822834645,
         "unit": "kN"
       },
       "capacity": {
-        "value": 514.1257007874015,
+        "value": 569.9674822834645,
         "unit": "kN"
       },
       "dcr": 1.0,
@@ -3551,8 +4311,8 @@
       "calculation_memory": {
         "inputs": {
           "beam_connection_sides": "both_sides",
-          "governing_side_vhmax": "der",
-          "selected_vhmax_source": "step4_computed_vhmax_der (governing_side=der)",
+          "governing_side_vhmax": "izq",
+          "selected_vhmax_source": "step4_computed_vhmax_izq (governing_side=izq)",
           "lh_der": {
             "value": 6096.0,
             "unit": "mm"
@@ -3577,15 +4337,15 @@
           "stated_vh_izqmax": null
         },
         "intermediates": {
-          "mpr": 1431473.9999999998,
-          "2mpr_over_lh_der": 469.6437007874015,
-          "mpr_der": 1431473.9999999998,
-          "vh_dermax": 514.1257007874015,
-          "vh_dermin": 425.1617007874015,
-          "2mpr_over_lh_izq": 382.30142716535426,
-          "mpr_izq": 1165254.7499999998,
-          "vh_izqmax": 426.7834271653543,
-          "vh_izqmin": 337.8194271653542
+          "mpr": 1601679.7499999998,
+          "2mpr_over_lh_der": 375.14222440944883,
+          "mpr_der": 1143433.5,
+          "vh_dermax": 419.62422440944886,
+          "vh_dermin": 330.6602244094488,
+          "2mpr_over_lh_izq": 525.4854822834645,
+          "mpr_izq": 1601679.7499999998,
+          "vh_izqmax": 569.9674822834645,
+          "vh_izqmin": 481.00348228346456
         },
         "design_factors": {},
         "equation": "Vhmax = 2*Mpr/Lh + Vgravity; Vhmin = 2*Mpr/Lh - Vgravity (Eq. 2.4-3, side-specific der/izq)",
@@ -3594,7 +4354,7 @@
           "vhmax_selected": "kN"
         },
         "final_capacity": {
-          "value": 514.1257007874015,
+          "value": 569.9674822834645,
           "unit": "kN"
         }
       },
@@ -3606,11 +4366,11 @@
       "clause": "Chapter 6 / Section 6.7.1 Step 5 + Eq. (2.4-4)",
       "source_document": "AISC 358-22",
       "demand": {
-        "value": 1542486.8946764804,
+        "value": 1724750.3142274779,
         "unit": "kN-mm"
       },
       "capacity": {
-        "value": 1542486.8946764804,
+        "value": 1724750.3142274779,
         "unit": "kN-mm"
       },
       "dcr": 1.0,
@@ -3618,26 +4378,26 @@
       "calculation_memory": {
         "inputs": {
           "beam_connection_sides": "both_sides",
-          "governing_side_mfmax": "der",
-          "selected_mfmax_source": "step5_computed_mf_dermax (governing_side=der)",
+          "governing_side_mfmax": "izq",
+          "selected_mfmax_source": "step5_computed_mf_izqmax (governing_side=izq)",
           "stated_mf_dermax": null,
           "stated_mf_izqmax": null
         },
         "intermediates": {
-          "mpr": 1431473.9999999998,
+          "mpr": 1601679.7499999998,
           "sh": 215.92558883257652,
-          "mpr_der": 1431473.9999999998,
+          "mpr_der": 1143433.5,
           "sh_der": 215.92558883257652,
-          "mf_dermax": 1542486.8946764804,
-          "mf_dermin": 1523277.2905915792,
-          "vh_dermax": 514.1257007874015,
-          "vh_dermin": 425.1617007874015,
-          "mpr_izq": 1165254.7499999998,
+          "mf_dermax": 1234041.1077440234,
+          "mf_dermin": 1214831.5036591222,
+          "vh_dermax": 419.62422440944886,
+          "vh_dermin": 330.6602244094488,
+          "mpr_izq": 1601679.7499999998,
           "sh_izq": 215.92558883257652,
-          "mf_izqmax": 1257408.212814664,
-          "mf_izqmin": 1238198.6087297625,
-          "vh_izqmax": 426.7834271653543,
-          "vh_izqmin": 337.8194271653542
+          "mf_izqmax": 1724750.3142274779,
+          "mf_izqmin": 1705540.7101425766,
+          "vh_izqmax": 569.9674822834645,
+          "vh_izqmin": 481.00348228346456
         },
         "design_factors": {},
         "equation": "Mfmax = Mpr + Vhmax*Sh; Mfmin = Mpr + Vhmin*Sh (Eq. 2.4-4, side-specific der/izq)",
@@ -3646,107 +4406,56 @@
           "mfmax_selected": "kN-mm"
         },
         "final_capacity": {
-          "value": 1542486.8946764804,
+          "value": 1724750.3142274779,
           "unit": "kN-mm"
         }
       },
       "notes": null
     },
     {
-      "name": "bseep_8es Step 12.1.1 column flange local bending (LFB)",
-      "rule_id": "AISC358.06.7.bseep_8es.step12_1_1_column_flange_local_bending",
-      "clause": "Chapter 6 / Section 6.7.2 + Eq. (6.7-13)",
-      "source_document": "AISC 358-22",
-      "demand": {
-        "value": 0.0011704968924944107,
-        "unit": "mm"
-      },
-      "capacity": {
-        "value": 40.4,
-        "unit": "mm"
-      },
-      "dcr": 0.000028972695358772542,
-      "status": "PASS",
-      "calculation_memory": {
-        "inputs": {
-          "mf": {
-            "value": 1542486.8946764804,
-            "unit": "kN-mm"
-          },
-          "beam_depth": {
-            "value": 607.0,
-            "unit": "mm"
-          },
-          "column_shape": "W18X175",
-          "column_fy": {
-            "value": 345.0,
-            "unit": "MPa"
-          },
-          "yc": {
-            "value": 6985.0,
-            "unit": "mm"
-          }
-        },
-        "intermediates": {},
-        "design_factors": {
-          "phi_d": 1.0
-        },
-        "equation": "tcf >= 1.11 Mf / (phi_d * d * Fyc * Yc) (Eq. 6.7-13)",
-        "units_trace": {
-          "tcf_req": "mm",
-          "tcf": "mm"
-        },
-        "final_capacity": {
-          "value": 40.4,
-          "unit": "mm"
-        }
-      },
-      "notes": null
-    },
-    {
-      "name": "bseep_8es Step 6.1 bolt tension rupture capacity",
-      "rule_id": "AISC358.06.7.bseep_8es.step6_1_bolt_tension_rupture",
+      "name": "bseep_8es Step 6.1 bolt tension rupture capacity (left)",
+      "rule_id": "AISC358.06.7.bseep_8es.step6_1_bolt_tension_rupture_vgizq",
       "clause": "Chapter 6 / Section 6.7.1 Step 6.1 + AISC 360-22 J3.7",
       "source_document": "AISC 358-22",
       "demand": {
-        "value": 266.8523371847759,
+        "value": 416.32478377606395,
         "unit": "kN"
       },
       "capacity": {
         "value": 450.193760569405,
         "unit": "kN"
       },
-      "dcr": 0.5927499680299013,
+      "dcr": 0.9247680004482879,
       "status": "PASS",
       "calculation_memory": {
         "inputs": {
           "mf": {
-            "value": 1257408.212814664,
+            "value": 1724750.3142274779,
             "unit": "kN-mm"
           },
           "mf_source": "max(Mf_vgizq_max, Mf_vgizq_min)",
           "mf_computed": {
-            "value": 1257408.212814664,
+            "value": 1724750.3142274779,
             "unit": "kN-mm"
           },
           "mf_vgizq_critico": {
-            "value": 1257408.212814664,
+            "value": 1724750.3142274779,
             "unit": "kN-mm"
           },
           "h1_pe_vgizq": {
-            "value": 743.346,
+            "value": 672.2959999999999,
             "unit": "mm"
           },
           "h2_pe_vgizq": {
-            "value": 648.35,
+            "value": 577.3,
             "unit": "mm"
           },
           "h3_pe_vgizq": {
-            "value": 529.65,
+            "value": 458.4,
             "unit": "mm"
           },
           "h4_pe_vgizq": {
-            "value": 434.654,
+            "value": 363.404,
             "unit": "mm"
           },
           "bolt_diameter": {
@@ -3764,14 +4473,14 @@
           "connection_type": "bseep_8es"
         },
         "intermediates": {
-          "sum_h": 2356.0,
+          "sum_h": 2071.4,
           "bolt_area": 641.3016532327706,
           "a_b_vgizq": {
             "value": 641.3016532327706,
             "unit": "mm2"
           },
           "rnt_b": 500.2152895215611,
-          "ru_b_p_pos": 266.8523371847759,
+          "ru_b_p_pos": 416.32478377606395,
           "phi_rn_b_p_pos": 450.193760569405,
           "nominal_tension_capacity_per_bolt": 500.2152895215611
         },
@@ -3791,24 +4500,24 @@
       "notes": null
     },
     {
-      "name": "bseep_8es Step 6.2 bolt shear rupture capacity",
-      "rule_id": "AISC358.06.7.bseep_8es.step6_2_bolt_shear_rupture",
+      "name": "bseep_8es Step 6.2 bolt shear rupture capacity (left)",
+      "rule_id": "AISC358.06.7.bseep_8es.step6_2_bolt_shear_rupture_vgizq",
       "clause": "Chapter 6 / Section 6.7.1 Step 6.2 + AISC 360-22 J3.7",
       "source_document": "AISC 358-22",
       "demand": {
-        "value": 53.347928395669285,
+        "value": 71.24593528543306,
         "unit": "kN"
       },
       "capacity": {
         "value": 271.270599317462,
         "unit": "kN"
       },
-      "dcr": 0.19665945565017676,
+      "dcr": 0.26263788064277294,
       "status": "PASS",
       "calculation_memory": {
         "inputs": {
           "vh_vgizq_critico": {
-            "value": 426.7834271653543,
+            "value": 569.9674822834645,
             "unit": "kN"
           },
           "vh_vgizq_critico_source": "max(Vh_vgizq_max, Vh_vgizq_min)",
@@ -3834,7 +4543,7 @@
             "unit": "mm2"
           },
           "rnv_b": 301.41177701940217,
-          "ru_b_v2_vgizq": 53.347928395669285,
+          "ru_b_v2_vgizq": 71.24593528543306,
           "phi_rn_b_v2_vgizq": 271.270599317462,
           "nominal_shear_capacity_per_bolt": 301.41177701940217
         },
@@ -3854,29 +4563,29 @@
       "notes": null
     },
     {
-      "name": "bseep_8es Step 7.1.1 end-plate flexural yielding",
-      "rule_id": "AISC358.06.7.bseep_8es.step7_1_1_end_plate_flexural_yielding",
+      "name": "bseep_8es Step 7.1.1 end-plate flexural yielding (left)",
+      "rule_id": "AISC358.06.7.bseep_8es.step7_1_1_end_plate_flexural_yielding_vgizq",
       "clause": "Chapter 6 / Section 6.7.1 Step 7.1.1 + Eq. (6.7-8)",
       "source_document": "AISC 358-22",
       "demand": {
-        "value": 1257408.212814664,
+        "value": 1724750.3142274779,
         "unit": "kN-mm"
       },
       "capacity": {
-        "value": 1645496.3774225672,
+        "value": 1379018.774941797,
         "unit": "kN-mm"
       },
-      "dcr": 0.7641513102473143,
-      "status": "PASS",
+      "dcr": 1.2507083627634243,
+      "status": "FAIL",
       "calculation_memory": {
         "inputs": {
           "mf_vgizq_critico": {
-            "value": 1257408.212814664,
+            "value": 1724750.3142274779,
             "unit": "kN-mm"
           },
           "mf_source": "max(Mf_vgizq_max, Mf_vgizq_min)",
           "mf_computed": {
-            "value": 1257408.212814664,
+            "value": 1724750.3142274779,
             "unit": "kN-mm"
           },
           "tpe_vgizq": {
@@ -3888,21 +4597,22 @@
             "unit": "MPa"
           },
           "yp_pe_vgizq": {
-            "value": 8214.2495525087,
+            "value": 6884.004431969526,
             "unit": "mm"
           },
           "yp_pe_vgizq_source": "derived_from_aisc358_tables_6_2_6_3_6_4",
           "yp_pe_vgizq_table": "AISC 358-22 Table 6.4",
-          "yp_pe_vgizq_case": "Case 1 (de <= s)"
+          "yp_pe_vgizq_case": "Case 1 (de <= s)",
+          "yp_pe_vgizq_is_hardcoded": false
         },
         "intermediates": {
-          "nominal_moment": 1828329.3082472968,
-          "design_moment": 1645496.3774225672,
+          "nominal_moment": 1532243.0832686634,
+          "design_moment": 1379018.774941797,
           "table_reference": "AISC 358-22 Table 6.4",
           "case_reference": "Case 1 (de <= s)",
           "formula": "Yp = bp/2*[h1*(1/(2de)) + h2*(1/pfo) + h3*(1/pfi) + h4*(1/s)] + (2/g)*[h1*(de + 3pb/4) + h2*(pfo + pb/4) + h3*(pfi + 3pb/4) + h4*(s + pb/4)] + g",
           "s": {
-            "value": 94.10100955887773,
+            "value": 89.7217922246318,
             "unit": "mm"
           },
           "pfi_input": {
@@ -3917,7 +4627,8 @@
             "value": 60.0,
             "unit": "mm"
           },
-          "de_le_s": true
+          "de_le_s": true,
+          "is_hardcoded": false
         },
         "design_factors": {
           "phi": 0.9
@@ -3928,48 +4639,48 @@
           "phi_rn_pe_m3_vgizq": "kN-mm"
         },
         "final_capacity": {
-          "value": 1645496.3774225672,
+          "value": 1379018.774941797,
           "unit": "kN-mm"
         }
       },
       "notes": null
     },
     {
-      "name": "bseep_8es Step 7.2.1 end-plate shear yielding",
-      "rule_id": "AISC358.06.7.bseep_8es.step7_2_1_end_plate_shear_yielding",
+      "name": "bseep_8es Step 7.2.1 end-plate shear yielding (left)",
+      "rule_id": "AISC358.06.7.bseep_8es.step7_2_1_end_plate_shear_yielding_vgizq",
       "clause": "Chapter 6 / Section 6.7.1 Step 7.2.1 + Eq. (6.7-10)",
       "source_document": "AISC 358-22",
       "demand": {
-        "value": 1413.7713209069755,
+        "value": 1455.7311902662711,
         "unit": "kN"
       },
       "capacity": {
-        "value": 997.6675499999999,
+        "value": 906.9705,
         "unit": "kN"
       },
-      "dcr": 1.417076581178746,
+      "dcr": 1.605048003508682,
       "status": "FAIL",
       "calculation_memory": {
         "inputs": {
           "ru_pe_m3_vgizq": {
-            "value": 1257408.212814664,
+            "value": 1724750.3142274779,
             "unit": "kN-mm"
           },
           "mf_source": "max(Mf_vgizq_max, Mf_vgizq_min)",
           "mf_computed": {
-            "value": 1257408.212814664,
+            "value": 1724750.3142274779,
             "unit": "kN-mm"
           },
           "d_vgizq": {
-            "value": 462.0,
+            "value": 612.0,
             "unit": "mm"
           },
           "tf_vgizq": {
-            "value": 17.3,
+            "value": 19.6,
             "unit": "mm"
           },
           "bpe_vgizq": {
-            "value": 253.0,
+            "value": 230.0,
             "unit": "mm"
           },
           "tpe_vgizq": {
@@ -3982,9 +4693,9 @@
           }
         },
         "intermediates": {
-          "z_vgizq": 444.7,
-          "rn_pe_v1_vgizq": 1330.2233999999999,
-          "phi_rn_pe_v1_vgizq": 997.6675499999999
+          "z_vgizq": 592.4,
+          "rn_pe_v1_vgizq": 1209.294,
+          "phi_rn_pe_v1_vgizq": 906.9705
         },
         "design_factors": {
           "phi": 0.75
@@ -3995,48 +4706,48 @@
           "phi_rn_pe_v1_vgizq": "kN"
         },
         "final_capacity": {
-          "value": 997.6675499999999,
+          "value": 906.9705,
           "unit": "kN"
         }
       },
       "notes": null
     },
     {
-      "name": "bseep_8es Step 7.2.2 end-plate shear rupture",
-      "rule_id": "AISC358.06.7.bseep_8es.step7_2_2_end_plate_shear_rupture",
+      "name": "bseep_8es Step 7.2.2 end-plate shear rupture (left)",
+      "rule_id": "AISC358.06.7.bseep_8es.step7_2_2_end_plate_shear_rupture_vgizq",
       "clause": "Chapter 6 / Section 6.7.1 Step 7.2.2 + Eq. (6.7-12)",
       "source_document": "AISC 358-22",
       "demand": {
-        "value": 1413.7713209069755,
+        "value": 1455.7311902662711,
         "unit": "kN"
       },
       "capacity": {
-        "value": 958.23405,
+        "value": 839.9335500000001,
         "unit": "kN"
       },
-      "dcr": 1.4753924898692292,
+      "dcr": 1.7331504263239288,
       "status": "FAIL",
       "calculation_memory": {
         "inputs": {
           "ru_pe_m3_vgizq": {
-            "value": 1257408.212814664,
+            "value": 1724750.3142274779,
             "unit": "kN-mm"
           },
           "mf_source": "max(Mf_vgizq_max, Mf_vgizq_min)",
           "mf_computed": {
-            "value": 1257408.212814664,
+            "value": 1724750.3142274779,
             "unit": "kN-mm"
           },
           "d_vgizq": {
-            "value": 462.0,
+            "value": 612.0,
             "unit": "mm"
           },
           "tf_vgizq": {
-            "value": 17.3,
+            "value": 19.6,
             "unit": "mm"
           },
           "bpe_vgizq": {
-            "value": 253.0,
+            "value": 230.0,
             "unit": "mm"
           },
           "tpe_vgizq": {
@@ -4057,10 +4768,10 @@
           }
         },
         "intermediates": {
-          "z_vgizq": 444.7,
-          "net_width": 186.3,
-          "nominal_shear": 1277.6454,
-          "design_shear": 958.23405,
+          "z_vgizq": 592.4,
+          "net_width": 163.3,
+          "nominal_shear": 1119.9114000000002,
+          "design_shear": 839.9335500000001,
           "phi_n": 0.75,
           "edge_allowance": 1.6,
           "db_in": 1.125,
@@ -4075,31 +4786,31 @@
           "phi_rn_pe_v2_vgizq": "kN"
         },
         "final_capacity": {
-          "value": 958.23405,
+          "value": 839.9335500000001,
           "unit": "kN"
         }
       },
       "notes": null
     },
     {
-      "name": "bseep_8es Step 7.3.1 end-plate hole tearout",
-      "rule_id": "AISC358.06.7.bseep_8es.step7_3_1_end_plate_hole_tearout",
+      "name": "bseep_8es Step 7.3.1 end-plate hole tearout (left)",
+      "rule_id": "AISC358.06.7.bseep_8es.step7_3_1_end_plate_hole_tearout_vgizq",
       "clause": "Chapter 6 / Section 7.3.1 + AISC 360-22 J3.11(a)",
       "source_document": "AISC 360-22",
       "demand": {
-        "value": 53.347928395669285,
+        "value": 71.24593528543306,
         "unit": "kN"
       },
       "capacity": {
         "value": 650.6116019999998,
         "unit": "kN"
       },
-      "dcr": 0.08199658326361862,
+      "dcr": 0.10950609406045157,
       "status": "PASS",
       "calculation_memory": {
         "inputs": {
           "vh_vgizq_critico": {
-            "value": 426.7834271653543,
+            "value": 569.9674822834645,
             "unit": "kN"
           },
           "vh_vgizq_critico_source": "max(Vh_vgizq_max, Vh_vgizq_min)",
@@ -4116,10 +4827,6 @@
             "value": 450.0,
             "unit": "MPa"
           },
-          "pb_pe_vgizq": {
-            "value": 94.996,
-            "unit": "mm"
-          },
           "pfo_pe_vgizq": {
             "value": 50.0,
             "unit": "mm"
@@ -4129,7 +4836,7 @@
             "unit": "mm"
           },
           "tf_vgizq": {
-            "value": 17.3,
+            "value": 19.6,
             "unit": "mm"
           },
           "dh_pe_vgizq": {
@@ -4139,13 +4846,13 @@
         },
         "intermediates": {
           "lc_1_pb_minus_dh": 63.245999999999995,
-          "lc_2_pfo_plus_pfi_plus_tbf_minus_dh": 85.55,
+          "lc_2_pfo_plus_pfi_plus_tbf_minus_dh": 85.65,
           "lc_rule_selector": 1.0,
           "dh": 31.75,
           "db": 28.575,
           "db_in": 1.125,
           "hole_add_in": 0.125,
-          "ru_pe_v2_vgizq": 53.347928395669285,
+          "ru_pe_v2_vgizq": 71.24593528543306,
           "nominal_strength": 867.4821359999999,
           "design_strength": 650.6116019999998
         },
@@ -4165,24 +4872,24 @@
       "notes": null
     },
     {
-      "name": "bseep_8es Step 7.3.2 end-plate hole bearing",
-      "rule_id": "AISC358.06.7.bseep_8es.step7_3_2_end_plate_hole_bearing",
+      "name": "bseep_8es Step 7.3.2 end-plate hole bearing (left)",
+      "rule_id": "AISC358.06.7.bseep_8es.step7_3_2_end_plate_hole_bearing_vgizq",
       "clause": "Chapter 6 / Section 7.3.2 + AISC 360-22 J3.11(a)",
       "source_document": "AISC 360-22",
       "demand": {
-        "value": 53.347928395669285,
+        "value": 71.24593528543306,
         "unit": "kN"
       },
       "capacity": {
         "value": 587.9020499999999,
         "unit": "kN"
       },
-      "dcr": 0.0907428854784046,
+      "dcr": 0.12118674409356639,
       "status": "PASS",
       "calculation_memory": {
         "inputs": {
           "vh_vgizq_critico": {
-            "value": 426.7834271653543,
+            "value": 569.9674822834645,
             "unit": "kN"
           },
           "vh_vgizq_critico_source": "max(Vh_vgizq_max, Vh_vgizq_min)",
@@ -4201,7 +4908,7 @@
           }
         },
         "intermediates": {
-          "ru_pe_v2_vgizq": 53.347928395669285,
+          "ru_pe_v2_vgizq": 71.24593528543306,
           "nominal_strength": 783.8693999999999,
           "design_strength": 587.9020499999999
         },
@@ -4221,8 +4928,1475 @@
       "notes": null
     },
     {
-      "name": "bseep_8es Step 8.1.1 stiffener weld tension rupture",
-      "rule_id": "AISC358.06.7.bseep_8es.step8_1_1_stiffener_weld_tension_rupture",
+      "name": "bseep_8es Step 12.1.1 column flange local bending (LFB) (left)",
+      "rule_id": "AISC358.06.7.bseep_8es.step12_1_1_column_flange_local_bending_vgizq",
+      "clause": "Chapter 6 / Section 6.7.2 + Eq. (6.7-13)",
+      "source_document": "AISC 358-22",
+      "demand": {
+        "value": 0.0012333186676892522,
+        "unit": "mm"
+      },
+      "capacity": {
+        "value": 24.0,
+        "unit": "mm"
+      },
+      "dcr": 0.00005138827782038551,
+      "status": "PASS",
+      "calculation_memory": {
+        "inputs": {
+          "mf": {
+            "value": 1724750.3142274779,
+            "unit": "kN-mm"
+          },
+          "beam_depth": {
+            "value": 536.0,
+            "unit": "mm"
+          },
+          "column_shape": "HEB 400",
+          "column_fy": {
+            "value": 345.0,
+            "unit": "MPa"
+          },
+          "yc": {
+            "value": 8394.406993440634,
+            "unit": "mm"
+          },
+          "yc_table_reference": "AISC 358-22 Table 6.6",
+          "yc_case_reference": "Case 1 (psi <= s)",
+          "yc_formula": "Y_cs = bcf/2*[h1*(1/s) + h2*(1/pso) + h3*(1/psi) + h4*(1/s)] + (2/g)*[h1*(s + pb/4) + h2*(pso + 3pb/4) + h3*(psi + pb/4) + h4*(s + 3pb/4) + pb^2/2] + g",
+          "yc_is_hardcoded": false,
+          "continuity_plate_enabled": true
+        },
+        "intermediates": {
+          "table_reference": "AISC 358-22 Table 6.6",
+          "case_reference": "Case 1 (psi <= s)",
+          "formula": "Y_cs = bcf/2*[h1*(1/s) + h2*(1/pso) + h3*(1/psi) + h4*(1/s)] + (2/g)*[h1*(s + pb/4) + h2*(pso + 3pb/4) + h3*(psi + pb/4) + h4*(s + 3pb/4) + pb^2/2] + g",
+          "s": {
+            "value": 102.46950765959599,
+            "unit": "mm"
+          },
+          "is_hardcoded": false,
+          "pso": {
+            "value": 50.0,
+            "unit": "mm"
+          },
+          "psi_input": {
+            "value": 51.50000000000001,
+            "unit": "mm"
+          },
+          "psi_effective": {
+            "value": 51.50000000000001,
+            "unit": "mm"
+          },
+          "pb": {
+            "value": 94.996,
+            "unit": "mm"
+          },
+          "continuity_plate_enabled": true,
+          "c": {
+            "value": 117.4,
+            "unit": "mm"
+          },
+          "psi_computed": {
+            "value": 51.50000000000001,
+            "unit": "mm"
+          },
+          "h1": {
+            "value": 672.2959999999999,
+            "unit": "mm"
+          },
+          "h2": {
+            "value": 577.3,
+            "unit": "mm"
+          },
+          "h3": {
+            "value": 458.4,
+            "unit": "mm"
+          },
+          "h4": {
+            "value": 363.404,
+            "unit": "mm"
+          },
+          "bcf": {
+            "value": 300.0,
+            "unit": "mm"
+          },
+          "g": {
+            "value": 140.0,
+            "unit": "mm"
+          }
+        },
+        "design_factors": {
+          "phi_d": 1.0
+        },
+        "equation": "tcf >= 1.11 Mf / (phi_d * d * Fyc * Yc) (Eq. 6.7-13)",
+        "units_trace": {
+          "tcf_req": "mm",
+          "tcf": "mm"
+        },
+        "final_capacity": {
+          "value": 24.0,
+          "unit": "mm"
+        }
+      },
+      "notes": null
+    },
+    {
+      "name": "bseep_8es Step 13.1.1 column web local yielding (WLY) (left)",
+      "rule_id": "AISC358.06.7.bseep_8es.step13_1_1_column_web_local_yielding_vgizq",
+      "clause": "Chapter 6 / Section 6.7.2 + Eq. (6.7-17)",
+      "source_document": "AISC 358-22",
+      "demand": {
+        "value": 2911.4623805325423,
+        "unit": "kN"
+      },
+      "capacity": {
+        "value": 1753.0829999999999,
+        "unit": "kN"
+      },
+      "dcr": 1.6607669919407937,
+      "status": "FAIL",
+      "calculation_memory": {
+        "inputs": {
+          "column_shape": "HEB 400",
+          "ru_cf_v2_col_vgizq": {
+            "value": 2911.4623805325423,
+            "unit": "kN"
+          },
+          "mf_vgizq_critico": {
+            "value": 1724750.3142274779,
+            "unit": "kN-mm"
+          },
+          "st_col": {
+            "value": 762.0,
+            "unit": "mm"
+          },
+          "d_col": {
+            "value": 400.0,
+            "unit": "mm"
+          },
+          "ct_col": 1.0,
+          "kc_from_sections_kdes": {
+            "value": 51.0,
+            "unit": "mm"
+          },
+          "kc_col": {
+            "value": 51.0,
+            "unit": "mm"
+          },
+          "lb": {
+            "value": 70.4,
+            "unit": "mm"
+          },
+          "lb_col": {
+            "value": 70.4,
+            "unit": "mm"
+          },
+          "lb_col_formula": "lb_col = tf_vgizq + 2w_w4_vgizq + 2*tpe_vgizq",
+          "t_w4_1_vgizq": {
+            "value": 0.0,
+            "unit": "mm"
+          },
+          "nl_w4_vgizq": 2,
+          "ductility_vgizq": "high",
+          "total_weld_thickness_w4_vgizq": {
+            "value": 0.0,
+            "unit": "mm"
+          },
+          "total_weld_thickness_w4_formula": "2w = t_w4.1",
+          "column_fy": {
+            "value": 345.0,
+            "unit": "MPa"
+          },
+          "fy_col": {
+            "value": 345.0,
+            "unit": "MPa"
+          },
+          "tw_col": {
+            "value": 13.5,
+            "unit": "mm"
+          },
+          "d_vgizq": {
+            "value": 612.0,
+            "unit": "mm"
+          },
+          "tf_vgizq": {
+            "value": 19.6,
+            "unit": "mm"
+          },
+          "tpe_vgizq": {
+            "value": 25.4,
+            "unit": "mm"
+          }
+        },
+        "intermediates": {
+          "phi_rn_cf_v2_col_vgizq": 1753.0829999999999,
+          "rn_nominal_cf_v2_col_vgizq": 1753.0829999999999
+        },
+        "design_factors": {
+          "phi_d": 1.0
+        },
+        "equation": "Ru_cf_v2_col_vgizq = Mf_vgizq_critico/(d_vgizq - tf_vgizq); lb_col = tf_vgizq + 2w_w4_vgizq + 2*tpe_vgizq; phi*Rn_cf_v2_col_vgizq = phi_ductil * (6*Ct_col*kc_col + lb_col) * Fy_col * tw_col",
+        "units_trace": {
+          "ffu": "kN",
+          "capacity": "kN"
+        },
+        "final_capacity": {
+          "value": 1753.0829999999999,
+          "unit": "kN"
+        }
+      },
+      "notes": null
+    },
+    {
+      "name": "bseep_8es Step 14.2.1 column web local crippling (WLC) (left)",
+      "rule_id": "AISC358.06.7.bseep_8es.step14_2_1_column_web_local_crippling_vgizq",
+      "clause": "Chapter 6 / Section 6.7.2 + Eq. (6.7-19) to Eq. (6.7-21)",
+      "source_document": "AISC 358-22",
+      "demand": {
+        "value": 2911.4623805325423,
+        "unit": "kN"
+      },
+      "capacity": {
+        "value": 1480.8795670782529,
+        "unit": "kN"
+      },
+      "dcr": 1.9660358919508911,
+      "status": "FAIL",
+      "calculation_memory": {
+        "inputs": {
+          "mf_vgizq_critico": {
+            "value": 1724750.3142274779,
+            "unit": "kN-mm"
+          },
+          "st_col": {
+            "value": 762.0,
+            "unit": "mm"
+          },
+          "d_col": {
+            "value": 400.0,
+            "unit": "mm"
+          },
+          "lb_col": {
+            "value": 70.4,
+            "unit": "mm"
+          },
+          "lb_col_formula": "lb_col = tf_vgizq + 2w_w4_vgizq + 2*tpe_vgizq",
+          "fy_col": {
+            "value": 345.0,
+            "unit": "MPa"
+          },
+          "tw_col": {
+            "value": 13.5,
+            "unit": "mm"
+          },
+          "tf_col": {
+            "value": 24.0,
+            "unit": "mm"
+          },
+          "e_col": {
+            "value": 200000.0,
+            "unit": "MPa"
+          },
+          "d_vgizq": {
+            "value": 612.0,
+            "unit": "mm"
+          },
+          "tf_vgizq": {
+            "value": 19.6,
+            "unit": "mm"
+          },
+          "tpe_vgizq": {
+            "value": 25.4,
+            "unit": "mm"
+          },
+          "t_w4_1_vgizq": {
+            "value": 0.0,
+            "unit": "mm"
+          },
+          "nl_w4_vgizq": 2,
+          "ductility_vgizq": "high",
+          "total_weld_thickness_w4_vgizq": {
+            "value": 0.0,
+            "unit": "mm"
+          },
+          "total_weld_thickness_w4_formula": "2w = t_w4.1"
+        },
+        "intermediates": {
+          "rn_nominal": 1974.5060894376702,
+          "phi": 0.75,
+          "case": "eq_6_7_19",
+          "phi_rn_cf_v2_col_vgizq_eq1": 1480.8795670782529,
+          "rn_nominal_cf_v2_col_vgizq_eq1": 1974.5060894376702
+        },
+        "design_factors": {
+          "phi_wlc": 0.75
+        },
+        "equation": "Ru_cw_v2_col_vgizq = Mf_vgizq_critico/(d_vgizq - tf_vgizq); lb_col = tf_vgizq + 2w_w4_vgizq + 2*tpe_vgizq; phi*Rn_cw_v2_col_vgizq = phi_wlc * Rn_eq(6.7-19/6.7-20/6.7-21); DCR_cw_v2_col_vgizq = Ru_cw_v2_col_vgizq / phi*Rn_cw_v2_col_vgizq",
+        "units_trace": {
+          "ffu": "kN",
+          "capacity": "kN"
+        },
+        "final_capacity": {
+          "value": 1480.8795670782529,
+          "unit": "kN"
+        }
+      },
+      "notes": null
+    },
+    {
+      "name": "bseep_8es Step 14.2.2 column web local buckling (WCB) (left)",
+      "rule_id": "AISC358.06.7.bseep_8es.step14_2_2_column_web_local_buckling_vgizq",
+      "clause": "Chapter 6 / Section 6.7.2 + Eq. (6.7-18)",
+      "source_document": "AISC 358-22",
+      "demand": {
+        "value": 2122.569209993248,
+        "unit": "kN"
+      },
+      "capacity": {
+        "value": 1234.4744106076748,
+        "unit": "kN"
+      },
+      "dcr": 1.719411266652668,
+      "status": "FAIL",
+      "calculation_memory": {
+        "inputs": {
+          "mu3_vgizq": {
+            "value": 1257410.0,
+            "unit": "kN-mm"
+          },
+          "mu3_vgder": {
+            "value": 1542490.0,
+            "unit": "kN-mm"
+          },
+          "pu_vgizq": {
+            "value": 0.0,
+            "unit": "kN"
+          },
+          "pu_vgder": {
+            "value": 0.0,
+            "unit": "kN"
+          },
+          "d_vgizq": {
+            "value": 612.0,
+            "unit": "mm"
+          },
+          "tf_vgizq": {
+            "value": 19.6,
+            "unit": "mm"
+          },
+          "d_vgder": {
+            "value": 536.0,
+            "unit": "mm"
+          },
+          "tf_vgder": {
+            "value": 17.4,
+            "unit": "mm"
+          },
+          "st_col": {
+            "value": 762.0,
+            "unit": "mm"
+          },
+          "d_col": {
+            "value": 400.0,
+            "unit": "mm"
+          },
+          "kc_col": {
+            "value": 51.0,
+            "unit": "mm"
+          },
+          "h_col": {
+            "value": 298.0,
+            "unit": "mm"
+          },
+          "fy_col": {
+            "value": 345.0,
+            "unit": "MPa"
+          },
+          "e_col": {
+            "value": 200000.0,
+            "unit": "MPa"
+          },
+          "tw_col": {
+            "value": 13.5,
+            "unit": "mm"
+          },
+          "t_w4_1_vgizq": {
+            "value": 0.0,
+            "unit": "mm"
+          },
+          "nl_w4_vgizq": 2,
+          "ductility_vgizq": "high",
+          "total_weld_thickness_w4_vgizq": {
+            "value": 0.0,
+            "unit": "mm"
+          },
+          "total_weld_thickness_w4_formula": "2w = t_w4.1"
+        },
+        "intermediates": {
+          "rn_nominal": 1645.965880810233,
+          "ct": 1.0,
+          "phi": 0.75,
+          "cond_left_force": -2122.569209993248,
+          "cond_right_force": -2974.3347473968374,
+          "cond_tolerance": "1e-9",
+          "same_sign": true,
+          "applicability_condition_met": true,
+          "ru_expr_neg": -2122.569209993248,
+          "ru_expr_pos": 2122.569209993248,
+          "phi_rn_cf_v2_col_vgizq_eq_wcb": 1234.4744106076748
+        },
+        "design_factors": {
+          "phi_wcb": 0.75
+        },
+        "equation": "Condicion aplicabilidad: same_sign(F_left, F_right), con F_left = -Mu3_vgizq/(d_vgizq - tf_vgizq) + 0.5*Pu_vgizq y F_right = -Mu3_vgder/(d_vgder - tf_vgder) + 0.5*Pu_vgder; Ru_cw_v2_col_vgizq = max(|-Mu3_vgizq/(d_vgizq - tf_vgizq) + Pu_vgizq|, |Mu3_vgizq/(d_vgizq - tf_vgizq) + Pu_vgizq|); h_col = d_col - 2*kc_col; phi*Rn_cw_v2_col_vgizq = phi_wcb * Ct_col * 24 * tw_col^3 * sqrt(E_col * Fy_col) / h_col",
+        "units_trace": {
+          "demand": "kN",
+          "capacity": "kN"
+        },
+        "final_capacity": {
+          "value": 1234.4744106076748,
+          "unit": "kN"
+        }
+      },
+      "notes": null
+    },
+    {
+      "name": "bseep_8es Step 11.1.1 beam web-to-end-plate weld tension rupture (left)",
+      "rule_id": "AISC358.06.7.bseep_8es.step11_1_1_beam_web_end_plate_weld_tension_rupture_vgizq",
+      "clause": "Chapter 6 / Section 6.7.1 + AISC 360-22 J2.4",
+      "source_document": "AISC 360-22",
+      "demand": {
+        "value": 0.0,
+        "unit": "ratio"
+      },
+      "capacity": {
+        "value": 1.0,
+        "unit": "ratio"
+      },
+      "dcr": 0.0,
+      "status": "PASS",
+      "calculation_memory": {
+        "inputs": {
+          "tipo_w3_vgizq": "CJP",
+          "hwef_w3_vgizq": {
+            "value": 294.996,
+            "unit": "mm"
+          },
+          "tw_vgizq": {
+            "value": 11.9,
+            "unit": "mm"
+          },
+          "fy_vgizq": {
+            "value": 345.0,
+            "unit": "MPa"
+          },
+          "ru_w3_p_pos_vgizq": {
+            "value": 1211.106078,
+            "unit": "kN"
+          }
+        },
+        "intermediates": {},
+        "design_factors": {
+          "phi": 0.75
+        },
+        "equation": "CJP => cumple; Ru_w3_p+_vgizq = Fy_vgizq * tw_vgizq * hwef_w3_vgizq, hwef_w3_vgizq = pfi_pe_vgizq + pb_pe_vgizq + 150 mm",
+        "units_trace": {
+          "dcr": "ratio"
+        },
+        "final_capacity": {
+          "value": 1.0,
+          "unit": "ratio"
+        }
+      },
+      "notes": null
+    },
+    {
+      "name": "bseep_8es Step 6.1 bolt tension rupture capacity (right)",
+      "rule_id": "AISC358.06.7.bseep_8es.step6_1_bolt_tension_rupture_vgder",
+      "clause": "Chapter 6 / Section 6.7.1 Step 6.1 + AISC 360-22 J3.7",
+      "source_document": "AISC 358-22",
+      "demand": {
+        "value": 297.8761001602837,
+        "unit": "kN"
+      },
+      "capacity": {
+        "value": 450.193760569405,
+        "unit": "kN"
+      },
+      "dcr": 0.6616619914579226,
+      "status": "PASS",
+      "calculation_memory": {
+        "inputs": {
+          "mf": {
+            "value": 1234041.1077440234,
+            "unit": "kN-mm"
+          },
+          "mf_source": "max(Mf_vgder_max, Mf_vgder_min)",
+          "mf_computed": {
+            "value": 1234041.1077440234,
+            "unit": "kN-mm"
+          },
+          "mf_vgder_critico": {
+            "value": 1234041.1077440234,
+            "unit": "kN-mm"
+          },
+          "h1_pe_vgder": {
+            "value": 672.2959999999999,
+            "unit": "mm"
+          },
+          "h2_pe_vgder": {
+            "value": 577.3,
+            "unit": "mm"
+          },
+          "h3_pe_vgder": {
+            "value": 458.4,
+            "unit": "mm"
+          },
+          "h4_pe_vgder": {
+            "value": 363.404,
+            "unit": "mm"
+          },
+          "bolt_diameter": {
+            "value": 28.575,
+            "unit": "mm"
+          },
+          "bolt_fnt": {
+            "value": 780.0,
+            "unit": "MPa"
+          },
+          "fnt_b_vgder": {
+            "value": 780.0,
+            "unit": "MPa"
+          },
+          "connection_type": "bseep_8es"
+        },
+        "intermediates": {
+          "sum_h": 2071.4,
+          "bolt_area": 641.3016532327706,
+          "a_b_vgder": {
+            "value": 641.3016532327706,
+            "unit": "mm2"
+          },
+          "rnt_b": 500.2152895215611,
+          "ru_b_p_pos": 297.8761001602837,
+          "phi_rn_b_p_pos": 450.193760569405,
+          "nominal_tension_capacity_per_bolt": 500.2152895215611
+        },
+        "design_factors": {
+          "phi": 0.9
+        },
+        "equation": "Ru_b_p+_vgder = Mf_vgder_critico/(2*(h1_pe_vgder + h2_pe_vgder + h3_pe_vgder + h4_pe_vgder)); phi*Rn_b_p+_vgder = phi * Rn_b_p+_vgder, Rn_b_p+_vgder = A_b_vgder * Fnt_b_vgder, A_b_vgder = pi*db^2/4 (AISC 360-22 J3.7)",
+        "units_trace": {
+          "ru_b_p_pos": "kN",
+          "phi_rn_b_p_pos": "kN"
+        },
+        "final_capacity": {
+          "value": 450.193760569405,
+          "unit": "kN"
+        }
+      },
+      "notes": null
+    },
+    {
+      "name": "bseep_8es Step 6.2 bolt shear rupture capacity (right)",
+      "rule_id": "AISC358.06.7.bseep_8es.step6_2_bolt_shear_rupture_vgder",
+      "clause": "Chapter 6 / Section 6.7.1 Step 6.2 + AISC 360-22 J3.7",
+      "source_document": "AISC 358-22",
+      "demand": {
+        "value": 52.45302805118111,
+        "unit": "kN"
+      },
+      "capacity": {
+        "value": 271.270599317462,
+        "unit": "kN"
+      },
+      "dcr": 0.193360534400547,
+      "status": "PASS",
+      "calculation_memory": {
+        "inputs": {
+          "vh_vgder_critico": {
+            "value": 419.62422440944886,
+            "unit": "kN"
+          },
+          "vh_vgder_critico_source": "max(Vh_vgder_max, Vh_vgder_min)",
+          "n_b_vgder": 8,
+          "bolt_diameter": {
+            "value": 28.575,
+            "unit": "mm"
+          },
+          "bolt_fnv": {
+            "value": 470.0,
+            "unit": "MPa"
+          },
+          "fnt_b_vgder": {
+            "value": 780.0,
+            "unit": "MPa"
+          },
+          "connection_type": "bseep_8es"
+        },
+        "intermediates": {
+          "bolt_area": 641.3016532327706,
+          "a_b_vgder": {
+            "value": 641.3016532327706,
+            "unit": "mm2"
+          },
+          "rnv_b": 301.41177701940217,
+          "ru_b_v2_vgder": 52.45302805118111,
+          "phi_rn_b_v2_vgder": 271.270599317462,
+          "nominal_shear_capacity_per_bolt": 301.41177701940217
+        },
+        "design_factors": {
+          "phi": 0.9
+        },
+        "equation": "Ru_b_v2_vgder = Vh_vgder_critico/n_b_vgder, phi*Rn_b_v2_vgder = phi * Rn_b_v2_vgder, Rn_b_v2_vgder = A_b_vgder * Fnv_b_vgder, A_b_vgder = pi*db^2/4, n_b_vgder = 4 (4E/4ES) or 8 (8ES) (AISC 360-22 J3.7)",
+        "units_trace": {
+          "ru_b_v2_vgizq": "kN",
+          "phi_rn_b_v2_vgizq": "kN"
+        },
+        "final_capacity": {
+          "value": 271.270599317462,
+          "unit": "kN"
+        }
+      },
+      "notes": null
+    },
+    {
+      "name": "bseep_8es Step 7.1.1 end-plate flexural yielding (right)",
+      "rule_id": "AISC358.06.7.bseep_8es.step7_1_1_end_plate_flexural_yielding_vgder",
+      "clause": "Chapter 6 / Section 6.7.1 Step 7.1.1 + Eq. (6.7-8)",
+      "source_document": "AISC 358-22",
+      "demand": {
+        "value": 1234041.1077440234,
+        "unit": "kN-mm"
+      },
+      "capacity": {
+        "value": 1379018.774941797,
+        "unit": "kN-mm"
+      },
+      "dcr": 0.8948689678254073,
+      "status": "PASS",
+      "calculation_memory": {
+        "inputs": {
+          "mf_vgder_critico": {
+            "value": 1234041.1077440234,
+            "unit": "kN-mm"
+          },
+          "mf_source": "max(Mf_vgder_max, Mf_vgder_min)",
+          "mf_computed": {
+            "value": 1234041.1077440234,
+            "unit": "kN-mm"
+          },
+          "tpe_vgder": {
+            "value": 25.4,
+            "unit": "mm"
+          },
+          "fyp_pe_vgder": {
+            "value": 345.0,
+            "unit": "MPa"
+          },
+          "yp_pe_vgder": {
+            "value": 6884.004431969526,
+            "unit": "mm"
+          },
+          "yp_pe_vgder_source": "derived_from_aisc358_tables_6_2_6_3_6_4",
+          "yp_pe_vgder_table": "AISC 358-22 Table 6.4",
+          "yp_pe_vgder_case": "Case 1 (de <= s)",
+          "yp_pe_vgder_is_hardcoded": false
+        },
+        "intermediates": {
+          "nominal_moment": 1532243.0832686634,
+          "design_moment": 1379018.774941797,
+          "table_reference": "AISC 358-22 Table 6.4",
+          "case_reference": "Case 1 (de <= s)",
+          "formula": "Yp = bp/2*[h1*(1/(2de)) + h2*(1/pfo) + h3*(1/pfi) + h4*(1/s)] + (2/g)*[h1*(de + 3pb/4) + h2*(pfo + pb/4) + h3*(pfi + 3pb/4) + h4*(s + pb/4)] + g",
+          "s": {
+            "value": 89.7217922246318,
+            "unit": "mm"
+          },
+          "pfi_input": {
+            "value": 50.0,
+            "unit": "mm"
+          },
+          "pfi_effective": {
+            "value": 50.0,
+            "unit": "mm"
+          },
+          "de": {
+            "value": 60.0,
+            "unit": "mm"
+          },
+          "de_le_s": true,
+          "is_hardcoded": false
+        },
+        "design_factors": {
+          "phi": 0.9
+        },
+        "equation": "Ru_pe_m3_vgder = Mf_vgder_critico; phi*Rn_pe_m3_vgder = phi * tpe_vgder^2 * Fyp_pe_vgder * Yp_pe_vgder (AISC 358-22 Eq. 6.7-8)",
+        "units_trace": {
+          "ru_pe_m3_vgizq": "kN-mm",
+          "phi_rn_pe_m3_vgizq": "kN-mm"
+        },
+        "final_capacity": {
+          "value": 1379018.774941797,
+          "unit": "kN-mm"
+        }
+      },
+      "notes": null
+    },
+    {
+      "name": "bseep_8es Step 7.2.1 end-plate shear yielding (right)",
+      "rule_id": "AISC358.06.7.bseep_8es.step7_2_1_end_plate_shear_yielding_vgder",
+      "clause": "Chapter 6 / Section 6.7.1 Step 7.2.1 + Eq. (6.7-10)",
+      "source_document": "AISC 358-22",
+      "demand": {
+        "value": 1189.7812454146003,
+        "unit": "kN"
+      },
+      "capacity": {
+        "value": 906.9705,
+        "unit": "kN"
+      },
+      "dcr": 1.3118191224682614,
+      "status": "FAIL",
+      "calculation_memory": {
+        "inputs": {
+          "ru_pe_m3_vgder": {
+            "value": 1234041.1077440234,
+            "unit": "kN-mm"
+          },
+          "mf_source": "max(Mf_vgder_max, Mf_vgder_min)",
+          "mf_computed": {
+            "value": 1234041.1077440234,
+            "unit": "kN-mm"
+          },
+          "d_vgder": {
+            "value": 536.0,
+            "unit": "mm"
+          },
+          "tf_vgder": {
+            "value": 17.4,
+            "unit": "mm"
+          },
+          "bpe_vgder": {
+            "value": 230.0,
+            "unit": "mm"
+          },
+          "tpe_vgder": {
+            "value": 25.4,
+            "unit": "mm"
+          },
+          "fyp_pe_vgder": {
+            "value": 345.0,
+            "unit": "MPa"
+          }
+        },
+        "intermediates": {
+          "z_vgder": 518.6,
+          "rn_pe_v1_vgder": 1209.294,
+          "phi_rn_pe_v1_vgder": 906.9705
+        },
+        "design_factors": {
+          "phi": 0.75
+        },
+        "equation": "Rn_pe_v1_vgder = Ru_pe_m3_vgder / (2*(d_vgder - tf_vgder)); phi*Rn_pe_v1_vgder = phi * 0.6 * Fyp_pe_vgder * bpe_vgder * tpe_vgder (AISC 358-22 Eq. 6.7-10)",
+        "units_trace": {
+          "rn_pe_v1_vgizq": "kN",
+          "phi_rn_pe_v1_vgizq": "kN"
+        },
+        "final_capacity": {
+          "value": 906.9705,
+          "unit": "kN"
+        }
+      },
+      "notes": null
+    },
+    {
+      "name": "bseep_8es Step 7.2.2 end-plate shear rupture (right)",
+      "rule_id": "AISC358.06.7.bseep_8es.step7_2_2_end_plate_shear_rupture_vgder",
+      "clause": "Chapter 6 / Section 6.7.1 Step 7.2.2 + Eq. (6.7-12)",
+      "source_document": "AISC 358-22",
+      "demand": {
+        "value": 1189.7812454146003,
+        "unit": "kN"
+      },
+      "capacity": {
+        "value": 839.9335500000001,
+        "unit": "kN"
+      },
+      "dcr": 1.416518301256808,
+      "status": "FAIL",
+      "calculation_memory": {
+        "inputs": {
+          "ru_pe_m3_vgder": {
+            "value": 1234041.1077440234,
+            "unit": "kN-mm"
+          },
+          "mf_source": "max(Mf_vgder_max, Mf_vgder_min)",
+          "mf_computed": {
+            "value": 1234041.1077440234,
+            "unit": "kN-mm"
+          },
+          "d_vgder": {
+            "value": 536.0,
+            "unit": "mm"
+          },
+          "tf_vgder": {
+            "value": 17.4,
+            "unit": "mm"
+          },
+          "bpe_vgder": {
+            "value": 230.0,
+            "unit": "mm"
+          },
+          "tpe_vgder": {
+            "value": 25.4,
+            "unit": "mm"
+          },
+          "fup_pe_vgder": {
+            "value": 450.0,
+            "unit": "MPa"
+          },
+          "db": {
+            "value": 28.575,
+            "unit": "mm"
+          },
+          "dh_pe_vgder": {
+            "value": 31.75,
+            "unit": "mm"
+          }
+        },
+        "intermediates": {
+          "z_vgder": 518.6,
+          "net_width": 163.3,
+          "nominal_shear": 1119.9114000000002,
+          "design_shear": 839.9335500000001,
+          "phi_n": 0.75,
+          "edge_allowance": 1.6,
+          "db_in": 1.125,
+          "hole_add_in": 0.125
+        },
+        "design_factors": {
+          "phi": 0.75
+        },
+        "equation": "Rn_pe_v2_vgder = Ru_pe_m3_vgder / (2*(d_vgder - tf_vgder)); phi*Rn_pe_v2_vgder = phi * 0.6 * Fup_pe_vgder * tpe_vgder * (bpe_vgder - 2*(dh_pe_vgder + 1.6 mm)) (AISC 358-22 Eq. 6.7-12)",
+        "units_trace": {
+          "rn_pe_v2_vgizq": "kN",
+          "phi_rn_pe_v2_vgizq": "kN"
+        },
+        "final_capacity": {
+          "value": 839.9335500000001,
+          "unit": "kN"
+        }
+      },
+      "notes": null
+    },
+    {
+      "name": "bseep_8es Step 7.3.1 end-plate hole tearout (right)",
+      "rule_id": "AISC358.06.7.bseep_8es.step7_3_1_end_plate_hole_tearout_vgder",
+      "clause": "Chapter 6 / Section 7.3.1 + AISC 360-22 J3.11(a)",
+      "source_document": "AISC 360-22",
+      "demand": {
+        "value": 52.45302805118111,
+        "unit": "kN"
+      },
+      "capacity": {
+        "value": 650.6116019999998,
+        "unit": "kN"
+      },
+      "dcr": 0.080621107723777,
+      "status": "PASS",
+      "calculation_memory": {
+        "inputs": {
+          "vh_vgder_critico": {
+            "value": 419.62422440944886,
+            "unit": "kN"
+          },
+          "vh_vgder_critico_source": "max(Vh_vgder_max, Vh_vgder_min)",
+          "n_b_vgder": 8,
+          "lc_pe_vgder": {
+            "value": 63.245999999999995,
+            "unit": "mm"
+          },
+          "tpe_vgder": {
+            "value": 25.4,
+            "unit": "mm"
+          },
+          "fup_pe_vgder": {
+            "value": 450.0,
+            "unit": "MPa"
+          },
+          "pfo_pe_vgder": {
+            "value": 50.0,
+            "unit": "mm"
+          },
+          "pfi_pe_vgder": {
+            "value": 50.0,
+            "unit": "mm"
+          },
+          "tf_vgder": {
+            "value": 17.4,
+            "unit": "mm"
+          },
+          "dh_pe_vgder": {
+            "value": 31.75,
+            "unit": "mm"
+          }
+        },
+        "intermediates": {
+          "lc_1_pb_minus_dh": 63.245999999999995,
+          "lc_2_pfo_plus_pfi_plus_tbf_minus_dh": 85.65,
+          "lc_rule_selector": 1.0,
+          "dh": 31.75,
+          "db": 28.575,
+          "db_in": 1.125,
+          "hole_add_in": 0.125,
+          "ru_pe_v2_vgder": 52.45302805118111,
+          "nominal_strength": 867.4821359999999,
+          "design_strength": 650.6116019999998
+        },
+        "design_factors": {
+          "phi": 0.75
+        },
+        "equation": "lc_pe_vgder = min(pb_pe_vgder - dh_pe_vgder, pfo_pe_vgder + pfi_pe_vgder + tf_vgder - dh_pe_vgder); Ru_pe_v2_vgder = Vh_vgder_critico / n_b_vgder; phi*Rn_pe_v2_vgder = phi * 1.2 * lc_pe_vgder * tpe_vgder * Fup_pe_vgder (AISC 360-22 J3.11a)",
+        "units_trace": {
+          "ru_pe_v2_vgizq": "kN",
+          "phi_rn_pe_v2_vgizq": "kN"
+        },
+        "final_capacity": {
+          "value": 650.6116019999998,
+          "unit": "kN"
+        }
+      },
+      "notes": null
+    },
+    {
+      "name": "bseep_8es Step 7.3.2 end-plate hole bearing (right)",
+      "rule_id": "AISC358.06.7.bseep_8es.step7_3_2_end_plate_hole_bearing_vgder",
+      "clause": "Chapter 6 / Section 7.3.2 + AISC 360-22 J3.11(a)",
+      "source_document": "AISC 360-22",
+      "demand": {
+        "value": 52.45302805118111,
+        "unit": "kN"
+      },
+      "capacity": {
+        "value": 587.9020499999999,
+        "unit": "kN"
+      },
+      "dcr": 0.08922069254764653,
+      "status": "PASS",
+      "calculation_memory": {
+        "inputs": {
+          "vh_vgder_critico": {
+            "value": 419.62422440944886,
+            "unit": "kN"
+          },
+          "vh_vgder_critico_source": "max(Vh_vgder_max, Vh_vgder_min)",
+          "n_b_vgder": 8,
+          "tpe_vgder": {
+            "value": 25.4,
+            "unit": "mm"
+          },
+          "fup_pe_vgder": {
+            "value": 450.0,
+            "unit": "MPa"
+          },
+          "d_b_vgder": {
+            "value": 28.575,
+            "unit": "mm"
+          }
+        },
+        "intermediates": {
+          "ru_pe_v2_vgder": 52.45302805118111,
+          "nominal_strength": 783.8693999999999,
+          "design_strength": 587.9020499999999
+        },
+        "design_factors": {
+          "phi": 0.75
+        },
+        "equation": "Ru_pe_v2_vgder = Vh_vgder_critico / n_b_vgder; phi*Rn_pe_v2_vgder = phi * 2.4 * d_b_vgder * tpe_vgder * Fup_pe_vgder (AISC 360-22 J3.11a)",
+        "units_trace": {
+          "ru_pe_v2_vgizq": "kN",
+          "phi_rn_pe_v2_vgizq": "kN"
+        },
+        "final_capacity": {
+          "value": 587.9020499999999,
+          "unit": "kN"
+        }
+      },
+      "notes": null
+    },
+    {
+      "name": "bseep_8es Step 12.1.1 column flange local bending (LFB) (right)",
+      "rule_id": "AISC358.06.7.bseep_8es.step12_1_1_column_flange_local_bending_vgder",
+      "clause": "Chapter 6 / Section 6.7.2 + Eq. (6.7-13)",
+      "source_document": "AISC 358-22",
+      "demand": {
+        "value": 0.0012333186676892522,
+        "unit": "mm"
+      },
+      "capacity": {
+        "value": 24.0,
+        "unit": "mm"
+      },
+      "dcr": 0.00005138827782038551,
+      "status": "PASS",
+      "calculation_memory": {
+        "inputs": {
+          "mf": {
+            "value": 1724750.3142274779,
+            "unit": "kN-mm"
+          },
+          "beam_depth": {
+            "value": 536.0,
+            "unit": "mm"
+          },
+          "column_shape": "HEB 400",
+          "column_fy": {
+            "value": 345.0,
+            "unit": "MPa"
+          },
+          "yc": {
+            "value": 8394.406993440634,
+            "unit": "mm"
+          },
+          "yc_table_reference": "AISC 358-22 Table 6.6",
+          "yc_case_reference": "Case 1 (psi <= s)",
+          "yc_formula": "Y_cs = bcf/2*[h1*(1/s) + h2*(1/pso) + h3*(1/psi) + h4*(1/s)] + (2/g)*[h1*(s + pb/4) + h2*(pso + 3pb/4) + h3*(psi + pb/4) + h4*(s + 3pb/4) + pb^2/2] + g",
+          "yc_is_hardcoded": false,
+          "continuity_plate_enabled": true
+        },
+        "intermediates": {
+          "table_reference": "AISC 358-22 Table 6.6",
+          "case_reference": "Case 1 (psi <= s)",
+          "formula": "Y_cs = bcf/2*[h1*(1/s) + h2*(1/pso) + h3*(1/psi) + h4*(1/s)] + (2/g)*[h1*(s + pb/4) + h2*(pso + 3pb/4) + h3*(psi + pb/4) + h4*(s + 3pb/4) + pb^2/2] + g",
+          "s": {
+            "value": 102.46950765959599,
+            "unit": "mm"
+          },
+          "is_hardcoded": false,
+          "pso": {
+            "value": 50.0,
+            "unit": "mm"
+          },
+          "psi_input": {
+            "value": 51.50000000000001,
+            "unit": "mm"
+          },
+          "psi_effective": {
+            "value": 51.50000000000001,
+            "unit": "mm"
+          },
+          "pb": {
+            "value": 94.996,
+            "unit": "mm"
+          },
+          "continuity_plate_enabled": true,
+          "c": {
+            "value": 117.4,
+            "unit": "mm"
+          },
+          "psi_computed": {
+            "value": 51.50000000000001,
+            "unit": "mm"
+          },
+          "h1": {
+            "value": 672.2959999999999,
+            "unit": "mm"
+          },
+          "h2": {
+            "value": 577.3,
+            "unit": "mm"
+          },
+          "h3": {
+            "value": 458.4,
+            "unit": "mm"
+          },
+          "h4": {
+            "value": 363.404,
+            "unit": "mm"
+          },
+          "bcf": {
+            "value": 300.0,
+            "unit": "mm"
+          },
+          "g": {
+            "value": 140.0,
+            "unit": "mm"
+          }
+        },
+        "design_factors": {
+          "phi_d": 1.0
+        },
+        "equation": "tcf >= 1.11 Mf / (phi_d * d * Fyc * Yc) (Eq. 6.7-13)",
+        "units_trace": {
+          "tcf_req": "mm",
+          "tcf": "mm"
+        },
+        "final_capacity": {
+          "value": 24.0,
+          "unit": "mm"
+        }
+      },
+      "notes": null
+    },
+    {
+      "name": "bseep_8es Step 13.1.1 column web local yielding (WLY) (right)",
+      "rule_id": "AISC358.06.7.bseep_8es.step13_1_1_column_web_local_yielding_vgder",
+      "clause": "Chapter 6 / Section 6.7.2 + Eq. (6.7-17)",
+      "source_document": "AISC 358-22",
+      "demand": {
+        "value": 2379.5624908292007,
+        "unit": "kN"
+      },
+      "capacity": {
+        "value": 1742.8365,
+        "unit": "kN"
+      },
+      "dcr": 1.3653389120719017,
+      "status": "FAIL",
+      "calculation_memory": {
+        "inputs": {
+          "column_shape": "HEB 400",
+          "ru_cf_v2_col_vgder": {
+            "value": 2379.5624908292007,
+            "unit": "kN"
+          },
+          "mf_vgder_critico": {
+            "value": 1234041.1077440234,
+            "unit": "kN-mm"
+          },
+          "st_col": {
+            "value": 762.0,
+            "unit": "mm"
+          },
+          "d_col": {
+            "value": 400.0,
+            "unit": "mm"
+          },
+          "ct_col": 1.0,
+          "kc_from_sections_kdes": {
+            "value": 51.0,
+            "unit": "mm"
+          },
+          "kc_col": {
+            "value": 51.0,
+            "unit": "mm"
+          },
+          "lb": {
+            "value": 68.19999999999999,
+            "unit": "mm"
+          },
+          "lb_col": {
+            "value": 68.19999999999999,
+            "unit": "mm"
+          },
+          "lb_col_formula": "lb_col = tf_vgder + 2w_w4_vgder + 2*tpe_vgder",
+          "t_w4_1_vgder": {
+            "value": 0.0,
+            "unit": "mm"
+          },
+          "nl_w4_vgder": 2,
+          "ductility_vgder": "high",
+          "total_weld_thickness_w4_vgder": {
+            "value": 0.0,
+            "unit": "mm"
+          },
+          "total_weld_thickness_w4_formula": "2w = t_w4.1",
+          "column_fy": {
+            "value": 345.0,
+            "unit": "MPa"
+          },
+          "fy_col": {
+            "value": 345.0,
+            "unit": "MPa"
+          },
+          "tw_col": {
+            "value": 13.5,
+            "unit": "mm"
+          },
+          "d_vgder": {
+            "value": 536.0,
+            "unit": "mm"
+          },
+          "tf_vgder": {
+            "value": 17.4,
+            "unit": "mm"
+          },
+          "tpe_vgder": {
+            "value": 25.4,
+            "unit": "mm"
+          }
+        },
+        "intermediates": {
+          "phi_rn_cf_v2_col_vgder": 1742.8365,
+          "rn_nominal_cf_v2_col_vgder": 1742.8365
+        },
+        "design_factors": {
+          "phi_d": 1.0
+        },
+        "equation": "Ru_cf_v2_col_vgder = Mf_vgder_critico/(d_vgder - tf_vgder); lb_col = tf_vgder + 2w_w4_vgder + 2*tpe_vgder; phi*Rn_cf_v2_col_vgder = phi_ductil * (6*Ct_col*kc_col + lb_col) * Fy_col * tw_col",
+        "units_trace": {
+          "ffu": "kN",
+          "capacity": "kN"
+        },
+        "final_capacity": {
+          "value": 1742.8365,
+          "unit": "kN"
+        }
+      },
+      "notes": null
+    },
+    {
+      "name": "bseep_8es Step 14.2.1 column web local crippling (WLC) (right)",
+      "rule_id": "AISC358.06.7.bseep_8es.step14_2_1_column_web_local_crippling_vgder",
+      "clause": "Chapter 6 / Section 6.7.2 + Eq. (6.7-19) to Eq. (6.7-21)",
+      "source_document": "AISC 358-22",
+      "demand": {
+        "value": 2379.5624908292007,
+        "unit": "kN"
+      },
+      "capacity": {
+        "value": 1472.4491355824778,
+        "unit": "kN"
+      },
+      "dcr": 1.616057514874959,
+      "status": "FAIL",
+      "calculation_memory": {
+        "inputs": {
+          "mf_vgder_critico": {
+            "value": 1234041.1077440234,
+            "unit": "kN-mm"
+          },
+          "st_col": {
+            "value": 762.0,
+            "unit": "mm"
+          },
+          "d_col": {
+            "value": 400.0,
+            "unit": "mm"
+          },
+          "lb_col": {
+            "value": 68.19999999999999,
+            "unit": "mm"
+          },
+          "lb_col_formula": "lb_col = tf_vgder + 2w_w4_vgder + 2*tpe_vgder",
+          "fy_col": {
+            "value": 345.0,
+            "unit": "MPa"
+          },
+          "tw_col": {
+            "value": 13.5,
+            "unit": "mm"
+          },
+          "tf_col": {
+            "value": 24.0,
+            "unit": "mm"
+          },
+          "e_col": {
+            "value": 200000.0,
+            "unit": "MPa"
+          },
+          "d_vgder": {
+            "value": 536.0,
+            "unit": "mm"
+          },
+          "tf_vgder": {
+            "value": 17.4,
+            "unit": "mm"
+          },
+          "tpe_vgder": {
+            "value": 25.4,
+            "unit": "mm"
+          },
+          "t_w4_1_vgder": {
+            "value": 0.0,
+            "unit": "mm"
+          },
+          "nl_w4_vgder": 2,
+          "ductility_vgder": "high",
+          "total_weld_thickness_w4_vgder": {
+            "value": 0.0,
+            "unit": "mm"
+          },
+          "total_weld_thickness_w4_formula": "2w = t_w4.1"
+        },
+        "intermediates": {
+          "rn_nominal": 1963.2655141099704,
+          "phi": 0.75,
+          "case": "eq_6_7_19",
+          "phi_rn_cf_v2_col_vgder_eq1": 1472.4491355824778,
+          "rn_nominal_cf_v2_col_vgder_eq1": 1963.2655141099704
+        },
+        "design_factors": {
+          "phi_wlc": 0.75
+        },
+        "equation": "Ru_cw_v2_col_vgder = Mf_vgder_critico/(d_vgder - tf_vgder); lb_col = tf_vgder + 2w_w4_vgder + 2*tpe_vgder; phi*Rn_cw_v2_col_vgder = phi_wlc * Rn_eq(6.7-19/6.7-20/6.7-21); DCR_cw_v2_col_vgder = Ru_cw_v2_col_vgder / phi*Rn_cw_v2_col_vgder",
+        "units_trace": {
+          "ffu": "kN",
+          "capacity": "kN"
+        },
+        "final_capacity": {
+          "value": 1472.4491355824778,
+          "unit": "kN"
+        }
+      },
+      "notes": null
+    },
+    {
+      "name": "bseep_8es Step 14.2.2 column web local buckling (WCB) (right)",
+      "rule_id": "AISC358.06.7.bseep_8es.step14_2_2_column_web_local_buckling_vgder",
+      "clause": "Chapter 6 / Section 6.7.2 + Eq. (6.7-18)",
+      "source_document": "AISC 358-22",
+      "demand": {
+        "value": 2974.3347473968374,
+        "unit": "kN"
+      },
+      "capacity": {
+        "value": 1234.4744106076748,
+        "unit": "kN"
+      },
+      "dcr": 2.4093936025232874,
+      "status": "FAIL",
+      "calculation_memory": {
+        "inputs": {
+          "mu3_vgder": {
+            "value": 1257410.0,
+            "unit": "kN-mm"
+          },
+          "pu_vgder": {
+            "value": 0.0,
+            "unit": "kN"
+          },
+          "d_vgder": {
+            "value": 612.0,
+            "unit": "mm"
+          },
+          "tf_vgder": {
+            "value": 19.6,
+            "unit": "mm"
+          },
+          "st_col": {
+            "value": 762.0,
+            "unit": "mm"
+          },
+          "d_col": {
+            "value": 400.0,
+            "unit": "mm"
+          },
+          "kc_col": {
+            "value": 51.0,
+            "unit": "mm"
+          },
+          "h_col": {
+            "value": 298.0,
+            "unit": "mm"
+          },
+          "fy_col": {
+            "value": 345.0,
+            "unit": "MPa"
+          },
+          "e_col": {
+            "value": 200000.0,
+            "unit": "MPa"
+          },
+          "tw_col": {
+            "value": 13.5,
+            "unit": "mm"
+          },
+          "t_w4_1_vgder": {
+            "value": 0.0,
+            "unit": "mm"
+          },
+          "nl_w4_vgder": 2,
+          "ductility_vgder": "high",
+          "total_weld_thickness_w4_vgder": {
+            "value": 0.0,
+            "unit": "mm"
+          },
+          "total_weld_thickness_w4_formula": "2w = t_w4.1"
+        },
+        "intermediates": {
+          "rn_nominal": 1645.965880810233,
+          "ct": 1.0,
+          "phi": 0.75,
+          "cond_left_force": -2974.3347473968374,
+          "cond_right_force": -2122.569209993248,
+          "cond_tolerance": "1e-9",
+          "same_sign": true,
+          "applicability_condition_met": true,
+          "ru_expr_neg": -2974.3347473968374,
+          "ru_expr_pos": 2974.3347473968374,
+          "phi_rn_cf_v2_col_vgder_eq_wcb": 1234.4744106076748
+        },
+        "design_factors": {
+          "phi_wcb": 0.75
+        },
+        "equation": "Condicion aplicabilidad: same_sign(F_left, F_right), con F_left = -Mu3_vgder/(d_vgder - tf_vgder) + 0.5*Pu_vgder y F_right = -Mu3_vgder/(d_vgder - tf_vgder) + 0.5*Pu_vgder; Ru_cw_v2_col_vgder = max(|-Mu3_vgder/(d_vgder - tf_vgder) + Pu_vgder|, |Mu3_vgder/(d_vgder - tf_vgder) + Pu_vgder|); h_col = d_col - 2*kc_col; phi*Rn_cw_v2_col_vgder = phi_wcb * Ct_col * 24 * tw_col^3 * sqrt(E_col * Fy_col) / h_col",
+        "units_trace": {
+          "demand": "kN",
+          "capacity": "kN"
+        },
+        "final_capacity": {
+          "value": 1234.4744106076748,
+          "unit": "kN"
+        }
+      },
+      "notes": null
+    },
+    {
+      "name": "bseep_8es Step 11.1.1 beam web-to-end-plate weld tension rupture (right)",
+      "rule_id": "AISC358.06.7.bseep_8es.step11_1_1_beam_web_end_plate_weld_tension_rupture_vgder",
+      "clause": "Chapter 6 / Section 6.7.1 + AISC 360-22 J2.4",
+      "source_document": "AISC 360-22",
+      "demand": {
+        "value": 0.0,
+        "unit": "ratio"
+      },
+      "capacity": {
+        "value": 1.0,
+        "unit": "ratio"
+      },
+      "dcr": 0.0,
+      "status": "PASS",
+      "calculation_memory": {
+        "inputs": {
+          "tipo_w3_vgder": "CJP",
+          "hwef_w3_vgder": {
+            "value": 294.996,
+            "unit": "mm"
+          },
+          "tw_vgder": {
+            "value": 10.9,
+            "unit": "mm"
+          },
+          "fy_vgder": {
+            "value": 345.0,
+            "unit": "MPa"
+          },
+          "ru_w3_p_pos_vgder": {
+            "value": 1109.3324579999999,
+            "unit": "kN"
+          }
+        },
+        "intermediates": {},
+        "design_factors": {
+          "phi": 0.75
+        },
+        "equation": "CJP => cumple; Ru_w3_p+_vgder = Fy_vgder * tw_vgder * hwef_w3_vgder, hwef_w3_vgder = pfi_pe_vgder + pb_pe_vgder + 150 mm",
+        "units_trace": {
+          "dcr": "ratio"
+        },
+        "final_capacity": {
+          "value": 1.0,
+          "unit": "ratio"
+        }
+      },
+      "notes": null
+    },
+    {
+      "name": "bseep_8es Step 8.1.1 stiffener weld tension rupture (left)",
+      "rule_id": "AISC358.06.7.bseep_8es.step8_1_1_stiffener_weld_tension_rupture_vgizq",
       "clause": "Chapter 6 / Section 6.7.1 Step 8.1.1 + AISC 360-22 J2.4",
       "source_document": "AISC 358-22",
       "demand": {
@@ -4306,8 +6480,8 @@
       "notes": null
     },
     {
-      "name": "bseep_8es Step 9.1.1 stiffener-beam weld shear rupture",
-      "rule_id": "AISC358.06.7.bseep_8es.step9_1_1_stiffener_beam_weld_shear_rupture",
+      "name": "bseep_8es Step 9.1.1 stiffener-beam weld shear rupture (left)",
+      "rule_id": "AISC358.06.7.bseep_8es.step9_1_1_stiffener_beam_weld_shear_rupture_vgizq",
       "clause": "Chapter 6 / Section 6.7.1 Step 9.1.1 + AISC 360-22 J2.4",
       "source_document": "AISC 358-22",
       "demand": {
@@ -4420,24 +6594,89 @@
       "notes": null
     },
     {
-      "name": "bseep_8es Step 10.1.1 beam shear yielding",
-      "rule_id": "AISC358.06.7.bseep_8es.step10_1_1_beam_shear_yielding",
-      "clause": "Chapter 6 / Section 6.7.1 Step 10.1.1 + AISC 360-22 G2.1",
+      "name": "bseep_8es Step 10.1.1 beam flange-to-end-plate weld rupture (left)",
+      "rule_id": "AISC358.06.7.bseep_8es.step10_1_1_beam_flange_end_plate_weld_tension_rupture_vgizq",
+      "clause": "Chapter 6 / Section 6.7.1 Step 10.1.1 + AISC 360-22 J2.4",
       "source_document": "AISC 360-22",
       "demand": {
-        "value": 426.7834271653543,
+        "value": 0.0,
+        "unit": "ratio"
+      },
+      "capacity": {
+        "value": 1.0,
+        "unit": "ratio"
+      },
+      "dcr": 0.0,
+      "status": "PASS",
+      "calculation_memory": {
+        "inputs": {
+          "tipo_w4_vgizq": "cjp",
+          "mf_vgizq_critico": null,
+          "d_vgizq": {
+            "value": 612.0,
+            "unit": "mm"
+          },
+          "tf_vgizq": {
+            "value": 19.6,
+            "unit": "mm"
+          },
+          "bf_vgizq": {
+            "value": 229.0,
+            "unit": "mm"
+          },
+          "l_w4_vgizq": {
+            "value": 229.0,
+            "unit": "mm"
+          },
+          "Fexx_w4_vgizq": {
+            "value": 490.0,
+            "unit": "MPa"
+          },
+          "t_w4_vgizq": {
+            "value": 8.0,
+            "unit": "mm"
+          },
+          "nl_w4_vgizq": 2,
+          "kds_w4_vgizq": 1.0,
+          "t_w4_1_vgizq": {
+            "value": 0.0,
+            "unit": "mm"
+          }
+        },
+        "intermediates": {},
+        "design_factors": {
+          "phi": 0.75
+        },
+        "equation": "CJP => cumple (AISC 360-22 J2.4)",
+        "units_trace": {
+          "dcr": "ratio"
+        },
+        "final_capacity": {
+          "value": 1.0,
+          "unit": "ratio"
+        }
+      },
+      "notes": null
+    },
+    {
+      "name": "bseep_8es Step 11.1.1 beam shear yielding (left)",
+      "rule_id": "AISC358.06.7.bseep_8es.step11_1_1_beam_shear_yielding_vgizq",
+      "clause": "Chapter 6 / Section 6.7.1 Step 11.1.1 + AISC 360-22 G2.1",
+      "source_document": "AISC 360-22",
+      "demand": {
+        "value": 569.9674822834645,
         "unit": "kN"
       },
       "capacity": {
-        "value": 1032.8472000000002,
+        "value": 1507.5396,
         "unit": "kN"
       },
-      "dcr": 0.4132106154379411,
+      "dcr": 0.37807795051185683,
       "status": "PASS",
       "calculation_memory": {
         "inputs": {
           "Vh_vgizq_max": {
-            "value": 426.7834271653543,
+            "value": 569.9674822834645,
             "unit": "kN"
           },
           "Vh_vgizq_source": "step4_computed_vhmax_izq",
@@ -4446,15 +6685,15 @@
             "unit": "MPa"
           },
           "tw_vgizq": {
-            "value": 10.8,
+            "value": 11.9,
             "unit": "mm"
           },
           "d_vgizq": {
-            "value": 462.0,
+            "value": 612.0,
             "unit": "mm"
           },
           "kdes_vgizq": {
-            "value": 27.4,
+            "value": 32.3,
             "unit": "mm"
           },
           "E_vgizq": {
@@ -4464,13 +6703,13 @@
           "cv1": 1.0
         },
         "intermediates": {
-          "h_clear": 407.2,
-          "h_over_tw": 37.7037037037037,
+          "h_clear": 547.4,
+          "h_over_tw": 46.0,
           "kv": 5.34,
           "lambda_r": 61.20244382730794,
           "cv1": 1.0,
-          "rn_v2_vgizq": 1032.8472000000002,
-          "phi_rn_v2_vgizq": 1032.8472000000002
+          "rn_v2_vgizq": 1507.5396,
+          "phi_rn_v2_vgizq": 1507.5396
         },
         "design_factors": {
           "phi": 1.0
@@ -4481,7 +6720,339 @@
           "phi*Rn_v2_vgizq": "kN"
         },
         "final_capacity": {
-          "value": 1032.8472000000002,
+          "value": 1507.5396,
+          "unit": "kN"
+        }
+      },
+      "notes": null
+    },
+    {
+      "name": "bseep_8es Step 8.1.1 stiffener weld tension rupture (right)",
+      "rule_id": "AISC358.06.7.bseep_8es.step8_1_1_stiffener_weld_tension_rupture_vgder",
+      "clause": "Chapter 6 / Section 6.7.1 Step 8.1.1 + AISC 360-22 J2.4",
+      "source_document": "AISC 358-22",
+      "demand": {
+        "value": 481.965,
+        "unit": "kN"
+      },
+      "capacity": {
+        "value": 195.85640899125,
+        "unit": "kN"
+      },
+      "dcr": 2.4608079076009814,
+      "status": "FAIL",
+      "calculation_memory": {
+        "inputs": {
+          "end_plate_stiffener_weld_type": "Fillet",
+          "weld_type_normalized": "fillet",
+          "tipo_w1_vgder": "fillet",
+          "fys_pest_vgder": {
+            "value": 345.0,
+            "unit": "MPa"
+          },
+          "t_pest_vgder": {
+            "value": 12.7,
+            "unit": "mm"
+          },
+          "h_pest_vgder": {
+            "value": 110.0,
+            "unit": "mm"
+          },
+          "c_pest_vgder": {
+            "value": 25.0,
+            "unit": "mm"
+          },
+          "fexx": {
+            "value": 490.0,
+            "unit": "MPa"
+          },
+          "fexx_w1_vgder": {
+            "value": 490.0,
+            "unit": "MPa"
+          },
+          "l_w1_vgder": {
+            "value": 65.95,
+            "unit": "mm"
+          },
+          "lst_source": "derived_hst_minus_clip_st_minus_2w_st",
+          "wst": {
+            "value": 9.525,
+            "unit": "mm"
+          },
+          "w_w1_vgder": {
+            "value": 9.525,
+            "unit": "mm"
+          },
+          "wst_source": "geometry.end_plate_stiffener_weld_size_wst",
+          "nl": 2,
+          "nl_w1_vgder": 2,
+          "kds_w1_vgder": 1.0
+        },
+        "intermediates": {
+          "ru_w1_p_pos_vgder_nominal": 481965.0,
+          "rn_w1_p_pos_vgder_nominal": 261141.878655,
+          "phi_rn_w1_p_pos_vgder_nominal": 195856.40899125,
+          "ru_w1_p_pos_vgder": 481.965,
+          "phi_rn_w1_p_pos_vgder": 195.85640899125,
+          "dcr_w1_p_pos_vgder": 2.4608079076009814
+        },
+        "design_factors": {
+          "phi": 0.75
+        },
+        "equation": "Fillet: Ru_w1_p+_vgder = Fys_pest_vgder * t_pest_vgder * h_pest_vgder; l_w1_vgder = h_pest_vgder - c_pest_vgder - 2*w_w1_vgder; phi*Rn_w1_p+_vgder = phi * kds_w1_vgder * nl_w1_vgder * 0.6 * Fexx_w1_vgder * 0.707 * l_w1_vgder * w_w1_vgder; DCR_w1_p+_vgder = Ru_w1_p+_vgder / phi*Rn_w1_p+_vgder (AISC 360-22 J2.4)",
+        "units_trace": {
+          "ru_w1_p_pos_vgizq": "kN",
+          "phi_rn_w1_p_pos_vgizq": "kN"
+        },
+        "final_capacity": {
+          "value": 195.85640899125,
+          "unit": "kN"
+        }
+      },
+      "notes": null
+    },
+    {
+      "name": "bseep_8es Step 9.1.1 stiffener-beam weld shear rupture (right)",
+      "rule_id": "AISC358.06.7.bseep_8es.step9_1_1_stiffener_beam_weld_shear_rupture_vgder",
+      "clause": "Chapter 6 / Section 6.7.1 Step 9.1.1 + AISC 360-22 J2.4",
+      "source_document": "AISC 358-22",
+      "demand": {
+        "value": 385.0696754819603,
+        "unit": "kN"
+      },
+      "capacity": {
+        "value": 434.9989815561376,
+        "unit": "kN"
+      },
+      "dcr": 0.8852197173070075,
+      "status": "PASS",
+      "calculation_memory": {
+        "inputs": {
+          "beam_stiffener_weld_type": "Fillet",
+          "weld_type_source": "geometry.beam_stiffener_weld_type",
+          "weld_type_normalized": "fillet",
+          "tipo_w2_vgder": "fillet",
+          "fys": {
+            "value": 345.0,
+            "unit": "MPa"
+          },
+          "fys_pest_vgder": {
+            "value": 345.0,
+            "unit": "MPa"
+          },
+          "ts": {
+            "value": 12.7,
+            "unit": "mm"
+          },
+          "t_pest_vgder": {
+            "value": 12.7,
+            "unit": "mm"
+          },
+          "fexx": {
+            "value": 490.0,
+            "unit": "MPa"
+          },
+          "fexx_w2_vgder": {
+            "value": 490.0,
+            "unit": "MPa"
+          },
+          "hst": {
+            "value": 110.0,
+            "unit": "mm"
+          },
+          "h_pest_vgder": {
+            "value": 110.0,
+            "unit": "mm"
+          },
+          "lst": {
+            "value": 190.52558883257652,
+            "unit": "mm"
+          },
+          "l_pest_vgder": {
+            "value": 190.52558883257652,
+            "unit": "mm"
+          },
+          "clip_st": {
+            "value": 25.0,
+            "unit": "mm"
+          },
+          "c_pest_vgder": {
+            "value": 25.0,
+            "unit": "mm"
+          },
+          "lst_w2": {
+            "value": 146.4755888325765,
+            "unit": "mm"
+          },
+          "l_w2_vgder": {
+            "value": 146.4755888325765,
+            "unit": "mm"
+          },
+          "lst_w2_source": "derived_lst_minus_clip_st_minus_2w_st",
+          "wst2": {
+            "value": 9.525,
+            "unit": "mm"
+          },
+          "w_w2_vgder": {
+            "value": 9.525,
+            "unit": "mm"
+          },
+          "wst2_source": "geometry.beam_stiffener_weld_size_wst2",
+          "nl_w2": 2,
+          "nl_w2_vgder": 2,
+          "kds_w2_vgder": 1.0,
+          "nl_w2_source": "geometry.beam_stiffener_weld_lines_nl_w2"
+        },
+        "intermediates": {
+          "ru_w2_v2_vgder_nominal": 385069.6754819603,
+          "rn_w2_v2_vgder_nominal": 579998.6420748502,
+          "phi_rn_w2_v2_vgder_nominal": 434998.9815561376,
+          "ru_w2_v2_vgder": 385.0696754819603,
+          "phi_rn_w2_v2_vgder": 434.9989815561376
+        },
+        "design_factors": {
+          "phi": 0.75
+        },
+        "equation": "Fillet: Ru_w2_v2_vgder = Fys_pest_vgder * 0.6 * t_pest_vgder * l_w2_vgder; l_w2_vgder = L_pest_vgder - c_pest_vgder - 2*w_w2_vgder; phi*Rn_w2_v2_vgder = phi * kds_w2_vgder * nl_w2_vgder * 0.6 * Fexx_w2_vgder * 0.707 * l_w2_vgder * w_w2_vgder; DCR_w2_v2_vgder = Ru_w2_v2_vgder / phi*Rn_w2_v2_vgder (AISC 360-22W J2b(g))",
+        "units_trace": {
+          "ru_w2_v2_vgizq": "kN",
+          "phi_rn_w2_v2_vgizq": "kN"
+        },
+        "final_capacity": {
+          "value": 434.9989815561376,
+          "unit": "kN"
+        }
+      },
+      "notes": null
+    },
+    {
+      "name": "bseep_8es Step 10.1.1 beam flange-to-end-plate weld rupture (right)",
+      "rule_id": "AISC358.06.7.bseep_8es.step10_1_1_beam_flange_end_plate_weld_tension_rupture_vgder",
+      "clause": "Chapter 6 / Section 6.7.1 Step 10.1.1 + AISC 360-22 J2.4",
+      "source_document": "AISC 360-22",
+      "demand": {
+        "value": 0.0,
+        "unit": "ratio"
+      },
+      "capacity": {
+        "value": 1.0,
+        "unit": "ratio"
+      },
+      "dcr": 0.0,
+      "status": "PASS",
+      "calculation_memory": {
+        "inputs": {
+          "tipo_w4_vgder": "cjp",
+          "mf_vgder_critico": null,
+          "d_vgder": {
+            "value": 536.0,
+            "unit": "mm"
+          },
+          "tf_vgder": {
+            "value": 17.4,
+            "unit": "mm"
+          },
+          "bf_vgder": {
+            "value": 210.0,
+            "unit": "mm"
+          },
+          "l_w4_vgder": {
+            "value": 210.0,
+            "unit": "mm"
+          },
+          "Fexx_w4_vgder": {
+            "value": 490.0,
+            "unit": "MPa"
+          },
+          "t_w4_vgder": {
+            "value": 8.0,
+            "unit": "mm"
+          },
+          "nl_w4_vgder": 2,
+          "kds_w4_vgder": 1.0,
+          "t_w4_1_vgder": {
+            "value": 0.0,
+            "unit": "mm"
+          }
+        },
+        "intermediates": {},
+        "design_factors": {
+          "phi": 0.75
+        },
+        "equation": "CJP => cumple (AISC 360-22 J2.4)",
+        "units_trace": {
+          "dcr": "ratio"
+        },
+        "final_capacity": {
+          "value": 1.0,
+          "unit": "ratio"
+        }
+      },
+      "notes": null
+    },
+    {
+      "name": "bseep_8es Step 11.1.1 beam shear yielding (right)",
+      "rule_id": "AISC358.06.7.bseep_8es.step11_1_1_beam_shear_yielding_vgder",
+      "clause": "Chapter 6 / Section 6.7.1 Step 11.1.1 + AISC 360-22 G2.1",
+      "source_document": "AISC 360-22",
+      "demand": {
+        "value": 419.62422440944886,
+        "unit": "kN"
+      },
+      "capacity": {
+        "value": 1209.3768,
+        "unit": "kN"
+      },
+      "dcr": 0.34697558644208226,
+      "status": "PASS",
+      "calculation_memory": {
+        "inputs": {
+          "Vh_vgder_max": {
+            "value": 419.62422440944886,
+            "unit": "kN"
+          },
+          "Vh_vgder_source": "step4_computed_vhmax_der",
+          "Fy_vgder": {
+            "value": 345.0,
+            "unit": "MPa"
+          },
+          "tw_vgder": {
+            "value": 10.9,
+            "unit": "mm"
+          },
+          "d_vgder": {
+            "value": 536.0,
+            "unit": "mm"
+          },
+          "kdes_vgder": {
+            "value": 30.2,
+            "unit": "mm"
+          },
+          "E_vgder": {
+            "value": 200000.0,
+            "unit": "MPa"
+          },
+          "cv1": 1.0
+        },
+        "intermediates": {
+          "h_clear": 475.6,
+          "h_over_tw": 43.633027522935784,
+          "kv": 5.34,
+          "lambda_r": 61.20244382730794,
+          "cv1": 1.0,
+          "rn_v2_vgder": 1209.3768,
+          "phi_rn_v2_vgder": 1209.3768
+        },
+        "design_factors": {
+          "phi": 1.0
+        },
+        "equation": "Ru_v2_vgder = Vh_vgder_max; Rn_v2_vgder = 0.6 * Fy_vgder * tw_vgder * d_vgder * Cv1; phi*Rn_v2_vgder = phi * Rn_v2_vgder; DCR_v2_vgder = Ru_v2_vgder / phi*Rn_v2_vgder (AISC 360-22 G2.1, Eq. G2-3/G2-4; kv=5.34 for webs without transverse stiffeners)",
+        "units_trace": {
+          "Ru_v2_vgizq": "kN",
+          "phi*Rn_v2_vgizq": "kN"
+        },
+        "final_capacity": {
+          "value": 1209.3768,
           "unit": "kN"
         }
       },
@@ -4490,8 +7061,8 @@
   ],
   "errors": [],
   "summary": {
-    "pass_count": 12,
-    "fail_count": 4,
+    "pass_count": 23,
+    "fail_count": 14,
     "error_count": 0,
     "not_implemented_count": 0,
     "worst_dcr": 2.4608079076009814

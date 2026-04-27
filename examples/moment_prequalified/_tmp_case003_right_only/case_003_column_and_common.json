@@ -1,0 +1,61 @@
+{
+    "project_id":  "proj_bseep_si_demo",
+    "case_id":  "case_si_bseep_8es_w18x175_w24x76",
+    "design_code_context":  {
+                                "primary_document":  "AISC 358-22",
+                                "supporting_documents":  [
+
+                                                         ]
+                            },
+    "units_system":  "SI",
+    "connection_family":  "moment_prequalified",
+    "connection_type":  "bseep_8es",
+    "load_state":  "strength",
+    "factores_diseno":  {
+                            "phi_ductil":  1.0,
+                            "phi_no_ductil":  0.9,
+                            "lados_conexion":  "right_only",
+                            "demanda_ductilidad_col":  "high",
+                            "ratio_McMb_min":  1.0,
+                            "ratio_McMb":  1.2
+                        },
+    "columna":  {
+                    "perfil_col":  "W18X175",
+                    "tipo_acero_perfil_col":  "ASTM A572 Gr 50",
+                    "E_col":  {
+                                  "value":  200000,
+                                  "unit":  "MPa"
+                              },
+                    "St_col":  {
+                                   "value":  762.0,
+                                   "unit":  "mm"
+                               },
+                    "union_col_losa":  "isolated"
+                },
+    "platina_continuidad":  {
+                                "usar_pc_col":  true,
+                                "tipo_acero_pc_col":  "ASTM A572 Gr 50",
+                                "tpc_col":  {
+                                                "value":  15.9,
+                                                "unit":  "mm"
+                                            }
+                            },
+    "soldaduras":  {
+                       "weld_4":  {
+                                      "description":  "Platina de continuidad con aleta de columna",
+                                      "Fexx_w4":  {
+                                                      "value":  490.0,
+                                                      "unit":  "MPa"
+                                                  },
+                                      "tipo_w4":  "CJP",
+                                      "t_w4":  null,
+                                      "nl_w4":  null
+                                  }
+                   },
+    "loads":  {
+                  "Pu_col":  {
+                                 "value":  696.654,
+                                 "unit":  "kN"
+                             }
+              }
+}

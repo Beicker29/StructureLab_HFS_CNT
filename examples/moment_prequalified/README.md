@@ -4,7 +4,7 @@ Este documento define el significado de cada variable que debes ingresar en los 
 
 ## Estructura general
 
-El archivo debe tener estos bloques:
+El archivo legacy monolitico usa estos bloques:
 
 - `project_id`
 - `case_id`
@@ -19,6 +19,11 @@ El archivo debe tener estos bloques:
 - `loads`
 - `design_factors`
 - `procedure`
+
+Nota:
+- para los casos actuales `bueep_4e`, `bseep_4es` y `bseep_8es` trabajamos preferentemente con `inputs split` por viga derecha, viga izquierda y columna/comunes.
+- la nomenclatura preferida es `*_vgder`, `*_vgizq` y `*_col`.
+- varios nombres listados abajo existen solo por compatibilidad legacy; evita usarlos en inputs nuevos.
 
 ## 1) Identificación y contexto
 
@@ -62,23 +67,27 @@ El archivo debe tener estos bloques:
 - `geometry.column.slab_connection_condition`: condicion union columna-losa (`isolated` o `not_isolated`; tambien acepta `aislada` o `no_aislada`).
 - `geometry.bolts.bolt_gage`: `g`, separación transversal entre líneas de pernos.
 - `geometry.end_plate.de`: `de`, distancia vertical de borde superior a primera línea de pernos.
-- `geometry.end_plate.pb`: `pb`, paso vertical entre líneas de pernos.
+- `geometry.end_plate.pb`: `pb`, paso vertical entre líneas de pernos. Solo aplica a `bseep_8es`.
 - `geometry.end_plate.pfo`: `pso` (linea de pernos 2), distancia libre entre la placa de continuidad superior y el eje de la linea de pernos inmediatamente arriba de la aleta superior de la viga.
 - `geometry.end_plate.pfi`: `pfi`, distancia libre base para la zona de la linea de pernos 3.
 - `hp` (altura de platina) se calcula como `hp = d + 2*pfo + 2*de`, donde `d` proviene del catalogo de la viga.
 - `geometry.continuity_plate.continuity_plate_thickness`: `tcp`, espesor de la placa de continuidad.
-- `geometry.welds.weld_4`: soldadura #4 (rigidizador con aleta de columna).
-- `geometry.welds.weld_4.weld_type`: tipo de soldadura de platina de continuidad (`CJP`, `PJP`, `double_sided_fillet` condicionado por espesor).
+- `geometry.welds.weld_4`: soldadura #4 (ala de viga con platina extremo).
+- `geometry.welds.weld_4.weld_type`: tipo de soldadura de ala de viga con platina extremo (`CJP` o filete segun el caso).
+- `geometry.welds.weld_4.backing_thickness`: en inputs split se expresa como `t_w4.1_<lado>` o `t_w4_1_<lado>`.
+- el espesor total de soldadura #4 se calcula como:
+  - ductilidad baja: `2w = nl_w4 * t_w4.1`
+  - ductilidad moderada/alta: `2w = t_w4.1`
 - `geometry.welds.weld_1`: soldadura #1 (rigidizador con end plate).
 - `geometry.welds.weld_1.weld_type`: tipo (`CJP` o `fillet`).
-- `geometry.welds.weld_1.length`: longitud `l_st` para Paso 8.
-- `geometry.welds.weld_1.size`: tamano/espesor `w_st` para Paso 8.
-- `geometry.welds.weld_1.nl`: numero de lineas efectivas `n_l` para Paso 8 (default interno `2`).
+- `geometry.welds.weld_1.length`: legacy. Ya no se ingresa; el motor calcula `l_w1` automaticamente.
+- `geometry.welds.weld_1.size`: legacy monolitico. En inputs split se usa `w_w1_<lado>`.
+- `geometry.welds.weld_1.nl`: legacy monolitico. En inputs split se usa `nl_w1_<lado>`.
 - `geometry.welds.weld_2`: soldadura #2 (viga con rigidizador).
 - `geometry.welds.weld_2.weld_type`: tipo (`CJP` o `fillet`; fallback al tipo de `weld_1`).
-- `geometry.welds.weld_2.length`: longitud `l_st,w2` para Paso 9 (fallback a `weld_1`, luego `Lst` derivado).
-- `geometry.welds.weld_2.size`: tamano/espesor `w_st,2` para Paso 9 (fallback a `weld_1`, luego `w`).
-- `geometry.welds.weld_2.nl`: numero de lineas `n_l,w2` para Paso 9 (fallback a `weld_1`, default interno `2`).
+- `geometry.welds.weld_2.length`: legacy. Ya no se ingresa; el motor calcula `l_w2` automaticamente.
+- `geometry.welds.weld_2.size`: legacy monolitico. En inputs split se usa `w_w2_<lado>`.
+- `geometry.welds.weld_2.nl`: legacy monolitico. En inputs split se usa `nl_w2_<lado>`.
 - `geometry.welds.weld_3`: soldadura #3 (alma de viga con end plate).
 - `geometry.welds.weld_3.weld_type`: tipo (`CJP`, `double_sided_fillet`, `single_sided_fillet`).
 - `geometry.welds.weld_3.thickness`: espesor `twe` (requerido si `weld_type` es `double_sided_fillet` o `single_sided_fillet`).
@@ -88,7 +97,8 @@ El archivo debe tener estos bloques:
 - `geometry.bolts.bolt_tightening_type`: tipo de apriete de pernos (`pretensioned` o `snug_tight`; tambien acepta `pretensionado` y `apriete_justo`).
 - `geometry.bolts.clear_distance_end_plate`: `lc_ep`, distancia libre para bearing/tearout en placa extremo (distancia horizontal en direccion de carga desde borde del agujero al borde libre de la platina).
 - `geometry.bolts.clear_distance_column_flange`: `lc_cf`, distancia libre para bearing/tearout en ala de columna (distancia horizontal desde borde del agujero al borde libre del ala de la columna).
-- `geometry.column.column_end_distance_to_beam_flange`: `a_col_end`, distancia vertical desde la aleta de la viga hasta el extremo de la columna para evaluar web crippling.
+- `columna.St_col`: distancia vertical desde el tope de las vigas hasta el tope de la columna; se usa en la verificacion geometrica de proyeccion minima de columna y en revisiones de resistencia del panel/columna.
+- `dcf_col`: nombre legacy; ya no debe usarse en inputs nuevos.
 - `geometry.stiffener.stiffener_thickness`: `ts` (solo conexiones `bseep_*`).
 - `hst` ya no se ingresa como input: el motor lo deriva como `hst = pfo + de`.
 - `Lst` ya no se ingresa como input: el motor lo deriva como `Lst = hst / tan(30 deg)`.
@@ -97,16 +107,19 @@ El archivo debe tener estos bloques:
 
 ## 5) Cargas
 
-- `loads.pu_viga_right`: carga axial `Pu` de la viga derecha (se usa para calcular `Ca` de viga).
-- `loads.pu_viga_left`: carga axial `Pu` de la viga izquierda (obligatoria si `design_factors.beam_connection_sides = both_sides`).
-- `loads.pu_viga`: alias legacy (el motor lo mapea a `pu_viga_right` si se usa un solo lado).
-- `loads.pu_columna`: carga axial `Pu` en la columna (se usa para calcular `Ca` de columna).
-- `loads.probable_moment_column_face`: alias legacy opcional para forzar `Mf`; por defecto `Mf` se calcula automáticamente (Paso 5).
-- `loads.Beam_right_Vgravity`: `Vgravity` de la viga derecha (input preferido).
-- `loads.Beam_left_Vgravity`: `Vgravity` de la viga izquierda (obligatorio si `beam_connection_sides = both_sides`).
+- `loads.pu_viga_right`: alias legacy de `Pu_vgder`.
+- `loads.pu_viga_left`: alias legacy de `Pu_vgizq`.
+- `loads.pu_viga`: alias legacy; evitar en inputs nuevos.
+- `loads.Vu2_vgder` / `loads.Vu2_vgizq`: cortante factorizado por lado cuando se quiera declarar como input explicito.
+- `loads.Mu3_vgder` / `loads.Mu3_vgizq`: momento factorizado por lado cuando se quiera declarar como input explicito.
+- `loads.pu_columna`: alias legacy de `Pu_col`.
+- `loads.probable_moment_column_face`: alias legacy opcional; evitar en inputs nuevos.
+- `loads.Beam_right_Vgravity` / `loads.Beam_left_Vgravity`: aliases legacy.
+- `loads.beam_right_vgravity` / `loads.beam_left_vgravity`: nombres legacy del payload normalizado.
+- en inputs split actuales se usan `Vg_vgder` y `Vg_vgizq`.
 - `loads.beam_gravity_shear_between_hinges*`: aliases legacy para compatibilidad.
-- `Vu` de viga ya no se ingresa como input; se deriva automáticamente desde `Vhmax` del Paso 3 (por lado der/izq y gobernante).
-- `Vu` de conexión ya no se ingresa como input; se deriva automáticamente desde `Vhmax` del Paso 3.
+- `Vu` de viga normalmente se deriva automáticamente desde `Vhmax` del Paso 3, salvo que se declare explícitamente como `Vu2_<lado>`.
+- `Mu` en cara de columna normalmente se deriva automáticamente, salvo que se declare explícitamente como `Mu3_<lado>`.
 - `loads.required_web_weld_force`: ya no se acepta como input; se deriva internamente a partir de `Vu` de conexión (temporalmente con factor 0.4).
 - `loads.panel_zone_demand`: ya no se acepta como input; se deriva internamente a partir de `Vu` de conexión (temporalmente con factor 0.5).
 
@@ -137,5 +150,7 @@ Nota de compactacion:
 ```json
 { "value": 0.0, "unit": "mm" }
 ```
+
+
 
 

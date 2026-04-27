@@ -30,10 +30,6 @@
       "value": 60.0,
       "unit": "mm"
     },
-    "pb_pe_vgizq": {
-      "value": 95.0,
-      "unit": "mm"
-    },
     "pfo_pe_vgizq": {
       "value": 50.0,
       "unit": "mm"
@@ -94,6 +90,24 @@
       },
       "nl_w3_vgizq": 2,
       "kds_w3_vgizq": 1.0
+    },
+    "weld_4": {
+      "description": "Ala de viga con end plate",
+      "Fexx_w4_vgizq": {
+        "value": 490.0,
+        "unit": "MPa"
+      },
+      "tipo_w4_vgizq": "CJP",
+      "t_w4_vgizq": {
+        "value": 8.0,
+        "unit": "mm"
+      },
+      "t_w4.1_vgizq": {
+        "value": 0.0,
+        "unit": "mm"
+      },
+      "nl_w4_vgizq": 2,
+      "kds_w4_vgizq": 1.0
     }
   },
   "loads": {
