@@ -94,17 +94,17 @@ def _chapter6_common_steps(connection_type: str) -> list[RuleBinding]:
         (
             "vgizq",
             "left",
-            chapter_06_end_plate.run_step6_1_bolt_tension_rupture,
-            chapter_06_end_plate.run_step6_2_bolt_shear_rupture,
-            chapter_06_end_plate.run_step7_1_1_end_plate_flexural_yielding,
-            chapter_06_end_plate.run_step7_2_1_end_plate_shear_yielding,
-            chapter_06_end_plate.run_step7_2_2_end_plate_shear_rupture,
-            chapter_06_end_plate.run_step7_3_1_end_plate_hole_tearout,
-            chapter_06_end_plate.run_step7_3_2_end_plate_hole_bearing,
-            chapter_06_end_plate.run_column_step1_flange_yielding,
-            chapter_06_end_plate.run_column_step3_web_local_yielding,
-            chapter_06_end_plate.run_column_step4_web_local_crippling,
-            chapter_06_end_plate.run_column_step4_2_web_local_buckling,
+            chapter_06_end_plate.run_step6_1_bolt_tension_rupture_vgizq,
+            chapter_06_end_plate.run_step6_2_bolt_shear_rupture_vgizq,
+            chapter_06_end_plate.run_step7_1_1_end_plate_flexural_yielding_vgizq,
+            chapter_06_end_plate.run_step7_2_1_end_plate_shear_yielding_vgizq,
+            chapter_06_end_plate.run_step7_2_2_end_plate_shear_rupture_vgizq,
+            chapter_06_end_plate.run_step7_3_1_end_plate_hole_tearout_vgizq,
+            chapter_06_end_plate.run_step7_3_2_end_plate_hole_bearing_vgizq,
+            chapter_06_end_plate.run_column_step1_flange_yielding_vgizq,
+            chapter_06_end_plate.run_column_step3_web_local_yielding_vgizq,
+            chapter_06_end_plate.run_column_step4_web_local_crippling_vgizq,
+            chapter_06_end_plate.run_column_step4_2_web_local_buckling_vgizq,
         ),
         (
             "vgder",
@@ -221,7 +221,7 @@ def _chapter6_common_steps(connection_type: str) -> list[RuleBinding]:
                     page="16.1-66",
                     connection_type=connection_type,
                     evaluator=(
-                        chapter_06_end_plate.run_step11_1_1_beam_web_end_plate_weld_tension_rupture
+                        chapter_06_end_plate.run_step11_1_1_beam_web_end_plate_weld_tension_rupture_vgizq
                         if side_suffix == "vgizq"
                         else chapter_06_end_plate.run_step11_1_1_beam_web_end_plate_weld_tension_rupture_vgder
                     ),
@@ -242,10 +242,10 @@ def _chapter6_stiffened_specific_steps(connection_type: str) -> list[RuleBinding
         (
             "vgizq",
             "left",
-            chapter_06_end_plate.run_step8_1_1_stiffener_weld_tension_rupture,
-            chapter_06_end_plate.run_step9_1_1_stiffener_beam_weld_shear_rupture,
-            chapter_06_end_plate.run_step10_1_1_beam_flange_end_plate_weld_tension_rupture,
-            chapter_06_end_plate.run_step10_1_1_beam_shear_yielding,
+            chapter_06_end_plate.run_step8_1_1_stiffener_weld_tension_rupture_vgizq,
+            chapter_06_end_plate.run_step9_1_1_stiffener_beam_weld_shear_rupture_vgizq,
+            chapter_06_end_plate.run_step10_1_1_beam_flange_end_plate_weld_tension_rupture_vgizq,
+            chapter_06_end_plate.run_step11_1_1_beam_shear_yielding_vgizq,
         ),
         (
             "vgder",

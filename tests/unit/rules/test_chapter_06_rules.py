@@ -105,7 +105,7 @@ def test_bueep_prequalification_limits_are_reported(bueep_4e_payload: dict) -> N
     assert any(note.get("id") == "section_4_2.installation_requirements" for note in notes)
     assert any(note.get("id") == "section_4_3.quality_control_assurance" for note in notes)
     width_check = next(item for item in limits if item["id"] == "beam_der.bp_ge_bf_plus_margin")
-    assert width_check["comparison"] == "ge"
+    assert width_check["comparison"] == "le"
     assert width_check["calculated_symbol"] == "bp_pe_vgder"
     assert str(width_check["limit_symbol"]).startswith("bf_vgder + margin")
     assert width_check["result"] == "OK"
@@ -356,6 +356,8 @@ def test_yc_stiffened_input_is_forbidden(bseep_8es_payload: dict) -> None:
 
 def test_bseep_prequalification_limits_fail_when_pitch_is_below_3db(bseep_8es_payload: dict) -> None:
     bseep_8es_payload["geometry"]["pb"]["value"] = 2.0
+    bseep_8es_payload["geometry"]["pb_vgizq"]["value"] = 2.0
+    bseep_8es_payload["geometry"]["pb_vgder"]["value"] = 2.0
     result = run_case_payload(bseep_8es_payload)
     prequal = next(check for check in result.checks if check.rule_id == "AISC358.06.3.bseep_8es.prequalification_limits")
     assert prequal.status == CheckStatus.FAIL
@@ -389,6 +391,8 @@ def test_bseep_prequalification_includes_stiffener_strength_checks(bseep_8es_pay
 
 def test_bseep8es_prequalification_limits_fail_when_pb_is_outside_89_95mm_range(bseep_8es_payload: dict) -> None:
     bseep_8es_payload["geometry"]["pb"]["value"] = 96.0
+    bseep_8es_payload["geometry"]["pb_vgizq"]["value"] = 96.0
+    bseep_8es_payload["geometry"]["pb_vgder"]["value"] = 96.0
     result = run_case_payload(bseep_8es_payload)
     prequal = next(check for check in result.checks if check.rule_id == "AISC358.06.3.bseep_8es.prequalification_limits")
     assert prequal.status == CheckStatus.FAIL
@@ -493,6 +497,40 @@ def test_stiffener_length_input_is_forbidden(bseep_8es_payload: dict) -> None:
         assert "stiffener_length" in exc.error.message
     else:
         raise AssertionError("Expected validation error because geometry.stiffener_length is no longer an allowed input.")
+
+
+def test_step12_column_flange_local_bending_uses_side_specific_mf(bseep_8es_payload: dict) -> None:
+    # Force side-specific Step 5 Mf usage (no legacy global override).
+    if "probable_moment_column_face" in bseep_8es_payload.get("loads", {}):
+        bseep_8es_payload["loads"]["probable_moment_column_face"] = None
+    # Force asymmetric side demands so left/right Mf must differ.
+    bseep_8es_payload["loads"]["beam_left_vgravity"]["value"] = 8.0
+    bseep_8es_payload["loads"]["beam_right_vgravity"]["value"] = 14.0
+    result = run_case_payload(bseep_8es_payload)
+    step5 = next(
+        check
+        for check in result.checks
+        if check.rule_id == "AISC358.06.7.bseep_8es.step5_probable_moment_face_column"
+    )
+    step12_izq = next(
+        check
+        for check in result.checks
+        if check.rule_id == "AISC358.06.7.bseep_8es.step12_1_1_column_flange_local_bending_vgizq"
+    )
+    step12_der = next(
+        check
+        for check in result.checks
+        if check.rule_id == "AISC358.06.7.bseep_8es.step12_1_1_column_flange_local_bending_vgder"
+    )
+
+    mf_izqmax = float(step5.calculation_memory.intermediates["mf_izqmax"])
+    mf_dermax = float(step5.calculation_memory.intermediates["mf_dermax"])
+    mf_step12_izq = float(step12_izq.calculation_memory.inputs["mf"]["value"])
+    mf_step12_der = float(step12_der.calculation_memory.inputs["mf"]["value"])
+
+    assert abs(mf_step12_izq - mf_izqmax) < 1e-6
+    assert abs(mf_step12_der - mf_dermax) < 1e-6
+    assert abs(mf_step12_izq - mf_step12_der) > 1e-6
 
 
 def test_grouped_geometry_payload_is_supported(bueep_4e_payload: dict) -> None:

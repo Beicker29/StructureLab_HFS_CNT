@@ -863,18 +863,15 @@ def _swap_side_tokens(value: object, *, to_side: str) -> object:
     if isinstance(value, list):
         return [_swap_side_tokens(item, to_side=to_side) for item in value]
     if isinstance(value, str):
-        if to_side == "der":
-            text = value.replace("vgizq", "vgder")
-            text = text.replace("_izq", "_der")
-            text = text.replace("(vg_izq)", "(vg_der)")
-            text = text.replace("viga izquierda", "viga derecha")
-            text = text.replace(" izquierda", " derecha")
-            return text
-        text = value.replace("vgder", "vgizq")
-        text = text.replace("_der", "_izq")
-        text = text.replace("(vg_der)", "(vg_izq)")
-        text = text.replace("viga derecha", "viga izquierda")
-        text = text.replace(" derecha", " izquierda")
+        text = value
+
+        def _swap_pair(raw: str, left: str, right: str, token: str) -> str:
+            return raw.replace(left, token).replace(right, left).replace(token, right)
+
+        # Use bidirectional swap to avoid key collisions when payloads contain both sides.
+        text = _swap_pair(text, "vgizq", "vgder", "__TMP_VG_SIDE__")
+        text = _swap_pair(text, "_izq", "_der", "__TMP_SUFFIX_SIDE__")
+        text = _swap_pair(text, " izquierda", " derecha", "__TMP_ADJ_SIDE__")
         return text
     return value
 
@@ -1875,17 +1872,21 @@ def _render_step_11_end_plate_beam_web_weld_tension(step_11_ctx: dict | None, st
 def _render_step_12_column_flange_local_bending(
     step_12_1_1: dict | None,
     step_11_ctx: dict | None,
-    step_5: dict | None,
     step_10_1_1: dict | None,
 ) -> str:
     inputs = step_12_1_1.get("inputs", {}) if isinstance(step_12_1_1, dict) else {}
+    inter = step_12_1_1.get("intermediates", {}) if isinstance(step_12_1_1, dict) else {}
     capacity = step_12_1_1.get("capacity") if isinstance(step_12_1_1, dict) else None
     design_factors = step_12_1_1.get("design_factors", {}) if isinstance(step_12_1_1, dict) else {}
     prequal_inputs = step_11_ctx.get("inputs", {}) if isinstance(step_11_ctx, dict) else {}
     step_10_inputs = step_10_1_1.get("inputs", {}) if isinstance(step_10_1_1, dict) else {}
 
     tcp_mm = _quantity_to_mm(prequal_inputs.get("continuity_plate_thickness_tcp"))
-    enabled_raw = prequal_inputs.get("continuity_plate_enabled")
+    enabled_raw = inputs.get("continuity_plate_enabled")
+    if enabled_raw is None:
+        enabled_raw = prequal_inputs.get("continuity_plate_enabled")
+    if enabled_raw is None:
+        enabled_raw = inter.get("continuity_plate_enabled")
     enabled_flag: bool | None = None
     if isinstance(enabled_raw, bool):
         enabled_flag = enabled_raw
@@ -1897,11 +1898,17 @@ def _render_step_12_column_flange_local_bending(
             enabled_flag = False
     has_continuity_plate = enabled_flag if enabled_flag is not None else (tcp_mm is not None and tcp_mm > 0.0)
     bcf_mm = _quantity_to_mm(prequal_inputs.get("column_flange_width_bcf"))
+    if bcf_mm is None:
+        bcf_mm = _quantity_to_mm(inter.get("bcf"))
     g_mm = _quantity_to_mm(prequal_inputs.get("bolt_gage_g"))
-    s_mm = None
+    if g_mm is None:
+        g_mm = _quantity_to_mm(inter.get("g"))
+    s_mm = _quantity_to_mm(inter.get("s"))
     if bcf_mm is not None and g_mm is not None and bcf_mm > 0.0 and g_mm > 0.0:
-        s_mm = 0.5 * ((bcf_mm * g_mm) ** 0.5)
+        s_mm = s_mm if s_mm is not None else 0.5 * ((bcf_mm * g_mm) ** 0.5)
     pfi_mm = _quantity_to_mm(prequal_inputs.get("pfi_pe_vgizq") or prequal_inputs.get("edge_pfi"))
+    if pfi_mm is None:
+        pfi_mm = _quantity_to_mm(inter.get("psi_input") or inter.get("psi_computed"))
 
     tcf_q = _as_quantity(capacity)
     yc_q = _as_quantity(inputs.get("yc"))
@@ -1939,27 +1946,19 @@ def _render_step_12_column_flange_local_bending(
     continuity_text = "hay platinas de continuidad" if has_continuity_plate else "no hay platinas de continuidad"
     y_table_text = _format_text(inputs.get("yc_table_reference")).replace("Table", "Tabla")
     y_is_hardcoded = bool(inputs.get("yc_is_hardcoded"))
-    d_vgizq_q = _as_quantity(step_10_inputs.get("d_vgizq") or prequal_inputs.get("d_vgizq"))
-    tf_vgizq_q = _as_quantity(step_10_inputs.get("tf_vgizq") or prequal_inputs.get("tf_vgizq"))
+    d_vgizq_q = _as_quantity(step_10_inputs.get("d_vgizq") or prequal_inputs.get("d_vgizq") or inputs.get("d_vgizq") or inputs.get("beam_depth"))
+    tf_vgizq_q = _as_quantity(
+        step_10_inputs.get("tf_vgizq")
+        or prequal_inputs.get("tf_vgizq")
+        or inputs.get("tf_vgizq")
+        or inputs.get("beam_flange_thickness")
+    )
     z_vgizq_q: Quantity | None = None
     if d_vgizq_q is not None and tf_vgizq_q is not None:
         z_value = d_vgizq_q.value - tf_vgizq_q.value
         if z_value > 0.0:
             z_vgizq_q = Quantity(value=z_value, unit=d_vgizq_q.unit)
-    mf_vgizq_max_q = None
-    if isinstance(step_5, dict):
-        step5_inter = step_5.get("intermediates", {})
-        mf_izqmax_value = step5_inter.get("mf_izqmax")
-        units_trace = step_5.get("units_trace", {})
-        mf_unit = units_trace.get("mfmax_governing") if isinstance(units_trace, dict) else None
-        if mf_unit is None:
-            capacity_q = step_5.get("capacity", {})
-            if isinstance(capacity_q, dict):
-                mf_unit = capacity_q.get("unit")
-        if mf_izqmax_value is not None and mf_unit is not None:
-            mf_vgizq_max_q = {"value": mf_izqmax_value, "unit": mf_unit}
-    if mf_vgizq_max_q is None:
-        mf_vgizq_max_q = inputs.get("mf")
+    mf_vgizq_max_q = inputs.get("mf")
     mf_vgizq_max_quantity = _as_quantity(mf_vgizq_max_q)
 
     ru_cf_v2_col_q: Quantity | None = None
@@ -1981,8 +1980,8 @@ def _render_step_12_column_flange_local_bending(
         except ValueError:
             dcr_cf_v2_col = None
 
-    case_y = "n/a"
-    if pfi_mm is not None and s_mm is not None:
+    case_y = _format_text(inputs.get("yc_case_reference"))
+    if case_y == "n/a" and pfi_mm is not None and s_mm is not None:
         case_y = "Case 1 (pfi <= s)" if pfi_mm <= s_mm else "Case 2 (pfi > s)"
 
     dcr_text = _format_decimal(dcr_cf_v2_col) if dcr_cf_v2_col is not None else "n/a"
@@ -2011,10 +2010,10 @@ def _render_step_12_column_flange_local_bending(
         f"- Ecuacion: `Ru_cf_v2_col_vgizq = Mf_vgizq_critico/(d_vgizq - tf_vgizq); phi*Rn_cf_v2_col_vgizq = phi_ductil * ((tf_col^2 * Fy_col * {y_symbol})/(1.11 * (d_vgizq - tf_vgizq))); DCR_cf_v2_col_vgizq = Ru_cf_v2_col_vgizq / phi*Rn_cf_v2_col_vgizq`",
         f"- phi usado: `{_format_decimal(phi)}`",
         f"- Mf_vgizq_critico: `{_format_quantity(mf_vgizq_max_q)}`",
-        f"- d_vgizq: `{_format_quantity((step_10_inputs.get('d_vgizq') or prequal_inputs.get('d_vgizq')) if isinstance(step_10_inputs, dict) else prequal_inputs.get('d_vgizq'))}`",
-        f"- tf_vgizq: `{_format_quantity((step_10_inputs.get('tf_vgizq') or prequal_inputs.get('tf_vgizq')) if isinstance(step_10_inputs, dict) else prequal_inputs.get('tf_vgizq'))}`",
+        f"- d_vgizq: `{_format_quantity(d_vgizq_q.model_dump()) if d_vgizq_q is not None else 'n/a'}`",
+        f"- tf_vgizq: `{_format_quantity(tf_vgizq_q.model_dump()) if tf_vgizq_q is not None else 'n/a'}`",
         f"- z_vgizq = d_vgizq - tf_vgizq: `{_format_quantity(z_vgizq_q.model_dump()) if z_vgizq_q is not None else 'n/a'}`",
-        f"- tf_col: `{_format_quantity(inputs.get('column_flange_thickness_from_sections'))}`",
+        f"- tf_col: `{_format_quantity(inputs.get('column_flange_thickness_from_sections') or capacity)}`",
         f"- Fy_col: `{_format_quantity(inputs.get('column_fy'))}`",
         f"- {y_symbol} usado: `{_format_quantity(inputs.get('yc'))}`",
         f"- Tabla {y_symbol} aplicada: `{y_table_text}`",
@@ -2752,8 +2751,7 @@ def render_memory_markdown(result: DetailedRunResult) -> str:
                 _render_step_12_column_flange_local_bending,
                 step_12_1_1_by_side.get(side),
                 step_11_ctx_by_side.get(side),
-                step_5,
-                step_11_beam_shear_by_side.get(side),
+                step_10_w4_1_1_by_side.get(side),
                 side=side,
             ).strip()
             if not block:

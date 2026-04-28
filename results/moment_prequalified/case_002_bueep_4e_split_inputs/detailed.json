@@ -125,11 +125,19 @@
             "value": 122.5,
             "unit": "mm"
           },
-          "beam_sc": {
+          "beam_sc_vgder": {
             "value": 712.0,
             "unit": "mm"
           },
-          "beam_s_threshold": {
+          "beam_s_threshold_vgder": {
+            "value": 105.11422358558332,
+            "unit": "mm"
+          },
+          "beam_sc_vgizq": {
+            "value": 712.0,
+            "unit": "mm"
+          },
+          "beam_s_threshold_vgizq": {
             "value": 105.11422358558332,
             "unit": "mm"
           },
@@ -287,7 +295,7 @@
               "requirement": "h1_vgder, h2_vgder, h3_vgder, h4_vgder y dh_vgder para trazabilidad geometrica",
               "formula": "h1=d-0.5tf+pso+pb; h2=d-0.5tf+pso; h3=d-1.5tf-psi; h4=d-1.5tf-psi-pb; dh=d+1/16 in (db<=7/8 in) else dh=d+1/8 in",
               "h1_vgder": {
-                "value": 648.35,
+                "value": 708.35,
                 "unit": "mm"
               },
               "h2_vgder": {
@@ -328,7 +336,7 @@
               "requirement": "h1_vgizq, h2_vgizq, h3_vgizq, h4_vgizq y dh_vgizq para trazabilidad geometrica",
               "formula": "h1=d-0.5tf+pso+pb; h2=d-0.5tf+pso; h3=d-1.5tf-psi; h4=d-1.5tf-psi-pb; dh=d+1/16 in (db<=7/8 in) else dh=d+1/8 in",
               "h1_vgizq": {
-                "value": 648.35,
+                "value": 708.35,
                 "unit": "mm"
               },
               "h2_vgizq": {
@@ -478,8 +486,8 @@
                 "value": 253.0,
                 "unit": "mm"
               },
-              "comparison": "ge",
-              "comparison_text": ">=",
+              "comparison": "le",
+              "comparison_text": "<=",
               "margin": {
                 "value": 0.0,
                 "unit": "mm"
@@ -547,7 +555,7 @@
               "limit_symbol": "compound",
               "comparison": "compound",
               "comparison_text": "compound",
-              "verification_text": "Sc = St_col - pfo; S = 0.5*sqrt(bcf*g); Sc_vgizq > S => 712.000 mm > 105.114 mm",
+              "verification_text": "Sc_vgizq = St_col - pfo_vgizq; S_vgizq = 0.5*sqrt(bcf*g_vgizq); Sc_vgizq > S_vgizq => 712.000 mm > 105.114 mm",
               "calculated": {
                 "value": 712.0,
                 "unit": "mm"
@@ -646,8 +654,8 @@
                 "value": 253.0,
                 "unit": "mm"
               },
-              "comparison": "ge",
-              "comparison_text": ">=",
+              "comparison": "le",
+              "comparison_text": "<=",
               "margin": {
                 "value": 0.0,
                 "unit": "mm"
@@ -715,7 +723,7 @@
               "limit_symbol": "compound",
               "comparison": "compound",
               "comparison_text": "compound",
-              "verification_text": "Sc = St_col - pfo; S = 0.5*sqrt(bcf*g); Sc_vgder > S => 712.000 mm > 105.114 mm",
+              "verification_text": "Sc_vgder = St_col - pfo_vgder; S_vgder = 0.5*sqrt(bcf*g_vgder); Sc_vgder > S_vgder => 712.000 mm > 105.114 mm",
               "calculated": {
                 "value": 712.0,
                 "unit": "mm"
@@ -1776,8 +1784,8 @@
                 "value": 253.0,
                 "unit": "mm"
               },
-              "comparison": "ge",
-              "comparison_text": ">=",
+              "comparison": "le",
+              "comparison_text": "<=",
               "margin": {
                 "value": 0.0,
                 "unit": "mm"
@@ -1845,7 +1853,7 @@
               "limit_symbol": "compound",
               "comparison": "compound",
               "comparison_text": "compound",
-              "verification_text": "Sc = St_col - pfo; S = 0.5*sqrt(bcf*g); Sc_vgizq > S => 712.000 mm > 105.114 mm",
+              "verification_text": "Sc_vgizq = St_col - pfo_vgizq; S_vgizq = 0.5*sqrt(bcf*g_vgizq); Sc_vgizq > S_vgizq => 712.000 mm > 105.114 mm",
               "calculated": {
                 "value": 712.0,
                 "unit": "mm"
@@ -1944,8 +1952,8 @@
                 "value": 253.0,
                 "unit": "mm"
               },
-              "comparison": "ge",
-              "comparison_text": ">=",
+              "comparison": "le",
+              "comparison_text": "<=",
               "margin": {
                 "value": 0.0,
                 "unit": "mm"
@@ -2013,7 +2021,7 @@
               "limit_symbol": "compound",
               "comparison": "compound",
               "comparison_text": "compound",
-              "verification_text": "Sc = St_col - pfo; S = 0.5*sqrt(bcf*g); Sc_vgder > S => 712.000 mm > 105.114 mm",
+              "verification_text": "Sc_vgder = St_col - pfo_vgder; S_vgder = 0.5*sqrt(bcf*g_vgder); Sc_vgder > S_vgder => 712.000 mm > 105.114 mm",
               "calculated": {
                 "value": 712.0,
                 "unit": "mm"

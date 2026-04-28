@@ -12,14 +12,14 @@
       "unit": "mm"
     },
     "Lnc_vgizq": {
-      "value": 1000.0,
+      "value": 1500.0,
       "unit": "mm"
     }
   },
   "placa_extremo": {
     "tipo_acero": "ASTM A572 Gr 50",
     "Bpe_vgizq": {
-      "value": 230.0,
+      "value": 240.0,
       "unit": "mm"
     },
     "tpe_vgizq": {
@@ -133,7 +133,7 @@
       "unit": "kN"
     },
     "Mu3_vgizq": {
-      "value": 1257410.0,
+      "value": 500,
       "unit": "kN-mm"
     },
     "Vg_vgizq": {

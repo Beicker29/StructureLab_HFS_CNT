@@ -38,7 +38,7 @@ Comparacion directa de valor calculado contra limite normativo (sin formato DCR)
 - Ambito: `END_PLATE_DER`
 - Clausula: `Documento: AISC 358-22 | Seccion: Seccion 6.3 + AISC 360-22 Tabla J3.3`
 - Formula: `h1=d-0.5tf+pso+pb; h2=d-0.5tf+pso; h3=d-1.5tf-psi; h4=d-1.5tf-psi-pb; dh=d+1/16 in (db<=7/8 in) else dh=d+1/8 in`
-- h1_vgder: `648.35 mm`
+- h1_vgder: `708.35 mm`
 - h2_vgder: `648.35 mm`
 - h3_vgder: `529.65 mm`
 - h4_vgder: `529.65 mm`
@@ -56,7 +56,7 @@ Comparacion directa de valor calculado contra limite normativo (sin formato DCR)
 - Ambito: `END_PLATE_IZQ`
 - Clausula: `Documento: AISC 358-22 | Seccion: Seccion 6.3 + AISC 360-22 Tabla J3.3`
 - Formula: `h1=d-0.5tf+pso+pb; h2=d-0.5tf+pso; h3=d-1.5tf-psi; h4=d-1.5tf-psi-pb; dh=d+1/16 in (db<=7/8 in) else dh=d+1/8 in`
-- h1_vgizq: `648.35 mm`
+- h1_vgizq: `708.35 mm`
 - h2_vgizq: `648.35 mm`
 - h3_vgizq: `529.65 mm`
 - h4_vgizq: `529.65 mm`
@@ -126,7 +126,7 @@ Comparacion directa de valor calculado contra limite normativo (sin formato DCR)
 #### Chequeo 1.2.3 - Ancho de placa de extremo vs ancho de ala de viga (left beam) (`bp_pe_vgizq`)
 
 - Ambito: `BEAM_IZQ`
-- Verificacion: `bp_pe_vgizq >= bf_vgizq + margin (25 mm); 253 mm >= 253 mm`
+- Verificacion: `bp_pe_vgizq <= bf_vgizq + margin (25 mm); 253 mm <= 253 mm`
 - Clausula: `Documento: AISC 358-22 | Seccion: Seccion 6.3 / Tabla 6.1`
 - Resultado: 🟢 Cumple
 
@@ -147,7 +147,7 @@ Comparacion directa de valor calculado contra limite normativo (sin formato DCR)
 #### Chequeo 1.2.6 - Criterio de despeje de viga con umbral Sc y S (left beam) (`Sc_vgizq`)
 
 - Ambito: `BEAM_IZQ`
-- Verificacion: `Sc = St_col - pfo; S = 0.5*sqrt(bcf*g); Sc_vgizq > S => 712.000 mm > 105.114 mm`
+- Verificacion: `Sc_vgizq = St_col - pfo_vgizq; S_vgizq = 0.5*sqrt(bcf*g_vgizq); Sc_vgizq > S_vgizq => 712.000 mm > 105.114 mm`
 - Clausula: `Documento: AISC 358-22 | Seccion: Seccion 6.3.1 (criterio de despeje de viga)`
 - Resultado: 🟢 Cumple
 
@@ -175,7 +175,7 @@ Comparacion directa de valor calculado contra limite normativo (sin formato DCR)
 #### Chequeo 1.2.10 - Ancho de placa de extremo vs ancho de ala de viga (right beam) (`bp_pe_vgder`)
 
 - Ambito: `BEAM_DER`
-- Verificacion: `bp_pe_vgder >= bf_vgder + margin (25 mm); 253 mm >= 253 mm`
+- Verificacion: `bp_pe_vgder <= bf_vgder + margin (25 mm); 253 mm <= 253 mm`
 - Clausula: `Documento: AISC 358-22 | Seccion: Seccion 6.3 / Tabla 6.1`
 - Resultado: 🟢 Cumple
 
@@ -196,7 +196,7 @@ Comparacion directa de valor calculado contra limite normativo (sin formato DCR)
 #### Chequeo 1.2.13 - Criterio de despeje de viga con umbral Sc y S (right beam) (`Sc_vgder`)
 
 - Ambito: `BEAM_DER`
-- Verificacion: `Sc = St_col - pfo; S = 0.5*sqrt(bcf*g); Sc_vgder > S => 712.000 mm > 105.114 mm`
+- Verificacion: `Sc_vgder = St_col - pfo_vgder; S_vgder = 0.5*sqrt(bcf*g_vgder); Sc_vgder > S_vgder => 712.000 mm > 105.114 mm`
 - Clausula: `Documento: AISC 358-22 | Seccion: Seccion 6.3.1 (criterio de despeje de viga)`
 - Resultado: 🟢 Cumple
 

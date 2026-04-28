@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 from copy import deepcopy
+from pathlib import Path
+import shutil
+from uuid import uuid4
 
 import pytest
 
@@ -154,12 +157,26 @@ BSEEP_8ES_CASE_PAYLOAD = {
         "beam_shear_connector_free_length_from_column_face_izq": {"value": 40.0, "unit": "in"},
         "column_slab_connection_condition": "isolated",
         "bolt_gage": {"value": 6.0, "unit": "in"},
+        "bolt_gage_vgder": {"value": 6.0, "unit": "in"},
+        "bolt_gage_vgizq": {"value": 6.0, "unit": "in"},
         "end_plate_width": {"value": 9.976377952755906, "unit": "in"},
+        "end_plate_width_vgder": {"value": 9.976377952755906, "unit": "in"},
+        "end_plate_width_vgizq": {"value": 9.976377952755906, "unit": "in"},
         "end_plate_thickness": {"value": 1.2, "unit": "in"},
+        "end_plate_thickness_vgder": {"value": 1.2, "unit": "in"},
+        "end_plate_thickness_vgizq": {"value": 1.2, "unit": "in"},
         "de": {"value": 2.3622, "unit": "in"},
+        "de_vgder": {"value": 2.3622, "unit": "in"},
+        "de_vgizq": {"value": 2.3622, "unit": "in"},
         "pb": {"value": 3.7402, "unit": "in"},
+        "pb_vgder": {"value": 3.7402, "unit": "in"},
+        "pb_vgizq": {"value": 3.7402, "unit": "in"},
         "pfo": {"value": 1.9685, "unit": "in"},
+        "pfo_vgder": {"value": 1.9685, "unit": "in"},
+        "pfo_vgizq": {"value": 1.9685, "unit": "in"},
         "pfi": {"value": 1.9685, "unit": "in"},
+        "pfi_vgder": {"value": 1.9685, "unit": "in"},
+        "pfi_vgizq": {"value": 1.9685, "unit": "in"},
         "continuity_plate_thickness": {"value": 0.625, "unit": "in"},
         "continuity_plate_weld_type": "CJP",
         "clear_distance_end_plate": {"value": 2.0, "unit": "in"},
@@ -183,6 +200,8 @@ BSEEP_8ES_CASE_PAYLOAD = {
         "kds_w3_vgizq": 1.0,
         "kds_w3_vgder": 1.0,
         "stiffener_thickness": {"value": 0.5, "unit": "in"},
+        "stiffener_thickness_vgizq": {"value": 0.5, "unit": "in"},
+        "stiffener_thickness_vgder": {"value": 0.5, "unit": "in"},
         "tipo_w4_vgizq": "CJP",
         "t_w4_vgizq": {"value": 0.25, "unit": "in"},
         "nl_w4_vgizq": 1,
@@ -242,3 +261,16 @@ def bseep_8es_payload() -> dict:
 @pytest.fixture
 def bseep_4es_payload() -> dict:
     return deepcopy(BSEEP_4ES_CASE_PAYLOAD)
+
+
+@pytest.fixture
+def tmp_path() -> Path:
+    """Workspace-local tmp path to avoid host TMP permission issues in sandboxed runs."""
+    root = Path("tmp_test_paths")
+    root.mkdir(parents=True, exist_ok=True)
+    path = root / f"case_{uuid4().hex}"
+    path.mkdir(parents=True, exist_ok=False)
+    try:
+        yield path
+    finally:
+        shutil.rmtree(path, ignore_errors=True)

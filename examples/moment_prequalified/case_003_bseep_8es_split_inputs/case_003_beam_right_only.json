@@ -8,7 +8,7 @@
       "unit": "MPa"
     },
     "Llb_vgder": {
-      "value": 6096.0,
+      "value": 7500,
       "unit": "mm"
     },
     "Lnc_vgder": {
@@ -137,7 +137,7 @@
       "unit": "kN-mm"
     },
     "Vg_vgder": {
-      "value": 44.482,
+      "value": 97.11,
       "unit": "kN"
     }
   }

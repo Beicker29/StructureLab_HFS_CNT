@@ -18,20 +18,20 @@
     "ratio_McMb": 1.2
   },
   "columna": {
-    "perfil_col": "HEB 400",
+    "perfil_col": "HEB 500",
     "tipo_acero_perfil_col": "ASTM A572 Gr 50",
     "E_col": {
       "value": 200000,
       "unit": "MPa"
     },
     "St_col": {
-      "value": 762.0,
+      "value": 2500,
       "unit": "mm"
     },
     "union_col_losa": "isolated"
   },
   "platina_continuidad": {
-    "usar_pc_col": true,
+    "usar_pc_col": false,
     "tipo_acero_pc_col": "ASTM A572 Gr 50",
     "tpc_col": {
       "value": 15.9,
@@ -52,7 +52,7 @@
   },
   "loads": {
     "Pu_col": {
-      "value": 696.654,
+      "value": 1173.33,
       "unit": "kN"
     }
   }
