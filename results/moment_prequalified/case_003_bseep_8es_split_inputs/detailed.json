@@ -101,7 +101,7 @@
             "unit": "mm"
           },
           "beam_clear_span_length_izq": {
-            "value": 6096.0,
+            "value": 7500.0,
             "unit": "mm"
           },
           "beam_shear_connector_free_length_from_column_face_izq": {
@@ -173,7 +173,7 @@
             "unit": "ratio"
           },
           "clear_span_to_depth_ratio_izq": {
-            "value": 9.96078431372549,
+            "value": 12.355848434925864,
             "unit": "ratio"
           },
           "clear_span_to_depth_limit": {
@@ -182,10 +182,10 @@
           },
           "frame_system_for_span_ratio": "SMF",
           "beam_flange_compactness_ratio_der": 6.03448275862069,
-          "beam_flange_compactness_ratio_izq": 5.841836734693877,
+          "beam_flange_compactness_ratio_izq": 6.589595375722543,
           "beam_flange_compactness_limit": 6.887004431501818,
           "beam_web_compactness_ratio_der": 43.633027522935784,
-          "beam_web_compactness_ratio_izq": 46.0,
+          "beam_web_compactness_ratio_izq": 48.839285714285715,
           "beam_web_compactness_limit": 56.24386952393152,
           "column_flange_compactness_ratio": 6.25,
           "column_flange_compactness_limit": 6.887004431501818,
@@ -254,7 +254,7 @@
                 "unit": "mm"
               },
               "protected_zone_length_vgizq": {
-                "value": 496.52558883257655,
+                "value": 494.02558883257655,
                 "unit": "mm"
               }
             },
@@ -315,7 +315,7 @@
               "description": "Altura derivada de placa de extremo",
               "formula": "Hpe_vgizq = d_vgizq + 2*pfo_pe_vgizq + 2*de_pe_vgizq",
               "hpe_vgizq": {
-                "value": 832.0,
+                "value": 827.0,
                 "unit": "mm"
               }
             },
@@ -432,7 +432,7 @@
               "limit_symbol": "{W, HEA, HEB, IPE}",
               "comparison": "family_in",
               "comparison_text": "in",
-              "calculated_text": "W24X84",
+              "calculated_text": "W24X76",
               "allowed_families": [
                 "W",
                 "HEA",
@@ -475,13 +475,13 @@
                 "unit": "mm"
               },
               "limit": {
-                "value": 254.0,
+                "value": 253.0,
                 "unit": "mm"
               },
               "comparison": "ge",
               "comparison_text": ">=",
               "margin": {
-                "value": -24.0,
+                "value": -23.0,
                 "unit": "mm"
               },
               "status": "FAIL",
@@ -525,13 +525,13 @@
                 "unit": "mm"
               },
               "limit": {
-                "value": 918.0,
+                "value": 910.5,
                 "unit": "mm"
               },
               "comparison": "ge",
               "comparison_text": ">=",
               "margin": {
-                "value": 82.0,
+                "value": 89.5,
                 "unit": "mm"
               },
               "status": "PASS",
@@ -564,7 +564,7 @@
               "calculated_symbol": "Llb_vgizq/d_vgizq",
               "limit_symbol": "7 (SMF)",
               "calculated": {
-                "value": 9.96078431372549,
+                "value": 12.355848434925864,
                 "unit": "ratio"
               },
               "limit": {
@@ -574,7 +574,7 @@
               "comparison": "ge",
               "comparison_text": ">=",
               "margin": {
-                "value": 2.9607843137254903,
+                "value": 5.355848434925864,
                 "unit": "ratio"
               },
               "status": "PASS",
@@ -589,7 +589,7 @@
               "calculated_symbol": "lambda_f_vgizq",
               "limit_symbol": "lambda_f_limit",
               "calculated": {
-                "value": 5.841836734693877,
+                "value": 6.589595375722543,
                 "unit": "ratio"
               },
               "limit": {
@@ -599,7 +599,7 @@
               "comparison": "le",
               "comparison_text": "<=",
               "margin": {
-                "value": 1.0451676968079413,
+                "value": 0.29740905577927546,
                 "unit": "ratio"
               },
               "status": "PASS",
@@ -614,7 +614,7 @@
               "calculated_symbol": "lambda_w_vgizq",
               "limit_symbol": "lambda_w_limit",
               "calculated": {
-                "value": 46.0,
+                "value": 48.839285714285715,
                 "unit": "ratio"
               },
               "limit": {
@@ -624,7 +624,7 @@
               "comparison": "le",
               "comparison_text": "<=",
               "margin": {
-                "value": 10.243869523931522,
+                "value": 7.404583809645807,
                 "unit": "ratio"
               },
               "status": "PASS",
@@ -1003,7 +1003,7 @@
                 "unit": "mm"
               },
               "maximum": {
-                "value": 254.0,
+                "value": 253.0,
                 "unit": "mm"
               }
             },
@@ -1131,13 +1131,13 @@
                 "unit": "mm"
               },
               "limit": {
-                "value": 11.9,
+                "value": 11.2,
                 "unit": "mm"
               },
               "comparison": "ge",
               "comparison_text": ">=",
               "margin": {
-                "value": 0.7999999999999989,
+                "value": 1.5,
                 "unit": "mm"
               },
               "status": "PASS",
@@ -1545,17 +1545,17 @@
                 "unit": "mm"
               },
               "limit": {
-                "value": 9.9,
+                "value": 9.2,
                 "unit": "mm"
               },
               "comparison": "le",
               "comparison_text": "<=",
               "margin": {
-                "value": 0.375,
+                "value": -0.32500000000000107,
                 "unit": "mm"
               },
-              "status": "PASS",
-              "result": "OK"
+              "status": "FAIL",
+              "result": "NO_OK"
             },
             {
               "step": "1",
@@ -2108,7 +2108,7 @@
               "calculated_symbol": "tf_vgizq",
               "limit_symbol": "[tf_vgizq_min, tf_vgizq_max]",
               "calculated": {
-                "value": 19.6,
+                "value": 17.3,
                 "unit": "mm"
               },
               "minimum": {
@@ -2122,15 +2122,15 @@
               "comparison": "range",
               "comparison_text": "in",
               "margin_to_min": {
-                "value": 5.312500000000002,
+                "value": 3.012500000000001,
                 "unit": "mm"
               },
               "margin_to_max": {
-                "value": 5.799999999999997,
+                "value": 8.099999999999998,
                 "unit": "mm"
               },
               "margin": {
-                "value": 5.312500000000002,
+                "value": 3.012500000000001,
                 "unit": "mm"
               },
               "status": "PASS",
@@ -2145,7 +2145,7 @@
               "calculated_symbol": "bf_vgizq",
               "limit_symbol": "[bf_vgizq_min, bf_vgizq_max]",
               "calculated": {
-                "value": 229.0,
+                "value": 228.0,
                 "unit": "mm"
               },
               "minimum": {
@@ -2159,15 +2159,15 @@
               "comparison": "range",
               "comparison_text": "in",
               "margin_to_min": {
-                "value": 38.5,
+                "value": 37.5,
                 "unit": "mm"
               },
               "margin_to_max": {
-                "value": 82.14999999999998,
+                "value": 83.14999999999998,
                 "unit": "mm"
               },
               "margin": {
-                "value": 38.5,
+                "value": 37.5,
                 "unit": "mm"
               },
               "status": "PASS",
@@ -2182,7 +2182,7 @@
               "calculated_symbol": "d_vgizq",
               "limit_symbol": "[d_vgizq_min, d_vgizq_max]",
               "calculated": {
-                "value": 612.0,
+                "value": 607.0,
                 "unit": "mm"
               },
               "minimum": {
@@ -2196,15 +2196,15 @@
               "comparison": "range",
               "comparison_text": "in",
               "margin_to_min": {
-                "value": 154.8,
+                "value": 149.8,
                 "unit": "mm"
               },
               "margin_to_max": {
-                "value": 302.4,
+                "value": 307.4,
                 "unit": "mm"
               },
               "margin": {
-                "value": 154.8,
+                "value": 149.8,
                 "unit": "mm"
               },
               "status": "PASS",
@@ -2296,7 +2296,7 @@
               "limit_symbol": "{W, HEA, HEB, IPE}",
               "comparison": "family_in",
               "comparison_text": "in",
-              "calculated_text": "W24X84",
+              "calculated_text": "W24X76",
               "allowed_families": [
                 "W",
                 "HEA",
@@ -2339,13 +2339,13 @@
                 "unit": "mm"
               },
               "limit": {
-                "value": 254.0,
+                "value": 253.0,
                 "unit": "mm"
               },
               "comparison": "ge",
               "comparison_text": ">=",
               "margin": {
-                "value": -24.0,
+                "value": -23.0,
                 "unit": "mm"
               },
               "status": "FAIL",
@@ -2389,13 +2389,13 @@
                 "unit": "mm"
               },
               "limit": {
-                "value": 918.0,
+                "value": 910.5,
                 "unit": "mm"
               },
               "comparison": "ge",
               "comparison_text": ">=",
               "margin": {
-                "value": 82.0,
+                "value": 89.5,
                 "unit": "mm"
               },
               "status": "PASS",
@@ -2428,7 +2428,7 @@
               "calculated_symbol": "Llb_vgizq/d_vgizq",
               "limit_symbol": "7 (SMF)",
               "calculated": {
-                "value": 9.96078431372549,
+                "value": 12.355848434925864,
                 "unit": "ratio"
               },
               "limit": {
@@ -2438,7 +2438,7 @@
               "comparison": "ge",
               "comparison_text": ">=",
               "margin": {
-                "value": 2.9607843137254903,
+                "value": 5.355848434925864,
                 "unit": "ratio"
               },
               "status": "PASS",
@@ -2453,7 +2453,7 @@
               "calculated_symbol": "lambda_f_vgizq",
               "limit_symbol": "lambda_f_limit",
               "calculated": {
-                "value": 5.841836734693877,
+                "value": 6.589595375722543,
                 "unit": "ratio"
               },
               "limit": {
@@ -2463,7 +2463,7 @@
               "comparison": "le",
               "comparison_text": "<=",
               "margin": {
-                "value": 1.0451676968079413,
+                "value": 0.29740905577927546,
                 "unit": "ratio"
               },
               "status": "PASS",
@@ -2478,7 +2478,7 @@
               "calculated_symbol": "lambda_w_vgizq",
               "limit_symbol": "lambda_w_limit",
               "calculated": {
-                "value": 46.0,
+                "value": 48.839285714285715,
                 "unit": "ratio"
               },
               "limit": {
@@ -2488,7 +2488,7 @@
               "comparison": "le",
               "comparison_text": "<=",
               "margin": {
-                "value": 10.243869523931522,
+                "value": 7.404583809645807,
                 "unit": "ratio"
               },
               "status": "PASS",
@@ -2867,7 +2867,7 @@
                 "unit": "mm"
               },
               "maximum": {
-                "value": 254.0,
+                "value": 253.0,
                 "unit": "mm"
               }
             },
@@ -2995,13 +2995,13 @@
                 "unit": "mm"
               },
               "limit": {
-                "value": 11.9,
+                "value": 11.2,
                 "unit": "mm"
               },
               "comparison": "ge",
               "comparison_text": ">=",
               "margin": {
-                "value": 0.7999999999999989,
+                "value": 1.5,
                 "unit": "mm"
               },
               "status": "PASS",
@@ -3409,17 +3409,17 @@
                 "unit": "mm"
               },
               "limit": {
-                "value": 9.9,
+                "value": 9.2,
                 "unit": "mm"
               },
               "comparison": "le",
               "comparison_text": "<=",
               "margin": {
-                "value": 0.375,
+                "value": -0.32500000000000107,
                 "unit": "mm"
               },
-              "status": "PASS",
-              "result": "OK"
+              "status": "FAIL",
+              "result": "NO_OK"
             },
             {
               "step": "1",
@@ -3972,7 +3972,7 @@
               "calculated_symbol": "tf_vgizq",
               "limit_symbol": "[tf_vgizq_min, tf_vgizq_max]",
               "calculated": {
-                "value": 19.6,
+                "value": 17.3,
                 "unit": "mm"
               },
               "minimum": {
@@ -3986,15 +3986,15 @@
               "comparison": "range",
               "comparison_text": "in",
               "margin_to_min": {
-                "value": 5.312500000000002,
+                "value": 3.012500000000001,
                 "unit": "mm"
               },
               "margin_to_max": {
-                "value": 5.799999999999997,
+                "value": 8.099999999999998,
                 "unit": "mm"
               },
               "margin": {
-                "value": 5.312500000000002,
+                "value": 3.012500000000001,
                 "unit": "mm"
               },
               "status": "PASS",
@@ -4009,7 +4009,7 @@
               "calculated_symbol": "bf_vgizq",
               "limit_symbol": "[bf_vgizq_min, bf_vgizq_max]",
               "calculated": {
-                "value": 229.0,
+                "value": 228.0,
                 "unit": "mm"
               },
               "minimum": {
@@ -4023,15 +4023,15 @@
               "comparison": "range",
               "comparison_text": "in",
               "margin_to_min": {
-                "value": 38.5,
+                "value": 37.5,
                 "unit": "mm"
               },
               "margin_to_max": {
-                "value": 82.14999999999998,
+                "value": 83.14999999999998,
                 "unit": "mm"
               },
               "margin": {
-                "value": 38.5,
+                "value": 37.5,
                 "unit": "mm"
               },
               "status": "PASS",
@@ -4046,7 +4046,7 @@
               "calculated_symbol": "d_vgizq",
               "limit_symbol": "[d_vgizq_min, d_vgizq_max]",
               "calculated": {
-                "value": 612.0,
+                "value": 607.0,
                 "unit": "mm"
               },
               "minimum": {
@@ -4060,15 +4060,15 @@
               "comparison": "range",
               "comparison_text": "in",
               "margin_to_min": {
-                "value": 154.8,
+                "value": 149.8,
                 "unit": "mm"
               },
               "margin_to_max": {
-                "value": 302.4,
+                "value": 307.4,
                 "unit": "mm"
               },
               "margin": {
-                "value": 154.8,
+                "value": 149.8,
                 "unit": "mm"
               },
               "status": "PASS",
@@ -4173,11 +4173,11 @@
       "clause": "Chapter 6 / Section 6.7.1 Step 2 + Eq. (2.4-1) and Eq. (2.4-2)",
       "source_document": "AISC 358-22",
       "demand": {
-        "value": 1601679.7499999998,
+        "value": 1431473.9999999998,
         "unit": "kN-mm"
       },
       "capacity": {
-        "value": 1601679.7499999998,
+        "value": 1431473.9999999998,
         "unit": "kN-mm"
       },
       "dcr": 1.0,
@@ -4198,7 +4198,7 @@
           },
           "member_ductility_demand_vgder": "high",
           "ze_vgizq": {
-            "value": 3670000.0,
+            "value": 3280000.0,
             "unit": "mm3"
           },
           "member_ductility_demand_vgizq": "high"
@@ -4209,7 +4209,7 @@
           "mpr_der": 1143433.5,
           "member_ductility_demand_beam_der": "high",
           "cpr_izq": 1.15,
-          "mpr_izq": 1601679.7499999998,
+          "mpr_izq": 1431473.9999999998,
           "member_ductility_demand_beam_izq": "high"
         },
         "design_factors": {},
@@ -4219,7 +4219,7 @@
           "mpr_stated": "kN-mm"
         },
         "final_capacity": {
-          "value": 1601679.7499999998,
+          "value": 1431473.9999999998,
           "unit": "kN-mm"
         }
       },
@@ -4245,11 +4245,11 @@
           "connection_type": "bseep_8es",
           "governing_side_sh": "der",
           "d_vgizq": {
-            "value": 612.0,
+            "value": 607.0,
             "unit": "mm"
           },
           "bf_vgizq": {
-            "value": 229.0,
+            "value": 228.0,
             "unit": "mm"
           },
           "L_pest_vgizq": {
@@ -4299,11 +4299,11 @@
       "clause": "Chapter 6 / Section 6.7.1 Step 4 + Eq. (2.4-3)",
       "source_document": "AISC 358-22",
       "demand": {
-        "value": 569.9674822834645,
+        "value": 478.83639999999997,
         "unit": "kN"
       },
       "capacity": {
-        "value": 569.9674822834645,
+        "value": 478.83639999999997,
         "unit": "kN"
       },
       "dcr": 1.0,
@@ -4325,27 +4325,27 @@
           "vgravity_between_hinges_der_source": "loads.beam_right_vgravity",
           "stated_vh_dermax": null,
           "lh_izq": {
-            "value": 6096.0,
+            "value": 7500.0,
             "unit": "mm"
           },
           "lh_izq_source": "geometry.beam_clear_span_length_izq",
           "vgravity_between_hinges_izq": {
-            "value": 44.482,
+            "value": 97.11,
             "unit": "kN"
           },
           "vgravity_between_hinges_izq_source": "loads.beam_left_vgravity",
           "stated_vh_izqmax": null
         },
         "intermediates": {
-          "mpr": 1601679.7499999998,
+          "mpr": 1431473.9999999998,
           "2mpr_over_lh_der": 375.14222440944883,
           "mpr_der": 1143433.5,
           "vh_dermax": 419.62422440944886,
           "vh_dermin": 330.6602244094488,
-          "2mpr_over_lh_izq": 525.4854822834645,
-          "mpr_izq": 1601679.7499999998,
-          "vh_izqmax": 569.9674822834645,
-          "vh_izqmin": 481.00348228346456
+          "2mpr_over_lh_izq": 381.72639999999996,
+          "mpr_izq": 1431473.9999999998,
+          "vh_izqmax": 478.83639999999997,
+          "vh_izqmin": 284.61639999999994
         },
         "design_factors": {},
         "equation": "Vhmax = 2*Mpr/Lh + Vgravity; Vhmin = 2*Mpr/Lh - Vgravity (Eq. 2.4-3, side-specific der/izq)",
@@ -4354,7 +4354,7 @@
           "vhmax_selected": "kN"
         },
         "final_capacity": {
-          "value": 569.9674822834645,
+          "value": 478.83639999999997,
           "unit": "kN"
         }
       },
@@ -4366,11 +4366,11 @@
       "clause": "Chapter 6 / Section 6.7.1 Step 5 + Eq. (2.4-4)",
       "source_document": "AISC 358-22",
       "demand": {
-        "value": 1724750.3142274779,
+        "value": 1534867.0316244708,
         "unit": "kN-mm"
       },
       "capacity": {
-        "value": 1724750.3142274779,
+        "value": 1534867.0316244708,
         "unit": "kN-mm"
       },
       "dcr": 1.0,
@@ -4384,7 +4384,7 @@
           "stated_mf_izqmax": null
         },
         "intermediates": {
-          "mpr": 1601679.7499999998,
+          "mpr": 1431473.9999999998,
           "sh": 215.92558883257652,
           "mpr_der": 1143433.5,
           "sh_der": 215.92558883257652,
@@ -4392,12 +4392,12 @@
           "mf_dermin": 1214831.5036591222,
           "vh_dermax": 419.62422440944886,
           "vh_dermin": 330.6602244094488,
-          "mpr_izq": 1601679.7499999998,
+          "mpr_izq": 1431473.9999999998,
           "sh_izq": 215.92558883257652,
-          "mf_izqmax": 1724750.3142274779,
-          "mf_izqmin": 1705540.7101425766,
-          "vh_izqmax": 569.9674822834645,
-          "vh_izqmin": 481.00348228346456
+          "mf_izqmax": 1534867.0316244708,
+          "mf_izqmin": 1492929.9637614079,
+          "vh_izqmax": 478.83639999999997,
+          "vh_izqmin": 284.61639999999994
         },
         "design_factors": {},
         "equation": "Mfmax = Mpr + Vhmax*Sh; Mfmin = Mpr + Vhmin*Sh (Eq. 2.4-4, side-specific der/izq)",
@@ -4406,7 +4406,7 @@
           "mfmax_selected": "kN-mm"
         },
         "final_capacity": {
-          "value": 1724750.3142274779,
+          "value": 1534867.0316244708,
           "unit": "kN-mm"
         }
       },
@@ -4418,28 +4418,28 @@
       "clause": "Chapter 6 / Section 6.7.1 Step 6.1 + AISC 360-22 J3.7",
       "source_document": "AISC 358-22",
       "demand": {
-        "value": 416.32478377606395,
+        "value": 370.4902557749519,
         "unit": "kN"
       },
       "capacity": {
         "value": 450.193760569405,
         "unit": "kN"
       },
-      "dcr": 0.9247680004482879,
+      "dcr": 0.822957331319643,
       "status": "PASS",
       "calculation_memory": {
         "inputs": {
           "mf": {
-            "value": 1724750.3142274779,
+            "value": 1534867.0316244708,
             "unit": "kN-mm"
           },
           "mf_source": "max(Mf_vgizq_max, Mf_vgizq_min)",
           "mf_computed": {
-            "value": 1724750.3142274779,
+            "value": 1534867.0316244708,
             "unit": "kN-mm"
           },
           "mf_vgizq_critico": {
-            "value": 1724750.3142274779,
+            "value": 1534867.0316244708,
             "unit": "kN-mm"
           },
           "h1_pe_vgizq": {
@@ -4480,7 +4480,7 @@
             "unit": "mm2"
           },
           "rnt_b": 500.2152895215611,
-          "ru_b_p_pos": 416.32478377606395,
+          "ru_b_p_pos": 370.4902557749519,
           "phi_rn_b_p_pos": 450.193760569405,
           "nominal_tension_capacity_per_bolt": 500.2152895215611
         },
@@ -4505,19 +4505,19 @@
       "clause": "Chapter 6 / Section 6.7.1 Step 6.2 + AISC 360-22 J3.7",
       "source_document": "AISC 358-22",
       "demand": {
-        "value": 71.24593528543306,
+        "value": 59.854549999999996,
         "unit": "kN"
       },
       "capacity": {
         "value": 271.270599317462,
         "unit": "kN"
       },
-      "dcr": 0.26263788064277294,
+      "dcr": 0.2206451792070306,
       "status": "PASS",
       "calculation_memory": {
         "inputs": {
           "vh_vgizq_critico": {
-            "value": 569.9674822834645,
+            "value": 478.83639999999997,
             "unit": "kN"
           },
           "vh_vgizq_critico_source": "max(Vh_vgizq_max, Vh_vgizq_min)",
@@ -4543,7 +4543,7 @@
             "unit": "mm2"
           },
           "rnv_b": 301.41177701940217,
-          "ru_b_v2_vgizq": 71.24593528543306,
+          "ru_b_v2_vgizq": 59.854549999999996,
           "phi_rn_b_v2_vgizq": 271.270599317462,
           "nominal_shear_capacity_per_bolt": 301.41177701940217
         },
@@ -4568,24 +4568,24 @@
       "clause": "Chapter 6 / Section 6.7.1 Step 7.1.1 + Eq. (6.7-8)",
       "source_document": "AISC 358-22",
       "demand": {
-        "value": 1724750.3142274779,
+        "value": 1534867.0316244708,
         "unit": "kN-mm"
       },
       "capacity": {
         "value": 1379018.774941797,
         "unit": "kN-mm"
       },
-      "dcr": 1.2507083627634243,
+      "dcr": 1.113013875891031,
       "status": "FAIL",
       "calculation_memory": {
         "inputs": {
           "mf_vgizq_critico": {
-            "value": 1724750.3142274779,
+            "value": 1534867.0316244708,
             "unit": "kN-mm"
           },
           "mf_source": "max(Mf_vgizq_max, Mf_vgizq_min)",
           "mf_computed": {
-            "value": 1724750.3142274779,
+            "value": 1534867.0316244708,
             "unit": "kN-mm"
           },
           "tpe_vgizq": {
@@ -4651,32 +4651,32 @@
       "clause": "Chapter 6 / Section 6.7.1 Step 7.2.1 + Eq. (6.7-10)",
       "source_document": "AISC 358-22",
       "demand": {
-        "value": 1455.7311902662711,
+        "value": 1301.396499596804,
         "unit": "kN"
       },
       "capacity": {
         "value": 906.9705,
         "unit": "kN"
       },
-      "dcr": 1.605048003508682,
+      "dcr": 1.434882942275194,
       "status": "FAIL",
       "calculation_memory": {
         "inputs": {
           "ru_pe_m3_vgizq": {
-            "value": 1724750.3142274779,
+            "value": 1534867.0316244708,
             "unit": "kN-mm"
           },
           "mf_source": "max(Mf_vgizq_max, Mf_vgizq_min)",
           "mf_computed": {
-            "value": 1724750.3142274779,
+            "value": 1534867.0316244708,
             "unit": "kN-mm"
           },
           "d_vgizq": {
-            "value": 612.0,
+            "value": 607.0,
             "unit": "mm"
           },
           "tf_vgizq": {
-            "value": 19.6,
+            "value": 17.3,
             "unit": "mm"
           },
           "bpe_vgizq": {
@@ -4693,7 +4693,7 @@
           }
         },
         "intermediates": {
-          "z_vgizq": 592.4,
+          "z_vgizq": 589.7,
           "rn_pe_v1_vgizq": 1209.294,
           "phi_rn_pe_v1_vgizq": 906.9705
         },
@@ -4718,32 +4718,32 @@
       "clause": "Chapter 6 / Section 6.7.1 Step 7.2.2 + Eq. (6.7-12)",
       "source_document": "AISC 358-22",
       "demand": {
-        "value": 1455.7311902662711,
+        "value": 1301.396499596804,
         "unit": "kN"
       },
       "capacity": {
         "value": 839.9335500000001,
         "unit": "kN"
       },
-      "dcr": 1.7331504263239288,
+      "dcr": 1.5494041160718057,
       "status": "FAIL",
       "calculation_memory": {
         "inputs": {
           "ru_pe_m3_vgizq": {
-            "value": 1724750.3142274779,
+            "value": 1534867.0316244708,
             "unit": "kN-mm"
           },
           "mf_source": "max(Mf_vgizq_max, Mf_vgizq_min)",
           "mf_computed": {
-            "value": 1724750.3142274779,
+            "value": 1534867.0316244708,
             "unit": "kN-mm"
           },
           "d_vgizq": {
-            "value": 612.0,
+            "value": 607.0,
             "unit": "mm"
           },
           "tf_vgizq": {
-            "value": 19.6,
+            "value": 17.3,
             "unit": "mm"
           },
           "bpe_vgizq": {
@@ -4768,7 +4768,7 @@
           }
         },
         "intermediates": {
-          "z_vgizq": 592.4,
+          "z_vgizq": 589.7,
           "net_width": 163.3,
           "nominal_shear": 1119.9114000000002,
           "design_shear": 839.9335500000001,
@@ -4798,19 +4798,19 @@
       "clause": "Chapter 6 / Section 7.3.1 + AISC 360-22 J3.11(a)",
       "source_document": "AISC 360-22",
       "demand": {
-        "value": 71.24593528543306,
+        "value": 59.854549999999996,
         "unit": "kN"
       },
       "capacity": {
         "value": 650.6116019999998,
         "unit": "kN"
       },
-      "dcr": 0.10950609406045157,
+      "dcr": 0.09199736035448075,
       "status": "PASS",
       "calculation_memory": {
         "inputs": {
           "vh_vgizq_critico": {
-            "value": 569.9674822834645,
+            "value": 478.83639999999997,
             "unit": "kN"
           },
           "vh_vgizq_critico_source": "max(Vh_vgizq_max, Vh_vgizq_min)",
@@ -4836,7 +4836,7 @@
             "unit": "mm"
           },
           "tf_vgizq": {
-            "value": 19.6,
+            "value": 17.3,
             "unit": "mm"
           },
           "dh_pe_vgizq": {
@@ -4852,7 +4852,7 @@
           "db": 28.575,
           "db_in": 1.125,
           "hole_add_in": 0.125,
-          "ru_pe_v2_vgizq": 71.24593528543306,
+          "ru_pe_v2_vgizq": 59.854549999999996,
           "nominal_strength": 867.4821359999999,
           "design_strength": 650.6116019999998
         },
@@ -4877,19 +4877,19 @@
       "clause": "Chapter 6 / Section 7.3.2 + AISC 360-22 J3.11(a)",
       "source_document": "AISC 360-22",
       "demand": {
-        "value": 71.24593528543306,
+        "value": 59.854549999999996,
         "unit": "kN"
       },
       "capacity": {
         "value": 587.9020499999999,
         "unit": "kN"
       },
-      "dcr": 0.12118674409356639,
+      "dcr": 0.10181041212562536,
       "status": "PASS",
       "calculation_memory": {
         "inputs": {
           "vh_vgizq_critico": {
-            "value": 569.9674822834645,
+            "value": 478.83639999999997,
             "unit": "kN"
           },
           "vh_vgizq_critico_source": "max(Vh_vgizq_max, Vh_vgizq_min)",
@@ -4908,7 +4908,7 @@
           }
         },
         "intermediates": {
-          "ru_pe_v2_vgizq": 71.24593528543306,
+          "ru_pe_v2_vgizq": 59.854549999999996,
           "nominal_strength": 783.8693999999999,
           "design_strength": 587.9020499999999
         },
@@ -4933,19 +4933,19 @@
       "clause": "Chapter 6 / Section 6.7.2 + Eq. (6.7-13)",
       "source_document": "AISC 358-22",
       "demand": {
-        "value": 0.0012333186676892522,
+        "value": 0.0010975386680077937,
         "unit": "mm"
       },
       "capacity": {
         "value": 24.0,
         "unit": "mm"
       },
-      "dcr": 0.00005138827782038551,
+      "dcr": 0.00004573077783365807,
       "status": "PASS",
       "calculation_memory": {
         "inputs": {
           "mf": {
-            "value": 1724750.3142274779,
+            "value": 1534867.0316244708,
             "unit": "kN-mm"
           },
           "beam_depth": {
@@ -5047,24 +5047,24 @@
       "clause": "Chapter 6 / Section 6.7.2 + Eq. (6.7-17)",
       "source_document": "AISC 358-22",
       "demand": {
-        "value": 2911.4623805325423,
+        "value": 2602.792999193608,
         "unit": "kN"
       },
       "capacity": {
-        "value": 1753.0829999999999,
+        "value": 1742.3707500000003,
         "unit": "kN"
       },
-      "dcr": 1.6607669919407937,
+      "dcr": 1.4938227120683745,
       "status": "FAIL",
       "calculation_memory": {
         "inputs": {
           "column_shape": "HEB 400",
           "ru_cf_v2_col_vgizq": {
-            "value": 2911.4623805325423,
+            "value": 2602.792999193608,
             "unit": "kN"
           },
           "mf_vgizq_critico": {
-            "value": 1724750.3142274779,
+            "value": 1534867.0316244708,
             "unit": "kN-mm"
           },
           "st_col": {
@@ -5085,11 +5085,11 @@
             "unit": "mm"
           },
           "lb": {
-            "value": 70.4,
+            "value": 68.1,
             "unit": "mm"
           },
           "lb_col": {
-            "value": 70.4,
+            "value": 68.1,
             "unit": "mm"
           },
           "lb_col_formula": "lb_col = tf_vgizq + 2w_w4_vgizq + 2*tpe_vgizq",
@@ -5117,11 +5117,11 @@
             "unit": "mm"
           },
           "d_vgizq": {
-            "value": 612.0,
+            "value": 607.0,
             "unit": "mm"
           },
           "tf_vgizq": {
-            "value": 19.6,
+            "value": 17.3,
             "unit": "mm"
           },
           "tpe_vgizq": {
@@ -5130,8 +5130,8 @@
           }
         },
         "intermediates": {
-          "phi_rn_cf_v2_col_vgizq": 1753.0829999999999,
-          "rn_nominal_cf_v2_col_vgizq": 1753.0829999999999
+          "phi_rn_cf_v2_col_vgizq": 1742.3707500000003,
+          "rn_nominal_cf_v2_col_vgizq": 1742.3707500000003
         },
         "design_factors": {
           "phi_d": 1.0
@@ -5142,7 +5142,7 @@
           "capacity": "kN"
         },
         "final_capacity": {
-          "value": 1753.0829999999999,
+          "value": 1742.3707500000003,
           "unit": "kN"
         }
       },
@@ -5154,19 +5154,19 @@
       "clause": "Chapter 6 / Section 6.7.2 + Eq. (6.7-19) to Eq. (6.7-21)",
       "source_document": "AISC 358-22",
       "demand": {
-        "value": 2911.4623805325423,
+        "value": 2602.792999193608,
         "unit": "kN"
       },
       "capacity": {
-        "value": 1480.8795670782529,
+        "value": 1472.0659341508515,
         "unit": "kN"
       },
-      "dcr": 1.9660358919508911,
+      "dcr": 1.7681225676178742,
       "status": "FAIL",
       "calculation_memory": {
         "inputs": {
           "mf_vgizq_critico": {
-            "value": 1724750.3142274779,
+            "value": 1534867.0316244708,
             "unit": "kN-mm"
           },
           "st_col": {
@@ -5178,7 +5178,7 @@
             "unit": "mm"
           },
           "lb_col": {
-            "value": 70.4,
+            "value": 68.1,
             "unit": "mm"
           },
           "lb_col_formula": "lb_col = tf_vgizq + 2w_w4_vgizq + 2*tpe_vgizq",
@@ -5199,11 +5199,11 @@
             "unit": "MPa"
           },
           "d_vgizq": {
-            "value": 612.0,
+            "value": 607.0,
             "unit": "mm"
           },
           "tf_vgizq": {
-            "value": 19.6,
+            "value": 17.3,
             "unit": "mm"
           },
           "tpe_vgizq": {
@@ -5223,11 +5223,11 @@
           "total_weld_thickness_w4_formula": "2w = t_w4.1"
         },
         "intermediates": {
-          "rn_nominal": 1974.5060894376702,
+          "rn_nominal": 1962.7545788678021,
           "phi": 0.75,
           "case": "eq_6_7_19",
-          "phi_rn_cf_v2_col_vgizq_eq1": 1480.8795670782529,
-          "rn_nominal_cf_v2_col_vgizq_eq1": 1974.5060894376702
+          "phi_rn_cf_v2_col_vgizq_eq1": 1472.0659341508515,
+          "rn_nominal_cf_v2_col_vgizq_eq1": 1962.7545788678021
         },
         "design_factors": {
           "phi_wlc": 0.75
@@ -5238,7 +5238,7 @@
           "capacity": "kN"
         },
         "final_capacity": {
-          "value": 1480.8795670782529,
+          "value": 1472.0659341508515,
           "unit": "kN"
         }
       },
@@ -5250,14 +5250,14 @@
       "clause": "Chapter 6 / Section 6.7.2 + Eq. (6.7-18)",
       "source_document": "AISC 358-22",
       "demand": {
-        "value": 2122.569209993248,
+        "value": 2132.2876038663726,
         "unit": "kN"
       },
       "capacity": {
         "value": 1234.4744106076748,
         "unit": "kN"
       },
-      "dcr": 1.719411266652668,
+      "dcr": 1.7272837618535533,
       "status": "FAIL",
       "calculation_memory": {
         "inputs": {
@@ -5278,11 +5278,11 @@
             "unit": "kN"
           },
           "d_vgizq": {
-            "value": 612.0,
+            "value": 607.0,
             "unit": "mm"
           },
           "tf_vgizq": {
-            "value": 19.6,
+            "value": 17.3,
             "unit": "mm"
           },
           "d_vgder": {
@@ -5337,13 +5337,13 @@
           "rn_nominal": 1645.965880810233,
           "ct": 1.0,
           "phi": 0.75,
-          "cond_left_force": -2122.569209993248,
+          "cond_left_force": -2132.2876038663726,
           "cond_right_force": -2974.3347473968374,
           "cond_tolerance": "1e-9",
           "same_sign": true,
           "applicability_condition_met": true,
-          "ru_expr_neg": -2122.569209993248,
-          "ru_expr_pos": 2122.569209993248,
+          "ru_expr_neg": -2132.2876038663726,
+          "ru_expr_pos": 2132.2876038663726,
           "phi_rn_cf_v2_col_vgizq_eq_wcb": 1234.4744106076748
         },
         "design_factors": {
@@ -5384,7 +5384,7 @@
             "unit": "mm"
           },
           "tw_vgizq": {
-            "value": 11.9,
+            "value": 11.2,
             "unit": "mm"
           },
           "fy_vgizq": {
@@ -5392,7 +5392,7 @@
             "unit": "MPa"
           },
           "ru_w3_p_pos_vgizq": {
-            "value": 1211.106078,
+            "value": 1139.8645439999998,
             "unit": "kN"
           }
         },
@@ -5932,19 +5932,19 @@
       "clause": "Chapter 6 / Section 6.7.2 + Eq. (6.7-13)",
       "source_document": "AISC 358-22",
       "demand": {
-        "value": 0.0012333186676892522,
+        "value": 0.0010975386680077937,
         "unit": "mm"
       },
       "capacity": {
         "value": 24.0,
         "unit": "mm"
       },
-      "dcr": 0.00005138827782038551,
+      "dcr": 0.00004573077783365807,
       "status": "PASS",
       "calculation_memory": {
         "inputs": {
           "mf": {
-            "value": 1724750.3142274779,
+            "value": 1534867.0316244708,
             "unit": "kN-mm"
           },
           "beam_depth": {
@@ -6269,11 +6269,11 @@
             "unit": "kN"
           },
           "d_vgder": {
-            "value": 612.0,
+            "value": 607.0,
             "unit": "mm"
           },
           "tf_vgder": {
-            "value": 19.6,
+            "value": 17.3,
             "unit": "mm"
           },
           "st_col": {
@@ -6321,7 +6321,7 @@
           "ct": 1.0,
           "phi": 0.75,
           "cond_left_force": -2974.3347473968374,
-          "cond_right_force": -2122.569209993248,
+          "cond_right_force": -2132.2876038663726,
           "cond_tolerance": "1e-9",
           "same_sign": true,
           "applicability_condition_met": true,
@@ -6613,19 +6613,19 @@
           "tipo_w4_vgizq": "cjp",
           "mf_vgizq_critico": null,
           "d_vgizq": {
-            "value": 612.0,
+            "value": 607.0,
             "unit": "mm"
           },
           "tf_vgizq": {
-            "value": 19.6,
+            "value": 17.3,
             "unit": "mm"
           },
           "bf_vgizq": {
-            "value": 229.0,
+            "value": 228.0,
             "unit": "mm"
           },
           "l_w4_vgizq": {
-            "value": 229.0,
+            "value": 228.0,
             "unit": "mm"
           },
           "Fexx_w4_vgizq": {
@@ -6664,19 +6664,19 @@
       "clause": "Chapter 6 / Section 6.7.1 Step 11.1.1 + AISC 360-22 G2.1",
       "source_document": "AISC 360-22",
       "demand": {
-        "value": 569.9674822834645,
+        "value": 478.83639999999997,
         "unit": "kN"
       },
       "capacity": {
-        "value": 1507.5396,
+        "value": 1407.2687999999998,
         "unit": "kN"
       },
-      "dcr": 0.37807795051185683,
+      "dcr": 0.3402593733336517,
       "status": "PASS",
       "calculation_memory": {
         "inputs": {
           "Vh_vgizq_max": {
-            "value": 569.9674822834645,
+            "value": 478.83639999999997,
             "unit": "kN"
           },
           "Vh_vgizq_source": "step4_computed_vhmax_izq",
@@ -6685,15 +6685,15 @@
             "unit": "MPa"
           },
           "tw_vgizq": {
-            "value": 11.9,
+            "value": 11.2,
             "unit": "mm"
           },
           "d_vgizq": {
-            "value": 612.0,
+            "value": 607.0,
             "unit": "mm"
           },
           "kdes_vgizq": {
-            "value": 32.3,
+            "value": 30.0,
             "unit": "mm"
           },
           "E_vgizq": {
@@ -6703,13 +6703,13 @@
           "cv1": 1.0
         },
         "intermediates": {
-          "h_clear": 547.4,
-          "h_over_tw": 46.0,
+          "h_clear": 547.0,
+          "h_over_tw": 48.839285714285715,
           "kv": 5.34,
           "lambda_r": 61.20244382730794,
           "cv1": 1.0,
-          "rn_v2_vgizq": 1507.5396,
-          "phi_rn_v2_vgizq": 1507.5396
+          "rn_v2_vgizq": 1407.2687999999998,
+          "phi_rn_v2_vgizq": 1407.2687999999998
         },
         "design_factors": {
           "phi": 1.0
@@ -6720,7 +6720,7 @@
           "phi*Rn_v2_vgizq": "kN"
         },
         "final_capacity": {
-          "value": 1507.5396,
+          "value": 1407.2687999999998,
           "unit": "kN"
         }
       },

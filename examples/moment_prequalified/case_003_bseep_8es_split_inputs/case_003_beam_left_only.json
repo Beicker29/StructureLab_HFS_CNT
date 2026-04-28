@@ -1,6 +1,6 @@
 {
   "viga": {
-    "perfil_vgizq": "W24X84",
+    "perfil_vgizq": "W24X76",
     "tipo_acero_perfil_vgizq": "ASTM A572 Gr 50",
     "demanda_ductilidad_vgizq": "high",
     "E_vgizq": {
@@ -8,7 +8,7 @@
       "unit": "MPa"
     },
     "Llb_vgizq": {
-      "value": 6096.0,
+      "value": 7500,
       "unit": "mm"
     },
     "Lnc_vgizq": {
@@ -137,7 +137,7 @@
       "unit": "kN-mm"
     },
     "Vg_vgizq": {
-      "value": 44.482,
+      "value": 97.11,
       "unit": "kN"
     }
   }
