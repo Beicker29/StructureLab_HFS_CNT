@@ -786,6 +786,36 @@ def _collect_step_14_2_2_column_web_local_buckling(result: DetailedRunResult) ->
     return None
 
 
+def _collect_step_21_5_1_column_panel_zone_shear_wpzs(result: DetailedRunResult) -> dict | None:
+    for check in result.checks:
+        rule_id = str(check.rule_id).lower()
+        clause = str(check.clause).lower()
+        name = str(check.name).lower()
+        if (
+            ".step21_5_1_column_panel_zone_shear_wpzs" not in rule_id
+            and "panel_zone" not in rule_id
+            and "wpzs" not in rule_id
+            and "j10.6" not in clause
+            and "panel-zone" not in name
+        ):
+            continue
+        return {
+            "rule_id": check.rule_id,
+            "clause": check.clause,
+            "source_document": check.source_document,
+            "status": check.status.value,
+            "demand": check.demand.model_dump() if check.demand is not None else None,
+            "capacity": check.capacity.model_dump() if check.capacity is not None else None,
+            "inputs": check.calculation_memory.inputs,
+            "intermediates": check.calculation_memory.intermediates,
+            "design_factors": check.calculation_memory.design_factors,
+            "equation": check.calculation_memory.equation,
+            "dcr": check.dcr,
+            "notes": check.notes,
+        }
+    return None
+
+
 def _canonical_side_mode(value: object) -> str | None:
     text = _format_text(value).strip().lower()
     if text in {"left", "left_only", "izq", "izquierda", "solo_izquierda"}:
@@ -1032,22 +1062,21 @@ def _render_step_1_notes(notes: list[dict]) -> str:
             "section_6_3.end_plate_stiffener_geometry_vgizq_note",
         }:
             formula = _format_text(item.get("formula"))
-            h_pest_vgder = _format_quantity(item.get("h_pest_vgder"))
-            l_pest_vgder = _format_quantity(item.get("l_pest_vgder"))
-            h_pest_vgizq = _format_quantity(item.get("h_pest_vgizq"))
-            l_pest_vgizq = _format_quantity(item.get("l_pest_vgizq"))
-            ed_pest_vgder = _format_quantity(item.get("ed_pest_vgder"))
-            ed_pest_vgizq = _format_quantity(item.get("ed_pest_vgizq"))
             if formula != "n/a":
                 lines.append(f"- Formula: `{formula}`")
-            lines.append(f"- h_pest_vgder: `{h_pest_vgder}`")
-            lines.append(f"- L_pest_vgder: `{l_pest_vgder}`")
-            if h_pest_vgizq != "n/a":
+            if note_id == "section_6_3.end_plate_stiffener_geometry_note":
+                h_pest_vgder = _format_quantity(item.get("h_pest_vgder"))
+                l_pest_vgder = _format_quantity(item.get("l_pest_vgder"))
+                ed_pest_vgder = _format_quantity(item.get("ed_pest_vgder"))
+                lines.append(f"- h_pest_vgder: `{h_pest_vgder}`")
+                lines.append(f"- L_pest_vgder: `{l_pest_vgder}`")
+                lines.append(f"- edge_detailing (Ed_pest_vgder): `{ed_pest_vgder}`")
+            else:
+                h_pest_vgizq = _format_quantity(item.get("h_pest_vgizq"))
+                l_pest_vgizq = _format_quantity(item.get("l_pest_vgizq"))
+                ed_pest_vgizq = _format_quantity(item.get("ed_pest_vgizq"))
                 lines.append(f"- h_pest_vgizq: `{h_pest_vgizq}`")
-            if l_pest_vgizq != "n/a":
                 lines.append(f"- L_pest_vgizq: `{l_pest_vgizq}`")
-            lines.append(f"- edge_detailing (Ed_pest_vgder): `{ed_pest_vgder}`")
-            if ed_pest_vgizq != "n/a":
                 lines.append(f"- edge_detailing (Ed_pest_vgizq): `{ed_pest_vgizq}`")
             lines.append("")
             continue
@@ -1076,8 +1105,10 @@ def _render_step_1_notes(notes: list[dict]) -> str:
                 lines.append(f"- Formula: `{formula}`")
             lines.append(f"- h1_vgder: `{h1}`")
             lines.append(f"- h2_vgder: `{h2}`")
-            lines.append(f"- h3_vgder: `{h3}`")
-            lines.append(f"- h4_vgder: `{h4}`")
+            if h3 != "n/a":
+                lines.append(f"- h3_vgder: `{h3}`")
+            if h4 != "n/a":
+                lines.append(f"- h4_vgder: `{h4}`")
             lines.append(f"- dh_vgder: `{dh}`")
             lines.append("")
             continue
@@ -1092,8 +1123,10 @@ def _render_step_1_notes(notes: list[dict]) -> str:
                 lines.append(f"- Formula: `{formula}`")
             lines.append(f"- h1_vgizq: `{h1}`")
             lines.append(f"- h2_vgizq: `{h2}`")
-            lines.append(f"- h3_vgizq: `{h3}`")
-            lines.append(f"- h4_vgizq: `{h4}`")
+            if h3 != "n/a":
+                lines.append(f"- h3_vgizq: `{h3}`")
+            if h4 != "n/a":
+                lines.append(f"- h4_vgizq: `{h4}`")
             lines.append(f"- dh_vgizq: `{dh}`")
             lines.append("")
             continue
@@ -1233,9 +1266,6 @@ def _render_step_3_sh(step_3: dict) -> str:
         f"- bf_vgder: `{_format_quantity(inputs.get('bf_vgder'))}`",
         f"- Sh_vgder: `{sh_der}`",
         "",
-        f"- Lado gobernante Sh: `{_format_text(inputs.get('governing_side_sh'))}`",
-        f"- Sh adoptado (gobernante): `{_format_quantity(step_3.get('demand'))}`",
-        "",
     ]
     return "\n".join(lines)
 
@@ -1260,13 +1290,13 @@ def _render_step_4_vh(step_4: dict) -> str:
                 subtitle,
                 "",
                 f"- Clausula: `{clause_text}`",
-                f"- Ecuacion: `Vh_{side_suffix}_max = 2*Mpr/Llb_{side_suffix} + Vg_{side_suffix}; Vh_{side_suffix}_min = 2*Mpr/Llb_{side_suffix} - Vg_{side_suffix}`",
+                f"- Ecuacion: `Vh_{side_suffix}_max = 2*Mpr_{side_suffix}/Llb_{side_suffix} + Vg_{side_suffix}; Vh_{side_suffix}_min = 2*Mpr_{side_suffix}/Llb_{side_suffix} - Vg_{side_suffix}`",
                 f"- Mpr_{side_suffix}: `{_format_scalar_with_unit(inter.get(f'mpr_{side}'), 'kN-mm')}`",
                 f"- Llb_{side_suffix}: `{_format_quantity(inputs.get(f'lh_{side}'))}`",
                 f"- Vg_{side_suffix}: `{_format_quantity(inputs.get(f'vgravity_between_hinges_{side}'))}`",
                 f"- Vh_{side_suffix}_max: `{_format_scalar_with_unit(inter.get(f'vh_{side}max'), 'kN')}`",
                 f"- Vh_{side_suffix}_min: `{_format_scalar_with_unit(inter.get(f'vh_{side}min'), 'kN')}`",
-                f"- Vhmax adoptado (gobernante): `{_format_scalar_with_unit(inter.get(f'vh_{side}max'), 'kN')}`",
+                f"- Vhmax_{side_suffix} adoptado: `{_format_scalar_with_unit(inter.get(f'vh_{side}max_adopted'), 'kN')}`",
                 "",
             ]
         )
@@ -1434,8 +1464,8 @@ def _render_step_7_end_plate(
                 f"- bpe_vgizq: `{_format_quantity(inputs.get('bpe_vgizq'))}`",
                 f"- tpe_vgizq: `{_format_quantity(inputs.get('tpe_vgizq'))}`",
                 f"- Fyp_pe_vgizq: `{_format_quantity(inputs.get('fyp_pe_vgizq'))}`",
-                f"- Ru_pe_m3_vgizq: `{_format_quantity(inputs.get('ru_pe_m3_vgizq'))}`",
-                f"- Rn_pe_v1_vgizq: `{_format_quantity(step_7_2_1.get('demand'))}`",
+                f"- Mf_vgizq_critico: `{_format_quantity(inputs.get('mf_vgizq_critico'))}`",
+                f"- Ru_pe_v1_vgizq: `{_format_quantity(step_7_2_1.get('demand'))}`",
                 f"- phi*Rn_pe_v1_vgizq: `{_format_quantity(step_7_2_1.get('capacity'))}`",
                 f"- DCR_pe_v1_vgizq: `{_format_text(step_7_2_1.get('dcr'))}`",
                 f"- Resultado: `{_render_result_plain_es(step_7_2_1.get('status'))}`",
@@ -1479,16 +1509,21 @@ def _render_step_7_end_plate(
         inputs = step_7_3_1.get("inputs", {})
         inter = step_7_3_1.get("intermediates", {})
         design_factors = step_7_3_1.get("design_factors", {})
-        lines.extend(
+        rule_id = str(step_7_3_1.get("rule_id") or "").lower()
+        show_pb = "bseep_8es" in rule_id and inputs.get("pb_pe_vgizq") is not None
+        detail_lines = [
+            "#### 7.3.1. ELR #1: Desgarramiento en la perforacion del perno",
+            "",
+            f"- Clausula: `{_render_clause_text(step_7_3_1.get('clause'), step_7_3_1.get('source_document'), step_7_3_1.get('rule_id'))}`",
+            f"- Ecuacion: `{_format_text(step_7_3_1.get('equation'))}`",
+            f"- phi usado: `{_format_text(design_factors.get('phi'))}`",
+            f"- Vh_vgizq_critico: `{_format_quantity(inputs.get('vh_vgizq_critico'))}`",
+            f"- n_b_vgizq: `{_format_text(inputs.get('n_b_vgizq'))}`",
+        ]
+        if show_pb:
+            detail_lines.append(f"- pb_pe_vgizq: `{_format_quantity(inputs.get('pb_pe_vgizq'))}`")
+        detail_lines.extend(
             [
-                "#### 7.3.1. ELR #1: Desgarramiento en la perforacion del perno",
-                "",
-                f"- Clausula: `{_render_clause_text(step_7_3_1.get('clause'), step_7_3_1.get('source_document'), step_7_3_1.get('rule_id'))}`",
-                f"- Ecuacion: `{_format_text(step_7_3_1.get('equation'))}`",
-                f"- phi usado: `{_format_text(design_factors.get('phi'))}`",
-                f"- Vh_vgizq_critico: `{_format_quantity(inputs.get('vh_vgizq_critico'))}`",
-                f"- n_b_vgizq: `{_format_text(inputs.get('n_b_vgizq'))}`",
-                f"- pb_pe_vgizq: `{_format_quantity(inputs.get('pb_pe_vgizq'))}`",
                 f"- pfo_pe_vgizq: `{_format_quantity(inputs.get('pfo_pe_vgizq'))}`",
                 f"- pfi_pe_vgizq: `{_format_quantity(inputs.get('pfi_pe_vgizq'))}`",
                 f"- tf_vgizq: `{_format_quantity(inputs.get('tf_vgizq'))}`",
@@ -1503,6 +1538,7 @@ def _render_step_7_end_plate(
                 "",
             ]
         )
+        lines.extend(detail_lines)
     if step_7_3_2 is not None:
         inputs = step_7_3_2.get("inputs", {})
         design_factors = step_7_3_2.get("design_factors", {})
@@ -2063,7 +2099,7 @@ def _render_step_13_column_web_local_yielding(
         "#### 14.1.1. ELR #1: Fluencia local del alma (WLY)",
         "",
         f"- Clausula: `{_render_clause_text(step_13_1_1.get('clause'), step_13_1_1.get('source_document'), step_13_1_1.get('rule_id'))}`",
-        "- Ecuacion: `Ru_cf_v2_col_vgizq = Mf_vgizq_critico/(d_vgizq - tf_vgizq); lb_col = tf_vgizq + 2w_w4_vgizq + 2*tpe_vgizq; phi*Rn_cf_v2_col_vgizq = phi_ductil * (6*Ct_col*kc_col + lb_col) * Fy_col * tw_col; DCR_cf_v2_col_vgizq = Ru_cf_v2_col_vgizq / phi*Rn_cf_v2_col_vgizq`",
+        "- Ecuacion: `Ru_cw_v2_col_vgizq = Mf_vgizq_critico/(d_vgizq - tf_vgizq); lb_col = tf_vgizq + 2w_w4_vgizq + 2*tpe_vgizq; phi*Rn_cw_v2_col_vgizq = phi_ductil * (6*Ct_col*kc_col + lb_col) * Fy_col * tw_col; DCR_cw_v2_col_vgizq = Ru_cw_v2_col_vgizq / phi*Rn_cw_v2_col_vgizq`",
         f"- phi usado (phi_ductil): `{_format_text(design_factors.get('phi_d'))}`",
         f"- Mf_vgizq_critico: `{_format_quantity(inputs.get('mf_vgizq_critico'))}`",
         f"- St_col: `{_format_quantity(inputs.get('st_col'))}`",
@@ -2082,12 +2118,32 @@ def _render_step_13_column_web_local_yielding(
         f"- demanda_ductilidad_vgizq: `{_format_text(inputs.get('ductility_vgizq'))}`",
         f"- 2w_w4_vgizq: `{_format_quantity(inputs.get('total_weld_thickness_w4_vgizq'))}`",
         f"- Ecuacion 2w_w4_vgizq: `{_format_text(inputs.get('total_weld_thickness_w4_formula'))}`",
-        f"- Ru_cf_v2_col_vgizq: `{_format_quantity(step_13_1_1.get('demand'))}`",
-        f"- phi*Rn_cf_v2_col_vgizq: `{_format_quantity(step_13_1_1.get('capacity'))}`",
-        f"- DCR_cf_v2_col_vgizq: `{_format_text(step_13_1_1.get('dcr'))}`",
+        f"- Ru_cw_v2_col_vgizq: `{_format_quantity(step_13_1_1.get('demand'))}`",
+        f"- phi*Rn_cw_v2_col_vgizq: `{_format_quantity(step_13_1_1.get('capacity'))}`",
+        f"- DCR_cw_v2_col_vgizq: `{_format_text(step_13_1_1.get('dcr'))}`",
         f"- Resultado: `{_render_result_plain_es(step_13_1_1.get('status'))}`",
         "",
     ]
+
+    def _render_wlc_rn_expression(case_key: object) -> str:
+        case_txt = _format_text(case_key)
+        if case_txt == "eq_6_7_19":
+            return (
+                "0.80*tw_col^2 * [1 + 3*(lb_col/d_col)*(tw_col/tf_col)^1.5] * "
+                "sqrt(E_col*Fy_col*tf_col/tw_col) [Eq. 6.7-19]"
+            )
+        if case_txt == "eq_6_7_20":
+            return (
+                "0.40*tw_col^2 * [1 + 3*(lb_col/d_col)*(tw_col/tf_col)^1.5] * "
+                "sqrt(E_col*Fy_col*tf_col/tw_col) [Eq. 6.7-20]"
+            )
+        if case_txt == "eq_6_7_21":
+            return (
+                "0.40*tw_col^2 * [1 + (4*lb_col/d_col - 0.2)*(tw_col/tf_col)^1.5] * "
+                "sqrt(E_col*Fy_col*tf_col/tw_col) [Eq. 6.7-21]"
+            )
+        return "n/a"
+
     if isinstance(step_14_2_1, dict):
         wlc_inputs = step_14_2_1.get("inputs", {})
         wlc_inter = step_14_2_1.get("intermediates", {})
@@ -2099,7 +2155,7 @@ def _render_step_13_column_web_local_yielding(
                 "#### 14.2.1. ELR #1: Arrugamiento local del alma (WLC)",
                 "",
                 f"- Clausula: `{_render_clause_text(step_14_2_1.get('clause'), step_14_2_1.get('source_document'), step_14_2_1.get('rule_id'))}`",
-                "- Ecuacion: `Ru_cw_v2_col_vgizq = Mf_vgizq_critico/(d_vgizq - tf_vgizq); lb_col = tf_vgizq + 2w_w4_vgizq + 2*tpe_vgizq; phi*Rn_cw_v2_col_vgizq = phi_wlc * Rn_eq(6.7-19/6.7-20/6.7-21); DCR_cw_v2_col_vgizq = Ru_cw_v2_col_vgizq / phi*Rn_cw_v2_col_vgizq`",
+                f"- Ecuacion: `Ru_cw_v2_col_vgizq = Mf_vgizq_critico/(d_vgizq - tf_vgizq); lb_col = tf_vgizq + 2w_w4_vgizq + 2*tpe_vgizq; Rn_cw_v2_col_vgizq = {_render_wlc_rn_expression(wlc_inter.get('case'))}; phi*Rn_cw_v2_col_vgizq = phi_wlc * Rn_cw_v2_col_vgizq; DCR_cw_v2_col_vgizq = Ru_cw_v2_col_vgizq / phi*Rn_cw_v2_col_vgizq`",
                 f"- phi usado: `{_format_text(wlc_design.get('phi_wlc'))}`",
                 f"- Mf_vgizq_critico: `{_format_quantity(wlc_inputs.get('mf_vgizq_critico'))}`",
                 f"- St_col: `{_format_quantity(wlc_inputs.get('st_col'))}`",
@@ -2537,23 +2593,52 @@ def _render_step_1_list(rows: list[dict]) -> str:
 
 def _render_step_1_list_grouped_by_scope(rows: list[dict]) -> str:
     grouped: dict[str, list[dict]] = {}
+    scope_order: list[str] = []
     for item in rows:
         scope = str(item.get("scope", "n/a")).upper()
-        grouped.setdefault(scope, []).append(item)
+        if scope not in grouped:
+            grouped[scope] = []
+            scope_order.append(scope)
+        grouped[scope].append(item)
+
+    def _scope_sort_key(scope: str) -> tuple[int, int, int]:
+        scope_upper = scope.upper()
+        if scope_upper.startswith("WELD_"):
+            parts = scope_upper.split("_")
+            try:
+                weld_idx = int(parts[1])
+            except (IndexError, ValueError):
+                weld_idx = 99
+            side_rank = 9
+            if scope_upper.endswith("_VGDER"):
+                side_rank = 1
+            elif scope_upper.endswith("_VGIZQ"):
+                side_rank = 2
+            elif scope_upper.endswith("_COL"):
+                side_rank = 3
+            return (2, weld_idx, side_rank)
+        if scope in scope_order:
+            return (1, scope_order.index(scope), 0)
+        return (3, 999, 0)
+
+    ordered_scopes = sorted(scope_order, key=_scope_sort_key)
 
     lines: list[str] = []
-    lines.append("### 1.2 Revisiones de propiedades geometricas")
-    lines.append("")
-    idx = 1
-    for scope in sorted(grouped.keys()):
-        lines.append(f"#### Ambito: `{scope}`")
+    scope_summary: list[dict[str, Any]] = []
+    for section_offset, scope in enumerate(ordered_scopes, start=2):
+        lines.append(f"### 1.{section_offset} Ambito `{scope}`")
         lines.append("")
+        local_idx = 1
+        total_checks = 0
+        pass_checks = 0
+        fail_numerals: list[str] = []
         for item in grouped[scope]:
             description = _translate_text_es(item.get("description"))
             calculated_symbol = str(item.get("calculated_symbol", "calc"))
             limit_symbol = str(item.get("limit_symbol", "lim"))
             calculated = _format_quantity(item.get("calculated"))
             result_text = _render_result_label(item.get("result", item.get("status", "UNKNOWN")))
+            status_raw = str(item.get("status", item.get("result", ""))).strip().upper()
             clause = _render_clause_text(
                 item.get("clause"),
                 item.get("source_document"),
@@ -2614,14 +2699,99 @@ def _render_step_1_list_grouped_by_scope(rows: list[dict]) -> str:
                 limit = _format_quantity(item.get("limit"))
                 verification = f"{calculated_symbol} {comparison} {limit_symbol}; {calculated} {comparison} {limit}"
 
-            lines.append(f"#### Chequeo 1.2.{idx} - {description} (`{calculated_symbol}`)")
+            lines.append(f"#### Chequeo 1.{section_offset}.{local_idx} - {description} (`{calculated_symbol}`)")
             lines.append("")
             lines.append(f"- Ambito: `{scope}`")
             lines.append(f"- Verificacion: `{verification}`")
             lines.append(f"- Clausula: `{clause}`")
             lines.append(f"- Resultado: {result_text}")
             lines.append("")
-            idx += 1
+            numeral = f"1.{section_offset}.{local_idx}"
+            total_checks += 1
+            if status_raw in {"PASS", "OK"}:
+                pass_checks += 1
+            else:
+                fail_numerals.append(numeral)
+            local_idx += 1
+
+        scope_summary.append(
+            {
+                "scope": scope,
+                "section_offset": section_offset,
+                "total": total_checks,
+                "pass": pass_checks,
+                "fail": total_checks - pass_checks,
+                "fail_numerals": fail_numerals,
+            }
+        )
+
+    summary_section = len(scope_order) + 2
+    lines.append(f"### 1.{summary_section} Resumen de chequeos por ambito")
+    lines.append("")
+    for summary in scope_summary:
+        fail_numerals = summary["fail_numerals"]
+        fail_text = ", ".join(fail_numerals) if fail_numerals else "ninguno"
+        status_dot = "🟢" if summary["fail"] == 0 else "🔴"
+        lines.append(
+            f"- {status_dot} "
+            f"`1.{summary['section_offset']}` `{summary['scope']}`: "
+            f"total={summary['total']}, cumple={summary['pass']}, no_cumple={summary['fail']}, "
+            f"numerales_no_cumplen={fail_text}"
+        )
+    lines.append("")
+    return "\n".join(lines)
+
+
+def _render_step_21_5_panel_zone_shear_wpzs(
+    *,
+    step_21_5_1: dict | None,
+    heading_index: int,
+) -> str:
+    lines = [
+        f"### 14.{heading_index}. Revision de capacidad a cortante (col)",
+        "",
+        f"#### 14.{heading_index}.1. ELR #1: Cortante en la zona del panel del alma (WPZS)",
+        "",
+    ]
+    if not isinstance(step_21_5_1, dict):
+        lines.extend(["- Resultado: `n/a`", ""])
+        return "\n".join(lines)
+
+    inputs = step_21_5_1.get("inputs", {})
+    inter = step_21_5_1.get("intermediates", {})
+    design_factors = step_21_5_1.get("design_factors", {})
+    lines.extend(
+        [
+            f"- Clausula: `{_render_clause_text(step_21_5_1.get('clause'), step_21_5_1.get('source_document'), step_21_5_1.get('rule_id'))}`",
+            f"- Ecuacion: `{_format_text(step_21_5_1.get('equation'))}`",
+            f"- Consideracion de deformacion inelastica de la zona de panel: `{_format_text(inputs.get('consideracion_deformacion_inelastica_zona_panel'))}`",
+            f"- Fuente condicion inelastica: `{_format_text(inputs.get('consideracion_deformacion_inelastica_zona_panel_source'))}`",
+            f"- paquete_wpzs: `{_format_text(inputs.get('package_wpzs'))}`",
+            f"- ecuacion_Rn_aplicada: `{_format_text(inputs.get('eq_case_wpzs') or inter.get('eq_case_wpzs'))}`",
+            f"- phi_wpzs: `{_format_text(inputs.get('phi_wpzs') or design_factors.get('phi_wpzs'))}`",
+            f"- alpha: `{_format_text(inputs.get('alpha') or design_factors.get('alpha'))}`",
+            f"- Vu_col_critico: `{_format_quantity(inputs.get('vu_col_critico'))}`",
+            f"- Fuente Vu_col_critico: `{_format_text(inputs.get('vu_col_critico_source'))}`",
+            f"- Ru_wpzs_col: `{_format_quantity(step_21_5_1.get('demand'))}`",
+            f"- Pu_col: `{_format_quantity(inputs.get('pu_col'))}`",
+            f"- Pr_col: `{_format_quantity(inputs.get('pr_col') or inputs.get('alpha_pr_col'))}`",
+            f"- Py_col: `{_format_quantity(inputs.get('py_col'))}`",
+            f"- alphaPr/Py: `{_format_text(inter.get('alpha_pr_over_py'))}`",
+            f"- Ag_col: `{_format_quantity(inputs.get('ag_col'))}`",
+            f"- Fy_col: `{_format_quantity(inputs.get('fy_col'))}`",
+            f"- d_col: `{_format_quantity(inputs.get('d_col'))}`",
+            f"- tw_col: `{_format_quantity(inputs.get('tw_col'))}`",
+            f"- bcf_col: `{_format_quantity(inputs.get('bcf_col'))}`",
+            f"- tcf_col: `{_format_quantity(inputs.get('tcf_col'))}`",
+            f"- db_col: `{_format_quantity(inputs.get('db_col'))}`",
+            f"- lado_db_col: `{_format_text(inputs.get('db_col_source_side'))}`",
+            f"- factor_panel: `{_format_text(inter.get('panel_factor'))}`",
+            f"- phi*Rn_wpzs_col: `{_format_quantity(step_21_5_1.get('capacity'))}`",
+            f"- DCR_wpzs_col: `{_format_text(step_21_5_1.get('dcr'))}`",
+            f"- Resultado: `{_render_result_plain_es(step_21_5_1.get('status'))}`",
+            "",
+        ]
+    )
     return "\n".join(lines)
 
 
@@ -2667,6 +2837,7 @@ def render_memory_markdown(result: DetailedRunResult) -> str:
     step_13_1_1_by_side = _map_step("step13_1_1_column_web_local_yielding")
     step_14_2_1_by_side = _map_step("step14_2_1_column_web_local_crippling")
     step_14_2_2_by_side = _map_step("step14_2_2_column_web_local_buckling")
+    step_21_5_1_panel_zone = _collect_step_21_5_1_column_panel_zone_shear_wpzs(result)
     content = [
         "# Memoria de Calculo",
         "",
@@ -2690,7 +2861,7 @@ def render_memory_markdown(result: DetailedRunResult) -> str:
         if notes:
             content.append(_render_step_1_notes(notes))
         if rows:
-            content.append(_render_step_1_list(rows))
+            content.append(_render_step_1_list_grouped_by_scope(rows))
         else:
             content.append("No hay subchequeos de prequalification disponibles para este caso.")
     elif connection_family_normalized == "fully_restrained_moment":
@@ -2813,6 +2984,12 @@ def render_memory_markdown(result: DetailedRunResult) -> str:
             body = body.replace("#### 14.2.1. ", f"#### 14.{compression_idx}.1. ")
             body = body.replace("#### 14.2.2. ", f"#### 14.{compression_idx}.2. ")
             side_sections_14.append(body)
+        panel_zone_section_14 = _render_step_21_5_panel_zone_shear_wpzs(
+            step_21_5_1=step_21_5_1_panel_zone,
+            heading_index=heading_counter,
+        ).strip()
+        if panel_zone_section_14:
+            side_sections_14.append(panel_zone_section_14)
         if side_sections_14:
             assigned_step_number = next_step_number
             block_14 = "\n".join(

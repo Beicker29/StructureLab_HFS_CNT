@@ -94,6 +94,8 @@ def _normalize_moment_geometry_payload(payload: dict[str, Any]) -> dict[str, Any
         "column": (
             "column_end_distance_to_beam_flange",
             "column_slab_connection_condition",
+            "panel_zone_inelastic_deformation_considered",
+            "panel_zone_equation_package",
         ),
         "end_plate": ("end_plate_width", "end_plate_thickness", "de", "pb", "pfo", "pfi"),
         "continuity_plate": ("continuity_plate_thickness", "continuity_plate_enabled", "continuity_plate_weld_type"),
@@ -245,6 +247,35 @@ def _normalize_moment_geometry_payload(payload: dict[str, Any]) -> dict[str, Any
                 flat_geometry["column_slab_connection_condition"] = block["slab_connection_condition"]
             if "union_columna_losa" in block and "column_slab_connection_condition" not in block:
                 flat_geometry["column_slab_connection_condition"] = block["union_columna_losa"]
+            if (
+                "panel_zone_inelastic_deformation_considered" in block
+                and "panel_zone_inelastic_deformation_considered" not in flat_geometry
+            ):
+                flat_geometry["panel_zone_inelastic_deformation_considered"] = block[
+                    "panel_zone_inelastic_deformation_considered"
+                ]
+            if (
+                "consideracion_deformacion_inelastica_zona_panel" in block
+                and "panel_zone_inelastic_deformation_considered" not in flat_geometry
+            ):
+                flat_geometry["panel_zone_inelastic_deformation_considered"] = block[
+                    "consideracion_deformacion_inelastica_zona_panel"
+                ]
+            if (
+                "considera_deformacion_inelastica_panel_zone" in block
+                and "panel_zone_inelastic_deformation_considered" not in flat_geometry
+            ):
+                flat_geometry["panel_zone_inelastic_deformation_considered"] = block[
+                    "considera_deformacion_inelastica_panel_zone"
+                ]
+            if "panel_zone_equation_package" in block and "panel_zone_equation_package" not in flat_geometry:
+                flat_geometry["panel_zone_equation_package"] = block["panel_zone_equation_package"]
+            if "paquete_wpzs" in block and "panel_zone_equation_package" not in flat_geometry:
+                flat_geometry["panel_zone_equation_package"] = block["paquete_wpzs"]
+            if "paquete_wpzs_col" in block and "panel_zone_equation_package" not in flat_geometry:
+                flat_geometry["panel_zone_equation_package"] = block["paquete_wpzs_col"]
+            if "paquete_ecuaciones_wpzs" in block and "panel_zone_equation_package" not in flat_geometry:
+                flat_geometry["panel_zone_equation_package"] = block["paquete_ecuaciones_wpzs"]
         if group_name == "continuity_plate":
             if "continuity_plate_enabled" in block and "continuity_plate_enabled" not in flat_geometry:
                 flat_geometry["continuity_plate_enabled"] = block["continuity_plate_enabled"]
@@ -282,6 +313,10 @@ def _normalize_moment_geometry_payload(payload: dict[str, Any]) -> dict[str, Any
             weld_3 = _get_nested_weld_block("weld_3", "weld3", "soldadura_3", "soldadura3")
             weld_4 = _get_nested_weld_block("weld_4", "weld4", "soldadura_4", "soldadura4")
             weld_cp = _get_nested_weld_block(
+                "weld_5",
+                "weld5",
+                "soldadura_5",
+                "soldadura5",
                 "weld_cp",
                 "continuity_plate_weld",
                 "weld_4_column",
@@ -1774,7 +1809,10 @@ def _normalize_moment_split_column_payload(raw_payload: dict[str, Any]) -> dict[
     soldaduras = _first_dict(raw_payload, "soldaduras", "welds")
     cargas = _first_dict(raw_payload, "loads", "cargas")
     factores = _first_dict(raw_payload, "design_factors", "factores_diseno")
-    weld_4_raw = soldaduras.get("weld_4") if isinstance(soldaduras.get("weld_4"), dict) else {}
+    weld_5_raw = soldaduras.get("weld_5") if isinstance(soldaduras.get("weld_5"), dict) else {}
+    if not weld_5_raw:
+        # Legacy fallback: column continuity weld was previously stored as weld_4.
+        weld_5_raw = soldaduras.get("weld_4") if isinstance(soldaduras.get("weld_4"), dict) else {}
 
     normalized: dict[str, Any] = {}
     for key in (
@@ -1796,7 +1834,9 @@ def _normalize_moment_split_column_payload(raw_payload: dict[str, Any]) -> dict[
     materials = _compact_dict(
         {
             "profile_steel_type": _first_present(columna, "tipo_acero_perfil_col"),
-            "weld_fexx": _first_present(weld_4_raw, "Fexx_w4")
+            "weld_fexx": _first_present(weld_5_raw, "Fexx_w5")
+            or _first_present(weld_5_raw, "Fexx_w4")
+            or _first_present(soldaduras, "Fexx_w5")
             or _first_present(soldaduras, "Fexx_w4"),
             "elastic_modulus": _first_present(columna, "E_col"),
             "plate_steel_type": _first_present(platina_cont, "tipo_acero_pc_col"),
@@ -1814,6 +1854,19 @@ def _normalize_moment_split_column_payload(raw_payload: dict[str, Any]) -> dict[
             "slab_connection_condition": _first_present(
                 columna,
                 "union_col_losa",
+            ),
+            "panel_zone_inelastic_deformation_considered": _first_present(
+                columna,
+                "consideracion_deformacion_inelastica_zona_panel",
+                "considera_deformacion_inelastica_panel_zone",
+                "panel_zone_inelastic_deformation_considered",
+            ),
+            "panel_zone_equation_package": _first_present(
+                columna,
+                "paquete_wpzs_col",
+                "paquete_wpzs",
+                "paquete_ecuaciones_wpzs",
+                "panel_zone_equation_package",
             ),
         }
     )
@@ -1838,7 +1891,8 @@ def _normalize_moment_split_column_payload(raw_payload: dict[str, Any]) -> dict[
                     ),
                     "continuity_plate_enabled": continuity_plate_enabled,
                     "continuity_plate_weld_type": _first_present(
-                        weld_4_raw,
+                        weld_5_raw,
+                        "tipo_w5",
                         "tipo_w4",
                         "weld_type",
                         "tipo_soldadura",

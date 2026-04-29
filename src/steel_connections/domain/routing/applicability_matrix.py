@@ -89,6 +89,15 @@ def _chapter6_common_steps(connection_type: str) -> list[RuleBinding]:
             connection_type=connection_type,
             evaluator=chapter_06_end_plate.run_step4_probable_moment_face_column,
         ),
+        _bind(
+            rule_id=f"AISC358.06.7.{connection_type}.step21_5_1_column_panel_zone_shear_wpzs_col",
+            name=f"{connection_type} Step 21.5.1 column panel-zone web shear (WPZS)",
+            clause="AISC 360-22w Section J10.6 + Eq. (J10-9) to Eq. (J10-12)",
+            page="16.1-120",
+            connection_type=connection_type,
+            evaluator=chapter_06_end_plate.run_column_step5_panel_zone_shear_wpzs,
+            source_document="AISC 360-22w",
+        ),
     ]
     for side_suffix, side_label, eval_6_1, eval_6_2, eval_7_1_1, eval_7_2_1, eval_7_2_2, eval_7_3_1, eval_7_3_2, eval_12, eval_13, eval_14_2_1, eval_14_2_2 in (
         (

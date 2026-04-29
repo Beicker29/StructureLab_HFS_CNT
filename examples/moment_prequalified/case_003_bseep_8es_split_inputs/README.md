@@ -24,6 +24,7 @@ Objetivo:
   - `platina_continuidad`
   - `loads`
   - `factores_diseno`
+  - en `columna` agrega `consideracion_deformacion_inelastica_zona_panel` para WPZS (AISC 360-22w J10.6): `false` usa J10-9/J10-10 y `true` usa J10-11/J10-12.
 
 ## Reglas de consistencia
 
@@ -36,6 +37,9 @@ Objetivo:
 - `soldaduras.weld_4` se ingresa por lado en los archivos de viga:
   - soldadura #4 = ala de viga con platina extremo
   - incluye `tipo_w4_<lado>`, `Fexx_w4_<lado>`, `t_w4_<lado>`, `nl_w4_<lado>`, `kds_w4_<lado>`, `t_w4.1_<lado>`
+- En `case_003_column_and_common.json`, la soldadura de platina de continuidad se ingresa como:
+  - `soldaduras.weld_5` (soldadura #5 = platina de continuidad con aleta de columna)
+  - campos: `tipo_w5`, `Fexx_w5` (y opcionalmente `t_w5`, `nl_w5`).
 - `beam_shape` (desde `viga.perfil`) debe coincidir en derecha e izquierda.
 - En columna/comunes, `materiales` mantiene:
   - `profile_steel_type`

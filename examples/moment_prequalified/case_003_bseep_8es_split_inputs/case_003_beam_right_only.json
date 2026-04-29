@@ -1,6 +1,6 @@
 {
   "viga": {
-    "perfil_vgder": "W21X68",
+    "perfil_vgder": "W24X76",
     "tipo_acero_perfil_vgder": "ASTM A572 Gr 50",
     "demanda_ductilidad_vgder": "high",
     "E_vgder": {
@@ -8,7 +8,7 @@
       "unit": "MPa"
     },
     "Llb_vgder": {
-      "value": 7500,
+      "value": 5691,
       "unit": "mm"
     },
     "Lnc_vgder": {
@@ -19,11 +19,11 @@
   "placa_extremo": {
     "tipo_acero": "ASTM A572 Gr 50",
     "Bpe_vgder": {
-      "value": 230.0,
+      "value": 270.0,
       "unit": "mm"
     },
     "tpe_vgder": {
-      "value": 25.4,
+      "value": 40,
       "unit": "mm"
     },
     "de_pe_vgder": {
@@ -31,7 +31,7 @@
       "unit": "mm"
     },
     "pb_pe_vgder": {
-      "value": 94.996,
+      "value": 95,
       "unit": "mm"
     },
     "pfo_pe_vgder": {
@@ -46,7 +46,7 @@
   "rigidizador": {
     "tipo_acero_pest_vgder": "ASTM A572 Gr 50",
     "t_pest_vgder": {
-      "value": 12.7,
+      "value": 15.9,
       "unit": "mm"
     }
   },
@@ -58,7 +58,7 @@
     "tipo_apriete_b_vgder": "pretensioned",
     "std_b_vgder": "ASTM A490",
     "desc_b_vgder": "Grupo 150",
-    "shape_b_vgder": "P1-1/8\"X1-3/4\"",
+    "shape_b_vgder": "P1\"X1-3/4\"",
     "thread_b_vgder": "N"
   },
   "soldaduras": {
@@ -68,7 +68,7 @@
         "value": 490.0,
         "unit": "MPa"
       },
-      "tipo_w1_vgder": "Fillet",
+      "tipo_w1_vgder": "CJP",
       "w_w1_vgder": {
         "value": 9.525,
         "unit": "mm"
@@ -82,7 +82,7 @@
         "value": 490.0,
         "unit": "MPa"
       },
-      "tipo_w2_vgder": "Fillet",
+      "tipo_w2_vgder": "CJP",
       "w_w2_vgder": {
         "value": 9.525,
         "unit": "mm"
@@ -116,7 +116,7 @@
         "unit": "mm"
       },
       "t_w4.1_vgder": {
-        "value": 0.0,
+        "value": 8.0,
         "unit": "mm"
       },
       "nl_w4_vgder": 2,
@@ -137,7 +137,7 @@
       "unit": "kN-mm"
     },
     "Vg_vgder": {
-      "value": 97.11,
+      "value": 91.43,
       "unit": "kN"
     }
   }

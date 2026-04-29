@@ -124,6 +124,8 @@ class AISC358MomentGeometry(StrictModel):
     stiffener_thickness_vgder: Quantity | None = None
     stiffener_thickness_vgizq: Quantity | None = None
     column_slab_connection_condition: str | None = None
+    panel_zone_inelastic_deformation_considered: bool | None = None
+    panel_zone_equation_package: str | None = None
     end_plate_width: Quantity | None = None
     end_plate_thickness: Quantity | None = None
     de: Quantity | None = None
@@ -201,6 +203,21 @@ class AISC358MomentGeometry(StrictModel):
         raise ValueError(
             "geometry.column_slab_connection_condition must be "
             "'isolated' or 'not_isolated' (also accepts 'aislada'/'no_aislada')."
+        )
+
+    @field_validator("panel_zone_equation_package")
+    @classmethod
+    def validate_panel_zone_equation_package(cls, value: str | None) -> str | None:
+        if value is None:
+            return value
+        normalized = value.strip().lower().replace(" ", "").replace("_", "")
+        if normalized in {"a", "(a)", "paquetea"}:
+            return "a"
+        if normalized in {"b", "(b)", "paqueteb"}:
+            return "b"
+        raise ValueError(
+            "geometry.panel_zone_equation_package must be 'a' or 'b' "
+            "(also accepts '(a)'/'(b)' and 'paquete_a'/'paquete_b')."
         )
 
     @field_validator(

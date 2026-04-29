@@ -28,6 +28,7 @@
       "value": 240,
       "unit": "mm"
     },
+    "consideracion_deformacion_inelastica_zona_panel": false,
     "union_col_losa": "isolated"
   },
   "platina_continuidad": {
@@ -39,15 +40,15 @@
     }
   },
   "soldaduras": {
-    "weld_4": {
+    "weld_5": {
       "description": "Platina de continuidad con aleta de columna",
-      "Fexx_w4": {
+      "Fexx_w5": {
         "value": 490.0,
         "unit": "MPa"
       },
-      "tipo_w4": "CJP",
-      "t_w4": null,
-      "nl_w4": null
+      "tipo_w5": "CJP",
+      "t_w5": null,
+      "nl_w5": null
     }
   },
   "loads": {

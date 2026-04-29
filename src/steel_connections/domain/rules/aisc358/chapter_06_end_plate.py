@@ -13,6 +13,7 @@ from steel_connections.codes.aisc358.chapter_06 import (
     compute_column_web_local_crippling_strength,
     compute_column_web_local_buckling_strength,
     compute_column_web_local_yielding_strength,
+    compute_column_panel_zone_shear_strength_j10_6,
     compute_beam_flange_force_from_mf,
     compute_end_plate_yield_line_parameter,
     compute_mf,
@@ -28,6 +29,7 @@ from steel_connections.codes.aisc358.chapter_06 import (
     compute_flange_slenderness_ratio,
     compute_minimum_stiffener_length,
     compute_sh,
+    compute_vh,
     compute_required_stiffener_thickness,
     compute_stiffener_slenderness_ratio_limit,
     compute_web_slenderness_limit,
@@ -320,8 +322,14 @@ def _profile_ag(profile: dict[str, Quantity], *, role: str, rule_binding: object
     return ag
 
 
-def _derive_stiffener_height_from_de_pfo(*, de: Quantity, pfo: Quantity) -> Quantity:
-    return Quantity(value=pfo.value + de.value, unit=pfo.unit)
+def _derive_stiffener_height_from_de_pfo(
+    *,
+    de: Quantity,
+    pfo: Quantity,
+    pb: Quantity | None = None,
+) -> Quantity:
+    pb_value = pb.value if pb is not None else 0.0
+    return Quantity(value=pfo.value + de.value + pb_value, unit=pfo.unit)
 
 
 def _derive_end_plate_height(*, beam_depth: Quantity, de: Quantity, pfo: Quantity) -> Quantity:
@@ -329,7 +337,11 @@ def _derive_end_plate_height(*, beam_depth: Quantity, de: Quantity, pfo: Quantit
 
 
 def _derive_stiffener_length_from_hst(*, stiffener_height: Quantity, unit_system: UnitSystem) -> Quantity:
-    return compute_minimum_stiffener_length(stiffener_height, unit_system)
+    lst = compute_minimum_stiffener_length(stiffener_height, unit_system)
+    if unit_system == UnitSystem.SI and lst.unit == "mm":
+        rounded = math.ceil(lst.value / 10.0) * 10.0
+        return Quantity(value=rounded, unit=lst.unit)
+    return lst
 
 
 def _compute_protected_zone_length(
@@ -644,8 +656,13 @@ def _compute_vh_by_side(
             side=side,
             rule_binding=rule_binding,
         )
-        base_shear = (2.0 * mpr_side.value) / lh.value
-        vhmax = Quantity(value=base_shear + vgravity.value, unit=force_unit)
+        vhmax, vh_trace = compute_vh(
+            mpr=mpr_side,
+            lh=lh,
+            vgravity_between_hinges=vgravity,
+            unit_system=case.units_system,
+        )
+        base_shear = vh_trace["2mpr_over_lh"]
         vhmin = Quantity(value=base_shear - vgravity.value, unit=force_unit)
         side_data[side] = {
             "mpr": mpr_side,
@@ -778,7 +795,8 @@ def _compute_sh_by_side(case: AISC358MomentCase, rule_binding: object) -> dict[s
     else:
         de = _require(case, "geometry.de", rule_binding)
         pfo = _require(case, "geometry.pfo", rule_binding)
-        hst = _derive_stiffener_height_from_de_pfo(de=de, pfo=pfo)
+        pb = _optional_pb_for_connection(case, rule_binding) if case.connection_type == "bseep_8es" else None
+        hst = _derive_stiffener_height_from_de_pfo(de=de, pfo=pfo, pb=pb)
         stiffener_length = _derive_stiffener_length_from_hst(
             stiffener_height=hst,
             unit_system=case.units_system,
@@ -843,42 +861,43 @@ def _optional_pb_for_connection(case: AISC358MomentCase, rule_binding: object) -
     return case.geometry.pb
 
 
-def _compute_end_plate_h_distances(case: AISC358MomentCase, rule_binding: object) -> dict[str, Quantity]:
+def _compute_end_plate_h_distances(case: AISC358MomentCase, rule_binding: object) -> dict[str, Quantity | None]:
     beam_profile = _beam_profile(case)
     beam_depth = beam_profile["d"]
     beam_flange_thickness = beam_profile["tf"]
     pb = _optional_pb_for_connection(case, rule_binding)
     pfo = _require(case, "geometry.pfo", rule_binding)
     pfi = _require(case, "geometry.pfi", rule_binding)
-    tcp = _require(case, "geometry.continuity_plate_thickness", rule_binding)
-    de = _require(case, "geometry.de", rule_binding)
-    pso = pfo
-    psi = Quantity(value=pfi.value + beam_flange_thickness.value - tcp.value, unit=pfi.unit)
     if case.connection_type == "bseep_8es":
         if pb is None:
             raise ValueError("geometry.pb is required for bseep_8es end-plate distances.")
         h1 = Quantity(
-            value=beam_depth.value - 0.5 * beam_flange_thickness.value + pso.value + pb.value,
+            value=beam_depth.value - 0.5 * beam_flange_thickness.value + pfo.value + pb.value,
+            unit=beam_depth.unit,
+        )
+        h2 = Quantity(
+            value=beam_depth.value - 0.5 * beam_flange_thickness.value + pfo.value,
+            unit=beam_depth.unit,
+        )
+        h3 = Quantity(
+            value=beam_depth.value - 1.5 * beam_flange_thickness.value - pfi.value,
             unit=beam_depth.unit,
         )
         h4 = Quantity(
-            value=beam_depth.value - 1.5 * beam_flange_thickness.value - psi.value - pb.value,
+            value=beam_depth.value - 1.5 * beam_flange_thickness.value - pfi.value - pb.value,
             unit=beam_depth.unit,
         )
     else:
         h1 = Quantity(
-            value=beam_depth.value - 0.5 * beam_flange_thickness.value + pso.value + de.value,
+            value=beam_depth.value - 0.5 * beam_flange_thickness.value + pfo.value,
             unit=beam_depth.unit,
         )
+        h2 = Quantity(
+            value=beam_depth.value - 1.5 * beam_flange_thickness.value - pfi.value,
+            unit=beam_depth.unit,
+        )
+        h3 = None
         h4 = None
-    h2 = Quantity(
-        value=beam_depth.value - 0.5 * beam_flange_thickness.value + pso.value,
-        unit=beam_depth.unit,
-    )
-    h3 = Quantity(
-        value=beam_depth.value - 1.5 * beam_flange_thickness.value - psi.value,
-        unit=beam_depth.unit,
-    )
     return {"h1": h1, "h2": h2, "h3": h3, "h4": h4}
 
 
@@ -1237,13 +1256,20 @@ def run_step3_shear_at_plastic_hinge(case: AISC358MomentCase, rule_binding: obje
         side_inputs[f"vgravity_between_hinges_{side}"] = side_data["vgravity"].model_dump()
         side_inputs[f"vgravity_between_hinges_{side}_source"] = side_data["vgravity_source"]
         stated_side = getattr(case.loads, f"shear_plastic_hinge_{side}max")
-        if side == "der" and stated_side is None:
+        stated_side_source = f"loads.shear_plastic_hinge_{side}max"
+        if side == "der" and stated_side is None and case.loads.shear_plastic_hinge is not None:
             stated_side = case.loads.shear_plastic_hinge
+            stated_side_source = "loads.shear_plastic_hinge"
+        selected_side = stated_side if stated_side is not None else side_data["vhmax"]
+        selected_side_source = stated_side_source if stated_side is not None else f"step4_computed_vhmax_{side}"
+
         side_inputs[f"stated_vh_{side}max"] = stated_side.model_dump() if stated_side is not None else None
+        side_inputs[f"selected_vh_{side}max_source"] = selected_side_source
         side_intermediates[f"2mpr_over_lh_{side}"] = side_data["2mpr_over_lh"]
         side_intermediates[f"mpr_{side}"] = side_data["mpr"].value
         side_intermediates[f"vh_{side}max"] = side_data["vhmax"].value
         side_intermediates[f"vh_{side}min"] = side_data["vhmin"].value
+        side_intermediates[f"vh_{side}max_adopted"] = selected_side.value
     return _build_result(
         rule_binding=rule_binding,
         demand=demand,
@@ -1573,32 +1599,32 @@ def run_step7_2_1_end_plate_shear_yielding(case: AISC358MomentCase, rule_binding
     if lever_arm <= 0.0:
         raise ValueError("Beam lever arm (d_vgizq - tf_vgizq) must be positive for Step 7.2.1.")
 
-    rn_pe_v1_vgizq = Quantity(
+    ru_pe_v1_vgizq = Quantity(
         value=mf_crit.value / (2.0 * lever_arm),
         unit="kip" if case.units_system == UnitSystem.US else "kN",
     )
     bpe_vgizq = _require(case, "geometry.end_plate_width", rule_binding)
     tpe_vgizq = _require(case, "geometry.end_plate_thickness", rule_binding)
     fyp_pe_vgizq = _require(case, "materials.end_plate_fy", rule_binding)
-    phi = 0.75
+    phi = 0.9
     nominal_shear = 0.6 * fyp_pe_vgizq.value * bpe_vgizq.value * tpe_vgizq.value
     design_shear = phi * nominal_shear
     if case.units_system == UnitSystem.SI:
         nominal_shear /= 1000.0
         design_shear /= 1000.0
-    phi_rn_pe_v1_vgizq = Quantity(value=design_shear, unit=rn_pe_v1_vgizq.unit)
+    phi_rn_pe_v1_vgizq = Quantity(value=design_shear, unit=ru_pe_v1_vgizq.unit)
 
     return _build_result(
         rule_binding=rule_binding,
-        demand=rn_pe_v1_vgizq,
+        demand=ru_pe_v1_vgizq,
         capacity=phi_rn_pe_v1_vgizq,
         equation=(
-            "Rn_pe_v1_vgizq = Ru_pe_m3_vgizq / (2*(d_vgizq - tf_vgizq)); "
+            "Ru_pe_v1_vgizq = Mf_vgizq_critico / (2*(d_vgizq - tf_vgizq)); "
             "phi*Rn_pe_v1_vgizq = phi * 0.6 * Fyp_pe_vgizq * bpe_vgizq * tpe_vgizq "
             "(AISC 358-22 Eq. 6.7-10)"
         ),
         inputs={
-            "ru_pe_m3_vgizq": mf_crit.model_dump(),
+            "mf_vgizq_critico": mf_crit.model_dump(),
             "mf_source": mf_source,
             "mf_computed": mf_computed.model_dump(),
             "d_vgizq": d_vgizq.model_dump(),
@@ -1609,11 +1635,11 @@ def run_step7_2_1_end_plate_shear_yielding(case: AISC358MomentCase, rule_binding
         },
         intermediates={
             "z_vgizq": lever_arm,
-            "rn_pe_v1_vgizq": nominal_shear,
+            "ru_pe_v1_vgizq": nominal_shear,
             "phi_rn_pe_v1_vgizq": design_shear,
         },
         design_factors={"phi": phi},
-        units_trace={"rn_pe_v1_vgizq": rn_pe_v1_vgizq.unit, "phi_rn_pe_v1_vgizq": phi_rn_pe_v1_vgizq.unit},
+        units_trace={"ru_pe_v1_vgizq": ru_pe_v1_vgizq.unit, "phi_rn_pe_v1_vgizq": phi_rn_pe_v1_vgizq.unit},
     )
 
 
@@ -1652,7 +1678,7 @@ def run_step7_2_2_end_plate_shear_rupture(case: AISC358MomentCase, rule_binding:
     db = _require(case, "geometry.bolt_diameter", rule_binding)
     dh, dh_inter = _compute_standard_hole_diameter(bolt_diameter=db, unit_system=case.units_system)
 
-    phi = 0.75
+    phi = 0.9
     edge_allowance = 1.0 / 16.0 if case.units_system == UnitSystem.US else 1.6
     net_width = bpe_vgizq.value - 2.0 * (dh.value + edge_allowance)
     if net_width <= 0.0:
@@ -1763,7 +1789,7 @@ def run_step7_3_1_end_plate_hole_tearout(case: AISC358MomentCase, rule_binding: 
     pfo_pe_vgizq = _require(case, "geometry.pfo", rule_binding)
     pfi_pe_vgizq = _require(case, "geometry.pfi", rule_binding)
     dh_pe_vgizq = Quantity(value=lc_inter["dh"], unit=lc.unit)
-    phi = 0.75
+    phi = 0.9
 
     phi_rn_pe_v2_vgizq, cap_intermediate = compute_end_plate_hole_tearout_capacity(
         end_plate_fu=fup_pe_vgizq,
@@ -1797,6 +1823,7 @@ def run_step7_3_1_end_plate_hole_tearout(case: AISC358MomentCase, rule_binding: 
             "fup_pe_vgizq": fup_pe_vgizq.model_dump(),
             "pfo_pe_vgizq": pfo_pe_vgizq.model_dump(),
             "pfi_pe_vgizq": pfi_pe_vgizq.model_dump(),
+            "pb_pe_vgizq": pb_pe_vgizq.model_dump() if pb_pe_vgizq is not None else None,
             "tf_vgizq": tf_vgizq.model_dump(),
             "dh_pe_vgizq": dh_pe_vgizq.model_dump(),
         },
@@ -1833,7 +1860,7 @@ def run_step7_3_2_end_plate_hole_bearing(case: AISC358MomentCase, rule_binding: 
     tpe_vgizq = _require(case, "geometry.end_plate_thickness", rule_binding)
     fup_pe_vgizq = _require(case, "materials.end_plate_fu", rule_binding)
     d_b_vgizq = _require(case, "geometry.bolt_diameter", rule_binding)
-    phi = 0.75
+    phi = 0.9
 
     phi_rn_pe_v2_vgizq, cap_intermediate = compute_end_plate_hole_bearing_capacity(
         end_plate_fu=fup_pe_vgizq,
@@ -1899,7 +1926,8 @@ def run_step8_1_1_stiffener_weld_tension_rupture(case: AISC358MomentCase, rule_b
     stiffener_thickness = _require(case, "geometry.stiffener_thickness", rule_binding)
     de = _require(case, "geometry.de", rule_binding)
     pfo = _require(case, "geometry.pfo", rule_binding)
-    h_pest_vgizq = _derive_stiffener_height_from_de_pfo(de=de, pfo=pfo)
+    pb = _optional_pb_for_connection(case, rule_binding) if case.connection_type == "bseep_8es" else None
+    h_pest_vgizq = _derive_stiffener_height_from_de_pfo(de=de, pfo=pfo, pb=pb)
     weld_fexx = _require(case, "materials.weld_fexx", rule_binding)
     c_pest_vgizq = _stiffener_clip_distance(case.units_system)
     kds_w1_vgizq = _require(case, "geometry.kds_w1_vgizq", rule_binding)
@@ -2030,7 +2058,8 @@ def run_step9_1_1_stiffener_beam_weld_shear_rupture(case: AISC358MomentCase, rul
     weld_fexx = _require(case, "materials.weld_fexx", rule_binding)
     de = _require(case, "geometry.de", rule_binding)
     pfo = _require(case, "geometry.pfo", rule_binding)
-    h_pest_vgizq = _derive_stiffener_height_from_de_pfo(de=de, pfo=pfo)
+    pb = _optional_pb_for_connection(case, rule_binding) if case.connection_type == "bseep_8es" else None
+    h_pest_vgizq = _derive_stiffener_height_from_de_pfo(de=de, pfo=pfo, pb=pb)
     l_pest_vgizq = _derive_stiffener_length_from_hst(stiffener_height=h_pest_vgizq, unit_system=case.units_system)
     c_pest_vgizq = _stiffener_clip_distance(case.units_system)
 
@@ -2618,9 +2647,9 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
     pu_column = _require(case, "loads.pu_columna", rule_binding)
     beam_ag = _profile_ag(beam_profile, role="beam", rule_binding=rule_binding)
     column_ag = _profile_ag(column_profile, role="column", rule_binding=rule_binding)
-    stiffener_height_der = _derive_stiffener_height_from_de_pfo(de=de_der, pfo=pfo_der)
+    stiffener_height_der = _derive_stiffener_height_from_de_pfo(de=de_der, pfo=pfo_der, pb=pb_der)
     stiffener_height_izq = (
-        _derive_stiffener_height_from_de_pfo(de=de_izq, pfo=pfo_izq)
+        _derive_stiffener_height_from_de_pfo(de=de_izq, pfo=pfo_izq, pb=pb_izq)
         if (de_izq is not None and pfo_izq is not None)
         else None
     )
@@ -2651,48 +2680,46 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
         side_profile: dict[str, Quantity],
         pfo_side: Quantity,
         pfi_side: Quantity,
-        de_side: Quantity,
         pb_side: Quantity | None,
-    ) -> dict[str, Quantity]:
+    ) -> dict[str, Quantity | None]:
         beam_depth_side = side_profile["d"]
         beam_tf_side = side_profile["tf"]
-        pso_side = pfo_side
-        psi_side = Quantity(value=pfi_side.value + beam_tf_side.value - tcp.value, unit=pfi_side.unit)
         if case.connection_type == "bseep_8es":
             if pb_side is None:
                 raise ValueError("geometry.pb is required for bseep_8es prequalification checks.")
             h1_side = Quantity(
-                value=beam_depth_side.value - 0.5 * beam_tf_side.value + pso_side.value + pb_side.value,
+                value=beam_depth_side.value - 0.5 * beam_tf_side.value + pfo_side.value + pb_side.value,
+                unit=beam_depth_side.unit,
+            )
+            h2_side = Quantity(
+                value=beam_depth_side.value - 0.5 * beam_tf_side.value + pfo_side.value,
+                unit=beam_depth_side.unit,
+            )
+            h3_side = Quantity(
+                value=beam_depth_side.value - 1.5 * beam_tf_side.value - pfi_side.value,
                 unit=beam_depth_side.unit,
             )
             h4_side = Quantity(
-                value=beam_depth_side.value - 1.5 * beam_tf_side.value - psi_side.value - pb_side.value,
+                value=beam_depth_side.value - 1.5 * beam_tf_side.value - pfi_side.value - pb_side.value,
                 unit=beam_depth_side.unit,
             )
         else:
             h1_side = Quantity(
-                value=beam_depth_side.value - 0.5 * beam_tf_side.value + pso_side.value + de_side.value,
+                value=beam_depth_side.value - 0.5 * beam_tf_side.value + pfo_side.value,
                 unit=beam_depth_side.unit,
             )
-            h4_side = Quantity(
-                value=beam_depth_side.value - 1.5 * beam_tf_side.value - psi_side.value,
+            h2_side = Quantity(
+                value=beam_depth_side.value - 1.5 * beam_tf_side.value - pfi_side.value,
                 unit=beam_depth_side.unit,
             )
-        h2_side = Quantity(
-            value=beam_depth_side.value - 0.5 * beam_tf_side.value + pso_side.value,
-            unit=beam_depth_side.unit,
-        )
-        h3_side = Quantity(
-            value=beam_depth_side.value - 1.5 * beam_tf_side.value - psi_side.value,
-            unit=beam_depth_side.unit,
-        )
-        return {"psi": psi_side, "h1": h1_side, "h2": h2_side, "h3": h3_side, "h4": h4_side}
+            h3_side = None
+            h4_side = None
+        return {"h1": h1_side, "h2": h2_side, "h3": h3_side, "h4": h4_side}
 
     h_terms_der = _compute_h_terms(
         side_profile=beam_profile_der,
         pfo_side=pfo_der,
         pfi_side=pfi_der,
-        de_side=de_der,
         pb_side=pb_der,
     )
     h_terms_izq = (
@@ -2700,7 +2727,6 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
             side_profile=beam_profile_izq,
             pfo_side=pfo_izq,
             pfi_side=pfi_izq,
-            de_side=de_izq,
             pb_side=pb_izq,
         )
         if beam_profile_izq is not None and pfo_izq is not None and pfi_izq is not None and de_izq is not None
@@ -3180,15 +3206,23 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
             "scope": "end_plate_der",
             "clause": "Section 6.3 + AISC 360-22 Table J3.3",
             "description": "Geometria end-plate de viga a derecha",
-            "requirement": "h1_vgder, h2_vgder, h3_vgder, h4_vgder y dh_vgder para trazabilidad geometrica",
+            "requirement": (
+                "h1_vgder, h2_vgder, h3_vgder, h4_vgder y dh_vgder para trazabilidad geometrica"
+                if case.connection_type == "bseep_8es"
+                else "h1_vgder, h2_vgder y dh_vgder para trazabilidad geometrica"
+            ),
             "formula": (
-                "h1=d-0.5tf+pso+pb; h2=d-0.5tf+pso; h3=d-1.5tf-psi; h4=d-1.5tf-psi-pb; "
-                "dh=d+1/16 in (db<=7/8 in) else dh=d+1/8 in"
+                (
+                    "h1=d-0.5tf+pfo+pb; h2=d-0.5tf+pfo; h3=d-1.5tf-pfi; h4=d-1.5tf-pfi-pb; "
+                    if case.connection_type == "bseep_8es"
+                    else "h1=d-0.5tf+pfo; h2=d-1.5tf-pfi; "
+                )
+                + "dh=d+1/16 in (db<=7/8 in) else dh=d+1/8 in"
             ),
             "h1_vgder": h_terms_der["h1"].model_dump(),
             "h2_vgder": h_terms_der["h2"].model_dump(),
-            "h3_vgder": h_terms_der["h3"].model_dump(),
-            "h4_vgder": h_terms_der["h4"].model_dump(),
+            "h3_vgder": h_terms_der["h3"].model_dump() if h_terms_der["h3"] is not None else None,
+            "h4_vgder": h_terms_der["h4"].model_dump() if h_terms_der["h4"] is not None else None,
             "dh_vgder": standard_hole_diameter.model_dump(),
         },
         {
@@ -3198,7 +3232,12 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
             "clause": "Section 6.3",
             "description": "Derived end-plate stiffener geometry and detailing edge requirement",
             "formula": (
-                "h_pest_vgder = pfo_pe_vgder + de_pe_vgder; "
+                (
+                    "h_pest_vgder = pfo_pe_vgder + pb_pe_vgder + de_pe_vgder; "
+                    if case.connection_type == "bseep_8es"
+                    else "h_pest_vgder = pfo_pe_vgder + de_pe_vgder; "
+                )
+                + 
                 "L_pest_vgder = h_pest_vgder/tan(30 deg); "
                 "Ed_pest_vgder = 25 mm"
             ),
@@ -3263,15 +3302,31 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
                 "scope": "end_plate_izq",
                 "clause": "Section 6.3 + AISC 360-22 Table J3.3",
                 "description": "Geometria end-plate de viga a izquierda",
-                "requirement": "h1_vgizq, h2_vgizq, h3_vgizq, h4_vgizq y dh_vgizq para trazabilidad geometrica",
+                "requirement": (
+                    "h1_vgizq, h2_vgizq, h3_vgizq, h4_vgizq y dh_vgizq para trazabilidad geometrica"
+                    if case.connection_type == "bseep_8es"
+                    else "h1_vgizq, h2_vgizq y dh_vgizq para trazabilidad geometrica"
+                ),
                 "formula": (
-                    "h1=d-0.5tf+pso+pb; h2=d-0.5tf+pso; h3=d-1.5tf-psi; h4=d-1.5tf-psi-pb; "
-                    "dh=d+1/16 in (db<=7/8 in) else dh=d+1/8 in"
+                    (
+                        "h1=d-0.5tf+pfo+pb; h2=d-0.5tf+pfo; h3=d-1.5tf-pfi; h4=d-1.5tf-pfi-pb; "
+                        if case.connection_type == "bseep_8es"
+                        else "h1=d-0.5tf+pfo; h2=d-1.5tf-pfi; "
+                    )
+                    + "dh=d+1/16 in (db<=7/8 in) else dh=d+1/8 in"
                 ),
                 "h1_vgizq": h_terms_izq["h1"].model_dump() if h_terms_izq is not None else None,
                 "h2_vgizq": h_terms_izq["h2"].model_dump() if h_terms_izq is not None else None,
-                "h3_vgizq": h_terms_izq["h3"].model_dump() if h_terms_izq is not None else None,
-                "h4_vgizq": h_terms_izq["h4"].model_dump() if h_terms_izq is not None else None,
+                "h3_vgizq": (
+                    h_terms_izq["h3"].model_dump()
+                    if h_terms_izq is not None and h_terms_izq["h3"] is not None
+                    else None
+                ),
+                "h4_vgizq": (
+                    h_terms_izq["h4"].model_dump()
+                    if h_terms_izq is not None and h_terms_izq["h4"] is not None
+                    else None
+                ),
                 "dh_vgizq": standard_hole_diameter.model_dump(),
             },
         )
@@ -3296,7 +3351,12 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
                 "clause": "Section 6.3",
                 "description": "Derived end-plate stiffener geometry and detailing edge requirement",
                 "formula": (
-                    "h_pest_vgizq = pfo_pe_vgizq + de_pe_vgizq; "
+                    (
+                        "h_pest_vgizq = pfo_pe_vgizq + pb_pe_vgizq + de_pe_vgizq; "
+                        if case.connection_type == "bseep_8es"
+                        else "h_pest_vgizq = pfo_pe_vgizq + de_pe_vgizq; "
+                    )
+                    +
                     "L_pest_vgizq = h_pest_vgizq/tan(30 deg); "
                     "Ed_pest_vgizq = 25 mm"
                 ),
@@ -3845,9 +3905,16 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
             description="End-plate stiffener height derived from end-plate geometry (right beam)",
             calculated_symbol="h_pest_vgder",
             verification_text=(
-                f"h_pest_vgder = pfo_pe_vgder + de_pe_vgder; {stiffener_height_der.value:.3f} {stiffener_height_der.unit} = "
-                f"{pfo_der.value:.3f} {pfo_der.unit} + {de_der.value:.3f} {de_der.unit}"
-            ),
+                    (
+                        f"h_pest_vgder = pfo_pe_vgder + pb_pe_vgder + de_pe_vgder; {stiffener_height_der.value:.3f} {stiffener_height_der.unit} = "
+                        f"{pfo_der.value:.3f} {pfo_der.unit} + {pb_der.value:.3f} {pb_der.unit} + {de_der.value:.3f} {de_der.unit}"
+                    )
+                    if case.connection_type == "bseep_8es" and pb_der is not None
+                    else (
+                        f"h_pest_vgder = pfo_pe_vgder + de_pe_vgder; {stiffener_height_der.value:.3f} {stiffener_height_der.unit} = "
+                        f"{pfo_der.value:.3f} {pfo_der.unit} + {de_der.value:.3f} {de_der.unit}"
+                    )
+                ),
             passes=stiffener_height_der.value > 0.0,
             calculated=stiffener_height_der,
         )
@@ -3861,8 +3928,15 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
                 description="End-plate stiffener height derived from end-plate geometry (left beam)",
                 calculated_symbol="h_pest_vgizq",
                 verification_text=(
-                    f"h_pest_vgizq = pfo_pe_vgizq + de_pe_vgizq; {stiffener_height_izq.value:.3f} {stiffener_height_izq.unit} = "
-                    f"{pfo_izq.value:.3f} {pfo_izq.unit} + {de_izq.value:.3f} {de_izq.unit}"
+                    (
+                        f"h_pest_vgizq = pfo_pe_vgizq + pb_pe_vgizq + de_pe_vgizq; {stiffener_height_izq.value:.3f} {stiffener_height_izq.unit} = "
+                        f"{pfo_izq.value:.3f} {pfo_izq.unit} + {pb_izq.value:.3f} {pb_izq.unit} + {de_izq.value:.3f} {de_izq.unit}"
+                    )
+                    if case.connection_type == "bseep_8es" and pb_izq is not None
+                    else (
+                        f"h_pest_vgizq = pfo_pe_vgizq + de_pe_vgizq; {stiffener_height_izq.value:.3f} {stiffener_height_izq.unit} = "
+                        f"{pfo_izq.value:.3f} {pfo_izq.unit} + {de_izq.value:.3f} {de_izq.unit}"
+                    )
                 ),
                 passes=stiffener_height_izq.value > 0.0,
                 calculated=stiffener_height_izq,
@@ -4005,7 +4079,7 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
         continuity_plate_limits = [
             _step1_text_in_set_limit(
                 check_id="section_6_3.continuity_plate_weld_type_declared",
-                scope="continuity_plate",
+                scope="weld_5_col",
                 clause="Section 6.3 (continuity plate weld detail)",
                 description="Continuity-plate weld type shall be explicitly declared with an allowed weld category",
                 calculated_symbol="weld_cp",
@@ -4015,7 +4089,7 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
             ),
             _step1_continuity_plate_weld_limit(
                 check_id="section_6_3.continuity_plate_weld_type_for_thin_plate",
-                scope="continuity_plate",
+                scope="weld_5_col",
                 clause="Section 6.3 (continuity plate weld detail)",
                 description=(
                     "Continuity-plate weld type when plate thickness is less than or equal to 3/8 in (10 mm)"
@@ -4026,19 +4100,7 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
             ),
         ]
 
-    end_plate_beam_web_weld_type_normalized = _normalize_end_plate_beam_web_weld_type(end_plate_beam_web_weld_type_raw)
-    weld_limits = [
-        _step1_text_in_set_limit(
-            check_id="section_6_7.end_plate_beam_web_weld_type_allowed",
-            scope="welds",
-            clause="Section 6.7",
-            description="End-plate to beam-web weld type shall be an allowed category",
-            calculated_symbol="weld_ep_web",
-            limit_symbol="{cjp, double_sided_fillet, single_sided_fillet}",
-            calculated_text=end_plate_beam_web_weld_type_normalized,
-            allowed_values=("cjp", "double_sided_fillet", "single_sided_fillet"),
-        )
-    ]
+    weld_limits: list[dict[str, object]] = []
     for side_suffix in _active_beam_sides(case):
         side_tag = f"vg{side_suffix}"
         ductility_side = (
@@ -4061,7 +4123,7 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
         weld_limits.append(
             _step1_verification_only_limit(
                 check_id=f"section_6_7.beam_flange_to_end_plate_weld_requirement_{side_tag}",
-                scope=f"welds_{side_suffix}",
+                scope=f"weld_4_{side_tag}",
                 clause="Section 6.7",
                 description=(
                     "Requisitos de soldadura entre ala de viga y placa de extremo "
@@ -4128,9 +4190,24 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
 
     for side_suffix in _active_beam_sides(case):
         side_tag = f"vg{side_suffix}"
-        side_scope = f"welds_{side_suffix}"
         side_label = "viga izquierda" if side_suffix == "izq" else "viga derecha"
         side_profile = _beam_profile_by_side(case, side_suffix)
+        weld3_type = _normalize_end_plate_beam_web_weld_type(_geometry_by_side("end_plate_beam_web_weld_type", side_tag))
+        weld_limits.append(
+            _step1_text_in_set_limit(
+                check_id=f"section_6_7.end_plate_beam_web_weld_type_allowed_{side_tag}",
+                scope=f"weld_3_{side_tag}",
+                clause="Section 6.7",
+                description=(
+                    "End-plate to beam-web weld type shall be an allowed category "
+                    f"({'left beam' if side_suffix == 'izq' else 'right beam'})"
+                ),
+                calculated_symbol=f"weld_ep_web_{side_tag}",
+                limit_symbol="{cjp, double_sided_fillet, single_sided_fillet}",
+                calculated_text=weld3_type,
+                allowed_values=("cjp", "double_sided_fillet", "single_sided_fillet"),
+            )
+        )
 
         end_plate_thickness_side = _geometry_by_side("end_plate_thickness", side_tag) or tp
         stiffener_thickness_side = _geometry_by_side("stiffener_thickness", side_tag)
@@ -4141,7 +4218,7 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
         clip_st_side = _stiffener_clip_distance(case.units_system)
 
         h_pest_side = (
-            _derive_stiffener_height_from_de_pfo(de=de_side, pfo=pfo_side)
+            _derive_stiffener_height_from_de_pfo(de=de_side, pfo=pfo_side, pb=pb_side)
             if de_side is not None and pfo_side is not None
             else None
         )
@@ -4227,12 +4304,118 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
             },
         ]
 
+        # AISC 358-22 Section 6.7 (item 6): end-plate-to-stiffener joints shall be CJP.
+        # Exception: if stiffener thickness <= 3/8 in (10 mm), fillet weld is permitted.
+        weld1_type_raw = _geometry_by_side("end_plate_stiffener_weld_type", side_tag)
+        weld1_type_normalized = _normalize_end_plate_stiffener_weld_type(weld1_type_raw)
+        stiffener_weld_thickness_limit = Quantity(
+            value=3.0 / 8.0 if case.units_system == UnitSystem.US else 10.0,
+            unit="in" if case.units_system == UnitSystem.US else "mm",
+        )
+        if stiffener_thickness_side is None:
+            weld_limits.append(
+                _step1_verification_only_limit(
+                    check_id=f"section_6_7.weld_1_type_vs_stiffener_thickness_{side_tag}",
+                    scope=f"weld_1_{side_tag}",
+                    clause="Section 6.7 (item 6)",
+                    description=f"Tipo de soldadura de end-plate con rigidizador segun espesor del rigidizador ({side_label})",
+                    calculated_symbol=f"tipo_w1_{side_tag}",
+                    verification_text=(
+                        f"si t_pest_{side_tag} > {stiffener_weld_thickness_limit.value:.3f} {stiffener_weld_thickness_limit.unit}: "
+                        f"tipo_w1_{side_tag} == cjp; "
+                        f"dato faltante: t_pest_{side_tag}"
+                    ),
+                    passes=False,
+                )
+            )
+        else:
+            thin_stiffener = stiffener_thickness_side.value <= (stiffener_weld_thickness_limit.value + 1e-9)
+            if thin_stiffener:
+                passes_weld1_rule = weld1_type_normalized in {"cjp", "fillet"}
+                verification_text = (
+                    f"si t_pest_{side_tag} <= {stiffener_weld_thickness_limit.value:.3f} {stiffener_weld_thickness_limit.unit}: "
+                    f"tipo_w1_{side_tag} in {{cjp, fillet}}; "
+                    f"t_pest_{side_tag} = {stiffener_thickness_side.value:.3f} {stiffener_thickness_side.unit}; "
+                    f"tipo_w1_{side_tag} = {weld1_type_normalized}"
+                )
+            else:
+                passes_weld1_rule = weld1_type_normalized == "cjp"
+                verification_text = (
+                    f"si t_pest_{side_tag} > {stiffener_weld_thickness_limit.value:.3f} {stiffener_weld_thickness_limit.unit}: "
+                    f"tipo_w1_{side_tag} == cjp; "
+                    f"t_pest_{side_tag} = {stiffener_thickness_side.value:.3f} {stiffener_thickness_side.unit}; "
+                    f"tipo_w1_{side_tag} = {weld1_type_normalized}"
+                )
+            weld_limits.append(
+                _step1_verification_only_limit(
+                    check_id=f"section_6_7.weld_1_type_vs_stiffener_thickness_{side_tag}",
+                    scope=f"weld_1_{side_tag}",
+                    clause="Section 6.7 (item 6)",
+                    description=f"Tipo de soldadura de end-plate con rigidizador segun espesor del rigidizador ({side_label})",
+                    calculated_symbol=f"tipo_w1_{side_tag}",
+                    verification_text=verification_text,
+                    passes=passes_weld1_rule,
+                )
+            )
+
+        weld2_type_raw = (
+            _geometry_by_side("beam_stiffener_weld_type", side_tag)
+            or _geometry_by_side("end_plate_stiffener_weld_type", side_tag)
+        )
+        weld2_type_normalized = _normalize_end_plate_stiffener_weld_type(weld2_type_raw)
+        if stiffener_thickness_side is None:
+            weld_limits.append(
+                _step1_verification_only_limit(
+                    check_id=f"section_6_7.weld_2_type_vs_stiffener_thickness_{side_tag}",
+                    scope=f"weld_2_{side_tag}",
+                    clause="Section 6.7 (item 6)",
+                    description=f"Tipo de soldadura de viga con rigidizador segun espesor del rigidizador ({side_label})",
+                    calculated_symbol=f"tipo_w2_{side_tag}",
+                    verification_text=(
+                        f"si t_pest_{side_tag} > {stiffener_weld_thickness_limit.value:.3f} {stiffener_weld_thickness_limit.unit}: "
+                        f"tipo_w2_{side_tag} == cjp; "
+                        f"dato faltante: t_pest_{side_tag}"
+                    ),
+                    passes=False,
+                )
+            )
+        else:
+            thin_stiffener_w2 = stiffener_thickness_side.value <= (stiffener_weld_thickness_limit.value + 1e-9)
+            if thin_stiffener_w2:
+                passes_weld2_rule = weld2_type_normalized in {"cjp", "fillet"}
+                verification_text_w2 = (
+                    f"si t_pest_{side_tag} <= {stiffener_weld_thickness_limit.value:.3f} {stiffener_weld_thickness_limit.unit}: "
+                    f"tipo_w2_{side_tag} in {{cjp, fillet}}; "
+                    f"t_pest_{side_tag} = {stiffener_thickness_side.value:.3f} {stiffener_thickness_side.unit}; "
+                    f"tipo_w2_{side_tag} = {weld2_type_normalized}"
+                )
+            else:
+                passes_weld2_rule = weld2_type_normalized == "cjp"
+                verification_text_w2 = (
+                    f"si t_pest_{side_tag} > {stiffener_weld_thickness_limit.value:.3f} {stiffener_weld_thickness_limit.unit}: "
+                    f"tipo_w2_{side_tag} == cjp; "
+                    f"t_pest_{side_tag} = {stiffener_thickness_side.value:.3f} {stiffener_thickness_side.unit}; "
+                    f"tipo_w2_{side_tag} = {weld2_type_normalized}"
+                )
+            weld_limits.append(
+                _step1_verification_only_limit(
+                    check_id=f"section_6_7.weld_2_type_vs_stiffener_thickness_{side_tag}",
+                    scope=f"weld_2_{side_tag}",
+                    clause="Section 6.7 (item 6)",
+                    description=f"Tipo de soldadura de viga con rigidizador segun espesor del rigidizador ({side_label})",
+                    calculated_symbol=f"tipo_w2_{side_tag}",
+                    verification_text=verification_text_w2,
+                    passes=passes_weld2_rule,
+                )
+            )
+
         for weld_ctx in weld_contexts:
             weld_type_normalized = _normalize_end_plate_stiffener_weld_type(weld_ctx["type_raw"])
             if weld_type_normalized != "fillet":
                 continue
 
             weld_index = weld_ctx["index"]
+            weld_scope = f"weld_{weld_index}_{side_tag}"
             weld_size = weld_ctx["size"]
             weld_length = weld_ctx["length"]
             thinner_part = weld_ctx["thinner_part"]
@@ -4248,7 +4431,7 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
                     missing.append(f"t_delgado_w{weld_index}_{side_tag}")
                 _append_fillet_missing_limit(
                     check_id=f"section_j2_4.weld_{weld_index}_minimum_size_{side_tag}",
-                    scope=side_scope,
+                    scope=weld_scope,
                     description=f"Tamano minimo de soldadura de filete {description_suffix}",
                     calculated_symbol=size_symbol,
                     missing_fields=tuple(missing),
@@ -4261,7 +4444,7 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
                 weld_limits.append(
                     _step1_limit(
                         check_id=f"section_j2_4.weld_{weld_index}_minimum_size_{side_tag}",
-                        scope=side_scope,
+                        scope=weld_scope,
                         clause="AISC 360-22 Table J2.4",
                         description=f"Tamano minimo de soldadura de filete {description_suffix}",
                         calculated_symbol=size_symbol,
@@ -4280,7 +4463,7 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
                     missing.append(f"t_delgado_w{weld_index}_{side_tag}")
                 _append_fillet_missing_limit(
                     check_id=f"section_j2_b.weld_{weld_index}_maximum_size_{side_tag}",
-                    scope=side_scope,
+                    scope=weld_scope,
                     description=f"Tamano maximo de soldadura de filete {description_suffix}",
                     calculated_symbol=size_symbol,
                     missing_fields=tuple(missing),
@@ -4293,7 +4476,7 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
                 weld_limits.append(
                     _step1_limit(
                         check_id=f"section_j2_b.weld_{weld_index}_maximum_size_{side_tag}",
-                        scope=side_scope,
+                        scope=weld_scope,
                         clause="AISC 360-22 Section J2b",
                         description=f"Tamano maximo de soldadura de filete {description_suffix}",
                         calculated_symbol=size_symbol,
@@ -4312,14 +4495,14 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
                     missing.append(length_symbol)
                 _append_fillet_missing_limit(
                     check_id=f"section_j2_2_c.weld_{weld_index}_minimum_length_{side_tag}",
-                    scope=side_scope,
+                    scope=weld_scope,
                     description=f"Longitud minima de soldadura de filete para diseno por resistencia {description_suffix}",
                     calculated_symbol=length_symbol,
                     missing_fields=tuple(missing),
                 )
                 _append_fillet_missing_limit(
                     check_id=f"section_j2_2_d.weld_{weld_index}_effective_length_{side_tag}",
-                    scope=side_scope,
+                    scope=weld_scope,
                     description=f"Longitud efectiva de soldadura de filete cargada en el extremo {description_suffix}",
                     calculated_symbol=length_symbol,
                     missing_fields=tuple(missing),
@@ -4334,7 +4517,7 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
             weld_limits.append(
                 _step1_limit(
                     check_id=f"section_j2_2_c.weld_{weld_index}_minimum_length_{side_tag}",
-                    scope=side_scope,
+                    scope=weld_scope,
                     clause="AISC 360-22 Section J2.2(c)",
                     description=f"Longitud minima de soldadura de filete para diseno por resistencia {description_suffix}",
                     calculated_symbol=length_symbol,
@@ -4357,7 +4540,7 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
             weld_limits.append(
                 _step1_verification_only_limit(
                     check_id=f"section_j2_2_d.weld_{weld_index}_effective_length_{side_tag}",
-                    scope=side_scope,
+                    scope=weld_scope,
                     clause="AISC 360-22 Section J2.2(d) + Eq. (J2-1)",
                     description=f"Longitud efectiva de soldadura de filete cargada en el extremo {description_suffix}",
                     calculated_symbol=length_symbol,
@@ -5105,7 +5288,8 @@ def run_bolt_bearing_tearout_column_flange(case: AISC358MomentCase, rule_binding
 def run_stiffener_minimum_length(case: AISC358MomentCase, rule_binding: object) -> CheckResult:
     de = _require(case, "geometry.de", rule_binding)
     pfo = _require(case, "geometry.pfo", rule_binding)
-    hst = _derive_stiffener_height_from_de_pfo(de=de, pfo=pfo)
+    pb = _optional_pb_for_connection(case, rule_binding) if case.connection_type == "bseep_8es" else None
+    hst = _derive_stiffener_height_from_de_pfo(de=de, pfo=pfo, pb=pb)
     lst = _derive_stiffener_length_from_hst(stiffener_height=hst, unit_system=case.units_system)
 
     required_lst = compute_minimum_stiffener_length(hst, case.units_system)
@@ -5187,7 +5371,8 @@ def run_stiffener_thickness(case: AISC358MomentCase, rule_binding: object) -> Ch
 def run_stiffener_local_buckling(case: AISC358MomentCase, rule_binding: object) -> CheckResult:
     de = _require(case, "geometry.de", rule_binding)
     pfo = _require(case, "geometry.pfo", rule_binding)
-    hst = _derive_stiffener_height_from_de_pfo(de=de, pfo=pfo)
+    pb = _optional_pb_for_connection(case, rule_binding) if case.connection_type == "bseep_8es" else None
+    hst = _derive_stiffener_height_from_de_pfo(de=de, pfo=pfo, pb=pb)
     ts = _require(case, "geometry.stiffener_thickness", rule_binding)
     elastic_modulus = _require(case, "materials.elastic_modulus", rule_binding)
     stiffener_fy = _require(case, "materials.stiffener_fy", rule_binding)
@@ -5505,9 +5690,16 @@ def run_column_step3_web_local_yielding(case: AISC358MomentCase, rule_binding: o
         beam_flange_thickness=beam_profile["tf"],
         unit_system=case.units_system,
     )
+    use_continuity_plate = bool(case.geometry.continuity_plate_enabled)
+    demand_force = capacity if use_continuity_plate else ffu
+    demand_source = (
+        "continuity_plate_enabled => Ru_cw_v2_col_vgizq = phi*Rn_cf_v2_col_vgizq"
+        if use_continuity_plate
+        else "Ru_cw_v2_col_vgizq = Mf_vgizq_critico/(d_vgizq - tf_vgizq)"
+    )
     return _build_result(
         rule_binding=rule_binding,
-        demand=ffu,
+        demand=demand_force,
         capacity=capacity,
         equation=(
             "Ru_cf_v2_col_vgizq = Mf_vgizq_critico/(d_vgizq - tf_vgizq); "
@@ -5516,7 +5708,8 @@ def run_column_step3_web_local_yielding(case: AISC358MomentCase, rule_binding: o
         ),
         inputs={
             "column_shape": case.sections.column_shape,
-            "ru_cf_v2_col_vgizq": ffu.model_dump(),
+            "ru_cf_v2_col_vgizq": demand_force.model_dump(),
+            "ru_cf_v2_col_vgizq_source": demand_source,
             "mf_vgizq_critico": mf_vgizq_critico.model_dump(),
             "st_col": column_top_distance.model_dump(),
             "d_col": column_profile["d"].model_dump(),
@@ -5541,9 +5734,10 @@ def run_column_step3_web_local_yielding(case: AISC358MomentCase, rule_binding: o
         intermediates={
             "phi_rn_cf_v2_col_vgizq": capacity.value,
             "rn_nominal_cf_v2_col_vgizq": intermediates.get("rn_nominal"),
+            "continuity_plate_enabled": use_continuity_plate,
         },
         design_factors={"phi_d": phi_d},
-        units_trace={"ffu": ffu.unit, "capacity": capacity.unit},
+        units_trace={"ffu": demand_force.unit, "capacity": capacity.unit},
     )
 
 
@@ -5601,9 +5795,16 @@ def run_column_step4_web_local_crippling(case: AISC358MomentCase, rule_binding: 
         beam_flange_thickness=beam_profile["tf"],
         unit_system=case.units_system,
     )
+    use_continuity_plate = bool(case.geometry.continuity_plate_enabled)
+    demand_force = capacity if use_continuity_plate else ffu
+    demand_source = (
+        "continuity_plate_enabled => Ru_cw_v2_col_vgizq = phi*Rn_cw_v2_col_vgizq"
+        if use_continuity_plate
+        else "Ru_cw_v2_col_vgizq = Mf_vgizq_critico/(d_vgizq - tf_vgizq)"
+    )
     return _build_result(
         rule_binding=rule_binding,
-        demand=ffu,
+        demand=demand_force,
         capacity=capacity,
         equation=(
             "Ru_cw_v2_col_vgizq = Mf_vgizq_critico/(d_vgizq - tf_vgizq); "
@@ -5613,6 +5814,7 @@ def run_column_step4_web_local_crippling(case: AISC358MomentCase, rule_binding: 
         ),
         inputs={
             "mf_vgizq_critico": mf_vgizq_critico.model_dump(),
+            "ru_cw_v2_col_vgizq_source": demand_source,
             "st_col": distance_to_end.model_dump(),
             "d_col": column_profile["d"].model_dump(),
             "lb_col": lb.model_dump(),
@@ -5634,9 +5836,10 @@ def run_column_step4_web_local_crippling(case: AISC358MomentCase, rule_binding: 
             **intermediates,
             "phi_rn_cf_v2_col_vgizq_eq1": capacity.value,
             "rn_nominal_cf_v2_col_vgizq_eq1": intermediates.get("rn_nominal"),
+            "continuity_plate_enabled": use_continuity_plate,
         },
         design_factors={"phi_wlc": intermediates.get("phi")},
-        units_trace={"ffu": ffu.unit, "capacity": capacity.unit},
+        units_trace={"ffu": demand_force.unit, "capacity": capacity.unit},
     )
 
 
@@ -5833,6 +6036,136 @@ def run_column_step4_2_web_local_buckling(case: AISC358MomentCase, rule_binding:
         },
         design_factors={"phi_wcb": phi_wcb},
         units_trace={"demand": ru.unit, "capacity": capacity.unit},
+    )
+
+
+def run_column_step5_panel_zone_shear_wpzs(case: AISC358MomentCase, rule_binding: object) -> CheckResult:
+    inelastic_panel_zone = case.geometry.panel_zone_inelastic_deformation_considered
+    inelastic_source = "geometry.panel_zone_inelastic_deformation_considered"
+    if inelastic_panel_zone is None:
+        legacy_package = case.geometry.panel_zone_equation_package
+        if legacy_package is None:
+            raise missing_required_input_error(
+                rule_id=rule_binding.rule_id,
+                source_document=rule_binding.source_document,
+                missing_fields=["geometry.panel_zone_inelastic_deformation_considered"],
+                message=(
+                    "Required input 'geometry.panel_zone_inelastic_deformation_considered' is missing for WPZS. "
+                    "Set false to use J10-9/J10-10, or true to use J10-11/J10-12."
+                ),
+            )
+        inelastic_panel_zone = str(legacy_package).strip().lower() == "b"
+        inelastic_source = "geometry.panel_zone_equation_package (legacy)"
+    package = "b" if bool(inelastic_panel_zone) else "a"
+    column_profile = _column_profile(case)
+    ag_col = column_profile.get("ag")
+    if ag_col is None:
+        raise missing_required_input_error(
+            rule_id=rule_binding.rule_id,
+            source_document=rule_binding.source_document,
+            missing_fields=["sections.column_shape -> ag (catalog)"],
+            message=(
+                "Column gross area 'Ag' is required from sections catalog for WPZS (J10.6) "
+                "and was not found for the selected column shape."
+            ),
+        )
+    fy_col = _require(case, "materials.column_fy", rule_binding)
+    pu_col = to_design_force_unit(_require(case, "loads.pu_columna", rule_binding), case.units_system)
+    force_unit = "kip" if case.units_system == UnitSystem.US else "kN"
+    py_value = fy_col.value * ag_col.value
+    if case.units_system == UnitSystem.SI:
+        py_value /= 1000.0
+    py_col = Quantity(value=py_value, unit=force_unit)
+    alpha = 1.0  # LRFD per AISC 360-22 J10.6
+    alpha_pr_col = Quantity(value=alpha * abs(pu_col.value), unit=pu_col.unit)
+
+    active_sides = _active_beam_sides(case)
+    vh_data = _compute_vh_by_side(case, rule_binding)
+    vu_candidates: dict[str, Quantity] = {}
+    vu_sources: dict[str, str] = {}
+    beam_depth_candidates: dict[str, Quantity] = {}
+    for side in active_sides:
+        side_tag = "vgizq" if side == "izq" else "vgder"
+        explicit_vu = getattr(case.loads, f"Vu2_{side_tag}", None)
+        if explicit_vu is not None:
+            vu_candidates[side] = to_design_force_unit(explicit_vu, case.units_system)
+            vu_sources[side] = f"loads.Vu2_{side_tag}"
+        else:
+            vu_candidates[side] = vh_data["sides"][side]["vhmax"]
+            vu_sources[side] = f"step4.Vh_{side_tag}_max"
+        beam_depth_candidates[side] = _beam_profile_by_side(case, side)["d"]
+
+    vu_governing_side, vu_col_critico = _select_max_quantity_by_side(vu_candidates)
+    demand = Quantity(value=0.5 * vu_col_critico.value, unit=vu_col_critico.unit)
+    db_side_for_rn, db_col = _select_max_quantity_by_side(beam_depth_candidates)
+
+    phi_wpzs = 0.90
+    capacity, intermediates = compute_column_panel_zone_shear_strength_j10_6(
+        package=str(package),
+        alpha_pr=alpha_pr_col,
+        py=py_col,
+        column_fy=fy_col,
+        column_depth=column_profile["d"],
+        column_web_thickness=column_profile["tw"],
+        column_flange_width=column_profile["bf"],
+        beam_depth=db_col,
+        column_flange_thickness=column_profile["tf"],
+        phi=phi_wpzs,
+        unit_system=case.units_system,
+    )
+
+    eq_case = str(intermediates.get("eq_case"))
+    if eq_case == "J10-9":
+        equation = "Rn_wpzs_col = 0.60*Fy_col*d_col*tw_col (J10-9)"
+    elif eq_case == "J10-10":
+        equation = "Rn_wpzs_col = 0.60*Fy_col*d_col*tw_col*(1.4 - Pr_col/Py_col) (J10-10)"
+    elif eq_case == "J10-11":
+        equation = "Rn_wpzs_col = 0.60*Fy_col*d_col*tw_col*(1 + 3*bcf_col*tcf_col^2/(db_col*d_col*tw_col)) (J10-11)"
+    elif eq_case == "J10-12":
+        equation = (
+            "Rn_wpzs_col = 0.60*Fy_col*d_col*tw_col*(1 + 3*bcf_col*tcf_col^2/(db_col*d_col*tw_col))"
+            "*(1.9 - 1.2*Pr_col/Py_col) (J10-12)"
+        )
+    else:
+        equation = "Rn_wpzs_col = n/a"
+    return _build_result(
+        rule_binding=rule_binding,
+        demand=demand,
+        capacity=capacity,
+        equation=equation,
+        inputs={
+            "consideracion_deformacion_inelastica_zona_panel": bool(inelastic_panel_zone),
+            "consideracion_deformacion_inelastica_zona_panel_source": inelastic_source,
+            "package_wpzs": package,
+            "eq_case_wpzs": eq_case,
+            "phi_wpzs": phi_wpzs,
+            "alpha": alpha,
+            "vu_col_critico": vu_col_critico.model_dump(),
+            "vu_col_critico_source": f"{vu_sources.get(vu_governing_side)} (governing_side={vu_governing_side})",
+            "ru_wpzs_col": demand.model_dump(),
+            "pu_col": pu_col.model_dump(),
+            "pr_col": alpha_pr_col.model_dump(),
+            "alpha_pr_col": alpha_pr_col.model_dump(),
+            "py_col": py_col.model_dump(),
+            "ag_col": ag_col.model_dump(),
+            "fy_col": fy_col.model_dump(),
+            "d_col": column_profile["d"].model_dump(),
+            "tw_col": column_profile["tw"].model_dump(),
+            "bcf_col": column_profile["bf"].model_dump(),
+            "tcf_col": column_profile["tf"].model_dump(),
+            "db_col": db_col.model_dump(),
+            "db_col_source_side": db_side_for_rn,
+        },
+        intermediates={
+            "alpha_pr_over_py": intermediates.get("alpha_pr_over_py"),
+            "panel_factor": intermediates.get("panel_factor"),
+            "rn_nominal_wpzs_col": intermediates.get("rn_nominal"),
+            "package_wpzs": intermediates.get("package"),
+            "eq_case_wpzs": intermediates.get("eq_case"),
+            "vu_governing_side": vu_governing_side,
+        },
+        design_factors={"phi_wpzs": phi_wpzs, "alpha": alpha},
+        units_trace={"demand": demand.unit, "capacity": capacity.unit},
     )
 
 

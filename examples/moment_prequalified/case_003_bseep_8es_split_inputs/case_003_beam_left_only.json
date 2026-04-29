@@ -8,7 +8,7 @@
       "unit": "MPa"
     },
     "Llb_vgizq": {
-      "value": 7500,
+      "value": 5691,
       "unit": "mm"
     },
     "Lnc_vgizq": {
@@ -19,11 +19,11 @@
   "placa_extremo": {
     "tipo_acero": "ASTM A572 Gr 50",
     "Bpe_vgizq": {
-      "value": 240.0,
+      "value": 270.0,
       "unit": "mm"
     },
     "tpe_vgizq": {
-      "value": 25.4,
+      "value": 40,
       "unit": "mm"
     },
     "de_pe_vgizq": {
@@ -31,7 +31,7 @@
       "unit": "mm"
     },
     "pb_pe_vgizq": {
-      "value": 94.996,
+      "value": 95,
       "unit": "mm"
     },
     "pfo_pe_vgizq": {
@@ -46,7 +46,7 @@
   "rigidizador": {
     "tipo_acero_pest_vgizq": "ASTM A572 Gr 50",
     "t_pest_vgizq": {
-      "value": 12.7,
+      "value": 15.9,
       "unit": "mm"
     }
   },
@@ -58,7 +58,7 @@
     "tipo_apriete_b_vgizq": "pretensioned",
     "std_b_vgizq": "ASTM A490",
     "desc_b_vgizq": "Grupo 150",
-    "shape_b_vgizq": "P1-1/8\"X1-3/4\"",
+    "shape_b_vgizq": "P1\"X1-3/4\"",
     "thread_b_vgizq": "N"
   },
   "soldaduras": {
@@ -68,7 +68,7 @@
         "value": 490.0,
         "unit": "MPa"
       },
-      "tipo_w1_vgizq": "Fillet",
+      "tipo_w1_vgizq": "CJP",
       "w_w1_vgizq": {
         "value": 9.525,
         "unit": "mm"
@@ -82,7 +82,7 @@
         "value": 490.0,
         "unit": "MPa"
       },
-      "tipo_w2_vgizq": "Fillet",
+      "tipo_w2_vgizq": "CJP",
       "w_w2_vgizq": {
         "value": 9.525,
         "unit": "mm"
@@ -116,7 +116,7 @@
         "unit": "mm"
       },
       "t_w4.1_vgizq": {
-        "value": 0.0,
+        "value": 8,
         "unit": "mm"
       },
       "nl_w4_vgizq": 2,
@@ -137,7 +137,7 @@
       "unit": "kN-mm"
     },
     "Vg_vgizq": {
-      "value": 97.11,
+      "value": 91.43,
       "unit": "kN"
     }
   }

@@ -98,6 +98,9 @@ Nota:
 - `geometry.bolts.clear_distance_end_plate`: `lc_ep`, distancia libre para bearing/tearout en placa extremo (distancia horizontal en direccion de carga desde borde del agujero al borde libre de la platina).
 - `geometry.bolts.clear_distance_column_flange`: `lc_cf`, distancia libre para bearing/tearout en ala de columna (distancia horizontal desde borde del agujero al borde libre del ala de la columna).
 - `columna.St_col`: distancia vertical desde el tope de las vigas hasta el tope de la columna; se usa en la verificacion geometrica de proyeccion minima de columna y en revisiones de resistencia del panel/columna.
+- `columna.consideracion_deformacion_inelastica_zona_panel` (mapeado a `geometry.panel_zone_inelastic_deformation_considered`): condicion WPZS de AISC 360-22w J10.6.
+  - `false`: usar paquete (a), ecuaciones J10-9 / J10-10.
+  - `true`: usar paquete (b), ecuaciones J10-11 / J10-12.
 - `dcf_col`: nombre legacy; ya no debe usarse en inputs nuevos.
 - `geometry.stiffener.stiffener_thickness`: `ts` (solo conexiones `bseep_*`).
 - `hst` ya no se ingresa como input: el motor lo deriva como `hst = pfo + de`.

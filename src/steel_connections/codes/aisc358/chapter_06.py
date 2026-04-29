@@ -976,3 +976,95 @@ def compute_column_web_local_buckling_strength(
         rn_nominal /= 1000.0
         rn_design /= 1000.0
     return Quantity(value=rn_design, unit=force_unit), {"rn_nominal": rn_nominal, "ct": ct, "phi": phi}
+
+
+def compute_column_panel_zone_shear_strength_j10_6(
+    *,
+    package: str,
+    alpha_pr: Quantity,
+    py: Quantity,
+    column_fy: Quantity,
+    column_depth: Quantity,
+    column_web_thickness: Quantity,
+    column_flange_width: Quantity,
+    beam_depth: Quantity,
+    column_flange_thickness: Quantity,
+    phi: float,
+    unit_system: UnitSystem,
+) -> tuple[Quantity, dict[str, float | str]]:
+    """Compute LRFD design strength for panel-zone web shear (WPZS).
+
+    Equations:
+    - Package (a), J10-9 / J10-10:
+      ``Rn = 0.60*Fy*dc*tw`` when ``alphaPr <= 0.4*Py``
+      ``Rn = 0.60*Fy*dc*tw*(1.4 - alphaPr/Py)`` when ``alphaPr > 0.4*Py``
+    - Package (b), J10-11 / J10-12:
+      ``Rn = 0.60*Fy*dc*tw*(1 + 3*bcf*tcf^2/(db*dc*tw))`` when ``alphaPr <= 0.75*Py``
+      ``Rn = 0.60*Fy*dc*tw*(1 + 3*bcf*tcf^2/(db*dc*tw))*(1.9 - 1.2*alphaPr/Py)`` when ``alphaPr > 0.75*Py``
+    - ``phiRn = phi * Rn``
+
+    Reference:
+    - AISC 360-22w, Section J10.6, Eq. (J10-9) to Eq. (J10-12).
+    """
+
+    validate_quantity_unit(alpha_pr, "force", unit_system, "alpha_pr")
+    validate_quantity_unit(py, "force", unit_system, "py")
+    validate_quantity_unit(column_fy, "stress", unit_system, "column_fy")
+    validate_quantity_unit(column_depth, "length", unit_system, "column_depth")
+    validate_quantity_unit(column_web_thickness, "length", unit_system, "column_web_thickness")
+    validate_quantity_unit(column_flange_width, "length", unit_system, "column_flange_width")
+    validate_quantity_unit(beam_depth, "length", unit_system, "beam_depth")
+    validate_quantity_unit(column_flange_thickness, "length", unit_system, "column_flange_thickness")
+
+    if alpha_pr.unit != py.unit:
+        raise ValueError("alpha_pr and py must have the same force unit.")
+    if py.value <= 0.0:
+        raise ValueError("Py must be > 0 for J10.6 panel-zone shear calculation.")
+    if phi <= 0.0:
+        raise ValueError("Resistance factor phi must be positive.")
+
+    normalized_package = str(package).strip().lower()
+    if normalized_package not in {"a", "b"}:
+        raise ValueError("package must be 'a' or 'b' for J10.6 panel-zone shear calculation.")
+
+    ratio = alpha_pr.value / py.value
+    base = 0.60 * column_fy.value * column_depth.value * column_web_thickness.value
+    rn_nominal = base
+    panel_factor = 1.0
+    eq_case = "J10-9"
+
+    if normalized_package == "a":
+        if ratio <= 0.4:
+            eq_case = "J10-9"
+            rn_nominal = base
+        else:
+            eq_case = "J10-10"
+            rn_nominal = base * (1.4 - ratio)
+    else:
+        panel_factor = 1.0 + (
+            3.0
+            * column_flange_width.value
+            * (column_flange_thickness.value**2)
+            / (beam_depth.value * column_depth.value * column_web_thickness.value)
+        )
+        if ratio <= 0.75:
+            eq_case = "J10-11"
+            rn_nominal = base * panel_factor
+        else:
+            eq_case = "J10-12"
+            rn_nominal = base * panel_factor * (1.9 - 1.2 * ratio)
+
+    rn_design = phi * rn_nominal
+    force_unit = "kip" if unit_system == UnitSystem.US else "kN"
+    if unit_system == UnitSystem.SI:
+        rn_nominal /= 1000.0
+        rn_design /= 1000.0
+
+    return Quantity(value=rn_design, unit=force_unit), {
+        "rn_nominal": rn_nominal,
+        "phi": phi,
+        "package": normalized_package,
+        "eq_case": eq_case,
+        "alpha_pr_over_py": ratio,
+        "panel_factor": panel_factor,
+    }
