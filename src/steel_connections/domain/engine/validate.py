@@ -60,6 +60,7 @@ def _normalize_moment_geometry_payload(payload: dict[str, Any]) -> dict[str, Any
         "column": ["column", "columna"],
         "end_plate": ["end_plate", "placa_extremo", "placa_extrema"],
         "continuity_plate": ["continuity_plate", "platina_continuidad", "platinas_continuidad"],
+        "doubler_plate": ["doubler_plate", "platina_dobladora", "placa_dobladora", "dobladora"],
         "stiffener": ["stiffener", "rigidizador"],
         "bolts": ["bolts", "pernos"],
         "welds": ["welds", "soldaduras"],
@@ -96,9 +97,18 @@ def _normalize_moment_geometry_payload(payload: dict[str, Any]) -> dict[str, Any
             "column_slab_connection_condition",
             "panel_zone_inelastic_deformation_considered",
             "panel_zone_equation_package",
+            "hb_col",
+            "ht_col",
         ),
         "end_plate": ("end_plate_width", "end_plate_thickness", "de", "pb", "pfo", "pfi"),
         "continuity_plate": ("continuity_plate_thickness", "continuity_plate_enabled", "continuity_plate_weld_type"),
+        "doubler_plate": (
+            "doubler_plate_thickness",
+            "doubler_plate_enabled",
+            "doubler_plate_web_plug_weld_type",
+            "doubler_plate_web_plug_weld_size",
+            "doubler_plate_web_plug_weld_lines_nl",
+        ),
         "stiffener": ("stiffener_height", "stiffener_thickness", "stiffener_length"),
         "bolts": (
             "bolt_diameter",
@@ -276,6 +286,14 @@ def _normalize_moment_geometry_payload(payload: dict[str, Any]) -> dict[str, Any
                 flat_geometry["panel_zone_equation_package"] = block["paquete_wpzs_col"]
             if "paquete_ecuaciones_wpzs" in block and "panel_zone_equation_package" not in flat_geometry:
                 flat_geometry["panel_zone_equation_package"] = block["paquete_ecuaciones_wpzs"]
+            if "hb_col" in block and "hb_col" not in flat_geometry:
+                flat_geometry["hb_col"] = block["hb_col"]
+            if "h_b_col" in block and "hb_col" not in flat_geometry:
+                flat_geometry["hb_col"] = block["h_b_col"]
+            if "ht_col" in block and "ht_col" not in flat_geometry:
+                flat_geometry["ht_col"] = block["ht_col"]
+            if "h_t_col" in block and "ht_col" not in flat_geometry:
+                flat_geometry["ht_col"] = block["h_t_col"]
         if group_name == "continuity_plate":
             if "continuity_plate_enabled" in block and "continuity_plate_enabled" not in flat_geometry:
                 flat_geometry["continuity_plate_enabled"] = block["continuity_plate_enabled"]
@@ -287,6 +305,40 @@ def _normalize_moment_geometry_payload(payload: dict[str, Any]) -> dict[str, Any
                 flat_geometry["continuity_plate_weld_type"] = block["weld_type"]
             if "tipo_soldadura" in block and "continuity_plate_weld_type" not in flat_geometry:
                 flat_geometry["continuity_plate_weld_type"] = block["tipo_soldadura"]
+        if group_name == "doubler_plate":
+            if "doubler_plate_enabled" in block and "doubler_plate_enabled" not in flat_geometry:
+                flat_geometry["doubler_plate_enabled"] = block["doubler_plate_enabled"]
+            if "usar_dp_col" in block and "doubler_plate_enabled" not in flat_geometry:
+                flat_geometry["doubler_plate_enabled"] = block["usar_dp_col"]
+            if "use_doubler_plates" in block and "doubler_plate_enabled" not in flat_geometry:
+                flat_geometry["doubler_plate_enabled"] = block["use_doubler_plates"]
+            if "doubler_plate_thickness" in block and "doubler_plate_thickness" not in flat_geometry:
+                flat_geometry["doubler_plate_thickness"] = block["doubler_plate_thickness"]
+            if "tdp_col" in block and "doubler_plate_thickness" not in flat_geometry:
+                flat_geometry["doubler_plate_thickness"] = block["tdp_col"]
+            if (
+                "doubler_plate_web_plug_weld_type" in block
+                and "doubler_plate_web_plug_weld_type" not in flat_geometry
+            ):
+                flat_geometry["doubler_plate_web_plug_weld_type"] = block["doubler_plate_web_plug_weld_type"]
+            if "tipo_soldadura_tapon" in block and "doubler_plate_web_plug_weld_type" not in flat_geometry:
+                flat_geometry["doubler_plate_web_plug_weld_type"] = block["tipo_soldadura_tapon"]
+            if (
+                "doubler_plate_web_plug_weld_size" in block
+                and "doubler_plate_web_plug_weld_size" not in flat_geometry
+            ):
+                flat_geometry["doubler_plate_web_plug_weld_size"] = block["doubler_plate_web_plug_weld_size"]
+            if "t_wdp_tapon" in block and "doubler_plate_web_plug_weld_size" not in flat_geometry:
+                flat_geometry["doubler_plate_web_plug_weld_size"] = block["t_wdp_tapon"]
+            if (
+                "doubler_plate_web_plug_weld_lines_nl" in block
+                and "doubler_plate_web_plug_weld_lines_nl" not in flat_geometry
+            ):
+                flat_geometry["doubler_plate_web_plug_weld_lines_nl"] = block[
+                    "doubler_plate_web_plug_weld_lines_nl"
+                ]
+            if "nl_wdp_tapon" in block and "doubler_plate_web_plug_weld_lines_nl" not in flat_geometry:
+                flat_geometry["doubler_plate_web_plug_weld_lines_nl"] = block["nl_wdp_tapon"]
         if group_name == "welds":
             def _assign_from_aliases(target_key: str, source_block: dict[str, Any], aliases: tuple[str, ...]) -> None:
                 if target_key in flat_geometry:
@@ -321,6 +373,13 @@ def _normalize_moment_geometry_payload(payload: dict[str, Any]) -> dict[str, Any
                 "continuity_plate_weld",
                 "weld_4_column",
                 "soldadura_cp",
+            )
+            weld_dp_plug = _get_nested_weld_block(
+                "weld_dp_tapon",
+                "weld_dp_plug",
+                "doubler_plate_plug_weld",
+                "soldadura_tapon_dp",
+                "soldadura_tapon_dobladora",
             )
 
             if weld_1:
@@ -579,6 +638,40 @@ def _normalize_moment_geometry_payload(payload: dict[str, Any]) -> dict[str, Any
                         "weld_type",
                         "tipo_soldadura",
                         "type",
+                    ),
+                )
+
+            if weld_dp_plug:
+                _assign_from_aliases(
+                    "doubler_plate_web_plug_weld_type",
+                    weld_dp_plug,
+                    (
+                        "doubler_plate_web_plug_weld_type",
+                        "weld_type",
+                        "tipo_soldadura",
+                        "type",
+                    ),
+                )
+                _assign_from_aliases(
+                    "doubler_plate_web_plug_weld_size",
+                    weld_dp_plug,
+                    (
+                        "doubler_plate_web_plug_weld_size",
+                        "t_wdp_tapon",
+                        "thickness",
+                        "size",
+                        "w",
+                    ),
+                )
+                _assign_from_aliases(
+                    "doubler_plate_web_plug_weld_lines_nl",
+                    weld_dp_plug,
+                    (
+                        "doubler_plate_web_plug_weld_lines_nl",
+                        "nl_wdp_tapon",
+                        "nl",
+                        "n_l",
+                        "lines",
                     ),
                 )
 
@@ -1806,6 +1899,7 @@ def _normalize_moment_split_column_payload(raw_payload: dict[str, Any]) -> dict[
 
     columna = _first_dict(raw_payload, "columna", "column")
     platina_cont = _first_dict(raw_payload, "platina_continuidad", "continuity_plate")
+    platina_dobladora = _first_dict(raw_payload, "platina_dobladora", "doubler_plate")
     soldaduras = _first_dict(raw_payload, "soldaduras", "welds")
     cargas = _first_dict(raw_payload, "loads", "cargas")
     factores = _first_dict(raw_payload, "design_factors", "factores_diseno")
@@ -1813,6 +1907,17 @@ def _normalize_moment_split_column_payload(raw_payload: dict[str, Any]) -> dict[
     if not weld_5_raw:
         # Legacy fallback: column continuity weld was previously stored as weld_4.
         weld_5_raw = soldaduras.get("weld_4") if isinstance(soldaduras.get("weld_4"), dict) else {}
+    weld_dp_plug_raw = (
+        soldaduras.get("weld_dp_tapon")
+        if isinstance(soldaduras.get("weld_dp_tapon"), dict)
+        else {}
+    )
+    if not weld_dp_plug_raw:
+        weld_dp_plug_raw = (
+            soldaduras.get("soldadura_tapon_dp")
+            if isinstance(soldaduras.get("soldadura_tapon_dp"), dict)
+            else {}
+        )
 
     normalized: dict[str, Any] = {}
     for key in (
@@ -1837,9 +1942,12 @@ def _normalize_moment_split_column_payload(raw_payload: dict[str, Any]) -> dict[
             "weld_fexx": _first_present(weld_5_raw, "Fexx_w5")
             or _first_present(weld_5_raw, "Fexx_w4")
             or _first_present(soldaduras, "Fexx_w5")
-            or _first_present(soldaduras, "Fexx_w4"),
+            or _first_present(soldaduras, "Fexx_w4")
+            or _first_present(weld_dp_plug_raw, "Fexx_wdp_tapon")
+            or _first_present(soldaduras, "Fexx_wdp_tapon"),
             "elastic_modulus": _first_present(columna, "E_col"),
             "plate_steel_type": _first_present(platina_cont, "tipo_acero_pc_col"),
+            "doubler_plate_steel_type": _first_present(platina_dobladora, "tipo_acero_dp_col"),
         }
     )
     if materials:
@@ -1868,6 +1976,16 @@ def _normalize_moment_split_column_payload(raw_payload: dict[str, Any]) -> dict[
                 "paquete_ecuaciones_wpzs",
                 "panel_zone_equation_package",
             ),
+            "hb_col": _first_present(
+                columna,
+                "hb_col",
+                "h_b_col",
+            ),
+            "ht_col": _first_present(
+                columna,
+                "ht_col",
+                "h_t_col",
+            ),
         }
     )
     continuity_plate_enabled = _first_present(
@@ -1878,6 +1996,15 @@ def _normalize_moment_split_column_payload(raw_payload: dict[str, Any]) -> dict[
         continuity_plate_enabled = _first_present(
             columna,
             "usar_pc_col",
+        )
+    doubler_plate_enabled = _first_present(
+        platina_dobladora,
+        "usar_dp_col",
+    )
+    if doubler_plate_enabled is None:
+        doubler_plate_enabled = _first_present(
+            columna,
+            "usar_dp_col",
         )
 
     geometry = _compact_dict(
@@ -1896,6 +2023,35 @@ def _normalize_moment_split_column_payload(raw_payload: dict[str, Any]) -> dict[
                         "tipo_w4",
                         "weld_type",
                         "tipo_soldadura",
+                    ),
+                }
+            )
+            or None,
+            "doubler_plate": _compact_dict(
+                {
+                    "doubler_plate_thickness": _first_present(
+                        platina_dobladora,
+                        "tdp_col",
+                    ),
+                    "doubler_plate_enabled": doubler_plate_enabled,
+                    "doubler_plate_web_plug_weld_type": _first_present(
+                        weld_dp_plug_raw,
+                        "tipo_wdp_tapon",
+                        "weld_type",
+                        "tipo_soldadura",
+                    ),
+                    "doubler_plate_web_plug_weld_size": _first_present(
+                        weld_dp_plug_raw,
+                        "t_wdp_tapon",
+                        "thickness",
+                        "size",
+                    ),
+                    "doubler_plate_web_plug_weld_lines_nl": _first_present(
+                        weld_dp_plug_raw,
+                        "nl_wdp_tapon",
+                        "nl",
+                        "n_l",
+                        "lines",
                     ),
                 }
             )
@@ -1937,14 +2093,19 @@ def _normalize_moment_split_column_payload(raw_payload: dict[str, Any]) -> dict[
 
     phi_no_ductil = _first_present(design_factors, "phi_no_ductil", "phi_non_ductile")
     phi_ductil = _first_present(design_factors, "phi_ductil", "phi_ductile")
+    phi_fragil = _first_present(design_factors, "phi_fragil", "phi_fragile")
     if phi_no_ductil is not None and "phi_n" not in design_factors:
         design_factors["phi_n"] = phi_no_ductil
     if phi_ductil is not None and "phi_d" not in design_factors:
         design_factors["phi_d"] = phi_ductil
+    if phi_fragil is not None and "phi_f" not in design_factors:
+        design_factors["phi_f"] = phi_fragil
     design_factors.pop("phi_no_ductil", None)
     design_factors.pop("phi_non_ductile", None)
     design_factors.pop("phi_ductil", None)
     design_factors.pop("phi_ductile", None)
+    design_factors.pop("phi_fragil", None)
+    design_factors.pop("phi_fragile", None)
     design_factors.pop("lados_conexion", None)
     design_factors.pop("demanda_ductilidad_col", None)
     design_factors.pop("ratio_McMb_min", None)

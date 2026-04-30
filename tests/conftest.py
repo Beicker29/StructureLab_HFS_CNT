@@ -101,6 +101,8 @@ BUEEP_4E_CASE_PAYLOAD = {
         "clear_distance_end_plate": {"value": 2.0, "unit": "in"},
         "clear_distance_column_flange": {"value": 2.0, "unit": "in"},
         "column_end_distance_to_beam_flange": {"value": 30.0, "unit": "in"},
+        "hb_col": {"value": 84.0, "unit": "in"},
+        "ht_col": {"value": 75.0, "unit": "in"},
         "end_plate_beam_web_weld_type": "CJP",
         "end_plate_beam_web_weld_thickness_twe": {"value": 0.25, "unit": "in"},
         "tipo_w4_vgder": "CJP",
@@ -108,16 +110,19 @@ BUEEP_4E_CASE_PAYLOAD = {
         "nl_w4_vgder": 1,
         "t_w4_1_vgder": {"value": 0.125, "unit": "in"},
         "kds_w4_vgder": 1.0,
+        "panel_zone_inelastic_deformation_considered": False,
     },
     "loads": {
         "pu_viga": {"value": 0.0, "unit": "kip"},
         "pu_columna": {"value": 0.0, "unit": "kip"},
         "probable_moment_column_face": {"value": 6000.0, "unit": "kip-in"},
-        "beam_right_vgravity": {"value": 10.0, "unit": "kip"}
+        "beam_right_vgravity": {"value": 10.0, "unit": "kip"},
+        "Mu3_vgder": {"value": 6000.0, "unit": "kip-in"}
     },
     "design_factors": {
         "phi_d": 0.9,
         "phi_n": 0.9,
+        "phi_f": 0.75,
         "beam_connection_sides": "right_only",
         "member_ductility_demand_beam": "moderate",
         "member_ductility_demand_column": "moderate",
@@ -183,6 +188,8 @@ BSEEP_8ES_CASE_PAYLOAD = {
         "bolt_tightening_type": "pretensioned",
         "clear_distance_column_flange": {"value": 2.0, "unit": "in"},
         "column_end_distance_to_beam_flange": {"value": 30.0, "unit": "in"},
+        "hb_col": {"value": 84.0, "unit": "in"},
+        "ht_col": {"value": 75.0, "unit": "in"},
         "end_plate_beam_web_weld_type": "CJP",
         "end_plate_beam_web_weld_thickness_twe": {"value": 0.25, "unit": "in"},
         "end_plate_stiffener_weld_type": "CJP",
@@ -212,6 +219,7 @@ BSEEP_8ES_CASE_PAYLOAD = {
         "nl_w4_vgder": 1,
         "t_w4_1_vgder": {"value": 0.125, "unit": "in"},
         "kds_w4_vgder": 1.0,
+        "panel_zone_inelastic_deformation_considered": False,
     },
     "loads": {
         "pu_viga": {"value": 0.0, "unit": "kip"},
@@ -220,11 +228,14 @@ BSEEP_8ES_CASE_PAYLOAD = {
         "pu_columna": {"value": 0.0, "unit": "kip"},
         "probable_moment_column_face": {"value": 6000.0, "unit": "kip-in"},
         "beam_right_vgravity": {"value": 10.0, "unit": "kip"},
-        "beam_left_vgravity": {"value": 10.0, "unit": "kip"}
+        "beam_left_vgravity": {"value": 10.0, "unit": "kip"},
+        "Mu3_vgder": {"value": 6000.0, "unit": "kip-in"},
+        "Mu3_vgizq": {"value": 6000.0, "unit": "kip-in"}
     },
     "design_factors": {
         "phi_d": 0.9,
         "phi_n": 0.9,
+        "phi_f": 0.75,
         "beam_connection_sides": "both_sides",
         "member_ductility_demand_beam": "moderate",
         "member_ductility_demand_column": "moderate",

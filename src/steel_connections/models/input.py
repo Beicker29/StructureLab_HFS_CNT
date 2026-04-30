@@ -45,6 +45,7 @@ class SectionReferences(StrictModel):
 class AISC358MomentMaterials(StrictModel):
     profile_steel_type: str | None = None
     plate_steel_type: str | None = None
+    doubler_plate_steel_type: str | None = None
     stiffener_steel_type_vgder: str | None = None
     stiffener_steel_type_vgizq: str | None = None
     bolt_fabrication_standard: str | None = None
@@ -71,6 +72,7 @@ class AISC358MomentMaterials(StrictModel):
     @field_validator(
         "profile_steel_type",
         "plate_steel_type",
+        "doubler_plate_steel_type",
         "stiffener_steel_type_vgder",
         "stiffener_steel_type_vgizq",
         "bolt_fabrication_standard",
@@ -135,12 +137,19 @@ class AISC358MomentGeometry(StrictModel):
     continuity_plate_thickness: Quantity | None = None
     continuity_plate_enabled: bool | None = None
     continuity_plate_weld_type: str | None = None
+    doubler_plate_thickness: Quantity | None = None
+    doubler_plate_enabled: bool | None = None
+    doubler_plate_web_plug_weld_type: str | None = None
+    doubler_plate_web_plug_weld_size: Quantity | None = None
+    doubler_plate_web_plug_weld_lines_nl: int | None = None
     bolt_diameter: Quantity | None = None
     bolt_gage: Quantity | None = None
     bolt_tightening_type: str | None = None
     clear_distance_end_plate: Quantity | None = None
     clear_distance_column_flange: Quantity | None = None
     column_end_distance_to_beam_flange: Quantity | None = None
+    hb_col: Quantity | None = None
+    ht_col: Quantity | None = None
     end_plate_beam_web_weld_type: str | None = None
     end_plate_beam_web_weld_type_vgder: str | None = None
     end_plate_beam_web_weld_type_vgizq: str | None = None
@@ -233,6 +242,7 @@ class AISC358MomentGeometry(StrictModel):
         "beam_stiffener_weld_type_vgizq",
         "tipo_w4_vgder",
         "tipo_w4_vgizq",
+        "doubler_plate_web_plug_weld_type",
     )
     @classmethod
     def normalize_weld_type_fields(cls, value: str | None) -> str | None:
@@ -250,6 +260,15 @@ class AISC358MomentGeometry(StrictModel):
             return None
         if value <= 0:
             raise ValueError("geometry.end_plate_beam_web_weld_lines_nl must be >= 1.")
+        return value
+
+    @field_validator("doubler_plate_web_plug_weld_lines_nl")
+    @classmethod
+    def validate_doubler_plate_web_plug_weld_lines_nl(cls, value: int | None) -> int | None:
+        if value is None:
+            return None
+        if value <= 0:
+            raise ValueError("geometry.doubler_plate_web_plug_weld_lines_nl must be >= 1.")
         return value
 
     @field_validator("end_plate_beam_web_weld_lines_nl_vgder", "end_plate_beam_web_weld_lines_nl_vgizq")
@@ -369,6 +388,7 @@ class AISC358MomentDesignFactors(StrictModel):
     phi_flange_weld: float | None = None
     phi_d: float | None = None
     phi_n: float | None = None
+    phi_f: float | None = None
     ry: float | None = None
     beam_connection_sides: str | None = None
     member_ductility_demand_beam: str | None = None
@@ -383,6 +403,7 @@ class AISC358MomentDesignFactors(StrictModel):
         "phi_flange_weld",
         "phi_d",
         "phi_n",
+        "phi_f",
     )
     @classmethod
     def validate_phi_range(cls, value: float | None) -> float | None:
@@ -589,6 +610,7 @@ class AISC358MomentCase(CaseBase):
             "pfo",
             "pfi",
             "continuity_plate_thickness",
+            "doubler_plate_thickness",
             "bolt_diameter",
             "bolt_gage",
             "clear_distance_end_plate",
@@ -612,6 +634,7 @@ class AISC358MomentCase(CaseBase):
             "t_w4_vgizq",
             "t_w4_1_vgder",
             "t_w4_1_vgizq",
+            "doubler_plate_web_plug_weld_size",
         ):
             value = getattr(self.geometry, field_name)
             if value is not None:

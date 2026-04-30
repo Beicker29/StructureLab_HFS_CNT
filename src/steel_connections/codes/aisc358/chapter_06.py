@@ -890,6 +890,7 @@ def compute_column_web_local_crippling_strength(
     elastic_modulus: Quantity,
     column_fy: Quantity,
     distance_to_column_end: Quantity,
+    phi: float,
     unit_system: UnitSystem,
 ) -> tuple[Quantity, dict[str, float]]:
     validate_quantity_unit(lb, "length", unit_system, "lb")
@@ -923,7 +924,8 @@ def compute_column_web_local_crippling_strength(
         )
         case_name = "eq_6_7_21"
 
-    phi = 0.75
+    if phi <= 0.0:
+        raise ValueError("Resistance factor phi must be positive.")
     rn_design = phi * rn_nominal
     force_unit = "kip" if unit_system == UnitSystem.US else "kN"
     if unit_system == UnitSystem.SI:

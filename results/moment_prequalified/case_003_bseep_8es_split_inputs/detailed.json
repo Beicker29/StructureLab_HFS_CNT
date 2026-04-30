@@ -118,7 +118,7 @@
           },
           "column_slab_connection_condition": "isolated",
           "column_end_distance_to_beam_flange_st_col": {
-            "value": 2500.0,
+            "value": 1250.0,
             "unit": "mm"
           },
           "column_st_col_min": {
@@ -126,7 +126,7 @@
             "unit": "mm"
           },
           "beam_sc_vgder": {
-            "value": 2355.0,
+            "value": 1105.0,
             "unit": "mm"
           },
           "beam_s_threshold_vgder": {
@@ -134,7 +134,7 @@
             "unit": "mm"
           },
           "beam_sc_vgizq": {
-            "value": 2355.0,
+            "value": 1105.0,
             "unit": "mm"
           },
           "beam_s_threshold_vgizq": {
@@ -555,9 +555,9 @@
               "limit_symbol": "compound",
               "comparison": "compound",
               "comparison_text": "compound",
-              "verification_text": "Sc_vgizq = St_col - pfo_vgizq - pb_vgizq; S_vgizq = 0.5*sqrt(bcf*g_vgizq); Sc_vgizq > S_vgizq => 2355.000 mm > 100.747 mm",
+              "verification_text": "Sc_vgizq = St_col - pfo_vgizq - pb_vgizq; S_vgizq = 0.5*sqrt(bcf*g_vgizq); Sc_vgizq > S_vgizq => 1105.000 mm > 100.747 mm",
               "calculated": {
-                "value": 2355.0,
+                "value": 1105.0,
                 "unit": "mm"
               },
               "status": "PASS",
@@ -723,9 +723,9 @@
               "limit_symbol": "compound",
               "comparison": "compound",
               "comparison_text": "compound",
-              "verification_text": "Sc_vgder = St_col - pfo_vgder - pb_vgder; S_vgder = 0.5*sqrt(bcf*g_vgder); Sc_vgder > S_vgder => 2355.000 mm > 100.747 mm",
+              "verification_text": "Sc_vgder = St_col - pfo_vgder - pb_vgder; S_vgder = 0.5*sqrt(bcf*g_vgder); Sc_vgder > S_vgder => 1105.000 mm > 100.747 mm",
               "calculated": {
-                "value": 2355.0,
+                "value": 1105.0,
                 "unit": "mm"
               },
               "status": "PASS",
@@ -901,9 +901,9 @@
               "limit_symbol": "compound",
               "comparison": "compound",
               "comparison_text": "compound",
-              "verification_text": "St_col >= pfo_pe_vgder + pb_pe_vgder + de_pe_vgder + 12.5 mm; St_col >= pfo_pe_vgizq + pb_pe_vgizq + de_pe_vgizq + 12.5 mm; 2500.000 mm >= 217.500 mm; 2500.000 mm >= 217.500 mm",
+              "verification_text": "St_col >= pfo_pe_vgder + pb_pe_vgder + de_pe_vgder + 12.5 mm; St_col >= pfo_pe_vgizq + pb_pe_vgizq + de_pe_vgizq + 12.5 mm; 1250.000 mm >= 217.500 mm; 1250.000 mm >= 217.500 mm",
               "calculated": {
-                "value": 2500.0,
+                "value": 1250.0,
                 "unit": "mm"
               },
               "status": "PASS",
@@ -960,6 +960,45 @@
                 "value": 32.78775071504384,
                 "unit": "ratio"
               },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "section_e3_6_2.column_web_thickness_minimum",
+              "scope": "column",
+              "clause": "AISC 341-22w E3.6e.2",
+              "description": "Espesor individual minimo del alma de columna",
+              "calculated_symbol": "tw_col",
+              "limit_symbol": "(d_z + w_z)/90 con d_z=d_izq-2tf_izq, w_z=bcf_col",
+              "calculated": {
+                "value": 22.6,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 9.582222222222223,
+                "unit": "mm"
+              },
+              "comparison": "ge",
+              "comparison_text": ">=",
+              "margin": {
+                "value": 13.017777777777779,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "section_e3_6_2.doubler_plate_thickness_minimum",
+              "scope": "doubler_plate_col",
+              "clause": "AISC 341-22w E3.6e.2",
+              "description": "Espesor individual minimo de doubler plate",
+              "calculated_symbol": "tdp_col",
+              "limit_symbol": "verification_only",
+              "comparison": "compound",
+              "comparison_text": "compound",
+              "verification_text": "No aplica: usar_dp_col = false",
               "status": "PASS",
               "result": "OK"
             },
@@ -2138,9 +2177,9 @@
               "limit_symbol": "compound",
               "comparison": "compound",
               "comparison_text": "compound",
-              "verification_text": "Sc_vgizq = St_col - pfo_vgizq - pb_vgizq; S_vgizq = 0.5*sqrt(bcf*g_vgizq); Sc_vgizq > S_vgizq => 2355.000 mm > 100.747 mm",
+              "verification_text": "Sc_vgizq = St_col - pfo_vgizq - pb_vgizq; S_vgizq = 0.5*sqrt(bcf*g_vgizq); Sc_vgizq > S_vgizq => 1105.000 mm > 100.747 mm",
               "calculated": {
-                "value": 2355.0,
+                "value": 1105.0,
                 "unit": "mm"
               },
               "status": "PASS",
@@ -2306,9 +2345,9 @@
               "limit_symbol": "compound",
               "comparison": "compound",
               "comparison_text": "compound",
-              "verification_text": "Sc_vgder = St_col - pfo_vgder - pb_vgder; S_vgder = 0.5*sqrt(bcf*g_vgder); Sc_vgder > S_vgder => 2355.000 mm > 100.747 mm",
+              "verification_text": "Sc_vgder = St_col - pfo_vgder - pb_vgder; S_vgder = 0.5*sqrt(bcf*g_vgder); Sc_vgder > S_vgder => 1105.000 mm > 100.747 mm",
               "calculated": {
-                "value": 2355.0,
+                "value": 1105.0,
                 "unit": "mm"
               },
               "status": "PASS",
@@ -2484,9 +2523,9 @@
               "limit_symbol": "compound",
               "comparison": "compound",
               "comparison_text": "compound",
-              "verification_text": "St_col >= pfo_pe_vgder + pb_pe_vgder + de_pe_vgder + 12.5 mm; St_col >= pfo_pe_vgizq + pb_pe_vgizq + de_pe_vgizq + 12.5 mm; 2500.000 mm >= 217.500 mm; 2500.000 mm >= 217.500 mm",
+              "verification_text": "St_col >= pfo_pe_vgder + pb_pe_vgder + de_pe_vgder + 12.5 mm; St_col >= pfo_pe_vgizq + pb_pe_vgizq + de_pe_vgizq + 12.5 mm; 1250.000 mm >= 217.500 mm; 1250.000 mm >= 217.500 mm",
               "calculated": {
-                "value": 2500.0,
+                "value": 1250.0,
                 "unit": "mm"
               },
               "status": "PASS",
@@ -2543,6 +2582,45 @@
                 "value": 32.78775071504384,
                 "unit": "ratio"
               },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "section_e3_6_2.column_web_thickness_minimum",
+              "scope": "column",
+              "clause": "AISC 341-22w E3.6e.2",
+              "description": "Espesor individual minimo del alma de columna",
+              "calculated_symbol": "tw_col",
+              "limit_symbol": "(d_z + w_z)/90 con d_z=d_izq-2tf_izq, w_z=bcf_col",
+              "calculated": {
+                "value": 22.6,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 9.582222222222223,
+                "unit": "mm"
+              },
+              "comparison": "ge",
+              "comparison_text": ">=",
+              "margin": {
+                "value": 13.017777777777779,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "section_e3_6_2.doubler_plate_thickness_minimum",
+              "scope": "doubler_plate_col",
+              "clause": "AISC 341-22w E3.6e.2",
+              "description": "Espesor individual minimo de doubler plate",
+              "calculated_symbol": "tdp_col",
+              "limit_symbol": "verification_only",
+              "comparison": "compound",
+              "comparison_text": "compound",
+              "verification_text": "No aplica: usar_dp_col = false",
               "status": "PASS",
               "result": "OK"
             },
@@ -3868,30 +3946,44 @@
       "clause": "AISC 360-22w Section J10.6 + Eq. (J10-9) to Eq. (J10-12)",
       "source_document": "AISC 360-22w",
       "demand": {
-        "value": 257.065,
+        "value": 4129.009830859449,
         "unit": "kN"
       },
       "capacity": {
-        "value": 2138.87304,
+        "value": 2376.5256,
         "unit": "kN"
       },
-      "dcr": 0.12018712433721639,
-      "status": "PASS",
+      "dcr": 1.7374144132339449,
+      "status": "FAIL",
       "calculation_memory": {
         "inputs": {
           "consideracion_deformacion_inelastica_zona_panel": false,
-          "consideracion_deformacion_inelastica_zona_panel_source": "geometry.panel_zone_inelastic_deformation_considered",
           "package_wpzs": "a",
           "eq_case_wpzs": "J10-9",
-          "phi_wpzs": 0.9,
+          "phi_wpzs": 1.0,
           "alpha": 1.0,
-          "vu_col_critico": {
-            "value": 514.13,
+          "hb_col": {
+            "value": 1250.0,
+            "unit": "mm"
+          },
+          "ht_col": {
+            "value": 1250.0,
+            "unit": "mm"
+          },
+          "vc2_col": {
+            "value": 1408.3832754876119,
             "unit": "kN"
           },
-          "vu_col_critico_source": "loads.Vu2_vgder (governing_side=der)",
+          "sum_mbe_col": {
+            "value": 3520958.1887190295,
+            "unit": "kN-mm"
+          },
+          "sum_mf_over_z_col": {
+            "value": 5537.393106347061,
+            "unit": "kN"
+          },
           "ru_wpzs_col": {
-            "value": 257.065,
+            "value": 4129.009830859449,
             "unit": "kN"
           },
           "pu_col": {
@@ -3938,7 +4030,87 @@
             "value": 607.0,
             "unit": "mm"
           },
-          "db_col_source_side": "der"
+          "db_col_source_side": "der",
+          "mpr_vgder": {
+            "value": 1431473.9999999998,
+            "unit": "kN-mm"
+          },
+          "vh_vgder_max": {
+            "value": 594.495893516078,
+            "unit": "kN"
+          },
+          "vh_vgder_min": {
+            "value": 411.63589351607794,
+            "unit": "kN"
+          },
+          "sh_vgder": {
+            "value": 400.0,
+            "unit": "mm"
+          },
+          "mbe_col_vgder_max": {
+            "value": 1820274.3143595147,
+            "unit": "kN-mm"
+          },
+          "mbe_col_vgder_min": {
+            "value": 1700683.8743595148,
+            "unit": "kN-mm"
+          },
+          "mf_vgder_max": {
+            "value": 1669272.3574064309,
+            "unit": "kN-mm"
+          },
+          "mf_vgder_min": {
+            "value": 1596128.3574064309,
+            "unit": "kN-mm"
+          },
+          "db_vgder": {
+            "value": 607.0,
+            "unit": "mm"
+          },
+          "tf_vgder": {
+            "value": 17.3,
+            "unit": "mm"
+          },
+          "mpr_vgizq": {
+            "value": 1431473.9999999998,
+            "unit": "kN-mm"
+          },
+          "vh_vgizq_max": {
+            "value": 594.495893516078,
+            "unit": "kN"
+          },
+          "vh_vgizq_min": {
+            "value": 411.63589351607794,
+            "unit": "kN"
+          },
+          "sh_vgizq": {
+            "value": 400.0,
+            "unit": "mm"
+          },
+          "mbe_col_vgizq_max": {
+            "value": 1820274.3143595147,
+            "unit": "kN-mm"
+          },
+          "mbe_col_vgizq_min": {
+            "value": 1700683.8743595148,
+            "unit": "kN-mm"
+          },
+          "mf_vgizq_max": {
+            "value": 1669272.3574064309,
+            "unit": "kN-mm"
+          },
+          "mf_vgizq_min": {
+            "value": 1596128.3574064309,
+            "unit": "kN-mm"
+          },
+          "db_vgizq": {
+            "value": 607.0,
+            "unit": "mm"
+          },
+          "tf_vgizq": {
+            "value": 17.3,
+            "unit": "mm"
+          }
         },
         "intermediates": {
           "alpha_pr_over_py": 0.1024384494499738,
@@ -3946,10 +4118,23 @@
           "rn_nominal_wpzs_col": 2376.5256,
           "package_wpzs": "a",
           "eq_case_wpzs": "J10-9",
-          "vu_governing_side": "der"
+          "sum_mbe_over_hb_plus_ht_formula": "Vc2_col = sum_Mbe_col/(hb_col + ht_col)",
+          "ru_wpz_formula": "Ru_wpz_v2_col = sum_Mf_col/(db - tf) - Vc2_col",
+          "z_vgder": 589.7,
+          "f_mf_vgder_max": 2830.7145284151784,
+          "f_mf_vgder_min": 2706.678577931882,
+          "arm_center_col_vgder": 654.0,
+          "z_vgizq": 589.7,
+          "f_mf_vgizq_max": 2830.7145284151784,
+          "f_mf_vgizq_min": 2706.678577931882,
+          "arm_center_col_vgizq": 654.0,
+          "sum_mbe_col_combo_1": 3520958.1887190295,
+          "sum_mbe_col_combo_2": 3520958.1887190295,
+          "sum_mf_over_z_col_combo_1": 5537.393106347061,
+          "sum_mf_over_z_col_combo_2": 5537.393106347061
         },
         "design_factors": {
-          "phi_wpzs": 0.9,
+          "phi_wpzs": 1.0,
           "alpha": 1.0
         },
         "equation": "Rn_wpzs_col = 0.60*Fy_col*d_col*tw_col (J10-9)",
@@ -3958,7 +4143,7 @@
           "capacity": "kN"
         },
         "final_capacity": {
-          "value": 2138.87304,
+          "value": 2376.5256,
           "unit": "kN"
         }
       },
@@ -4618,7 +4803,7 @@
             "unit": "kN-mm"
           },
           "st_col": {
-            "value": 2500.0,
+            "value": 1250.0,
             "unit": "mm"
           },
           "d_col": {
@@ -4722,7 +4907,7 @@
           },
           "ru_cw_v2_col_vgizq_source": "Ru_cw_v2_col_vgizq = Mf_vgizq_critico/(d_vgizq - tf_vgizq)",
           "st_col": {
-            "value": 2500.0,
+            "value": 1250.0,
             "unit": "mm"
           },
           "d_col": {
@@ -4847,7 +5032,7 @@
             "unit": "mm"
           },
           "st_col": {
-            "value": 2500.0,
+            "value": 1250.0,
             "unit": "mm"
           },
           "d_col": {
@@ -5618,7 +5803,7 @@
             "unit": "kN-mm"
           },
           "st_col": {
-            "value": 2500.0,
+            "value": 1250.0,
             "unit": "mm"
           },
           "d_col": {
@@ -5722,7 +5907,7 @@
           },
           "ru_cw_v2_col_vgder_source": "Ru_cw_v2_col_vgder = Mf_vgder_critico/(d_vgder - tf_vgder)",
           "st_col": {
-            "value": 2500.0,
+            "value": 1250.0,
             "unit": "mm"
           },
           "d_col": {
@@ -5847,7 +6032,7 @@
             "unit": "mm"
           },
           "st_col": {
-            "value": 2500.0,
+            "value": 1250.0,
             "unit": "mm"
           },
           "d_col": {
@@ -6373,10 +6558,10 @@
   ],
   "errors": [],
   "summary": {
-    "pass_count": 37,
-    "fail_count": 1,
+    "pass_count": 36,
+    "fail_count": 2,
     "error_count": 0,
     "not_implemented_count": 0,
-    "worst_dcr": 1.0
+    "worst_dcr": 1.7374144132339449
   }
 }

@@ -46,6 +46,9 @@ from steel_connections.codes.engineering.customized import (
     compute_moment_prequalified_step6_1_bolt_tension_demand,
     compute_moment_prequalified_step6_2_bolt_shear_demand,
 )
+from steel_connections.codes.engineering.geometry import (
+    compute_minimum_panel_zone_plate_thickness_e3_6 as compute_minimum_panel_zone_plate_thickness_e3_6_eq,
+)
 from steel_connections.codes.engineering.geometry import compute_protected_zone_length as compute_protected_zone_length_eq
 from steel_connections.codes.engineering.shear import compute_beam_web_shear_yielding_strength
 from steel_connections.codes.engineering.weld import (
@@ -1964,7 +1967,7 @@ def run_step8_1_1_stiffener_weld_tension_rupture(case: AISC358MomentCase, rule_b
         unit_system=case.units_system,
     )
     ru_w1_p_pos_vgizq = demand_result["pu"]
-    phi = 0.75
+    phi = _require(case, "design_factors.phi_f", rule_binding)
     weld_check = compute_fillet_weld_check_with_kds(
         demand=ru_w1_p_pos_vgizq,
         fexx=weld_fexx,
@@ -2118,7 +2121,7 @@ def run_step9_1_1_stiffener_beam_weld_shear_rupture(case: AISC358MomentCase, rul
         unit_system=case.units_system,
     )
     ru_w2_v2_vgizq = demand_result["vu"]
-    phi = 0.75
+    phi = _require(case, "design_factors.phi_f", rule_binding)
     weld_strength = compute_fillet_weld_check_with_kds(
         demand=ru_w2_v2_vgizq,
         fexx=weld_fexx,
@@ -2230,7 +2233,7 @@ def run_step10_1_1_beam_flange_end_plate_weld_tension_rupture(
                 "t_w4_1_vgizq": backing_thickness.model_dump() if backing_thickness is not None else None,
             },
             intermediates={},
-            design_factors={"phi": 0.75},
+            design_factors={"phi": _require(case, "design_factors.phi_f", rule_binding)},
             units_trace={"dcr": "ratio"},
         )
 
@@ -2254,7 +2257,7 @@ def run_step10_1_1_beam_flange_end_plate_weld_tension_rupture(
     t_w4_vgizq = _require(case, "geometry.t_w4_vgizq", rule_binding)
     nl_w4_vgizq = _require(case, "geometry.nl_w4_vgizq", rule_binding)
     kds_w4_vgizq = _require(case, "geometry.kds_w4_vgizq", rule_binding)
-    phi = 0.75
+    phi = _require(case, "design_factors.phi_f", rule_binding)
 
     weld_check = compute_fillet_weld_check_with_kds(
         demand=flange_force,
@@ -2411,7 +2414,7 @@ def run_step11_1_1_beam_web_end_plate_weld_tension_rupture(
         unit_system=case.units_system,
     )
     ru_w3_p_pos_vgizq = demand_result["pu"]
-    phi = 0.75
+    phi = _require(case, "design_factors.phi_f", rule_binding)
 
     if weld_type == "cjp":
         return _build_result(
@@ -3829,6 +3832,106 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
         ),
     ]
 
+    doubler_plate_limits: list[dict[str, Any]] = []
+    deeper_side = "izq" if beam_connection_sides == "left_only" else "der"
+    deeper_beam_profile = beam_profile_der
+    if beam_connection_sides == "both_sides" and beam_profile_izq is not None:
+        if beam_profile_izq["d"].value >= beam_profile_der["d"].value:
+            deeper_side = "izq"
+            deeper_beam_profile = beam_profile_izq
+    e36_check = compute_minimum_panel_zone_plate_thickness_e3_6_eq(
+        beam_depth=deeper_beam_profile["d"],
+        beam_flange_thickness=deeper_beam_profile["tf"],
+        panel_zone_width=bcf,
+        unit_system=case.units_system,
+    )
+    t_req_e3_6 = e36_check["t_required"]
+    dz_e3_6 = e36_check["d_z"]
+    column_ductility_normalized = str(column_ductility or "").strip().lower()
+    ductility_applies = column_ductility_normalized in {"high", "moderate"}
+    if ductility_applies:
+        column_limits.append(
+            _step1_limit(
+                check_id="section_e3_6_2.column_web_thickness_minimum",
+                scope="column",
+                clause="AISC 341-22w E3.6e.2",
+                description="Espesor individual minimo del alma de columna",
+                calculated_symbol="tw_col",
+                limit_symbol=f"(d_z + w_z)/90 con d_z=d_{deeper_side}-2tf_{deeper_side}, w_z=bcf_col",
+                calculated=column_profile["tw"],
+                limit=t_req_e3_6,
+                comparison="ge",
+            )
+        )
+        if case.geometry.doubler_plate_enabled:
+            tdp_col = case.geometry.doubler_plate_thickness
+            if tdp_col is None:
+                raise missing_required_input_error(
+                    rule_id=rule_binding.rule_id,
+                    source_document=rule_binding.source_document,
+                    missing_fields=["geometry.doubler_plate_thickness"],
+                    message=(
+                        "Required input 'geometry.doubler_plate_thickness' is missing when "
+                        "'geometry.doubler_plate_enabled' is true."
+                    ),
+                )
+            doubler_plate_limits.append(
+                _step1_limit(
+                    check_id="section_e3_6_2.doubler_plate_thickness_minimum",
+                    scope="doubler_plate_col",
+                    clause="AISC 341-22w E3.6e.2",
+                    description="Espesor individual minimo de doubler plate",
+                    calculated_symbol="tdp_col",
+                    limit_symbol=f"(d_z + w_z)/90 con d_z=d_{deeper_side}-2tf_{deeper_side}, w_z=bcf_col",
+                    calculated=tdp_col,
+                    limit=t_req_e3_6,
+                    comparison="ge",
+                )
+            )
+        else:
+            doubler_plate_limits.append(
+                _step1_verification_only_limit(
+                    check_id="section_e3_6_2.doubler_plate_thickness_minimum",
+                    scope="doubler_plate_col",
+                    clause="AISC 341-22w E3.6e.2",
+                    description="Espesor individual minimo de doubler plate",
+                    calculated_symbol="tdp_col",
+                    verification_text="No aplica: usar_dp_col = false",
+                    passes=True,
+                )
+            )
+    else:
+        column_limits.append(
+            _step1_verification_only_limit(
+                check_id="section_e3_6_2.column_web_thickness_minimum",
+                scope="column",
+                clause="AISC 341-22w E3.6e.2",
+                description="Espesor individual minimo del alma de columna",
+                calculated_symbol="tw_col",
+                verification_text=(
+                    "No aplica para demanda_ductilidad_col='low'. "
+                    f"Formula de referencia: t >= (d_z + w_z)/90 con d_z=d_{deeper_side}-2tf_{deeper_side}, "
+                    "w_z=bcf_col"
+                ),
+                passes=True,
+            )
+        )
+        doubler_plate_limits.append(
+            _step1_verification_only_limit(
+                check_id="section_e3_6_2.doubler_plate_thickness_minimum",
+                scope="doubler_plate_col",
+                clause="AISC 341-22w E3.6e.2",
+                description="Espesor individual minimo de doubler plate",
+                calculated_symbol="tdp_col",
+                verification_text=(
+                    "No aplica para demanda_ductilidad_col='low'. "
+                    f"Formula de referencia: t >= (d_z + w_z)/90 con d_z=d_{deeper_side}-2tf_{deeper_side}, "
+                    "w_z=bcf_col"
+                ),
+                passes=True,
+            )
+        )
+
     bp_bounds = active_table_61.get("bp")
     end_plate_limits: list[dict[str, Any]] = []
     if bp_bounds is not None:
@@ -4802,6 +4905,7 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
     step_1_limits = (
         beam_limits
         + column_limits
+        + doubler_plate_limits
         + end_plate_limits
         + end_plate_stiffener_limits
         + weld_limits
@@ -5777,6 +5881,7 @@ def run_column_step4_web_local_crippling(case: AISC358MomentCase, rule_binding: 
         value=beam_profile["tf"].value + total_weld_thickness.value + 2.0 * tp.value,
         unit=beam_profile["tf"].unit,
     )
+    phi_f = _require(case, "design_factors.phi_f", rule_binding)
     capacity, intermediates = compute_column_web_local_crippling_strength(
         lb=lb,
         column_depth=column_profile["d"],
@@ -5785,6 +5890,7 @@ def run_column_step4_web_local_crippling(case: AISC358MomentCase, rule_binding: 
         elastic_modulus=elastic_modulus,
         column_fy=column_fy,
         distance_to_column_end=distance_to_end,
+        phi=phi_f,
         unit_system=case.units_system,
     )
     mf_data = _compute_mf_by_side(case, rule_binding)
@@ -5955,7 +6061,7 @@ def run_column_step4_2_web_local_buckling(case: AISC358MomentCase, rule_binding:
     st_col = _require(case, "geometry.column_end_distance_to_beam_flange", rule_binding)
     h_col = Quantity(value=column_profile["d"].value - 2.0 * kc_col.value, unit=column_profile["d"].unit)
     ct_col = 0.5 if st_col.value < 0.5 * column_profile["d"].value else 1.0
-    phi_wcb = 0.75
+    phi_wcb = _require(case, "design_factors.phi_f", rule_binding)
 
     backing_thickness = _require(case, "geometry.t_w4_1_vgizq", rule_binding)
     ductility_vgizq = case.design_factors.member_ductility_demand_beam_vgizq or case.design_factors.member_ductility_demand_beam
@@ -6041,7 +6147,6 @@ def run_column_step4_2_web_local_buckling(case: AISC358MomentCase, rule_binding:
 
 def run_column_step5_panel_zone_shear_wpzs(case: AISC358MomentCase, rule_binding: object) -> CheckResult:
     inelastic_panel_zone = case.geometry.panel_zone_inelastic_deformation_considered
-    inelastic_source = "geometry.panel_zone_inelastic_deformation_considered"
     if inelastic_panel_zone is None:
         legacy_package = case.geometry.panel_zone_equation_package
         if legacy_package is None:
@@ -6055,7 +6160,6 @@ def run_column_step5_panel_zone_shear_wpzs(case: AISC358MomentCase, rule_binding
                 ),
             )
         inelastic_panel_zone = str(legacy_package).strip().lower() == "b"
-        inelastic_source = "geometry.panel_zone_equation_package (legacy)"
     package = "b" if bool(inelastic_panel_zone) else "a"
     column_profile = _column_profile(case)
     ag_col = column_profile.get("ag")
@@ -6079,27 +6183,122 @@ def run_column_step5_panel_zone_shear_wpzs(case: AISC358MomentCase, rule_binding
     alpha = 1.0  # LRFD per AISC 360-22 J10.6
     alpha_pr_col = Quantity(value=alpha * abs(pu_col.value), unit=pu_col.unit)
 
+    ductility_col = case.design_factors.member_ductility_demand_column
+    if ductility_col is not None and str(ductility_col).strip().lower() == "low":
+        raise ValueError(
+            "WPZS with demanda_ductilidad_col='low' is not implemented yet in this repository."
+        )
+
     active_sides = _active_beam_sides(case)
+    mf_data = _compute_mf_by_side(case, rule_binding)
+    mpr_data = _compute_mpr_by_side(case, rule_binding)
     vh_data = _compute_vh_by_side(case, rule_binding)
-    vu_candidates: dict[str, Quantity] = {}
-    vu_sources: dict[str, str] = {}
+    sh_data = _compute_sh_by_side(case, rule_binding)
+    hb_col = _require(case, "geometry.hb_col", rule_binding)
+    ht_col = _require(case, "geometry.ht_col", rule_binding)
+    if hb_col.unit != ht_col.unit:
+        raise ValueError(
+            "Incompatible units between geometry.hb_col and geometry.ht_col; both must use the same unit."
+        )
+    hb_plus_ht = hb_col.value + ht_col.value
+    if hb_plus_ht <= 0.0:
+        raise ValueError("Sum of hb_col + ht_col must be positive to compute Vc_col.")
+
+    expected_moment_unit = "kip-in" if case.units_system == UnitSystem.US else "kN-mm"
+    sum_mbe_col = 0.0
+    sum_mf_over_z = 0.0
+    side_inputs: dict[str, Any] = {}
+    side_intermediates: dict[str, Any] = {}
     beam_depth_candidates: dict[str, Quantity] = {}
+    mbe_by_side: dict[str, dict[str, Quantity]] = {}
+    mf_force_by_side: dict[str, dict[str, Quantity]] = {}
     for side in active_sides:
         side_tag = "vgizq" if side == "izq" else "vgder"
-        explicit_vu = getattr(case.loads, f"Vu2_{side_tag}", None)
-        if explicit_vu is not None:
-            vu_candidates[side] = to_design_force_unit(explicit_vu, case.units_system)
-            vu_sources[side] = f"loads.Vu2_{side_tag}"
-        else:
-            vu_candidates[side] = vh_data["sides"][side]["vhmax"]
-            vu_sources[side] = f"step4.Vh_{side_tag}_max"
-        beam_depth_candidates[side] = _beam_profile_by_side(case, side)["d"]
+        beam_profile = _beam_profile_by_side(case, side)
+        beam_depth_candidates[side] = beam_profile["d"]
+        mpr_side = mpr_data["sides"][side]["mpr"]
+        vhmax_side = vh_data["sides"][side]["vhmax"]
+        vhmin_side = vh_data["sides"][side]["vhmin"]
+        sh_side = sh_data["sides"][side]["sh"]
+        if mpr_side.unit != expected_moment_unit:
+            raise ValueError(
+                f"Invalid unit for Mpr_{side_tag}. Expected '{expected_moment_unit}', got '{mpr_side.unit}'."
+            )
+        if sh_side.unit != column_profile["d"].unit:
+            raise ValueError(
+                f"Incompatible units between Sh_{side_tag} ('{sh_side.unit}') and d_col ('{column_profile['d'].unit}')."
+            )
+        arm_side = Quantity(
+            value=sh_side.value + 0.5 * column_profile["d"].value,
+            unit=sh_side.unit,
+        )
+        mbe_col_side_max = Quantity(
+            value=mpr_side.value + vhmax_side.value * arm_side.value,
+            unit=expected_moment_unit,
+        )
+        mbe_col_side_min = Quantity(
+            value=mpr_side.value + vhmin_side.value * arm_side.value,
+            unit=expected_moment_unit,
+        )
 
-    vu_governing_side, vu_col_critico = _select_max_quantity_by_side(vu_candidates)
-    demand = Quantity(value=0.5 * vu_col_critico.value, unit=vu_col_critico.unit)
+        mf_col_face_side_max = mf_data["sides"][side]["mfmax"]
+        mf_col_face_side_min = mf_data["sides"][side]["mfmin"]
+        f_mf_col_side_max, f_mf_trace = compute_beam_flange_force_from_mf(
+            mf=mf_col_face_side_max,
+            beam_depth=beam_profile["d"],
+            beam_flange_thickness=beam_profile["tf"],
+            unit_system=case.units_system,
+        )
+        f_mf_col_side_min, _ = compute_beam_flange_force_from_mf(
+            mf=mf_col_face_side_min,
+            beam_depth=beam_profile["d"],
+            beam_flange_thickness=beam_profile["tf"],
+            unit_system=case.units_system,
+        )
+        mbe_by_side[side] = {"max": mbe_col_side_max, "min": mbe_col_side_min}
+        mf_force_by_side[side] = {"max": f_mf_col_side_max, "min": f_mf_col_side_min}
+        side_inputs[f"mpr_{side_tag}"] = mpr_side.model_dump()
+        side_inputs[f"vh_{side_tag}_max"] = vhmax_side.model_dump()
+        side_inputs[f"vh_{side_tag}_min"] = vhmin_side.model_dump()
+        side_inputs[f"sh_{side_tag}"] = sh_side.model_dump()
+        side_inputs[f"mbe_col_{side_tag}_max"] = mbe_col_side_max.model_dump()
+        side_inputs[f"mbe_col_{side_tag}_min"] = mbe_col_side_min.model_dump()
+        side_inputs[f"mf_{side_tag}_max"] = mf_col_face_side_max.model_dump()
+        side_inputs[f"mf_{side_tag}_min"] = mf_col_face_side_min.model_dump()
+        side_inputs[f"db_{side_tag}"] = beam_profile["d"].model_dump()
+        side_inputs[f"tf_{side_tag}"] = beam_profile["tf"].model_dump()
+        side_intermediates[f"z_{side_tag}"] = f_mf_trace["lever_arm"]
+        side_intermediates[f"f_mf_{side_tag}_max"] = f_mf_col_side_max.value
+        side_intermediates[f"f_mf_{side_tag}_min"] = f_mf_col_side_min.value
+        side_intermediates[f"arm_center_col_{side_tag}"] = arm_side.value
+
+    if len(active_sides) == 2 and "izq" in mbe_by_side and "der" in mbe_by_side:
+        mbe_comb_1 = mbe_by_side["izq"]["max"].value + mbe_by_side["der"]["min"].value
+        mbe_comb_2 = mbe_by_side["izq"]["min"].value + mbe_by_side["der"]["max"].value
+        sum_mbe_col = max(mbe_comb_1, mbe_comb_2)
+        mfz_comb_1 = mf_force_by_side["izq"]["max"].value + mf_force_by_side["der"]["min"].value
+        mfz_comb_2 = mf_force_by_side["izq"]["min"].value + mf_force_by_side["der"]["max"].value
+        sum_mf_over_z = max(mfz_comb_1, mfz_comb_2)
+        side_intermediates["sum_mbe_col_combo_1"] = mbe_comb_1
+        side_intermediates["sum_mbe_col_combo_2"] = mbe_comb_2
+        side_intermediates["sum_mf_over_z_col_combo_1"] = mfz_comb_1
+        side_intermediates["sum_mf_over_z_col_combo_2"] = mfz_comb_2
+    else:
+        only_side = active_sides[0]
+        sum_mbe_col = max(
+            mbe_by_side[only_side]["max"].value,
+            mbe_by_side[only_side]["min"].value,
+        )
+        sum_mf_over_z = max(
+            mf_force_by_side[only_side]["max"].value,
+            mf_force_by_side[only_side]["min"].value,
+        )
+
+    vc2_col = Quantity(value=sum_mbe_col / hb_plus_ht, unit=force_unit)
+    demand = Quantity(value=sum_mf_over_z - vc2_col.value, unit=force_unit)
     db_side_for_rn, db_col = _select_max_quantity_by_side(beam_depth_candidates)
 
-    phi_wpzs = 0.90
+    phi_wpzs = float(_require(case, "design_factors.phi_d", rule_binding))
     capacity, intermediates = compute_column_panel_zone_shear_strength_j10_6(
         package=str(package),
         alpha_pr=alpha_pr_col,
@@ -6114,16 +6313,20 @@ def run_column_step5_panel_zone_shear_wpzs(case: AISC358MomentCase, rule_binding
         unit_system=case.units_system,
     )
 
+    db_symbol = "d_vgizq" if db_side_for_rn == "izq" else "d_vgder"
     eq_case = str(intermediates.get("eq_case"))
     if eq_case == "J10-9":
         equation = "Rn_wpzs_col = 0.60*Fy_col*d_col*tw_col (J10-9)"
     elif eq_case == "J10-10":
         equation = "Rn_wpzs_col = 0.60*Fy_col*d_col*tw_col*(1.4 - Pr_col/Py_col) (J10-10)"
     elif eq_case == "J10-11":
-        equation = "Rn_wpzs_col = 0.60*Fy_col*d_col*tw_col*(1 + 3*bcf_col*tcf_col^2/(db_col*d_col*tw_col)) (J10-11)"
+        equation = (
+            f"Rn_wpzs_col = 0.60*Fy_col*d_col*tw_col*(1 + 3*bcf_col*tcf_col^2/({db_symbol}*d_col*tw_col)) "
+            "(J10-11)"
+        )
     elif eq_case == "J10-12":
         equation = (
-            "Rn_wpzs_col = 0.60*Fy_col*d_col*tw_col*(1 + 3*bcf_col*tcf_col^2/(db_col*d_col*tw_col))"
+            f"Rn_wpzs_col = 0.60*Fy_col*d_col*tw_col*(1 + 3*bcf_col*tcf_col^2/({db_symbol}*d_col*tw_col))"
             "*(1.9 - 1.2*Pr_col/Py_col) (J10-12)"
         )
     else:
@@ -6135,13 +6338,15 @@ def run_column_step5_panel_zone_shear_wpzs(case: AISC358MomentCase, rule_binding
         equation=equation,
         inputs={
             "consideracion_deformacion_inelastica_zona_panel": bool(inelastic_panel_zone),
-            "consideracion_deformacion_inelastica_zona_panel_source": inelastic_source,
             "package_wpzs": package,
             "eq_case_wpzs": eq_case,
             "phi_wpzs": phi_wpzs,
             "alpha": alpha,
-            "vu_col_critico": vu_col_critico.model_dump(),
-            "vu_col_critico_source": f"{vu_sources.get(vu_governing_side)} (governing_side={vu_governing_side})",
+            "hb_col": hb_col.model_dump(),
+            "ht_col": ht_col.model_dump(),
+            "vc2_col": vc2_col.model_dump(),
+            "sum_mbe_col": {"value": sum_mbe_col, "unit": expected_moment_unit},
+            "sum_mf_over_z_col": {"value": sum_mf_over_z, "unit": force_unit},
             "ru_wpzs_col": demand.model_dump(),
             "pu_col": pu_col.model_dump(),
             "pr_col": alpha_pr_col.model_dump(),
@@ -6155,6 +6360,7 @@ def run_column_step5_panel_zone_shear_wpzs(case: AISC358MomentCase, rule_binding
             "tcf_col": column_profile["tf"].model_dump(),
             "db_col": db_col.model_dump(),
             "db_col_source_side": db_side_for_rn,
+            **side_inputs,
         },
         intermediates={
             "alpha_pr_over_py": intermediates.get("alpha_pr_over_py"),
@@ -6162,7 +6368,9 @@ def run_column_step5_panel_zone_shear_wpzs(case: AISC358MomentCase, rule_binding
             "rn_nominal_wpzs_col": intermediates.get("rn_nominal"),
             "package_wpzs": intermediates.get("package"),
             "eq_case_wpzs": intermediates.get("eq_case"),
-            "vu_governing_side": vu_governing_side,
+            "sum_mbe_over_hb_plus_ht_formula": "Vc2_col = sum_Mbe_col/(hb_col + ht_col)",
+            "ru_wpz_formula": "Ru_wpz_v2_col = sum_Mf_col/(db - tf) - Vc2_col",
+            **side_intermediates,
         },
         design_factors={"phi_wpzs": phi_wpzs, "alpha": alpha},
         units_trace={"demand": demand.unit, "capacity": capacity.unit},

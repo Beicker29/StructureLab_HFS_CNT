@@ -48,3 +48,40 @@ def compute_protected_zone_length(
         "candidate_b": candidate_b,
         "lpz": lpz,
     }
+
+
+def compute_minimum_panel_zone_plate_thickness_e3_6(
+    *,
+    beam_depth: Quantity,
+    beam_flange_thickness: Quantity,
+    panel_zone_width: Quantity,
+    unit_system: UnitSystem,
+) -> dict[str, Any]:
+    """Compute minimum individual thickness for column web/doubler plates.
+
+    Equation:
+    - ``d_z = d - 2*t_f``
+    - ``t_req = (d_z + w_z)/90``
+
+    Reference:
+    - AISC 341-22w Section E3.6e(2), Eq. (E3-6)
+    """
+
+    validate_quantity_unit(beam_depth, "length", unit_system, "beam_depth")
+    validate_quantity_unit(beam_flange_thickness, "length", unit_system, "beam_flange_thickness")
+    validate_quantity_unit(panel_zone_width, "length", unit_system, "panel_zone_width")
+
+    dz = Quantity(
+        value=beam_depth.value - 2.0 * beam_flange_thickness.value,
+        unit=beam_depth.unit,
+    )
+    t_req = Quantity(
+        value=(dz.value + panel_zone_width.value) / 90.0,
+        unit=beam_depth.unit,
+    )
+    return {
+        "equation": "t >= (d_z + w_z)/90; d_z = d - 2*t_f",
+        "reference": "AISC 341-22w Section E3.6e(2), Eq. (E3-6)",
+        "d_z": dz,
+        "t_required": t_req,
+    }

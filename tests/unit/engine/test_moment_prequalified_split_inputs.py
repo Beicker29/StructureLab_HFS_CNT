@@ -19,12 +19,12 @@ def test_parse_moment_prequalified_split_bundle_from_directory() -> None:
     case = parse_and_validate_file(SPLIT_ROOT)
     assert case.connection_family == "moment_prequalified"
     assert case.connection_type == "bseep_8es"
-    assert case.sections.beam_shape == "W21X68"
-    assert case.sections.column_shape == "HEB 500"
+    assert case.sections.beam_shape == "W24X76"
+    assert case.sections.column_shape == "W18X175"
     assert case.loads.pu_viga_right is not None
     assert case.loads.pu_viga_right.value == 0.0
     assert case.loads.beam_left_vgravity is not None
-    assert case.loads.beam_left_vgravity.value == 97.11
+    assert case.loads.beam_left_vgravity.value == 91.43
 
 
 def test_parse_moment_prequalified_split_bundle_from_any_member_file() -> None:
@@ -33,9 +33,9 @@ def test_parse_moment_prequalified_split_bundle_from_any_member_file() -> None:
     assert case.connection_family == "moment_prequalified"
     assert case.connection_type == "bseep_8es"
     assert case.geometry.end_plate_width is not None
-    assert case.geometry.end_plate_width.value == 230.0
+    assert case.geometry.end_plate_width.value == 270.0
     assert case.geometry.end_plate_width_vgizq is not None
-    assert case.geometry.end_plate_width_vgizq.value == 240.0
+    assert case.geometry.end_plate_width_vgizq.value == 270.0
 
 
 def test_parse_moment_prequalified_split_bundle_4e_directory() -> None:
@@ -80,8 +80,8 @@ def test_parse_moment_prequalified_split_bundle_right_only_two_files(tmp_path: P
 
     case = parse_and_validate_file(tmp_path)
     assert case.design_factors.beam_connection_sides == "right_only"
-    assert case.sections.beam_shape_der == "W21X68"
-    assert case.sections.beam_shape == "W21X68"
+    assert case.sections.beam_shape_der == "W24X76"
+    assert case.sections.beam_shape == "W24X76"
 
 
 def test_parse_moment_prequalified_split_bundle_both_sides_missing_beam_file_fails(tmp_path: Path) -> None:

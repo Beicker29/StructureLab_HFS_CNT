@@ -12,6 +12,7 @@
   "factores_diseno": {
     "phi_ductil": 1.0,
     "phi_no_ductil": 0.9,
+    "phi_fragil": 0.75,
     "lados_conexion": "both_sides",
     "demanda_ductilidad_col": "high",
     "ratio_McMb_min": 1.0,
@@ -25,7 +26,15 @@
       "unit": "MPa"
     },
     "St_col": {
-      "value": 2500,
+      "value": 1250,
+      "unit": "mm"
+    },
+    "hb_col": {
+      "value": 1250,
+      "unit": "mm"
+    },
+    "ht_col": {
+      "value": 1250,
       "unit": "mm"
     },
     "consideracion_deformacion_inelastica_zona_panel": false,
@@ -39,6 +48,14 @@
       "unit": "mm"
     }
   },
+  "platina_dobladora": {
+    "usar_dp_col": false,
+    "tipo_acero_dp_col": "ASTM A572 Gr 50",
+    "tdp_col": {
+      "value": 12.7,
+      "unit": "mm"
+    }
+  },
   "soldaduras": {
     "weld_5": {
       "description": "Platina de continuidad con aleta de columna",
@@ -49,6 +66,19 @@
       "tipo_w5": "CJP",
       "t_w5": null,
       "nl_w5": null
+    },
+    "weld_dp_tapon": {
+      "description": "Soldadura de tapon entre alma de columna y doubler plates",
+      "Fexx_wdp_tapon": {
+        "value": 490.0,
+        "unit": "MPa"
+      },
+      "tipo_wdp_tapon": "fillet",
+      "t_wdp_tapon": {
+        "value": 8.0,
+        "unit": "mm"
+      },
+      "nl_wdp_tapon": 1
     }
   },
   "loads": {

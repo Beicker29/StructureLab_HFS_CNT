@@ -54,7 +54,19 @@ def test_bueep_prequalification_limits_are_reported(bueep_4e_payload: dict) -> N
     assert prequal.dcr is None
     limits = prequal.calculation_memory.intermediates["step_1_limits"]
     assert len(limits) >= 30
-    assert {"beam_der", "column", "end_plate_der", "end_plate_stiffener_der", "welds", "continuity_plate", "bolts", "table_6_1_der"} <= {
+    assert {
+        "beam_der",
+        "column",
+        "end_plate_der",
+        "end_plate_stiffener_der",
+        "bolts",
+        "table_6_1_der",
+        "weld_1_vgder",
+        "weld_2_vgder",
+        "weld_3_vgder",
+        "weld_4_vgder",
+        "weld_5_col",
+    } <= {
         item["scope"] for item in limits
     }
     beam_shape = next(item for item in limits if item["id"] == "beam_der.shape_family")
@@ -140,8 +152,12 @@ def test_bueep_prequalification_limits_are_reported(bueep_4e_payload: dict) -> N
     assert end_plate_stiffener["scope"] == "end_plate_stiffener_der"
     assert end_plate_stiffener["comparison"] == "compound"
     assert "pfo_pe_vgder + de_pe_vgder" in end_plate_stiffener["verification_text"]
-    end_plate_web_weld_type = next(item for item in limits if item["id"] == "section_6_7.end_plate_beam_web_weld_type_allowed")
-    assert end_plate_web_weld_type["scope"] == "welds"
+    end_plate_web_weld_type = next(
+        item
+        for item in limits
+        if item["id"] in {"section_6_7.end_plate_beam_web_weld_type_allowed", "section_6_7.end_plate_beam_web_weld_type_allowed_vgder"}
+    )
+    assert end_plate_web_weld_type["scope"] in {"welds", "weld_3_vgder"}
     assert end_plate_web_weld_type["comparison"] == "in_set"
     assert end_plate_web_weld_type["result"] == "OK"
     pfo_compound = next(item for item in limits if item["id"] == "table_6_1.edge_pfo_ge_emin_der")
@@ -547,6 +563,9 @@ def test_grouped_geometry_payload_is_supported(bueep_4e_payload: dict) -> None:
         "column": {
             "column_end_distance_to_beam_flange": geo["column_end_distance_to_beam_flange"],
             "slab_connection_condition": geo["column_slab_connection_condition"],
+            "panel_zone_inelastic_deformation_considered": geo["panel_zone_inelastic_deformation_considered"],
+            "hb_col": geo["hb_col"],
+            "ht_col": geo["ht_col"],
         },
         "end_plate": {
             "end_plate_width": geo["end_plate_width"],

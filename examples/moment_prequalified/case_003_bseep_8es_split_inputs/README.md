@@ -63,6 +63,7 @@ Objetivo:
 - Ejemplos en `factores_diseno` (columna/common):
   - `phi_ductil` (se mapea a `phi_d`)
   - `phi_no_ductil` (se mapea a `phi_n`)
+  - `phi_fragil` (se mapea a `phi_f`)
   - `lados_conexion`
   - `demanda_ductilidad_col`
   - `ratio_McMb_min`

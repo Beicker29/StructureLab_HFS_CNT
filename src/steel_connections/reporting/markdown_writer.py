@@ -1770,6 +1770,7 @@ def _render_step_11_end_plate_beam_web_weld_tension(step_11_ctx: dict | None, st
     if step_11_ctx is None:
         return ""
     step_11_inputs = step_11_ctx.get("inputs", {})
+    step_11_design_factors = step_11_ctx.get("design_factors", {}) if isinstance(step_11_ctx, dict) else {}
     step_10_inputs = step_10_1_1.get("inputs", {}) if step_10_1_1 is not None else {}
 
     def _pick(mapping: dict, *keys: str):
@@ -1802,7 +1803,11 @@ def _render_step_11_end_plate_beam_web_weld_tension(step_11_ctx: dict | None, st
         kds_factor = float(kds_w3_vgizq) if kds_w3_vgizq is not None else None
     except (TypeError, ValueError):
         kds_factor = None
-    phi = 0.75
+    phi_raw = step_11_design_factors.get("phi")
+    try:
+        phi = float(phi_raw)
+    except (TypeError, ValueError):
+        phi = None
 
     hwef_w3_vgizq_q: Quantity | None = None
     ru_w3_p_pos_vgizq_q: Quantity | None = None
@@ -1827,6 +1832,7 @@ def _render_step_11_end_plate_beam_web_weld_tension(step_11_ctx: dict | None, st
         and fexx_q is not None
         and twe_q is not None
         and nl is not None
+        and phi is not None
     ):
         phi_pn_q = WeldFillet(
             fexx=fexx_q,
@@ -2603,6 +2609,10 @@ def _render_step_1_list_grouped_by_scope(rows: list[dict]) -> str:
 
     def _scope_sort_key(scope: str) -> tuple[int, int, int]:
         scope_upper = scope.upper()
+        if scope_upper == "DOUBLER_PLATE_COL":
+            # Render doubler-plate checks after weld scopes to keep column-web check in 1.4
+            # and isolate doubler validations in a late dedicated subchapter.
+            return (2, 98, 9)
         if scope_upper.startswith("WELD_"):
             parts = scope_upper.split("_")
             try:
@@ -2760,20 +2770,46 @@ def _render_step_21_5_panel_zone_shear_wpzs(
     inputs = step_21_5_1.get("inputs", {})
     inter = step_21_5_1.get("intermediates", {})
     design_factors = step_21_5_1.get("design_factors", {})
+    equation_text = _format_text(step_21_5_1.get("equation"))
+    equation_text = (
+        equation_text.replace("Ru_wpzs_col", "Ru_wpz_v2_col")
+        .replace("phi*Rn_wpzs_col", "Rn_wpz_v2_col")
+        .replace("Rn_wpzs_col", "Rn_wpz_v2_col")
+        .replace("DCR_wpzs_col", "DCR_wpz_v2_col")
+    )
     lines.extend(
         [
             f"- Clausula: `{_render_clause_text(step_21_5_1.get('clause'), step_21_5_1.get('source_document'), step_21_5_1.get('rule_id'))}`",
-            f"- Ecuacion: `{_format_text(step_21_5_1.get('equation'))}`",
-            f"- Consideracion de deformacion inelastica de la zona de panel: `{_format_text(inputs.get('consideracion_deformacion_inelastica_zona_panel'))}`",
-            f"- Fuente condicion inelastica: `{_format_text(inputs.get('consideracion_deformacion_inelastica_zona_panel_source'))}`",
-            f"- paquete_wpzs: `{_format_text(inputs.get('package_wpzs'))}`",
-            f"- ecuacion_Rn_aplicada: `{_format_text(inputs.get('eq_case_wpzs') or inter.get('eq_case_wpzs'))}`",
-            f"- phi_wpzs: `{_format_text(inputs.get('phi_wpzs') or design_factors.get('phi_wpzs'))}`",
-            f"- alpha: `{_format_text(inputs.get('alpha') or design_factors.get('alpha'))}`",
-            f"- Vu_col_critico: `{_format_quantity(inputs.get('vu_col_critico'))}`",
-            f"- Fuente Vu_col_critico: `{_format_text(inputs.get('vu_col_critico_source'))}`",
-            f"- Ru_wpzs_col: `{_format_quantity(step_21_5_1.get('demand'))}`",
-            f"- Pu_col: `{_format_quantity(inputs.get('pu_col'))}`",
+            f"- Ecuacion: `{equation_text}`",
+            f"- Considera deformacion inelastica del panel zone: `{'Si' if inputs.get('consideracion_deformacion_inelastica_zona_panel') else 'No'}`",
+            f"- phi_ductil (usado en WPZS): `{_format_text(inputs.get('phi_wpzs') or design_factors.get('phi_wpzs'))}`",
+            f"- hb_col: `{_format_quantity(inputs.get('hb_col'))}`",
+            f"- ht_col: `{_format_quantity(inputs.get('ht_col'))}`",
+        ]
+    )
+    for side_tag in ("vgizq", "vgder"):
+        mbe_max = inputs.get(f"mbe_col_{side_tag}_max")
+        mbe_min = inputs.get(f"mbe_col_{side_tag}_min")
+        if mbe_max is not None:
+            lines.append(f"- Mbe_col_{side_tag}_max: `{_format_quantity(mbe_max)}`")
+        if mbe_min is not None:
+            lines.append(f"- Mbe_col_{side_tag}_min: `{_format_quantity(mbe_min)}`")
+    lines.append(f"- sum_Mbe_col: `{_format_quantity(inputs.get('sum_mbe_col'))}`")
+    lines.append(f"- Vc2_col: `{_format_quantity(inputs.get('vc2_col'))}`")
+    for side_tag in ("vgizq", "vgder"):
+        mf_max = inputs.get(f"mf_{side_tag}_max")
+        mf_min = inputs.get(f"mf_{side_tag}_min")
+        d_side = inputs.get(f"db_{side_tag}")
+        if d_side is not None:
+            lines.append(f"- d_{side_tag}: `{_format_quantity(d_side)}`")
+        if mf_max is not None:
+            lines.append(f"- Mf_{side_tag}_max: `{_format_quantity(mf_max)}`")
+        if mf_min is not None:
+            lines.append(f"- Mf_{side_tag}_min: `{_format_quantity(mf_min)}`")
+    lines.extend(
+        [
+            f"- sum_Mf_col/(db-tf): `{_format_quantity(inputs.get('sum_mf_over_z_col'))}`",
+            f"- Ru_wpz_v2_col: `{_format_quantity(step_21_5_1.get('demand'))}`",
             f"- Pr_col: `{_format_quantity(inputs.get('pr_col') or inputs.get('alpha_pr_col'))}`",
             f"- Py_col: `{_format_quantity(inputs.get('py_col'))}`",
             f"- alphaPr/Py: `{_format_text(inter.get('alpha_pr_over_py'))}`",
@@ -2783,15 +2819,13 @@ def _render_step_21_5_panel_zone_shear_wpzs(
             f"- tw_col: `{_format_quantity(inputs.get('tw_col'))}`",
             f"- bcf_col: `{_format_quantity(inputs.get('bcf_col'))}`",
             f"- tcf_col: `{_format_quantity(inputs.get('tcf_col'))}`",
-            f"- db_col: `{_format_quantity(inputs.get('db_col'))}`",
-            f"- lado_db_col: `{_format_text(inputs.get('db_col_source_side'))}`",
-            f"- factor_panel: `{_format_text(inter.get('panel_factor'))}`",
-            f"- phi*Rn_wpzs_col: `{_format_quantity(step_21_5_1.get('capacity'))}`",
-            f"- DCR_wpzs_col: `{_format_text(step_21_5_1.get('dcr'))}`",
+            f"- Rn_wpz_v2_col: `{_format_quantity(step_21_5_1.get('capacity'))}`",
+            f"- DCR_wpz_v2_col: `{_format_text(step_21_5_1.get('dcr'))}`",
             f"- Resultado: `{_render_result_plain_es(step_21_5_1.get('status'))}`",
             "",
         ]
     )
+    lines.append("")
     return "\n".join(lines)
 
 

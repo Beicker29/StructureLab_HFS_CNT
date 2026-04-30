@@ -130,6 +130,7 @@ Nota:
 
 - `design_factors.phi_d`: factor de resistencia para chequeos tipo `phi_d`.
 - `design_factors.phi_n`: factor de resistencia para chequeos tipo `phi_n`.
+- `design_factors.phi_f`: factor de resistencia para chequeos tipo `phi_f` (fragil).
 - `design_factors.member_ductility_demand_beam`: demanda de ductilidad para compacidad de viga (`high` o `moderate`).
 - `design_factors.member_ductility_demand_column`: demanda de ductilidad para compacidad de columna (`high` o `moderate`).
 - `design_factors.column_beam_moment_ratio_minimum`: relación mínima columna-viga.

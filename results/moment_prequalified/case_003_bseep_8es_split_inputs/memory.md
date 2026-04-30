@@ -137,7 +137,7 @@ Comparacion directa de valor calculado contra limite normativo (sin formato DCR)
 #### Chequeo 1.2.5 - Criterio de despeje de viga con umbral Sc y S (left beam) (`Sc_vgizq`)
 
 - Ambito: `BEAM_IZQ`
-- Verificacion: `Sc_vgizq = St_col - pfo_vgizq - pb_vgizq; S_vgizq = 0.5*sqrt(bcf*g_vgizq); Sc_vgizq > S_vgizq => 2355.000 mm > 100.747 mm`
+- Verificacion: `Sc_vgizq = St_col - pfo_vgizq - pb_vgizq; S_vgizq = 0.5*sqrt(bcf*g_vgizq); Sc_vgizq > S_vgizq => 1105.000 mm > 100.747 mm`
 - Clausula: `Documento: AISC 358-22 | Seccion: Seccion 6.3.1 (criterio de despeje de viga)`
 - Resultado: 🟢 Cumple
 
@@ -195,7 +195,7 @@ Comparacion directa de valor calculado contra limite normativo (sin formato DCR)
 #### Chequeo 1.3.5 - Criterio de despeje de viga con umbral Sc y S (right beam) (`Sc_vgder`)
 
 - Ambito: `BEAM_DER`
-- Verificacion: `Sc_vgder = St_col - pfo_vgder - pb_vgder; S_vgder = 0.5*sqrt(bcf*g_vgder); Sc_vgder > S_vgder => 2355.000 mm > 100.747 mm`
+- Verificacion: `Sc_vgder = St_col - pfo_vgder - pb_vgder; S_vgder = 0.5*sqrt(bcf*g_vgder); Sc_vgder > S_vgder => 1105.000 mm > 100.747 mm`
 - Clausula: `Documento: AISC 358-22 | Seccion: Seccion 6.3.1 (criterio de despeje de viga)`
 - Resultado: 🟢 Cumple
 
@@ -253,7 +253,7 @@ Comparacion directa de valor calculado contra limite normativo (sin formato DCR)
 #### Chequeo 1.4.5 - Proyeccion de columna minima por encima de las vigas (`St_col`)
 
 - Ambito: `COLUMN`
-- Verificacion: `St_col >= pfo_pe_vgder + pb_pe_vgder + de_pe_vgder + 12.5 mm; St_col >= pfo_pe_vgizq + pb_pe_vgizq + de_pe_vgizq + 12.5 mm; 2500.000 mm >= 217.500 mm; 2500.000 mm >= 217.500 mm`
+- Verificacion: `St_col >= pfo_pe_vgder + pb_pe_vgder + de_pe_vgder + 12.5 mm; St_col >= pfo_pe_vgizq + pb_pe_vgizq + de_pe_vgizq + 12.5 mm; 1250.000 mm >= 217.500 mm; 1250.000 mm >= 217.500 mm`
 - Clausula: `Documento: AISC 358-22 | Seccion: Seccion 6.3.1 (criterio de despeje superior de columna)`
 - Resultado: 🟢 Cumple
 
@@ -269,6 +269,13 @@ Comparacion directa de valor calculado contra limite normativo (sin formato DCR)
 - Ambito: `COLUMN`
 - Verificacion: `lambda_w_col <= lambda_w_limit; 18.01 adim <= 50.8 adim`
 - Clausula: `Documento: AISC 358-22 | Seccion: AISC 341-22w / AISC 358-22w Seccion 2.3.4 (6) + AISC Seismic Provisions`
+- Resultado: 🟢 Cumple
+
+#### Chequeo 1.4.8 - Espesor individual minimo del alma de columna (`tw_col`)
+
+- Ambito: `COLUMN`
+- Verificacion: `tw_col >= (d_z + w_z)/90 con d_z=d_izq-2tf_izq, w_z=bcf_col; 22.6 mm >= 9.58 mm`
+- Clausula: `Documento: AISC 358-22 | Seccion: AISC 341-22w E3.6e.2`
 - Resultado: 🟢 Cumple
 
 ### 1.5 Ambito `END_PLATE_DER`
@@ -590,11 +597,20 @@ Comparacion directa de valor calculado contra limite normativo (sin formato DCR)
 - Clausula: `Documento: AISC 358-22 | Seccion: Seccion 6.3 (detalle de soldadura de platina de continuidad)`
 - Resultado: 🟢 Cumple
 
-### 1.21 Resumen de chequeos por ambito
+### 1.21 Ambito `DOUBLER_PLATE_COL`
+
+#### Chequeo 1.21.1 - Espesor individual minimo de doubler plate (`tdp_col`)
+
+- Ambito: `DOUBLER_PLATE_COL`
+- Verificacion: `No aplica: usar_dp_col = false`
+- Clausula: `Documento: AISC 358-22 | Seccion: AISC 341-22w E3.6e.2`
+- Resultado: 🟢 Cumple
+
+### 1.22 Resumen de chequeos por ambito
 
 - 🔴 `1.2` `BEAM_IZQ`: total=8, cumple=7, no_cumple=1, numerales_no_cumplen=1.2.2
 - 🔴 `1.3` `BEAM_DER`: total=8, cumple=7, no_cumple=1, numerales_no_cumplen=1.3.2
-- 🟢 `1.4` `COLUMN`: total=7, cumple=7, no_cumple=0, numerales_no_cumplen=ninguno
+- 🟢 `1.4` `COLUMN`: total=8, cumple=8, no_cumple=0, numerales_no_cumplen=ninguno
 - 🔴 `1.5` `END_PLATE_DER`: total=1, cumple=0, no_cumple=1, numerales_no_cumplen=1.5.1
 - 🔴 `1.6` `END_PLATE_IZQ`: total=1, cumple=0, no_cumple=1, numerales_no_cumplen=1.6.1
 - 🟢 `1.7` `END_PLATE_STIFFENER_DER`: total=4, cumple=4, no_cumple=0, numerales_no_cumplen=ninguno
@@ -611,6 +627,7 @@ Comparacion directa de valor calculado contra limite normativo (sin formato DCR)
 - 🔴 `1.18` `WELD_4_VGDER`: total=1, cumple=0, no_cumple=1, numerales_no_cumplen=1.18.1
 - 🔴 `1.19` `WELD_4_VGIZQ`: total=1, cumple=0, no_cumple=1, numerales_no_cumplen=1.19.1
 - 🟢 `1.20` `WELD_5_COL`: total=2, cumple=2, no_cumple=0, numerales_no_cumplen=ninguno
+- 🟢 `1.21` `DOUBLER_PLATE_COL`: total=1, cumple=1, no_cumple=0, numerales_no_cumplen=ninguno
 
 ## Paso 2 - Momento probable maximo en rotula plastica (Mpr)
 
@@ -1192,7 +1209,7 @@ Donde:
 - Ecuacion: `Ru_cw_v2_col_vgizq = Mf_vgizq_critico/(d_vgizq - tf_vgizq); lb_col = tf_vgizq + 2w_w4_vgizq + 2*tpe_vgizq; phi*Rn_cw_v2_col_vgizq = phi_ductil * (6*Ct_col*kc_col + lb_col) * Fy_col * tw_col; DCR_cw_v2_col_vgizq = Ru_cw_v2_col_vgizq / phi*Rn_cw_v2_col_vgizq`
 - phi usado (phi_ductil): `1`
 - Mf_vgizq_critico: `1669.27 kN-m`
-- St_col: `2500 mm`
+- St_col: `1250 mm`
 - d_col: `508 mm`
 - Ct_col: `1`
 - kc_col: `50.5 mm`
@@ -1221,7 +1238,7 @@ Donde:
 - Ecuacion: `Ru_cw_v2_col_vgizq = Mf_vgizq_critico/(d_vgizq - tf_vgizq); lb_col = tf_vgizq + 2w_w4_vgizq + 2*tpe_vgizq; Rn_cw_v2_col_vgizq = 0.80*tw_col^2 * [1 + 3*(lb_col/d_col)*(tw_col/tf_col)^1.5] * sqrt(E_col*Fy_col*tf_col/tw_col) [Eq. 6.7-19]; phi*Rn_cw_v2_col_vgizq = phi_wlc * Rn_cw_v2_col_vgizq; DCR_cw_v2_col_vgizq = Ru_cw_v2_col_vgizq / phi*Rn_cw_v2_col_vgizq`
 - phi usado: `0.75`
 - Mf_vgizq_critico: `1669.27 kN-m`
-- St_col: `2500 mm`
+- St_col: `1250 mm`
 - d_col (dc): `508 mm`
 - lb_col: `105.3 mm`
 - Ecuacion lb_col: `lb_col = tf_vgizq + 2w_w4_vgizq + 2*tpe_vgizq`
@@ -1261,7 +1278,7 @@ Donde:
 - termino_condicion_der: `-2615.72 kN`
 - tolerancia_condicion: `1e-9`
 - same_sign: `True`
-- St_col: `2500 mm`
+- St_col: `1250 mm`
 - d_col: `508 mm`
 - Ct_col: `1`
 - kc_col: `50.5 mm`
@@ -1284,7 +1301,7 @@ Donde:
 - Ecuacion: `Ru_cw_v2_col_vgder = Mf_vgder_critico/(d_vgder - tf_vgder); lb_col = tf_vgder + 2w_w4_vgder + 2*tpe_vgder; phi*Rn_cw_v2_col_vgder = phi_ductil * (6*Ct_col*kc_col + lb_col) * Fy_col * tw_col; DCR_cw_v2_col_vgder = Ru_cw_v2_col_vgder / phi*Rn_cw_v2_col_vgder`
 - phi usado (phi_ductil): `1`
 - Mf_vgder_critico: `1669.27 kN-m`
-- St_col: `2500 mm`
+- St_col: `1250 mm`
 - d_col: `508 mm`
 - Ct_col: `1`
 - kc_col: `50.5 mm`
@@ -1313,7 +1330,7 @@ Donde:
 - Ecuacion: `Ru_cw_v2_col_vgder = Mf_vgder_critico/(d_vgder - tf_vgder); lb_col = tf_vgder + 2w_w4_vgder + 2*tpe_vgder; Rn_cw_v2_col_vgder = 0.80*tw_col^2 * [1 + 3*(lb_col/d_col)*(tw_col/tf_col)^1.5] * sqrt(E_col*Fy_col*tf_col/tw_col) [Eq. 6.7-19]; phi*Rn_cw_v2_col_vgder = phi_wlc * Rn_cw_v2_col_vgder; DCR_cw_v2_col_vgder = Ru_cw_v2_col_vgder / phi*Rn_cw_v2_col_vgder`
 - phi usado: `0.75`
 - Mf_vgder_critico: `1669.27 kN-m`
-- St_col: `2500 mm`
+- St_col: `1250 mm`
 - d_col (dc): `508 mm`
 - lb_col: `105.3 mm`
 - Ecuacion lb_col: `lb_col = tf_vgder + 2w_w4_vgder + 2*tpe_vgder`
@@ -1353,7 +1370,7 @@ Donde:
 - termino_condicion_izq: `-0.85 kN`
 - tolerancia_condicion: `1e-9`
 - same_sign: `True`
-- St_col: `2500 mm`
+- St_col: `1250 mm`
 - d_col: `508 mm`
 - Ct_col: `1`
 - kc_col: `50.5 mm`
@@ -1373,17 +1390,25 @@ Donde:
 #### 21.5.1. ELR #1: Cortante en la zona del panel del alma (WPZS)
 
 - Clausula: `Documento: AISC 360-22w | Seccion: AISC 360-22w Seccion J10.6 + Eq. (J10-9) to Eq. (J10-12)`
-- Ecuacion: `Rn_wpzs_col = 0.60*Fy_col*d_col*tw_col (J10-9)`
-- Consideracion de deformacion inelastica de la zona de panel: `False`
-- Fuente condicion inelastica: `geometry.panel_zone_inelastic_deformation_considered`
-- paquete_wpzs: `a`
-- ecuacion_Rn_aplicada: `J10-9`
-- phi_wpzs: `0.9`
-- alpha: `1`
-- Vu_col_critico: `514.13 kN`
-- Fuente Vu_col_critico: `loads.Vu2_vgder (governing_side=der)`
-- Ru_wpzs_col: `257.06 kN`
-- Pu_col: `1173.33 kN`
+- Ecuacion: `Rn_wpz_v2_col = 0.60*Fy_col*d_col*tw_col (J10-9)`
+- Considera deformacion inelastica del panel zone: `No`
+- phi_ductil (usado en WPZS): `1`
+- hb_col: `1250 mm`
+- ht_col: `1250 mm`
+- Mbe_col_vgizq_max: `1820.27 kN-m`
+- Mbe_col_vgizq_min: `1700.68 kN-m`
+- Mbe_col_vgder_max: `1820.27 kN-m`
+- Mbe_col_vgder_min: `1700.68 kN-m`
+- sum_Mbe_col: `3520.96 kN-m`
+- Vc2_col: `1408.38 kN`
+- d_vgizq: `607 mm`
+- Mf_vgizq_max: `1669.27 kN-m`
+- Mf_vgizq_min: `1596.13 kN-m`
+- d_vgder: `607 mm`
+- Mf_vgder_max: `1669.27 kN-m`
+- Mf_vgder_min: `1596.13 kN-m`
+- sum_Mf_col/(db-tf): `5537.39 kN`
+- Ru_wpz_v2_col: `4129.01 kN`
 - Pr_col: `1173.33 kN`
 - Py_col: `11454 kN`
 - alphaPr/Py: `0.1`
@@ -1393,9 +1418,6 @@ Donde:
 - tw_col: `22.6 mm`
 - bcf_col: `290 mm`
 - tcf_col: `40.4 mm`
-- db_col: `607 mm`
-- lado_db_col: `der`
-- factor_panel: `1`
-- phi*Rn_wpzs_col: `2138.87 kN`
-- DCR_wpzs_col: `0.12`
-- Resultado: `🟢 Cumple`
+- Rn_wpz_v2_col: `2376.53 kN`
+- DCR_wpz_v2_col: `1.74`
+- Resultado: `🔴 No cumple`

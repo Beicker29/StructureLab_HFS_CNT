@@ -1185,7 +1185,7 @@ Donde:
 #### 13.5.1. ELR #1: Cortante en la zona del panel del alma (WPZS)
 
 - Clausula: `Documento: AISC 360-22w | Seccion: AISC 360-22w Seccion J10.6 + Eq. (J10-9) to Eq. (J10-12)`
-- Ecuacion: `Ru_wpzs_col = 0.5*Vu_col_critico; Py_col = Fy_col*Ag_col; alphaPr_col = alpha*|Pu_col|; si consideracion_deformacion_inelastica_zona_panel=false: Rn_wpzs_col = 0.60*Fy_col*d_col*tw_col (J10-9) o Rn_wpzs_col = 0.60*Fy_col*d_col*tw_col*(1.4 - alphaPr_col/Py_col) (J10-10); si consideracion_deformacion_inelastica_zona_panel=true: Rn_wpzs_col = 0.60*Fy_col*d_col*tw_col*(1 + 3*bcf_col*tcf_col^2/(db_col*d_col*tw_col)) (J10-11) o Rn_wpzs_col = 0.60*Fy_col*d_col*tw_col*(1 + 3*bcf_col*tcf_col^2/(db_col*d_col*tw_col))*(1.9 - 1.2*alphaPr_col/Py_col) (J10-12); phi*Rn_wpzs_col = phi_wpzs*Rn_wpzs_col`
+- Ecuacion: `Rn_wpzs_col = 0.60*Fy_col*d_col*tw_col (J10-9)`
 - Consideracion de deformacion inelastica de la zona de panel: `False`
 - Fuente condicion inelastica: `geometry.panel_zone_inelastic_deformation_considered`
 - paquete_wpzs: `a`
@@ -1196,7 +1196,7 @@ Donde:
 - Fuente Vu_col_critico: `step4.Vh_vgder_max (governing_side=der)`
 - Ru_wpzs_col: `257.06 kN`
 - Pu_col: `0 kN`
-- alphaPr_col: `0 kN`
+- Pr_col: `0 kN`
 - Py_col: `11454 kN`
 - alphaPr/Py: `0`
 - Ag_col: `33200 mm2`
