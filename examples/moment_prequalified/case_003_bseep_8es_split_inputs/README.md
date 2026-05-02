@@ -37,9 +37,13 @@ Objetivo:
 - `soldaduras.weld_4` se ingresa por lado en los archivos de viga:
   - soldadura #4 = ala de viga con platina extremo
   - incluye `tipo_w4_<lado>`, `Fexx_w4_<lado>`, `t_w4_<lado>`, `nl_w4_<lado>`, `kds_w4_<lado>`, `t_w4.1_<lado>`
-- En `case_003_column_and_common.json`, la soldadura de platina de continuidad se ingresa como:
-  - `soldaduras.weld_5` (soldadura #5 = platina de continuidad con aleta de columna)
-  - campos: `tipo_w5`, `Fexx_w5` (y opcionalmente `t_w5`, `nl_w5`).
+- `soldaduras.weld_1` y `soldaduras.weld_2` admiten separacion de extremos:
+  - `L_gap_w1_<lado>`
+  - `L_gap_w2_<lado>`
+- En `case_003_column_and_common.json`, las soldaduras de columna se ingresan a nivel raiz:
+  - `weld_5` (soldadura #5 = platina de continuidad con aleta de columna)
+  - `weld_6` (soldadura #6 = platina de continuidad con alma de columna)
+  - `weld_7` (soldadura #7 = soldadura de plug entre alma de columna y platina de enchape)
 - `beam_shape` (desde `viga.perfil`) debe coincidir en derecha e izquierda.
 - En columna/comunes, `materiales` mantiene:
   - `profile_steel_type`

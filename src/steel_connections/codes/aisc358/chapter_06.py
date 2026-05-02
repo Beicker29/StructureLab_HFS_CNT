@@ -453,15 +453,25 @@ def compute_beam_flange_force_from_mf(
         "geometry.beam_flange_thickness",
     )
     expected_moment_unit = "kip-in" if unit_system == UnitSystem.US else "kN-mm"
-    if mf.unit != expected_moment_unit:
-        raise ValueError(
-            f"Invalid unit for probable moment. Expected '{expected_moment_unit}', got '{mf.unit}'."
-        )
+    mf_for_calc = mf
+    if unit_system == UnitSystem.US:
+        if mf.unit != expected_moment_unit:
+            raise ValueError(
+                f"Invalid unit for probable moment. Expected '{expected_moment_unit}', got '{mf.unit}'."
+            )
+    else:
+        if mf.unit == "kN-m":
+            mf_for_calc = Quantity(value=mf.value * 1000.0, unit="kN-mm")
+        elif mf.unit != expected_moment_unit:
+            raise ValueError(
+                "Invalid unit for probable moment. Expected 'kN-mm' or 'kN-m', "
+                f"got '{mf.unit}'."
+            )
 
     lever_arm = beam_depth.value - beam_flange_thickness.value
     if lever_arm <= 0.0:
         raise ValueError("Beam depth must be greater than beam flange thickness.")
-    flange_force = mf.value / lever_arm
+    flange_force = mf_for_calc.value / lever_arm
     force_unit = "kip" if unit_system == UnitSystem.US else "kN"
     return Quantity(value=flange_force, unit=force_unit), {"lever_arm": lever_arm}
 

@@ -59,7 +59,7 @@ def test_bueep_prequalification_limits_are_reported(bueep_4e_payload: dict) -> N
         "column",
         "end_plate_der",
         "end_plate_stiffener_der",
-        "bolts",
+        "bolts_der",
         "table_6_1_der",
         "weld_1_vgder",
         "weld_2_vgder",
@@ -94,15 +94,15 @@ def test_bueep_prequalification_limits_are_reported(bueep_4e_payload: dict) -> N
     )
     assert continuity_weld_declared["comparison"] == "in_set"
     assert continuity_weld_declared["result"] == "OK"
-    bolt_tight_valid = next(item for item in limits if item["id"] == "section_4_1.bolt_tightening_type_valid")
+    bolt_tight_valid = next(item for item in limits if item["id"] == "section_4_1.bolt_tightening_type_valid_der")
     assert bolt_tight_valid["comparison"] == "in_set"
     assert bolt_tight_valid["result"] == "OK"
     bolt_tight_required = next(
-        item for item in limits if item["id"] == "section_4_1.bolt_tightening_required_pretensioned"
+        item for item in limits if item["id"] == "section_4_1.bolt_tightening_required_pretensioned_der"
     )
     assert bolt_tight_required["comparison"] == "equals"
     assert bolt_tight_required["result"] == "OK"
-    bolt_standard = next(item for item in limits if item["id"] == "section_4_1.bolt_fabrication_standard_permitted")
+    bolt_standard = next(item for item in limits if item["id"] == "section_4_1.bolt_fabrication_standard_permitted_der")
     assert bolt_standard["comparison"] == "in_set"
     assert bolt_standard["result"] == "OK"
     notes = prequal.calculation_memory.intermediates["step_1_notes"]
@@ -114,8 +114,8 @@ def test_bueep_prequalification_limits_are_reported(bueep_4e_payload: dict) -> N
         note.get("id") in {"section_6_7.beam_flange_to_end_plate_weld_note", "section_6_7.stiffened_end_plate_weld_sequence_note"}
         for note in notes
     )
-    assert any(note.get("id") == "section_4_2.installation_requirements" for note in notes)
-    assert any(note.get("id") == "section_4_3.quality_control_assurance" for note in notes)
+    assert any(note.get("id") == "section_4_2.installation_requirements_der" for note in notes)
+    assert any(note.get("id") == "section_4_3.quality_control_assurance_der" for note in notes)
     width_check = next(item for item in limits if item["id"] == "beam_der.bp_ge_bf_plus_margin")
     assert width_check["comparison"] == "le"
     assert width_check["calculated_symbol"] == "bp_pe_vgder"
@@ -162,10 +162,10 @@ def test_bueep_prequalification_limits_are_reported(bueep_4e_payload: dict) -> N
     assert end_plate_web_weld_type["result"] == "OK"
     pfo_compound = next(item for item in limits if item["id"] == "table_6_1.edge_pfo_ge_emin_der")
     assert pfo_compound["comparison"] == "compound"
-    assert "pso_pe_vgder (=pfo_pe_vgder)" in pfo_compound["verification_text"]
+    assert "pso_pe_vgder = pfo_pe_vgder + 0.5*tf_vgder - 0.5*tpc_col" in pfo_compound["verification_text"]
     pfi_compound = next(item for item in limits if item["id"] == "table_6_1.edge_pfi_ge_emin_der")
     assert pfi_compound["comparison"] == "compound"
-    assert "psi_pe_vgder = pfi_pe_vgder + tf_vgder - tcp_col" in pfi_compound["verification_text"]
+    assert "psi_pe_vgder = pfi_pe_vgder + 0.5*tf_vgder - 0.5*tpc_col" in pfi_compound["verification_text"]
 
 
 def test_step2_mpr_uses_beam_catalog_zx_for_bueep(bueep_4e_payload: dict) -> None:
@@ -479,7 +479,7 @@ def test_bueep_prequalification_limits_fail_when_bolt_tightening_is_snug_tight(
     bolt_tight_required = next(
         item
         for item in prequal.calculation_memory.intermediates["step_1_limits"]
-        if item["id"] == "section_4_1.bolt_tightening_required_pretensioned"
+        if item["id"] == "section_4_1.bolt_tightening_required_pretensioned_der"
     )
     assert bolt_tight_required["result"] == "NO_OK"
     assert bolt_tight_required["comparison"] == "equals"

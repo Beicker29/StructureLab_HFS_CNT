@@ -60,7 +60,14 @@ def _normalize_moment_geometry_payload(payload: dict[str, Any]) -> dict[str, Any
         "column": ["column", "columna"],
         "end_plate": ["end_plate", "placa_extremo", "placa_extrema"],
         "continuity_plate": ["continuity_plate", "platina_continuidad", "platinas_continuidad"],
-        "doubler_plate": ["doubler_plate", "platina_dobladora", "placa_dobladora", "dobladora"],
+        "doubler_plate": [
+            "doubler_plate",
+            "platina_dobladora",
+            "platina_enchape_alma",
+            "platina_de_enchape_del_alma",
+            "placa_dobladora",
+            "dobladora",
+        ],
         "stiffener": ["stiffener", "rigidizador"],
         "bolts": ["bolts", "pernos"],
         "welds": ["welds", "soldaduras"],
@@ -101,9 +108,28 @@ def _normalize_moment_geometry_payload(payload: dict[str, Any]) -> dict[str, Any
             "ht_col",
         ),
         "end_plate": ("end_plate_width", "end_plate_thickness", "de", "pb", "pfo", "pfi"),
-        "continuity_plate": ("continuity_plate_thickness", "continuity_plate_enabled", "continuity_plate_weld_type"),
+        "continuity_plate": (
+            "continuity_plate_thickness",
+            "continuity_plate_width_b1",
+            "continuity_plate_count",
+            "continuity_plate_enabled",
+            "continuity_plate_weld_type",
+            "continuity_plate_weld_type_col",
+            "continuity_plate_web_weld_type_col",
+            "t_w5_col",
+            "w_w5_col",
+            "nl_w5_col",
+            "L_gap_w5_col",
+            "kds_w5_col",
+            "t_w6_col",
+            "w_w6_col",
+            "nl_w6_col",
+            "L_gap_w6_col",
+            "kds_w6_col",
+        ),
         "doubler_plate": (
             "doubler_plate_thickness",
+            "doubler_plate_count",
             "doubler_plate_enabled",
             "doubler_plate_web_plug_weld_type",
             "doubler_plate_web_plug_weld_size",
@@ -123,10 +149,12 @@ def _normalize_moment_geometry_payload(payload: dict[str, Any]) -> dict[str, Any
             "end_plate_beam_web_weld_thickness_twe",
             "end_plate_beam_web_weld_lines_nl",
             "end_plate_stiffener_weld_type",
+            "L_gap_w1",
             "end_plate_stiffener_weld_length_lst",
             "end_plate_stiffener_weld_size_wst",
             "end_plate_stiffener_weld_lines_nl",
             "beam_stiffener_weld_type",
+            "L_gap_w2",
             "beam_stiffener_weld_length_lstw2",
             "beam_stiffener_weld_size_wst2",
             "beam_stiffener_weld_lines_nl_w2",
@@ -295,6 +323,14 @@ def _normalize_moment_geometry_payload(payload: dict[str, Any]) -> dict[str, Any
             if "h_t_col" in block and "ht_col" not in flat_geometry:
                 flat_geometry["ht_col"] = block["h_t_col"]
         if group_name == "continuity_plate":
+            if "continuity_plate_width_b1" in block and "continuity_plate_width_b1" not in flat_geometry:
+                flat_geometry["continuity_plate_width_b1"] = block["continuity_plate_width_b1"]
+            if "b1_pc_col" in block and "continuity_plate_width_b1" not in flat_geometry:
+                flat_geometry["continuity_plate_width_b1"] = block["b1_pc_col"]
+            if "continuity_plate_count" in block and "continuity_plate_count" not in flat_geometry:
+                flat_geometry["continuity_plate_count"] = block["continuity_plate_count"]
+            if "n_pc_col" in block and "continuity_plate_count" not in flat_geometry:
+                flat_geometry["continuity_plate_count"] = block["n_pc_col"]
             if "continuity_plate_enabled" in block and "continuity_plate_enabled" not in flat_geometry:
                 flat_geometry["continuity_plate_enabled"] = block["continuity_plate_enabled"]
             if "usar_platinas_continuidad" in block and "continuity_plate_enabled" not in flat_geometry:
@@ -305,6 +341,34 @@ def _normalize_moment_geometry_payload(payload: dict[str, Any]) -> dict[str, Any
                 flat_geometry["continuity_plate_weld_type"] = block["weld_type"]
             if "tipo_soldadura" in block and "continuity_plate_weld_type" not in flat_geometry:
                 flat_geometry["continuity_plate_weld_type"] = block["tipo_soldadura"]
+            if "continuity_plate_weld_type_col" in block and "continuity_plate_weld_type_col" not in flat_geometry:
+                flat_geometry["continuity_plate_weld_type_col"] = block["continuity_plate_weld_type_col"]
+            if "tipo_w5_col" in block and "continuity_plate_weld_type_col" not in flat_geometry:
+                flat_geometry["continuity_plate_weld_type_col"] = block["tipo_w5_col"]
+            if "continuity_plate_web_weld_type_col" in block and "continuity_plate_web_weld_type_col" not in flat_geometry:
+                flat_geometry["continuity_plate_web_weld_type_col"] = block["continuity_plate_web_weld_type_col"]
+            if "tipo_w6_col" in block and "continuity_plate_web_weld_type_col" not in flat_geometry:
+                flat_geometry["continuity_plate_web_weld_type_col"] = block["tipo_w6_col"]
+            if "t_w5_col" in block and "t_w5_col" not in flat_geometry:
+                flat_geometry["t_w5_col"] = block["t_w5_col"]
+            if "w_w5_col" in block and "w_w5_col" not in flat_geometry:
+                flat_geometry["w_w5_col"] = block["w_w5_col"]
+            if "nl_w5_col" in block and "nl_w5_col" not in flat_geometry:
+                flat_geometry["nl_w5_col"] = block["nl_w5_col"]
+            if "L_gap_w5_col" in block and "L_gap_w5_col" not in flat_geometry:
+                flat_geometry["L_gap_w5_col"] = block["L_gap_w5_col"]
+            if "kds_w5_col" in block and "kds_w5_col" not in flat_geometry:
+                flat_geometry["kds_w5_col"] = block["kds_w5_col"]
+            if "t_w6_col" in block and "t_w6_col" not in flat_geometry:
+                flat_geometry["t_w6_col"] = block["t_w6_col"]
+            if "w_w6_col" in block and "w_w6_col" not in flat_geometry:
+                flat_geometry["w_w6_col"] = block["w_w6_col"]
+            if "nl_w6_col" in block and "nl_w6_col" not in flat_geometry:
+                flat_geometry["nl_w6_col"] = block["nl_w6_col"]
+            if "L_gap_w6_col" in block and "L_gap_w6_col" not in flat_geometry:
+                flat_geometry["L_gap_w6_col"] = block["L_gap_w6_col"]
+            if "kds_w6_col" in block and "kds_w6_col" not in flat_geometry:
+                flat_geometry["kds_w6_col"] = block["kds_w6_col"]
         if group_name == "doubler_plate":
             if "doubler_plate_enabled" in block and "doubler_plate_enabled" not in flat_geometry:
                 flat_geometry["doubler_plate_enabled"] = block["doubler_plate_enabled"]
@@ -314,22 +378,32 @@ def _normalize_moment_geometry_payload(payload: dict[str, Any]) -> dict[str, Any
                 flat_geometry["doubler_plate_enabled"] = block["use_doubler_plates"]
             if "doubler_plate_thickness" in block and "doubler_plate_thickness" not in flat_geometry:
                 flat_geometry["doubler_plate_thickness"] = block["doubler_plate_thickness"]
+            if "t_dp_col" in block and "doubler_plate_thickness" not in flat_geometry:
+                flat_geometry["doubler_plate_thickness"] = block["t_dp_col"]
             if "tdp_col" in block and "doubler_plate_thickness" not in flat_geometry:
                 flat_geometry["doubler_plate_thickness"] = block["tdp_col"]
+            if "doubler_plate_count" in block and "doubler_plate_count" not in flat_geometry:
+                flat_geometry["doubler_plate_count"] = block["doubler_plate_count"]
+            if "n_dp_col" in block and "doubler_plate_count" not in flat_geometry:
+                flat_geometry["doubler_plate_count"] = block["n_dp_col"]
             if (
                 "doubler_plate_web_plug_weld_type" in block
                 and "doubler_plate_web_plug_weld_type" not in flat_geometry
             ):
                 flat_geometry["doubler_plate_web_plug_weld_type"] = block["doubler_plate_web_plug_weld_type"]
-            if "tipo_soldadura_tapon" in block and "doubler_plate_web_plug_weld_type" not in flat_geometry:
-                flat_geometry["doubler_plate_web_plug_weld_type"] = block["tipo_soldadura_tapon"]
+            if "tipo_soldadura_plug" in block and "doubler_plate_web_plug_weld_type" not in flat_geometry:
+                flat_geometry["doubler_plate_web_plug_weld_type"] = block["tipo_soldadura_plug"]
+            if "tipo_w7_col" in block and "doubler_plate_web_plug_weld_type" not in flat_geometry:
+                flat_geometry["doubler_plate_web_plug_weld_type"] = block["tipo_w7_col"]
             if (
                 "doubler_plate_web_plug_weld_size" in block
                 and "doubler_plate_web_plug_weld_size" not in flat_geometry
             ):
                 flat_geometry["doubler_plate_web_plug_weld_size"] = block["doubler_plate_web_plug_weld_size"]
-            if "t_wdp_tapon" in block and "doubler_plate_web_plug_weld_size" not in flat_geometry:
-                flat_geometry["doubler_plate_web_plug_weld_size"] = block["t_wdp_tapon"]
+            if "t_wdp_plug" in block and "doubler_plate_web_plug_weld_size" not in flat_geometry:
+                flat_geometry["doubler_plate_web_plug_weld_size"] = block["t_wdp_plug"]
+            if "t_w7_col" in block and "doubler_plate_web_plug_weld_size" not in flat_geometry:
+                flat_geometry["doubler_plate_web_plug_weld_size"] = block["t_w7_col"]
             if (
                 "doubler_plate_web_plug_weld_lines_nl" in block
                 and "doubler_plate_web_plug_weld_lines_nl" not in flat_geometry
@@ -337,8 +411,10 @@ def _normalize_moment_geometry_payload(payload: dict[str, Any]) -> dict[str, Any
                 flat_geometry["doubler_plate_web_plug_weld_lines_nl"] = block[
                     "doubler_plate_web_plug_weld_lines_nl"
                 ]
-            if "nl_wdp_tapon" in block and "doubler_plate_web_plug_weld_lines_nl" not in flat_geometry:
-                flat_geometry["doubler_plate_web_plug_weld_lines_nl"] = block["nl_wdp_tapon"]
+            if "nl_wdp_plug" in block and "doubler_plate_web_plug_weld_lines_nl" not in flat_geometry:
+                flat_geometry["doubler_plate_web_plug_weld_lines_nl"] = block["nl_wdp_plug"]
+            if "nl_w7_col" in block and "doubler_plate_web_plug_weld_lines_nl" not in flat_geometry:
+                flat_geometry["doubler_plate_web_plug_weld_lines_nl"] = block["nl_w7_col"]
         if group_name == "welds":
             def _assign_from_aliases(target_key: str, source_block: dict[str, Any], aliases: tuple[str, ...]) -> None:
                 if target_key in flat_geometry:
@@ -374,12 +450,25 @@ def _normalize_moment_geometry_payload(payload: dict[str, Any]) -> dict[str, Any
                 "weld_4_column",
                 "soldadura_cp",
             )
+            weld_cw = _get_nested_weld_block(
+                "weld_6",
+                "weld6",
+                "soldadura_6",
+                "soldadura6",
+                "weld_cw",
+                "continuity_plate_web_weld",
+                "soldadura_cw",
+            )
             weld_dp_plug = _get_nested_weld_block(
-                "weld_dp_tapon",
+                "weld_7",
+                "weld7",
+                "soldadura_7",
+                "soldadura7",
+                "weld_dp_plug",
                 "weld_dp_plug",
                 "doubler_plate_plug_weld",
-                "soldadura_tapon_dp",
-                "soldadura_tapon_dobladora",
+                "soldadura_plug_dp",
+                "soldadura_plug_dobladora",
             )
 
             if weld_1:
@@ -427,6 +516,16 @@ def _normalize_moment_geometry_payload(payload: dict[str, Any]) -> dict[str, Any
                         "nl",
                         "lines",
                     ),
+                )
+                _assign_from_aliases(
+                    "L_gap_w1_vgder",
+                    weld_1,
+                    ("L_gap_w1_vgder", "L_gap_w1", "l_gap_w1_vgder", "l_gap", "gap"),
+                )
+                _assign_from_aliases(
+                    "L_gap_w1_vgizq",
+                    weld_1,
+                    ("L_gap_w1_vgizq", "L_gap_w1", "l_gap_w1_vgizq", "l_gap", "gap"),
                 )
                 _assign_from_aliases(
                     "kds_w1_vgder",
@@ -484,6 +583,16 @@ def _normalize_moment_geometry_payload(payload: dict[str, Any]) -> dict[str, Any
                         "nl",
                         "lines",
                     ),
+                )
+                _assign_from_aliases(
+                    "L_gap_w2_vgder",
+                    weld_2,
+                    ("L_gap_w2_vgder", "L_gap_w2", "l_gap_w2_vgder", "l_gap", "gap"),
+                )
+                _assign_from_aliases(
+                    "L_gap_w2_vgizq",
+                    weld_2,
+                    ("L_gap_w2_vgizq", "L_gap_w2", "l_gap_w2_vgizq", "l_gap", "gap"),
                 )
                 _assign_from_aliases(
                     "kds_w2_vgder",
@@ -640,6 +749,44 @@ def _normalize_moment_geometry_payload(payload: dict[str, Any]) -> dict[str, Any
                         "type",
                     ),
                 )
+                _assign_from_aliases(
+                    "continuity_plate_weld_type_col",
+                    weld_cp,
+                    (
+                        "continuity_plate_weld_type_col",
+                        "tipo_w5_col",
+                        "tipo_w5",
+                        "weld_type_continuity_plate",
+                        "weld_type",
+                        "tipo_soldadura",
+                        "type",
+                    ),
+                )
+                _assign_from_aliases(
+                    "t_w5_col",
+                    weld_cp,
+                    ("w_w5_col", "t_w5_col", "t_w5", "thickness", "size", "w"),
+                )
+                _assign_from_aliases(
+                    "w_w5_col",
+                    weld_cp,
+                    ("w_w5_col", "t_w5_col", "t_w5", "thickness", "size", "w"),
+                )
+                _assign_from_aliases(
+                    "nl_w5_col",
+                    weld_cp,
+                    ("nl_w5_col", "nl_w5", "nl", "n_l", "lines"),
+                )
+                _assign_from_aliases(
+                    "L_gap_w5_col",
+                    weld_cp,
+                    ("L_gap_w5_col", "L_gap_w5", "l_gap_w5_col", "l_gap", "gap"),
+                )
+                _assign_from_aliases(
+                    "kds_w5_col",
+                    weld_cp,
+                    ("kds_w5_col", "kds_w5"),
+                )
 
             if weld_dp_plug:
                 _assign_from_aliases(
@@ -647,6 +794,7 @@ def _normalize_moment_geometry_payload(payload: dict[str, Any]) -> dict[str, Any
                     weld_dp_plug,
                     (
                         "doubler_plate_web_plug_weld_type",
+                        "tipo_w7_col",
                         "weld_type",
                         "tipo_soldadura",
                         "type",
@@ -657,7 +805,8 @@ def _normalize_moment_geometry_payload(payload: dict[str, Any]) -> dict[str, Any
                     weld_dp_plug,
                     (
                         "doubler_plate_web_plug_weld_size",
-                        "t_wdp_tapon",
+                        "t_w7_col",
+                        "t_wdp_plug",
                         "thickness",
                         "size",
                         "w",
@@ -668,17 +817,88 @@ def _normalize_moment_geometry_payload(payload: dict[str, Any]) -> dict[str, Any
                     weld_dp_plug,
                     (
                         "doubler_plate_web_plug_weld_lines_nl",
-                        "nl_wdp_tapon",
+                        "nl_w7_col",
+                        "nl_wdp_plug",
                         "nl",
                         "n_l",
                         "lines",
                     ),
                 )
 
+            if weld_cw:
+                _assign_from_aliases(
+                    "continuity_plate_web_weld_type_col",
+                    weld_cw,
+                    (
+                        "continuity_plate_web_weld_type_col",
+                        "tipo_w6_col",
+                        "tipo_w6",
+                        "weld_type",
+                        "tipo_soldadura",
+                        "type",
+                    ),
+                )
+                _assign_from_aliases(
+                    "t_w6_col",
+                    weld_cw,
+                    ("w_w6_col", "t_w6_col", "t_w6", "thickness", "size", "w"),
+                )
+                _assign_from_aliases(
+                    "w_w6_col",
+                    weld_cw,
+                    ("w_w6_col", "t_w6_col", "t_w6", "thickness", "size", "w"),
+                )
+                _assign_from_aliases(
+                    "nl_w6_col",
+                    weld_cw,
+                    ("nl_w6_col", "nl_w6", "nl", "n_l", "lines"),
+                )
+                _assign_from_aliases(
+                    "L_gap_w6_col",
+                    weld_cw,
+                    ("L_gap_w6_col", "L_gap_w6", "l_gap_w6_col", "l_gap", "gap"),
+                )
+                _assign_from_aliases(
+                    "kds_w6_col",
+                    weld_cw,
+                    ("kds_w6_col", "kds_w6"),
+                )
+
             if "continuity_plate_weld_type" in block and "continuity_plate_weld_type" not in flat_geometry:
                 flat_geometry["continuity_plate_weld_type"] = block["continuity_plate_weld_type"]
             if "weld_type_continuity_plate" in block and "continuity_plate_weld_type" not in flat_geometry:
                 flat_geometry["continuity_plate_weld_type"] = block["weld_type_continuity_plate"]
+            if "continuity_plate_weld_type_col" in block and "continuity_plate_weld_type_col" not in flat_geometry:
+                flat_geometry["continuity_plate_weld_type_col"] = block["continuity_plate_weld_type_col"]
+            if "tipo_w5_col" in block and "continuity_plate_weld_type_col" not in flat_geometry:
+                flat_geometry["continuity_plate_weld_type_col"] = block["tipo_w5_col"]
+            if "t_w5_col" in block and "t_w5_col" not in flat_geometry:
+                flat_geometry["t_w5_col"] = block["t_w5_col"]
+            if "w_w5_col" in block and "w_w5_col" not in flat_geometry:
+                flat_geometry["w_w5_col"] = block["w_w5_col"]
+            if "nl_w5_col" in block and "nl_w5_col" not in flat_geometry:
+                flat_geometry["nl_w5_col"] = block["nl_w5_col"]
+            if "L_gap_w5_col" in block and "L_gap_w5_col" not in flat_geometry:
+                flat_geometry["L_gap_w5_col"] = block["L_gap_w5_col"]
+            if "kds_w5_col" in block and "kds_w5_col" not in flat_geometry:
+                flat_geometry["kds_w5_col"] = block["kds_w5_col"]
+            if (
+                "continuity_plate_web_weld_type_col" in block
+                and "continuity_plate_web_weld_type_col" not in flat_geometry
+            ):
+                flat_geometry["continuity_plate_web_weld_type_col"] = block["continuity_plate_web_weld_type_col"]
+            if "tipo_w6_col" in block and "continuity_plate_web_weld_type_col" not in flat_geometry:
+                flat_geometry["continuity_plate_web_weld_type_col"] = block["tipo_w6_col"]
+            if "t_w6_col" in block and "t_w6_col" not in flat_geometry:
+                flat_geometry["t_w6_col"] = block["t_w6_col"]
+            if "w_w6_col" in block and "w_w6_col" not in flat_geometry:
+                flat_geometry["w_w6_col"] = block["w_w6_col"]
+            if "nl_w6_col" in block and "nl_w6_col" not in flat_geometry:
+                flat_geometry["nl_w6_col"] = block["nl_w6_col"]
+            if "L_gap_w6_col" in block and "L_gap_w6_col" not in flat_geometry:
+                flat_geometry["L_gap_w6_col"] = block["L_gap_w6_col"]
+            if "kds_w6_col" in block and "kds_w6_col" not in flat_geometry:
+                flat_geometry["kds_w6_col"] = block["kds_w6_col"]
             if "end_plate_beam_web_weld_type" in block and "end_plate_beam_web_weld_type" not in flat_geometry:
                 flat_geometry["end_plate_beam_web_weld_type"] = block["end_plate_beam_web_weld_type"]
             if "weld_type_end_plate_beam_web" in block and "end_plate_beam_web_weld_type" not in flat_geometry:
@@ -718,6 +938,12 @@ def _normalize_moment_geometry_payload(payload: dict[str, Any]) -> dict[str, Any
                 flat_geometry["end_plate_stiffener_weld_length_lst"] = block["stiffener_weld_length_lst"]
             if "l_st" in block and "end_plate_stiffener_weld_length_lst" not in flat_geometry:
                 flat_geometry["end_plate_stiffener_weld_length_lst"] = block["l_st"]
+            if "L_gap_w1" in block and "L_gap_w1" not in flat_geometry:
+                flat_geometry["L_gap_w1"] = block["L_gap_w1"]
+            if "L_gap_w1_vgder" in block and "L_gap_w1_vgder" not in flat_geometry:
+                flat_geometry["L_gap_w1_vgder"] = block["L_gap_w1_vgder"]
+            if "L_gap_w1_vgizq" in block and "L_gap_w1_vgizq" not in flat_geometry:
+                flat_geometry["L_gap_w1_vgizq"] = block["L_gap_w1_vgizq"]
             if (
                 "end_plate_stiffener_weld_size_wst" in block
                 and "end_plate_stiffener_weld_size_wst" not in flat_geometry
@@ -754,6 +980,12 @@ def _normalize_moment_geometry_payload(payload: dict[str, Any]) -> dict[str, Any
                 flat_geometry["beam_stiffener_weld_length_lstw2"] = block["stiffener_beam_weld_length_lstw2"]
             if "l_st_w2" in block and "beam_stiffener_weld_length_lstw2" not in flat_geometry:
                 flat_geometry["beam_stiffener_weld_length_lstw2"] = block["l_st_w2"]
+            if "L_gap_w2" in block and "L_gap_w2" not in flat_geometry:
+                flat_geometry["L_gap_w2"] = block["L_gap_w2"]
+            if "L_gap_w2_vgder" in block and "L_gap_w2_vgder" not in flat_geometry:
+                flat_geometry["L_gap_w2_vgder"] = block["L_gap_w2_vgder"]
+            if "L_gap_w2_vgizq" in block and "L_gap_w2_vgizq" not in flat_geometry:
+                flat_geometry["L_gap_w2_vgizq"] = block["L_gap_w2_vgizq"]
             if (
                 "beam_stiffener_weld_size_wst2" in block
                 and "beam_stiffener_weld_size_wst2" not in flat_geometry
@@ -1428,69 +1660,141 @@ def _resolve_catalog_driven_properties(case: AISC358MomentCase) -> None:
         )
         case.materials.stiffener_fy_vgizq = stiffener_props_izq["fy"]  # type: ignore[assignment]
 
-    # Bolt strength is sourced from materials.xlsx/Pernos.
-    bolt_standard = _require_text(
-        case.materials.bolt_fabrication_standard,
-        "materials.bolt_fabrication_standard",
-        "data/materials.xlsx",
-    )
-    bolt_description = _require_text(
-        case.materials.bolt_description,
-        "materials.bolt_description",
-        "data/materials.xlsx",
-    )
-    bolt_strength = get_bolt_strength_properties(
-        description=bolt_description,
-        specification=bolt_standard,
-        unit_system=case.units_system,
-    )
-    case.materials.bolt_fnt = bolt_strength["fnt"]  # type: ignore[assignment]
-    bolt_thread_condition = _require_text(
-        case.materials.bolt_thread_condition,
-        "geometry.bolts.bolt_thread_condition",
-        "data/materials.xlsx",
-    ).upper()
-    if bolt_thread_condition == "N":
-        case.materials.bolt_fnv = bolt_strength["fnv_threads_not_excluded"]  # type: ignore[assignment]
-    elif bolt_thread_condition == "X":
-        case.materials.bolt_fnv = bolt_strength["fnv_threads_excluded"]  # type: ignore[assignment]
-    else:
+    # Bolt strength/geometry are sourced from materials.xlsx/Pernos and sections.xlsx/Perno.
+    beam_connection_sides = _canonical_beam_connection_sides(case.design_factors.beam_connection_sides)
+    if beam_connection_sides is None:
         _raise_validation_error(
             message=(
-                "Invalid input 'geometry.bolts.bolt_thread_condition'. "
-                "Expected 'N' (threads not excluded) or 'X' (threads excluded)."
+                "Required input 'design_factors.beam_connection_sides' is missing or invalid for bolt "
+                "catalog-driven properties."
             ),
-            missing_fields=["geometry.bolts.bolt_thread_condition"],
+            missing_fields=["design_factors.beam_connection_sides"],
+            source_document="AISC 358-22",
+        )
+    active_side_tags = (
+        ("vgder", "vgizq")
+        if beam_connection_sides == "both_sides"
+        else ("vgder",)
+        if beam_connection_sides == "right_only"
+        else ("vgizq",)
+    )
+    primary_side_tag = "vgder" if beam_connection_sides in {"right_only", "both_sides"} else "vgizq"
+
+    def _require_side_or_common_material_text(
+        *,
+        field_root: str,
+        side_tag: str,
+        source_document: str,
+        required_field_override: str | None = None,
+    ) -> tuple[str, str]:
+        side_field = f"{field_root}_{side_tag}"
+        side_value = getattr(case.materials, side_field, None)
+        if isinstance(side_value, str) and side_value.strip():
+            return side_value.strip(), f"materials.{side_field}"
+        common_value = getattr(case.materials, field_root, None)
+        common_field = required_field_override or f"materials.{field_root}"
+        common_text = _require_text(common_value, common_field, source_document)
+        return common_text, common_field
+
+    derived_db: Quantity | None = None
+    for side_tag in active_side_tags:
+        bolt_standard, bolt_standard_field = _require_side_or_common_material_text(
+            field_root="bolt_fabrication_standard",
+            side_tag=side_tag,
             source_document="data/materials.xlsx",
         )
-
-    # Bolt geometry is sourced from sections.xlsx/Perno.
-    bolt_shape = _require_text(case.materials.bolt_shape, "geometry.bolts.bolt_shape", "data/sections.xlsx")
-    bolt_geom = get_bolt_section_properties(bolt_shape=bolt_shape, unit_system=case.units_system)
-    geom_standard = str(bolt_geom["fabrication_standard"] or "").strip()
-    geom_description = str(bolt_geom["classification"])
-    # Some bolt rows in sections/Perno may omit fabrication_standard metadata.
-    # Keep strict validation only when catalog standard is explicitly populated.
-    if geom_standard and normalize_text(geom_standard) != normalize_text(bolt_standard):
-        _raise_validation_error(
-            message=(
-                f"Mismatch between materials.bolt_fabrication_standard='{bolt_standard}' and "
-                f"sections/Perno standard '{geom_standard}' for shape '{bolt_shape}'."
-            ),
-            missing_fields=["materials.bolt_fabrication_standard", "geometry.bolts.bolt_shape"],
-            source_document="data/sections.xlsx",
+        bolt_description, bolt_description_field = _require_side_or_common_material_text(
+            field_root="bolt_description",
+            side_tag=side_tag,
+            source_document="data/materials.xlsx",
         )
-    if normalize_text(geom_description) != normalize_text(bolt_description):
-        _raise_validation_error(
-            message=(
-                f"Mismatch between materials.bolt_description='{bolt_description}' and "
-                f"sections/Perno classification '{geom_description}' for shape '{bolt_shape}'."
-            ),
-            missing_fields=["materials.bolt_description", "geometry.bolts.bolt_shape"],
+        bolt_thread_condition, _ = _require_side_or_common_material_text(
+            field_root="bolt_thread_condition",
+            side_tag=side_tag,
+            source_document="data/materials.xlsx",
+            required_field_override="geometry.bolts.bolt_thread_condition",
+        )
+        bolt_thread_condition = bolt_thread_condition.upper()
+        bolt_shape, bolt_shape_field = _require_side_or_common_material_text(
+            field_root="bolt_shape",
+            side_tag=side_tag,
             source_document="data/sections.xlsx",
         )
 
-    derived_db = bolt_geom["diameter_nominal"]  # type: ignore[assignment]
+        bolt_strength = get_bolt_strength_properties(
+            description=bolt_description,
+            specification=bolt_standard,
+            unit_system=case.units_system,
+        )
+        setattr(case.materials, f"bolt_fnt_{side_tag}", bolt_strength["fnt"])
+        if bolt_thread_condition == "N":
+            bolt_fnv = bolt_strength["fnv_threads_not_excluded"]
+        elif bolt_thread_condition == "X":
+            bolt_fnv = bolt_strength["fnv_threads_excluded"]
+        else:
+            _raise_validation_error(
+                message=(
+                    "Invalid input 'materials.bolt_thread_condition_<lado>'. "
+                    "Expected 'N' (threads not excluded) or 'X' (threads excluded)."
+                ),
+                missing_fields=[f"materials.bolt_thread_condition_{side_tag}"],
+                source_document="data/materials.xlsx",
+            )
+        setattr(case.materials, f"bolt_fnv_{side_tag}", bolt_fnv)
+
+        bolt_geom = get_bolt_section_properties(bolt_shape=bolt_shape, unit_system=case.units_system)
+        geom_standard = str(bolt_geom["fabrication_standard"] or "").strip()
+        geom_description = str(bolt_geom["classification"])
+        if geom_standard and normalize_text(geom_standard) != normalize_text(bolt_standard):
+            _raise_validation_error(
+                message=(
+                    f"Mismatch between {bolt_standard_field}='{bolt_standard}' and sections/Perno standard "
+                    f"'{geom_standard}' for shape '{bolt_shape}'."
+                ),
+                missing_fields=[bolt_standard_field, bolt_shape_field],
+                source_document="data/sections.xlsx",
+            )
+        if normalize_text(geom_description) != normalize_text(bolt_description):
+            _raise_validation_error(
+                message=(
+                    f"Mismatch between {bolt_description_field}='{bolt_description}' and sections/Perno "
+                    f"classification '{geom_description}' for shape '{bolt_shape}'."
+                ),
+                missing_fields=[bolt_description_field, bolt_shape_field],
+                source_document="data/sections.xlsx",
+            )
+
+        derived_db_side = bolt_geom["diameter_nominal"]  # type: ignore[assignment]
+        side_db_field = f"bolt_diameter_{side_tag}"
+        current_side_db = getattr(case.geometry, side_db_field, None)
+        if current_side_db is not None and (
+            current_side_db.unit != derived_db_side.unit or abs(current_side_db.value - derived_db_side.value) > 1e-9
+        ):
+            _raise_validation_error(
+                message=(
+                    f"Input 'geometry.{side_db_field}' must not contradict the selected bolt shape. "
+                    f"Expected {derived_db_side.value} {derived_db_side.unit} from sections/Perno."
+                ),
+                missing_fields=[f"geometry.{side_db_field}", bolt_shape_field],
+                source_document="data/sections.xlsx",
+            )
+        setattr(case.geometry, side_db_field, derived_db_side)
+
+        if side_tag == primary_side_tag:
+            derived_db = derived_db_side
+            case.materials.bolt_fabrication_standard = bolt_standard
+            case.materials.bolt_description = bolt_description
+            case.materials.bolt_shape = bolt_shape
+            case.materials.bolt_thread_condition = bolt_thread_condition
+            case.materials.bolt_fnt = bolt_strength["fnt"]  # type: ignore[assignment]
+            case.materials.bolt_fnv = bolt_fnv  # type: ignore[assignment]
+
+    if derived_db is None:
+        _raise_validation_error(
+            message="Cannot derive bolt diameter from sections/Perno for active beam side(s).",
+            missing_fields=["materials.bolt_shape"],
+            source_document="data/sections.xlsx",
+        )
     if case.geometry.bolt_diameter is not None:
         current = case.geometry.bolt_diameter
         if current.unit != derived_db.unit or abs(current.value - derived_db.value) > 1e-9:
@@ -1499,88 +1803,122 @@ def _resolve_catalog_driven_properties(case: AISC358MomentCase) -> None:
                     "Input 'geometry.bolt_diameter' must not contradict the selected bolt shape. "
                     f"Expected {derived_db.value} {derived_db.unit} from sections/Perno."
                 ),
-                missing_fields=["geometry.bolt_diameter", "geometry.bolts.bolt_shape"],
+                missing_fields=["geometry.bolt_diameter", "materials.bolt_shape"],
                 source_document="data/sections.xlsx",
             )
     case.geometry.bolt_diameter = derived_db
 
-    # lc for end plate / column flange is derived from geometry under zero-guess policy when not explicitly provided.
-    if case.geometry.clear_distance_end_plate is None or case.geometry.clear_distance_column_flange is None:
-        pb = case.geometry.pb
-        pfo = case.geometry.pfo
-        pfi = case.geometry.pfi
+    # lc for end plate / column flange is derived per active side under zero-guess policy.
+    for side_tag in active_side_tags:
+        side_suffix = "der" if side_tag == "vgder" else "izq"
+        lc_ep_field = f"clear_distance_end_plate_{side_tag}"
+        lc_cf_field = f"clear_distance_column_flange_{side_tag}"
+        lc_ep_side = getattr(case.geometry, lc_ep_field, None)
+        lc_cf_side = getattr(case.geometry, lc_cf_field, None)
+        if lc_ep_side is not None and lc_cf_side is not None:
+            continue
+
+        pfo_side = getattr(case.geometry, f"pfo_{side_tag}", None) or case.geometry.pfo
+        pfi_side = getattr(case.geometry, f"pfi_{side_tag}", None) or case.geometry.pfi
+        pb_side = (
+            getattr(case.geometry, f"pb_{side_tag}", None) or case.geometry.pb
+            if case.connection_type == "bseep_8es"
+            else None
+        )
+        db_side = getattr(case.geometry, f"bolt_diameter_{side_tag}", None) or derived_db
+        if db_side is None:
+            _raise_validation_error(
+                message=f"Required input 'geometry.bolt_diameter_{side_tag}' is missing to derive clear distance.",
+                missing_fields=[f"geometry.bolt_diameter_{side_tag}"],
+                source_document="data/sections.xlsx",
+            )
+
         uses_pb_in_lc = case.connection_type == "bseep_8es"
-        if pfo is None or pfi is None or (uses_pb_in_lc and pb is None):
+        if pfo_side is None or pfi_side is None or (uses_pb_in_lc and pb_side is None):
             _raise_validation_error(
                 message=(
-                    "Cannot derive bolt clear distances. Required inputs are missing: "
-                    "'geometry.pb', 'geometry.pfo', 'geometry.pfi'."
+                    f"Cannot derive bolt clear distances on side '{side_suffix}'. Required inputs are missing: "
+                    f"'geometry.pb_{side_tag}', 'geometry.pfo_{side_tag}', 'geometry.pfi_{side_tag}'."
                     if uses_pb_in_lc
-                    else "'geometry.pfo', 'geometry.pfi'."
+                    else f"'geometry.pfo_{side_tag}', 'geometry.pfi_{side_tag}'."
                 ),
                 missing_fields=(
-                    ["geometry.pb", "geometry.pfo", "geometry.pfi"]
+                    [f"geometry.pb_{side_tag}", f"geometry.pfo_{side_tag}", f"geometry.pfi_{side_tag}"]
                     if uses_pb_in_lc
-                    else ["geometry.pfo", "geometry.pfi"]
+                    else [f"geometry.pfo_{side_tag}", f"geometry.pfi_{side_tag}"]
                 ),
                 source_document="AISC 358-22 Section 6.7",
             )
-        if uses_pb_in_lc and pb is not None and (pb.unit != pfo.unit or pb.unit != pfi.unit):
+        if uses_pb_in_lc and pb_side is not None and (pb_side.unit != pfo_side.unit or pb_side.unit != pfi_side.unit):
             _raise_validation_error(
                 message=(
                     "Cannot derive bolt clear distances due to inconsistent units in "
-                    "'geometry.pb', 'geometry.pfo', and 'geometry.pfi'."
+                    f"'geometry.pb_{side_tag}', 'geometry.pfo_{side_tag}', and 'geometry.pfi_{side_tag}'."
                 ),
-                missing_fields=["geometry.pb", "geometry.pfo", "geometry.pfi"],
+                missing_fields=[f"geometry.pb_{side_tag}", f"geometry.pfo_{side_tag}", f"geometry.pfi_{side_tag}"],
                 source_document="AISC 358-22 Section 6.7",
             )
-        beam_profile_for_lc = get_beam_profile_properties(beam_shape=case.sections.beam_shape, unit_system=case.units_system)
+
+        beam_shape_side = (
+            (case.sections.beam_shape_der or case.sections.beam_shape)
+            if side_tag == "vgder"
+            else (case.sections.beam_shape_izq or case.sections.beam_shape)
+        )
+        beam_profile_for_lc = get_beam_profile_properties(beam_shape=beam_shape_side, unit_system=case.units_system)
         tbf = beam_profile_for_lc["tf"]
-        reference_unit = pb.unit if uses_pb_in_lc and pb is not None else pfo.unit
+        reference_unit = pb_side.unit if uses_pb_in_lc and pb_side is not None else pfo_side.unit
         if tbf.unit != reference_unit:
             _raise_validation_error(
                 message=(
-                    "Cannot derive bolt clear distances due to inconsistent units between "
-                    "beam flange thickness (catalog) and end-plate geometry inputs."
+                    "Cannot derive bolt clear distances due to inconsistent units between beam flange thickness "
+                    f"(sections.{beam_shape_side}) and end-plate geometry inputs on side '{side_suffix}'."
                 ),
                 missing_fields=(
-                    ["sections.beam_shape", "geometry.pb"]
+                    [f"sections.beam_shape_{side_suffix}", f"geometry.pb_{side_tag}"]
                     if uses_pb_in_lc
-                    else ["sections.beam_shape", "geometry.pfo"]
+                    else [f"sections.beam_shape_{side_suffix}", f"geometry.pfo_{side_tag}"]
                 ),
                 source_document="data/sections.xlsx",
             )
+
         is_us = str(case.units_system.value).upper() == "US"
-        db_in = derived_db.value if is_us else derived_db.value / 25.4
+        db_in = db_side.value if is_us else db_side.value / 25.4
         hole_add_in = 1.0 / 16.0 if db_in <= (7.0 / 8.0 + 1e-9) else 1.0 / 8.0
         dh_value = (db_in + hole_add_in) if is_us else (db_in + hole_add_in) * 25.4
 
-        lc_1 = (pb.value - dh_value) if uses_pb_in_lc and pb is not None else None
-        lc_2 = pfo.value + pfi.value + tbf.value - dh_value
+        lc_1 = (pb_side.value - dh_value) if uses_pb_in_lc and pb_side is not None else None
+        lc_2 = pfo_side.value + pfi_side.value + tbf.value - dh_value
         lc_value = min(lc_1, lc_2) if lc_1 is not None else lc_2
         if lc_value <= 0.0:
             _raise_validation_error(
                 message=(
-                    "Derived bolt clear distance is not positive. "
+                    f"Derived bolt clear distance is not positive on side '{side_suffix}'. "
                     "Expected min(pb-dh, pfo+pfi+tbf-dh) > 0."
                     if uses_pb_in_lc
-                    else "Expected pfo+pfi+tbf-dh > 0."
+                    else f"Derived bolt clear distance is not positive on side '{side_suffix}'. Expected pfo+pfi+tbf-dh > 0."
                 ),
                 missing_fields=(
-                    ["geometry.pb", "geometry.pfo", "geometry.pfi", "geometry.bolt_diameter"]
+                    [f"geometry.pb_{side_tag}", f"geometry.pfo_{side_tag}", f"geometry.pfi_{side_tag}", f"geometry.bolt_diameter_{side_tag}"]
                     if uses_pb_in_lc
-                    else ["geometry.pfo", "geometry.pfi", "geometry.bolt_diameter"]
+                    else [f"geometry.pfo_{side_tag}", f"geometry.pfi_{side_tag}", f"geometry.bolt_diameter_{side_tag}"]
                 ),
                 source_document="AISC 360-22 Table J3.4 / AISC 358-22 Section 6.7",
             )
-        derived_lc = Quantity(value=lc_value, unit=reference_unit)
-        if case.geometry.clear_distance_end_plate is None:
-            case.geometry.clear_distance_end_plate = derived_lc
-        if case.geometry.clear_distance_column_flange is None:
-            case.geometry.clear_distance_column_flange = derived_lc
+        derived_lc_side = Quantity(value=lc_value, unit=reference_unit)
+        if lc_ep_side is None:
+            setattr(case.geometry, lc_ep_field, derived_lc_side)
+        if lc_cf_side is None:
+            setattr(case.geometry, lc_cf_field, derived_lc_side)
+
+    primary_lc_ep = getattr(case.geometry, f"clear_distance_end_plate_{primary_side_tag}", None)
+    primary_lc_cf = getattr(case.geometry, f"clear_distance_column_flange_{primary_side_tag}", None)
+    if primary_lc_ep is not None:
+        case.geometry.clear_distance_end_plate = primary_lc_ep
+    if primary_lc_cf is not None:
+        case.geometry.clear_distance_column_flange = primary_lc_cf
 
     # Maintain legacy field used by Step 5 (no hidden default because it is derived from selected standard).
-    case.materials.bolt_grade = bolt_standard
+    case.materials.bolt_grade = case.materials.bolt_fabrication_standard
 
 
 _MOMENT_SPLIT_RIGHT_SUFFIX = "_beam_right_only.json"
@@ -1717,7 +2055,9 @@ def _normalize_moment_split_side_payload(raw_payload: dict[str, Any], *, side: s
             )
             or _first_present(rigidizador, "tipo_acero"),
             "bolt_fabrication_standard": _first_present(pernos, f"std_b_{side_tag}"),
+            f"bolt_fabrication_standard_{side_tag}": _first_present(pernos, f"std_b_{side_tag}"),
             "bolt_description": _first_present(pernos, f"desc_b_{side_tag}"),
+            f"bolt_description_{side_tag}": _first_present(pernos, f"desc_b_{side_tag}"),
             "weld_fexx": weld_fexx,
             f"weld_fexx_w4_{side_tag}": _first_present(
                 weld_4_raw,
@@ -1725,7 +2065,9 @@ def _normalize_moment_split_side_payload(raw_payload: dict[str, Any], *, side: s
             ),
             "elastic_modulus": _first_present(viga, f"E_{side_tag}"),
             "bolt_shape": _first_present(pernos, f"shape_b_{side_tag}"),
+            f"bolt_shape_{side_tag}": _first_present(pernos, f"shape_b_{side_tag}"),
             "bolt_thread_condition": _first_present(pernos, f"thread_b_{side_tag}"),
+            f"bolt_thread_condition_{side_tag}": _first_present(pernos, f"thread_b_{side_tag}"),
         }
     )
 
@@ -1751,7 +2093,7 @@ def _normalize_moment_split_side_payload(raw_payload: dict[str, Any], *, side: s
     )
     continuity_plate = _compact_dict(
         {
-            "continuity_plate_thickness": _first_present(platina_cont, "tpc_col"),
+            "continuity_plate_thickness": _first_present(platina_cont, "t_pc_col", "tpc_col"),
             "continuity_plate_enabled": _first_present(
                 platina_cont,
                 "usar_pc_col",
@@ -1771,6 +2113,7 @@ def _normalize_moment_split_side_payload(raw_payload: dict[str, Any], *, side: s
         {
             "bolt_gage": _first_present(pernos, f"g_b_{side_tag}"),
             "bolt_tightening_type": _first_present(pernos, f"tipo_apriete_b_{side_tag}"),
+            f"bolt_tightening_type_{side_tag}": _first_present(pernos, f"tipo_apriete_b_{side_tag}"),
             "clear_distance_end_plate": _first_present(pernos, f"lc_pe_{side_tag}"),
             "clear_distance_column_flange": _first_present(
                 pernos,
@@ -1787,6 +2130,13 @@ def _normalize_moment_split_side_payload(raw_payload: dict[str, Any], *, side: s
             "weld_type": _first_present(weld_1_raw, f"tipo_w1_{side_tag}", "weld_type"),
             "size": _first_present(weld_1_raw, f"w_w1_{side_tag}", "size"),
             "nl": _first_present(weld_1_raw, f"nl_w1_{side_tag}", "nl"),
+            f"L_gap_w1_{side_tag}": _first_present(
+                weld_1_raw,
+                f"L_gap_w1_{side_tag}",
+                "L_gap_w1",
+                "l_gap",
+                "gap",
+            ),
             f"kds_w1_{side_tag}": _first_present(weld_1_raw, f"kds_w1_{side_tag}", "kds"),
         }
     )
@@ -1798,6 +2148,13 @@ def _normalize_moment_split_side_payload(raw_payload: dict[str, Any], *, side: s
             "weld_type": _first_present(weld_2_raw, f"tipo_w2_{side_tag}", "weld_type"),
             "size": _first_present(weld_2_raw, f"w_w2_{side_tag}", "size"),
             "nl": _first_present(weld_2_raw, f"nl_w2_{side_tag}", "nl"),
+            f"L_gap_w2_{side_tag}": _first_present(
+                weld_2_raw,
+                f"L_gap_w2_{side_tag}",
+                "L_gap_w2",
+                "l_gap",
+                "gap",
+            ),
             f"kds_w2_{side_tag}": _first_present(weld_2_raw, f"kds_w2_{side_tag}", "kds"),
         }
     )
@@ -1899,23 +2256,48 @@ def _normalize_moment_split_column_payload(raw_payload: dict[str, Any]) -> dict[
 
     columna = _first_dict(raw_payload, "columna", "column")
     platina_cont = _first_dict(raw_payload, "platina_continuidad", "continuity_plate")
-    platina_dobladora = _first_dict(raw_payload, "platina_dobladora", "doubler_plate")
+    platina_dobladora = _first_dict(
+        raw_payload,
+        "platina_enchape_alma",
+        "platina_de_enchape_del_alma",
+        "platina_dobladora",
+        "doubler_plate",
+    )
     soldaduras = _first_dict(raw_payload, "soldaduras", "welds")
     cargas = _first_dict(raw_payload, "loads", "cargas")
     factores = _first_dict(raw_payload, "design_factors", "factores_diseno")
-    weld_5_raw = soldaduras.get("weld_5") if isinstance(soldaduras.get("weld_5"), dict) else {}
+    weld_5_raw = _first_dict(raw_payload, "weld_5")
+    if not weld_5_raw:
+        weld_5_raw = soldaduras.get("weld_5") if isinstance(soldaduras.get("weld_5"), dict) else {}
     if not weld_5_raw:
         # Legacy fallback: column continuity weld was previously stored as weld_4.
         weld_5_raw = soldaduras.get("weld_4") if isinstance(soldaduras.get("weld_4"), dict) else {}
+    weld_6_raw = _first_dict(raw_payload, "weld_6")
+    if not weld_6_raw:
+        weld_6_raw = soldaduras.get("weld_6") if isinstance(soldaduras.get("weld_6"), dict) else {}
     weld_dp_plug_raw = (
-        soldaduras.get("weld_dp_tapon")
-        if isinstance(soldaduras.get("weld_dp_tapon"), dict)
-        else {}
+        _first_dict(
+            raw_payload,
+            "weld_7",
+            "soldadura_7",
+            "weld_dp_plug",
+            "soldadura_plug_dp",
+            "weld_dp_plugweld_dp_plug",
+        )
+        or (
+            soldaduras.get("weld_7")
+            if isinstance(soldaduras.get("weld_7"), dict)
+            else (
+                soldaduras.get("weld_dp_plug")
+                if isinstance(soldaduras.get("weld_dp_plug"), dict)
+                else {}
+            )
+        )
     )
     if not weld_dp_plug_raw:
         weld_dp_plug_raw = (
-            soldaduras.get("soldadura_tapon_dp")
-            if isinstance(soldaduras.get("soldadura_tapon_dp"), dict)
+            soldaduras.get("soldadura_plug_dp")
+            if isinstance(soldaduras.get("soldadura_plug_dp"), dict)
             else {}
         )
 
@@ -1939,14 +2321,25 @@ def _normalize_moment_split_column_payload(raw_payload: dict[str, Any]) -> dict[
     materials = _compact_dict(
         {
             "profile_steel_type": _first_present(columna, "tipo_acero_perfil_col"),
-            "weld_fexx": _first_present(weld_5_raw, "Fexx_w5")
+            "weld_fexx": _first_present(weld_5_raw, "Fexx_w5_col")
+            or _first_present(weld_5_raw, "Fexx_w5")
             or _first_present(weld_5_raw, "Fexx_w4")
+            or _first_present(weld_6_raw, "Fexx_w6_col")
+            or _first_present(weld_6_raw, "Fexx_w6")
+            or _first_present(soldaduras, "Fexx_w5_col")
             or _first_present(soldaduras, "Fexx_w5")
             or _first_present(soldaduras, "Fexx_w4")
-            or _first_present(weld_dp_plug_raw, "Fexx_wdp_tapon")
-            or _first_present(soldaduras, "Fexx_wdp_tapon"),
+            or _first_present(soldaduras, "Fexx_w6_col")
+            or _first_present(soldaduras, "Fexx_w6")
+            or _first_present(weld_dp_plug_raw, "Fexx_wdp_plug")
+            or _first_present(weld_dp_plug_raw, "Fexx_w7_col")
+            or _first_present(soldaduras, "Fexx_wdp_plug")
+            or _first_present(soldaduras, "Fexx_w7_col")
+            or _first_present(raw_payload, "Fexx_wdp_plug")
+            or _first_present(raw_payload, "Fexx_w7_col"),
             "elastic_modulus": _first_present(columna, "E_col"),
             "plate_steel_type": _first_present(platina_cont, "tipo_acero_pc_col"),
+            "continuity_plate_steel_type": _first_present(platina_cont, "tipo_acero_pc_col"),
             "doubler_plate_steel_type": _first_present(platina_dobladora, "tipo_acero_dp_col"),
         }
     )
@@ -2014,15 +2407,112 @@ def _normalize_moment_split_column_payload(raw_payload: dict[str, Any]) -> dict[
                 {
                     "continuity_plate_thickness": _first_present(
                         platina_cont,
+                        "t_pc_col",
                         "tpc_col",
+                    ),
+                    "continuity_plate_width_b1": _first_present(
+                        platina_cont,
+                        "b1_pc_col",
+                    ),
+                    "continuity_plate_count": _first_present(
+                        platina_cont,
+                        "n_pc_col",
+                        "continuity_plate_count",
                     ),
                     "continuity_plate_enabled": continuity_plate_enabled,
                     "continuity_plate_weld_type": _first_present(
                         weld_5_raw,
+                        "tipo_w5_col",
                         "tipo_w5",
                         "tipo_w4",
                         "weld_type",
                         "tipo_soldadura",
+                    ),
+                    "continuity_plate_weld_type_col": _first_present(
+                        weld_5_raw,
+                        "tipo_w5_col",
+                        "tipo_w5",
+                        "weld_type",
+                        "tipo_soldadura",
+                    ),
+                    "w_w5_col": _first_present(
+                        weld_5_raw,
+                        "w_w5_col",
+                        "t_w5_col",
+                        "t_w5",
+                        "thickness",
+                        "size",
+                    ),
+                    "t_w5_col": _first_present(
+                        weld_5_raw,
+                        "w_w5_col",
+                        "t_w5_col",
+                        "t_w5",
+                        "thickness",
+                        "size",
+                    ),
+                    "nl_w5_col": _first_present(
+                        weld_5_raw,
+                        "nl_w5_col",
+                        "nl_w5",
+                        "nl",
+                        "n_l",
+                        "lines",
+                    ),
+                    "L_gap_w5_col": _first_present(
+                        weld_5_raw,
+                        "L_gap_w5_col",
+                        "L_gap_w5",
+                        "l_gap",
+                        "gap",
+                    ),
+                    "kds_w5_col": _first_present(
+                        weld_5_raw,
+                        "kds_w5_col",
+                        "kds_w5",
+                    ),
+                    "continuity_plate_web_weld_type_col": _first_present(
+                        weld_6_raw,
+                        "tipo_w6_col",
+                        "tipo_w6",
+                        "weld_type",
+                        "tipo_soldadura",
+                    ),
+                    "w_w6_col": _first_present(
+                        weld_6_raw,
+                        "w_w6_col",
+                        "t_w6_col",
+                        "t_w6",
+                        "thickness",
+                        "size",
+                    ),
+                    "t_w6_col": _first_present(
+                        weld_6_raw,
+                        "w_w6_col",
+                        "t_w6_col",
+                        "t_w6",
+                        "thickness",
+                        "size",
+                    ),
+                    "nl_w6_col": _first_present(
+                        weld_6_raw,
+                        "nl_w6_col",
+                        "nl_w6",
+                        "nl",
+                        "n_l",
+                        "lines",
+                    ),
+                    "L_gap_w6_col": _first_present(
+                        weld_6_raw,
+                        "L_gap_w6_col",
+                        "L_gap_w6",
+                        "l_gap",
+                        "gap",
+                    ),
+                    "kds_w6_col": _first_present(
+                        weld_6_raw,
+                        "kds_w6_col",
+                        "kds_w6",
                     ),
                 }
             )
@@ -2031,24 +2521,41 @@ def _normalize_moment_split_column_payload(raw_payload: dict[str, Any]) -> dict[
                 {
                     "doubler_plate_thickness": _first_present(
                         platina_dobladora,
+                        "t_dp_col",
                         "tdp_col",
+                    ),
+                    "doubler_plate_count": _first_present(
+                        platina_dobladora,
+                        "n_dp_col",
                     ),
                     "doubler_plate_enabled": doubler_plate_enabled,
                     "doubler_plate_web_plug_weld_type": _first_present(
                         weld_dp_plug_raw,
-                        "tipo_wdp_tapon",
+                        "tipo_w7_col",
+                        "tipo_wdp_plug",
                         "weld_type",
                         "tipo_soldadura",
                     ),
                     "doubler_plate_web_plug_weld_size": _first_present(
                         weld_dp_plug_raw,
-                        "t_wdp_tapon",
+                        "w_w7_col",
+                        "t_w7_col",
+                        "t_wdp_plug",
+                        "thickness",
+                        "size",
+                    ),
+                    "w_w7_col": _first_present(
+                        weld_dp_plug_raw,
+                        "w_w7_col",
+                        "t_w7_col",
+                        "t_wdp_plug",
                         "thickness",
                         "size",
                     ),
                     "doubler_plate_web_plug_weld_lines_nl": _first_present(
                         weld_dp_plug_raw,
-                        "nl_wdp_tapon",
+                        "nl_w7_col",
+                        "nl_wdp_plug",
                         "nl",
                         "n_l",
                         "lines",
@@ -2359,6 +2866,11 @@ def _compose_moment_prequalified_split_payload(
             merged_geometry[f"pfi_{side_tag}"] = end_plate_group.get("pfi")
         if bolt_group:
             merged_geometry[f"bolt_gage_{side_tag}"] = bolt_group.get("bolt_gage")
+            merged_geometry[f"bolt_tightening_type_{side_tag}"] = (
+                bolt_group.get(f"bolt_tightening_type_{side_tag}") or bolt_group.get("bolt_tightening_type")
+            )
+            merged_geometry[f"clear_distance_end_plate_{side_tag}"] = bolt_group.get("clear_distance_end_plate")
+            merged_geometry[f"clear_distance_column_flange_{side_tag}"] = bolt_group.get("clear_distance_column_flange")
         if stiffener_group:
             merged_geometry[f"stiffener_thickness_{side_tag}"] = stiffener_group.get("stiffener_thickness")
         if isinstance(welds_group, dict):
@@ -2370,10 +2882,18 @@ def _compose_moment_prequalified_split_payload(
                 merged_geometry[f"end_plate_stiffener_weld_type_{side_tag}"] = weld_1.get("weld_type")
                 merged_geometry[f"end_plate_stiffener_weld_size_wst_{side_tag}"] = weld_1.get("size")
                 merged_geometry[f"end_plate_stiffener_weld_lines_nl_{side_tag}"] = weld_1.get("nl")
+                merged_geometry[f"L_gap_w1_{side_tag}"] = (
+                    weld_1.get(f"L_gap_w1_{side_tag}")
+                    or weld_1.get("L_gap_w1")
+                )
             if weld_2:
                 merged_geometry[f"beam_stiffener_weld_type_{side_tag}"] = weld_2.get("weld_type")
                 merged_geometry[f"beam_stiffener_weld_size_wst2_{side_tag}"] = weld_2.get("size")
                 merged_geometry[f"beam_stiffener_weld_lines_nl_w2_{side_tag}"] = weld_2.get("nl")
+                merged_geometry[f"L_gap_w2_{side_tag}"] = (
+                    weld_2.get(f"L_gap_w2_{side_tag}")
+                    or weld_2.get("L_gap_w2")
+                )
             if weld_3:
                 merged_geometry[f"end_plate_beam_web_weld_type_{side_tag}"] = weld_3.get("weld_type")
                 merged_geometry[f"end_plate_beam_web_weld_thickness_twe_{side_tag}"] = weld_3.get("thickness")

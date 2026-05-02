@@ -1,6 +1,6 @@
 {
   "viga": {
-    "perfil_vgizq": "W24X76",
+    "perfil_vgizq": "W21X68",
     "tipo_acero_perfil_vgizq": "ASTM A572 Gr 50",
     "demanda_ductilidad_vgizq": "high",
     "E_vgizq": {
@@ -8,22 +8,22 @@
       "unit": "MPa"
     },
     "Llb_vgizq": {
-      "value": 5691,
+      "value": 7500,
       "unit": "mm"
     },
     "Lnc_vgizq": {
-      "value": 1500.0,
+      "value": 1000.0,
       "unit": "mm"
     }
   },
   "placa_extremo": {
     "tipo_acero": "ASTM A572 Gr 50",
     "Bpe_vgizq": {
-      "value": 270.0,
+      "value": 235.0,
       "unit": "mm"
     },
     "tpe_vgizq": {
-      "value": 40,
+      "value": 25.4,
       "unit": "mm"
     },
     "de_pe_vgizq": {
@@ -52,7 +52,7 @@
   },
   "pernos": {
     "g_b_vgizq": {
-      "value": 140,
+      "value": 150,
       "unit": "mm"
     },
     "tipo_apriete_b_vgizq": "pretensioned",
@@ -74,6 +74,10 @@
         "unit": "mm"
       },
       "nl_w1_vgizq": 2,
+      "L_gap_w1_vgizq": {
+        "value": 25.0,
+        "unit": "mm"
+      },
       "kds_w1_vgizq": 1.0
     },
     "weld_2": {
@@ -88,6 +92,10 @@
         "unit": "mm"
       },
       "nl_w2_vgizq": 2,
+      "L_gap_w2_vgizq": {
+        "value": 25.0,
+        "unit": "mm"
+      },
       "kds_w2_vgizq": 1.0
     },
     "weld_3": {
@@ -116,7 +124,7 @@
         "unit": "mm"
       },
       "t_w4.1_vgizq": {
-        "value": 8,
+        "value": 8.0,
         "unit": "mm"
       },
       "nl_w4_vgizq": 2,
@@ -129,15 +137,15 @@
       "unit": "kN"
     },
     "Vu2_vgizq": {
-      "value": 426.78,
+      "value": 161.43,
       "unit": "kN"
     },
     "Mu3_vgizq": {
-      "value": 500,
-      "unit": "kN-mm"
+      "value": 352.94,
+      "unit": "kN-m"
     },
     "Vg_vgizq": {
-      "value": 91.43,
+      "value": 97.11,
       "unit": "kN"
     }
   }

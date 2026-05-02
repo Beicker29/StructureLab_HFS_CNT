@@ -9,7 +9,7 @@ Esta carpeta separa la entrada en 3 archivos:
 Notas:
 - `soldaduras.weld_4` se define por lado en los archivos de viga.
 - `soldaduras.weld_4` corresponde a la soldadura #4 entre ala de viga y platina extremo.
-- La soldadura de platina de continuidad en `case_004_column_and_common.json` se define como `soldaduras.weld_5`.
+- Las soldaduras de columna en `case_004_column_and_common.json` se definen a nivel raiz como `weld_5`, `weld_6` y `weld_7`.
 
 Uso directo (sin ensamblar):
 

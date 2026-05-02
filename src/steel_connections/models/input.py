@@ -45,13 +45,22 @@ class SectionReferences(StrictModel):
 class AISC358MomentMaterials(StrictModel):
     profile_steel_type: str | None = None
     plate_steel_type: str | None = None
+    continuity_plate_steel_type: str | None = None
     doubler_plate_steel_type: str | None = None
     stiffener_steel_type_vgder: str | None = None
     stiffener_steel_type_vgizq: str | None = None
     bolt_fabrication_standard: str | None = None
+    bolt_fabrication_standard_vgder: str | None = None
+    bolt_fabrication_standard_vgizq: str | None = None
     bolt_description: str | None = None
+    bolt_description_vgder: str | None = None
+    bolt_description_vgizq: str | None = None
     bolt_shape: str | None = None
+    bolt_shape_vgder: str | None = None
+    bolt_shape_vgizq: str | None = None
     bolt_thread_condition: str | None = None
+    bolt_thread_condition_vgder: str | None = None
+    bolt_thread_condition_vgizq: str | None = None
     beam_fy: Quantity | None = None
     beam_fu: Quantity | None = None
     weld_fexx: Quantity | None = None
@@ -61,6 +70,10 @@ class AISC358MomentMaterials(StrictModel):
     end_plate_fu: Quantity | None = None
     bolt_fnt: Quantity | None = None
     bolt_fnv: Quantity | None = None
+    bolt_fnt_vgder: Quantity | None = None
+    bolt_fnt_vgizq: Quantity | None = None
+    bolt_fnv_vgder: Quantity | None = None
+    bolt_fnv_vgizq: Quantity | None = None
     column_fu: Quantity | None = None
     column_fy: Quantity | None = None
     stiffener_fy: Quantity | None = None
@@ -72,12 +85,19 @@ class AISC358MomentMaterials(StrictModel):
     @field_validator(
         "profile_steel_type",
         "plate_steel_type",
+        "continuity_plate_steel_type",
         "doubler_plate_steel_type",
         "stiffener_steel_type_vgder",
         "stiffener_steel_type_vgizq",
         "bolt_fabrication_standard",
+        "bolt_fabrication_standard_vgder",
+        "bolt_fabrication_standard_vgizq",
         "bolt_description",
+        "bolt_description_vgder",
+        "bolt_description_vgizq",
         "bolt_shape",
+        "bolt_shape_vgder",
+        "bolt_shape_vgizq",
         "bolt_grade",
     )
     @classmethod
@@ -89,7 +109,7 @@ class AISC358MomentMaterials(StrictModel):
             raise ValueError("Text material fields cannot be empty when provided.")
         return normalized
 
-    @field_validator("bolt_thread_condition")
+    @field_validator("bolt_thread_condition", "bolt_thread_condition_vgder", "bolt_thread_condition_vgizq")
     @classmethod
     def validate_bolt_thread_condition(cls, value: str | None) -> str | None:
         if value is None:
@@ -135,18 +155,42 @@ class AISC358MomentGeometry(StrictModel):
     pfo: Quantity | None = None
     pfi: Quantity | None = None
     continuity_plate_thickness: Quantity | None = None
+    continuity_plate_width_b1: Quantity | None = None
+    continuity_plate_count: int | None = None
     continuity_plate_enabled: bool | None = None
     continuity_plate_weld_type: str | None = None
+    continuity_plate_weld_type_col: str | None = None
+    continuity_plate_web_weld_type_col: str | None = None
+    t_w5_col: Quantity | None = None
+    w_w5_col: Quantity | None = None
+    nl_w5_col: int | None = None
+    L_gap_w5_col: Quantity | None = None
+    kds_w5_col: float | None = None
+    t_w6_col: Quantity | None = None
+    w_w6_col: Quantity | None = None
+    nl_w6_col: int | None = None
+    L_gap_w6_col: Quantity | None = None
+    kds_w6_col: float | None = None
     doubler_plate_thickness: Quantity | None = None
+    doubler_plate_count: int | None = None
     doubler_plate_enabled: bool | None = None
     doubler_plate_web_plug_weld_type: str | None = None
     doubler_plate_web_plug_weld_size: Quantity | None = None
+    w_w7_col: Quantity | None = None
     doubler_plate_web_plug_weld_lines_nl: int | None = None
     bolt_diameter: Quantity | None = None
+    bolt_diameter_vgder: Quantity | None = None
+    bolt_diameter_vgizq: Quantity | None = None
     bolt_gage: Quantity | None = None
     bolt_tightening_type: str | None = None
+    bolt_tightening_type_vgder: str | None = None
+    bolt_tightening_type_vgizq: str | None = None
     clear_distance_end_plate: Quantity | None = None
+    clear_distance_end_plate_vgder: Quantity | None = None
+    clear_distance_end_plate_vgizq: Quantity | None = None
     clear_distance_column_flange: Quantity | None = None
+    clear_distance_column_flange_vgder: Quantity | None = None
+    clear_distance_column_flange_vgizq: Quantity | None = None
     column_end_distance_to_beam_flange: Quantity | None = None
     hb_col: Quantity | None = None
     ht_col: Quantity | None = None
@@ -162,6 +206,9 @@ class AISC358MomentGeometry(StrictModel):
     end_plate_stiffener_weld_type: str | None = None
     end_plate_stiffener_weld_type_vgder: str | None = None
     end_plate_stiffener_weld_type_vgizq: str | None = None
+    L_gap_w1: Quantity | None = None
+    L_gap_w1_vgder: Quantity | None = None
+    L_gap_w1_vgizq: Quantity | None = None
     end_plate_stiffener_weld_length_lst: Quantity | None = None
     end_plate_stiffener_weld_size_wst: Quantity | None = None
     end_plate_stiffener_weld_size_wst_vgder: Quantity | None = None
@@ -172,6 +219,9 @@ class AISC358MomentGeometry(StrictModel):
     beam_stiffener_weld_type: str | None = None
     beam_stiffener_weld_type_vgder: str | None = None
     beam_stiffener_weld_type_vgizq: str | None = None
+    L_gap_w2: Quantity | None = None
+    L_gap_w2_vgder: Quantity | None = None
+    L_gap_w2_vgizq: Quantity | None = None
     beam_stiffener_weld_length_lstw2: Quantity | None = None
     beam_stiffener_weld_size_wst2: Quantity | None = None
     beam_stiffener_weld_size_wst2_vgder: Quantity | None = None
@@ -231,6 +281,8 @@ class AISC358MomentGeometry(StrictModel):
 
     @field_validator(
         "continuity_plate_weld_type",
+        "continuity_plate_weld_type_col",
+        "continuity_plate_web_weld_type_col",
         "end_plate_beam_web_weld_type",
         "end_plate_beam_web_weld_type_vgder",
         "end_plate_beam_web_weld_type_vgizq",
@@ -269,6 +321,42 @@ class AISC358MomentGeometry(StrictModel):
             return None
         if value <= 0:
             raise ValueError("geometry.doubler_plate_web_plug_weld_lines_nl must be >= 1.")
+        return value
+
+    @field_validator("doubler_plate_count")
+    @classmethod
+    def validate_doubler_plate_count(cls, value: int | None) -> int | None:
+        if value is None:
+            return None
+        if value < 0:
+            raise ValueError("geometry.doubler_plate_count must be >= 0.")
+        return value
+
+    @field_validator("continuity_plate_count")
+    @classmethod
+    def validate_continuity_plate_count(cls, value: int | None) -> int | None:
+        if value is None:
+            return None
+        if value <= 0:
+            raise ValueError("geometry.continuity_plate_count must be >= 1.")
+        return value
+
+    @field_validator("nl_w5_col")
+    @classmethod
+    def validate_continuity_plate_weld_lines(cls, value: int | None) -> int | None:
+        if value is None:
+            return None
+        if value <= 0:
+            raise ValueError("geometry.nl_w5_col must be >= 1.")
+        return value
+
+    @field_validator("nl_w6_col")
+    @classmethod
+    def validate_continuity_plate_web_weld_lines(cls, value: int | None) -> int | None:
+        if value is None:
+            return None
+        if value <= 0:
+            raise ValueError("geometry.nl_w6_col must be >= 1.")
         return value
 
     @field_validator("end_plate_beam_web_weld_lines_nl_vgder", "end_plate_beam_web_weld_lines_nl_vgizq")
@@ -334,6 +422,7 @@ class AISC358MomentGeometry(StrictModel):
         "kds_w3_vgizq",
         "kds_w4_vgder",
         "kds_w4_vgizq",
+        "kds_w5_col",
     )
     @classmethod
     def validate_kds_positive(cls, value: float | None) -> float | None:
@@ -343,7 +432,7 @@ class AISC358MomentGeometry(StrictModel):
             raise ValueError("geometry.kds_wi_<lado> must be > 0.")
         return value
 
-    @field_validator("bolt_tightening_type")
+    @field_validator("bolt_tightening_type", "bolt_tightening_type_vgder", "bolt_tightening_type_vgizq")
     @classmethod
     def normalize_bolt_tightening_type(cls, value: str | None) -> str | None:
         if value is None:
@@ -544,6 +633,10 @@ class AISC358MomentCase(CaseBase):
             "end_plate_fu",
             "bolt_fnt",
             "bolt_fnv",
+            "bolt_fnt_vgder",
+            "bolt_fnt_vgizq",
+            "bolt_fnv_vgder",
+            "bolt_fnv_vgizq",
             "column_fu",
             "column_fy",
             "stiffener_fy",
@@ -610,20 +703,33 @@ class AISC358MomentCase(CaseBase):
             "pfo",
             "pfi",
             "continuity_plate_thickness",
+            "continuity_plate_width_b1",
             "doubler_plate_thickness",
             "bolt_diameter",
+            "bolt_diameter_vgder",
+            "bolt_diameter_vgizq",
             "bolt_gage",
             "clear_distance_end_plate",
+            "clear_distance_end_plate_vgder",
+            "clear_distance_end_plate_vgizq",
             "clear_distance_column_flange",
+            "clear_distance_column_flange_vgder",
+            "clear_distance_column_flange_vgizq",
             "column_end_distance_to_beam_flange",
             "end_plate_beam_web_weld_thickness_twe",
             "end_plate_beam_web_weld_thickness_twe_vgder",
             "end_plate_beam_web_weld_thickness_twe_vgizq",
             "end_plate_stiffener_weld_length_lst",
+            "L_gap_w1",
+            "L_gap_w1_vgder",
+            "L_gap_w1_vgizq",
             "end_plate_stiffener_weld_size_wst",
             "end_plate_stiffener_weld_size_wst_vgder",
             "end_plate_stiffener_weld_size_wst_vgizq",
             "beam_stiffener_weld_length_lstw2",
+            "L_gap_w2",
+            "L_gap_w2_vgder",
+            "L_gap_w2_vgizq",
             "beam_stiffener_weld_size_wst2",
             "beam_stiffener_weld_size_wst2_vgder",
             "beam_stiffener_weld_size_wst2_vgizq",
@@ -634,6 +740,12 @@ class AISC358MomentCase(CaseBase):
             "t_w4_vgizq",
             "t_w4_1_vgder",
             "t_w4_1_vgizq",
+            "t_w5_col",
+            "w_w5_col",
+            "L_gap_w5_col",
+            "t_w6_col",
+            "w_w6_col",
+            "w_w7_col",
             "doubler_plate_web_plug_weld_size",
         ):
             value = getattr(self.geometry, field_name)
@@ -674,12 +786,18 @@ class AISC358MomentCase(CaseBase):
         for field_name in ("Mu3_vgder", "Mu3_vgizq"):
             value = getattr(self.loads, field_name)
             if value is not None:
-                expected_unit = "kip-in" if self.units_system == UnitSystem.US else "kN-mm"
-                if value.unit != expected_unit:
-                    raise ValueError(
-                        f"Invalid unit at 'loads.{field_name}'. "
-                        f"Expected '{expected_unit}' for {self.units_system.value}."
-                    )
+                if self.units_system == UnitSystem.US:
+                    if value.unit != "kip-in":
+                        raise ValueError(
+                            f"Invalid unit at 'loads.{field_name}'. "
+                            f"Expected 'kip-in' for {self.units_system.value}."
+                        )
+                else:
+                    if value.unit not in {"kN-mm", "kN-m"}:
+                        raise ValueError(
+                            f"Invalid unit at 'loads.{field_name}'. "
+                            f"Expected 'kN-mm' or 'kN-m' for {self.units_system.value}."
+                        )
         if self.loads.probable_moment_column_face is not None:
             expected_unit = "kip-in" if self.units_system == UnitSystem.US else "kN-mm"
             if self.loads.probable_moment_column_face.unit != expected_unit:

@@ -3,15 +3,22 @@
 import math
 import re
 from pathlib import Path
+from typing import Any
 
 from steel_connections.codes.engineering.flexure import (
     compute_column_flange_local_bending_strength,
     compute_dcr,
 )
+from steel_connections.codes.engineering.shear import compute_beam_web_shear_yielding_strength
 from steel_connections.codes.engineering.weld import (
     WeldFillet,
+    compute_fillet_weld_check_with_kds,
     compute_effective_web_weld_length,
     compute_plate_tension_demand_from_yielding,
+)
+from steel_connections.data.materials_repository import (
+    get_hrs_steel_properties,
+    get_plate_steel_properties,
 )
 from steel_connections.models.output import DetailedRunResult
 from steel_connections.models.units import Quantity, UnitSystem
@@ -298,6 +305,24 @@ def _collect_step_1_notes(result: DetailedRunResult) -> list[dict]:
                 enriched.setdefault("rule_id", check.rule_id)
                 notes.append(enriched)
     return notes
+
+
+def _collect_step_1_inputs(result: DetailedRunResult) -> dict:
+    merged: dict = {}
+    for check in result.checks:
+        if ".06.3." not in check.rule_id:
+            continue
+        payload = check.calculation_memory.inputs
+        if not isinstance(payload, dict):
+            continue
+        for key, value in payload.items():
+            if key not in merged:
+                merged[key] = value
+                continue
+            current = merged.get(key)
+            if current is None and value is not None:
+                merged[key] = value
+    return merged
 
 def _collect_splice_step_1_rows(result: DetailedRunResult) -> list[dict]:
     rows: list[dict] = []
@@ -992,6 +1017,48 @@ def _normalize_markdown_spacing(text: str) -> str:
     return "\n".join(lines)
 
 
+def _normalize_memory_spanish_labels(text: str) -> str:
+    heading_replacements = {
+        "Revision": "Revisión",
+        "revision": "revisión",
+        "Calculo": "Cálculo",
+        "calculo": "cálculo",
+        "tecnicas": "técnicas",
+        "tecnica": "técnica",
+        "geometricas": "geométricas",
+        "geometrica": "geométrica",
+        "mecanicas": "mecánicas",
+        "mecanica": "mecánica",
+        "precalificacion": "precalificación",
+        "maximo": "máximo",
+        "rotula": "rótula",
+        "plastica": "plástica",
+        "flexion": "flexión",
+        "traccion": "tracción",
+        "compresion": "compresión",
+        "conexion": "conexión",
+        "Ambito": "Ámbito",
+        "ambito": "ámbito",
+    }
+
+    def _apply_heading_accents(line: str) -> str:
+        updated = line
+        for old, new in heading_replacements.items():
+            updated = updated.replace(old, new)
+        return updated
+
+    normalized_lines: list[str] = []
+    for line in text.splitlines():
+        if line.lstrip().startswith("#"):
+            line = _apply_heading_accents(line)
+        if line.startswith("- Ambito:"):
+            line = line.replace("- Ambito:", "- Ámbito:")
+        if line == "No hay notas tecnicas disponibles para este caso.":
+            line = "No hay notas técnicas disponibles para este caso."
+        normalized_lines.append(line)
+    return "\n".join(normalized_lines)
+
+
 def _replace_first_step_heading_number(block: str, *, step_number: int) -> str:
     lines = block.splitlines()
     for idx, line in enumerate(lines):
@@ -1019,178 +1086,302 @@ def _align_nested_heading_numbers_with_step(block: str, *, step_number: int) -> 
 def _render_step_1_notes(notes: list[dict]) -> str:
     if not notes:
         return ""
-    lines: list[str] = []
-    lines.append("### 1.1 Notas tecnicas")
-    lines.append("")
-    note_index = 1
+    grouped: dict[str, list[dict]] = {}
+    scope_order: list[str] = []
     for item in notes:
         note_id = _format_text(item.get("id"))
+        if note_id == "section_6_7.beam_flange_to_end_plate_weld_note":
+            continue
         scope = _format_text(item.get("scope")).upper()
-        description = _translate_text_es(item.get("description"))
-        if note_id == "section_6_7.beam_flange_to_end_plate_weld_note":
-            continue
-        clause = _render_clause_text(
-            item.get("clause"),
-            item.get("source_document"),
-            item.get("rule_id"),
-        )
-        note_label = f"1.1.{note_index}"
-        note_index += 1
-        lines.append(f"#### {note_label} Nota tecnica - {description}")
+        if scope not in grouped:
+            grouped[scope] = []
+            scope_order.append(scope)
+        grouped[scope].append(item)
+
+    def _scope_sort_key(scope: str) -> tuple[int, int, int]:
+        scope_upper = scope.upper()
+        if scope_upper == "CONTINUITY_PLATE_COL":
+            return (2, 99, 10)
+        if scope_upper == "CONTINUITY_PLATE_COL":
+            return (2, 98, 10)
+        if scope_upper == "DOUBLER_PLATE_COL":
+            return (2, 99, 9)
+        if scope_upper.startswith("WELD_"):
+            parts = scope_upper.split("_")
+            try:
+                weld_idx = int(parts[1])
+            except (IndexError, ValueError):
+                weld_idx = 99
+            side_rank = 9
+            if scope_upper.endswith("_VGDER"):
+                side_rank = 1
+            elif scope_upper.endswith("_VGIZQ"):
+                side_rank = 2
+            elif scope_upper.endswith("_COL"):
+                side_rank = 3
+            return (2, weld_idx, side_rank)
+        if scope in scope_order:
+            return (1, scope_order.index(scope), 0)
+        return (3, 999, 0)
+
+    ordered_scopes = sorted(scope_order, key=_scope_sort_key)
+
+    def _side_from_scope(scope: str) -> str:
+        scope_upper = scope.upper()
+        if scope_upper.endswith("_VGIZQ") or scope_upper.endswith("_IZQ") or "VGIZQ" in scope_upper:
+            return "vg_izq"
+        if scope_upper.endswith("_VGDER") or scope_upper.endswith("_DER") or "VGDER" in scope_upper:
+            return "vg_der"
+        return "otros"
+
+    scopes_by_side: dict[str, list[str]] = {"vg_izq": [], "vg_der": [], "otros": []}
+    for scope in ordered_scopes:
+        scopes_by_side[_side_from_scope(scope)].append(scope)
+
+    side_sections: list[tuple[str, str]] = []
+    if scopes_by_side["vg_izq"]:
+        side_sections.append(("vg_izq", "Notas tecnicas (vg_izq)"))
+    if scopes_by_side["vg_der"]:
+        side_sections.append(("vg_der", "Notas tecnicas (vg_der)"))
+    if scopes_by_side["otros"]:
+        side_sections.append(("otros", "Notas tecnicas (otros)"))
+    lines: list[str] = []
+
+    for section_offset, (side_key, side_title) in enumerate(side_sections, start=1):
+        lines.append(f"### 1.{section_offset} {side_title}")
         lines.append("")
-        lines.append(f"- Ambito: `{scope}`")
-        lines.append(f"- Clausula: `{clause}`")
-        requirement = _translate_text_es(item.get("requirement"))
-        if note_id == "section_6_7.beam_flange_to_end_plate_weld_note":
-            requirement = (
-                "La union entre el ala de la viga y la placa de extremo debe ejecutarse con una soldadura "
-                "de ranura CJP sin respaldo. La soldadura de ranura CJP debe realizarse de modo que la raiz "
-                "de la soldadura quede del lado del alma de la viga respecto del ala. La cara interior del ala "
-                "debe tener una soldadura de filete de c in. (8 mm). Estas soldaduras deben ser de demanda critica."
+        local_note_index = 1
+        side_items: list[tuple[str, dict]] = []
+        for scope in scopes_by_side[side_key]:
+            for item in grouped[scope]:
+                side_items.append((scope, item))
+        for scope, item in side_items:
+            note_id = _format_text(item.get("id"))
+            description = _translate_text_es(item.get("description"))
+            clause = _render_clause_text(
+                item.get("clause"),
+                item.get("source_document"),
+                item.get("rule_id"),
             )
-        if requirement != "n/a" and note_id not in {
-            "section_6_3.end_plate_height_derived",
-            "section_6_3.end_plate_height_derived_izq",
-            "section_6_3.end_plate_geometry_vgder_note",
-            "section_6_3.end_plate_geometry_vgizq_note",
-            "section_6_3.end_plate_stiffener_geometry_note",
-            "section_6_3.end_plate_stiffener_geometry_vgizq_note",
-        }:
-            lines.append(f"- Requisito: `{requirement}`")
-        if note_id in {
-            "section_6_3.end_plate_stiffener_geometry_note",
-            "section_6_3.end_plate_stiffener_geometry_vgizq_note",
-        }:
+            note_label = f"1.{section_offset}.{local_note_index}"
+            local_note_index += 1
+            lines.append(f"#### {note_label} Nota tecnica - {description}")
+            lines.append("")
+            lines.append(f"- Ambito: `{scope}`")
+            lines.append(f"- Clausula: `{clause}`")
+            requirement = _translate_text_es(item.get("requirement"))
+            if requirement != "n/a" and note_id not in {
+                "section_6_3.end_plate_height_derived",
+                "section_6_3.end_plate_height_derived_izq",
+                "section_6_3.end_plate_geometry_vgder_note",
+                "section_6_3.end_plate_geometry_vgizq_note",
+                "section_6_3.end_plate_stiffener_geometry_note",
+                "section_6_3.end_plate_stiffener_geometry_vgizq_note",
+            }:
+                lines.append(f"- Requisito: `{requirement}`")
+            if note_id in {
+                "section_6_3.end_plate_stiffener_geometry_note",
+                "section_6_3.end_plate_stiffener_geometry_vgizq_note",
+            }:
+                formula = _format_text(item.get("formula"))
+                if formula != "n/a":
+                    lines.append(f"- Formula: `{formula}`")
+                if note_id == "section_6_3.end_plate_stiffener_geometry_note":
+                    h_pest_vgder = _format_quantity(item.get("h_pest_vgder"))
+                    l_pest_vgder = _format_quantity(item.get("l_pest_vgder"))
+                    ed_pest_vgder = _format_quantity(item.get("ed_pest_vgder"))
+                    lines.append(f"- h_pest_vgder: `{h_pest_vgder}`")
+                    lines.append(f"- L_pest_vgder: `{l_pest_vgder}`")
+                    lines.append(f"- edge_detailing (Ed_pest_vgder): `{ed_pest_vgder}`")
+                else:
+                    h_pest_vgizq = _format_quantity(item.get("h_pest_vgizq"))
+                    l_pest_vgizq = _format_quantity(item.get("l_pest_vgizq"))
+                    ed_pest_vgizq = _format_quantity(item.get("ed_pest_vgizq"))
+                    lines.append(f"- h_pest_vgizq: `{h_pest_vgizq}`")
+                    lines.append(f"- L_pest_vgizq: `{l_pest_vgizq}`")
+                    lines.append(f"- edge_detailing (Ed_pest_vgizq): `{ed_pest_vgizq}`")
+                lines.append("")
+                continue
+            if note_id == "section_6_3.end_plate_h_distances_note":
+                formula = _format_text(item.get("formula"))
+                h1 = _format_quantity(item.get("h1"))
+                h2 = _format_quantity(item.get("h2"))
+                h3 = _format_quantity(item.get("h3"))
+                h4 = _format_quantity(item.get("h4"))
+                if formula != "n/a":
+                    lines.append(f"- Formula: `{formula}`")
+                lines.append(f"- h1: `{h1}`")
+                lines.append(f"- h2: `{h2}`")
+                lines.append(f"- h3: `{h3}`")
+                lines.append(f"- h4: `{h4}`")
+                lines.append("")
+                continue
+            if note_id == "section_6_3.end_plate_geometry_vgder_note":
+                formula = _format_text(item.get("formula"))
+                h1 = _format_quantity(item.get("h1_vgder"))
+                h2 = _format_quantity(item.get("h2_vgder"))
+                h3 = _format_quantity(item.get("h3_vgder"))
+                h4 = _format_quantity(item.get("h4_vgder"))
+                dh = _format_quantity(item.get("dh_vgder"))
+                if formula != "n/a":
+                    lines.append(f"- Formula: `{formula}`")
+                lines.append(f"- h1_vgder: `{h1}`")
+                lines.append(f"- h2_vgder: `{h2}`")
+                if h3 != "n/a":
+                    lines.append(f"- h3_vgder: `{h3}`")
+                if h4 != "n/a":
+                    lines.append(f"- h4_vgder: `{h4}`")
+                lines.append(f"- dh_vgder: `{dh}`")
+                lines.append("")
+                continue
+            if note_id == "section_6_3.end_plate_geometry_vgizq_note":
+                formula = _format_text(item.get("formula"))
+                h1 = _format_quantity(item.get("h1_vgizq"))
+                h2 = _format_quantity(item.get("h2_vgizq"))
+                h3 = _format_quantity(item.get("h3_vgizq"))
+                h4 = _format_quantity(item.get("h4_vgizq"))
+                dh = _format_quantity(item.get("dh_vgizq"))
+                if formula != "n/a":
+                    lines.append(f"- Formula: `{formula}`")
+                lines.append(f"- h1_vgizq: `{h1}`")
+                lines.append(f"- h2_vgizq: `{h2}`")
+                if h3 != "n/a":
+                    lines.append(f"- h3_vgizq: `{h3}`")
+                if h4 != "n/a":
+                    lines.append(f"- h4_vgizq: `{h4}`")
+                lines.append(f"- dh_vgizq: `{dh}`")
+                lines.append("")
+                continue
+            if note_id == "section_6_7.end_plate_standard_hole_diameter_note":
+                formula = _format_text(item.get("formula"))
+                db = _format_quantity(item.get("db"))
+                dh = _format_quantity(item.get("dh"))
+                hole_add_in = _format_text(item.get("hole_add_in"))
+                if formula != "n/a":
+                    lines.append(f"- Formula: `{formula}`")
+                lines.append(f"- db (diametro perno): `{db}`")
+                lines.append(f"- dh (agujero estandar): `{dh}`")
+                lines.append(f"- Incremento aplicado (in): `{hole_add_in}`")
+                lines.append("")
+                continue
+            if note_id in {
+                "section_6_3.end_plate_height_derived",
+                "section_6_3.end_plate_height_derived_izq",
+            }:
+                formula = _format_text(item.get("formula"))
+                hpe_der = _format_quantity(item.get("hpe_vgder"))
+                hpe_izq = _format_quantity(item.get("hpe_vgizq"))
+                if formula != "n/a":
+                    lines.append(f"- Formula: `{formula}`")
+                if hpe_der != "n/a":
+                    lines.append(f"- Hpe_vgder: `{hpe_der}`")
+                if hpe_izq != "n/a":
+                    lines.append(f"- Hpe_vgizq: `{hpe_izq}`")
+                lines.append("")
+                continue
+            if note_id == "section_2_3_4.protected_zone_length":
+                formula = _format_text(item.get("formula"))
+                protected_zone_der = _format_quantity(item.get("protected_zone_length_vgder"))
+                protected_zone_izq = _format_quantity(item.get("protected_zone_length_vgizq"))
+                if formula != "n/a":
+                    lines.append(f"- Formula: `{formula}`")
+                if protected_zone_der != "n/a":
+                    lines.append(f"- Lpz_vgder: `{protected_zone_der}`")
+                if protected_zone_izq != "n/a":
+                    lines.append(f"- Lpz_vgizq: `{protected_zone_izq}`")
+                lines.append("")
+                continue
             formula = _format_text(item.get("formula"))
             if formula != "n/a":
+                candidate_a_label = _format_text(item.get("candidate_a_label"))
+                candidate_a = _format_quantity(item.get("candidate_a"))
+                candidate_b_label = _format_text(item.get("candidate_b_label"))
+                candidate_b = _format_quantity(item.get("candidate_b"))
+                protected_zone = _format_quantity(item.get("protected_zone_length"))
+                protected_zone_der = _format_quantity(item.get("protected_zone_length_vgder"))
+                protected_zone_izq = _format_quantity(item.get("protected_zone_length_vgizq"))
+                derived_value = _format_quantity(item.get("derived_value"))
                 lines.append(f"- Formula: `{formula}`")
-            if note_id == "section_6_3.end_plate_stiffener_geometry_note":
-                h_pest_vgder = _format_quantity(item.get("h_pest_vgder"))
-                l_pest_vgder = _format_quantity(item.get("l_pest_vgder"))
-                ed_pest_vgder = _format_quantity(item.get("ed_pest_vgder"))
-                lines.append(f"- h_pest_vgder: `{h_pest_vgder}`")
-                lines.append(f"- L_pest_vgder: `{l_pest_vgder}`")
-                lines.append(f"- edge_detailing (Ed_pest_vgder): `{ed_pest_vgder}`")
-            else:
-                h_pest_vgizq = _format_quantity(item.get("h_pest_vgizq"))
-                l_pest_vgizq = _format_quantity(item.get("l_pest_vgizq"))
-                ed_pest_vgizq = _format_quantity(item.get("ed_pest_vgizq"))
-                lines.append(f"- h_pest_vgizq: `{h_pest_vgizq}`")
-                lines.append(f"- L_pest_vgizq: `{l_pest_vgizq}`")
-                lines.append(f"- edge_detailing (Ed_pest_vgizq): `{ed_pest_vgizq}`")
-            lines.append("")
+                lines.append(f"- Candidato A ({candidate_a_label}): `{candidate_a}`")
+                lines.append(f"- Candidato B ({candidate_b_label}): `{candidate_b}`")
+                if protected_zone_der != "n/a":
+                    lines.append(f"- Longitud zona protegida viga derecha: `{protected_zone_der}`")
+                if protected_zone_izq != "n/a":
+                    lines.append(f"- Longitud zona protegida viga izquierda: `{protected_zone_izq}`")
+                if derived_value != "n/a":
+                    lines.append(f"- Valor derivado: `{derived_value}`")
+                elif protected_zone != "n/a" and protected_zone_der == "n/a" and protected_zone_izq == "n/a":
+                    lines.append(f"- Longitud zona protegida requerida: `{protected_zone}`")
+                lines.append("")
+    return "\n".join(lines)
+
+
+def _render_step_notes_grouped_by_scope(notes: list[dict], *, chapter_number: int) -> str:
+    if not notes:
+        return ""
+    grouped: dict[str, list[dict]] = {}
+    scope_order: list[str] = []
+    for item in notes:
+        note_id = _format_text(item.get("id"))
+        if note_id == "section_6_7.beam_flange_to_end_plate_weld_note":
             continue
-        if note_id == "section_6_3.end_plate_h_distances_note":
-            formula = _format_text(item.get("formula"))
-            h1 = _format_quantity(item.get("h1"))
-            h2 = _format_quantity(item.get("h2"))
-            h3 = _format_quantity(item.get("h3"))
-            h4 = _format_quantity(item.get("h4"))
-            if formula != "n/a":
-                lines.append(f"- Formula: `{formula}`")
-            lines.append(f"- h1: `{h1}`")
-            lines.append(f"- h2: `{h2}`")
-            lines.append(f"- h3: `{h3}`")
-            lines.append(f"- h4: `{h4}`")
-            lines.append("")
-            continue
-        if note_id == "section_6_3.end_plate_geometry_vgder_note":
-            formula = _format_text(item.get("formula"))
-            h1 = _format_quantity(item.get("h1_vgder"))
-            h2 = _format_quantity(item.get("h2_vgder"))
-            h3 = _format_quantity(item.get("h3_vgder"))
-            h4 = _format_quantity(item.get("h4_vgder"))
-            dh = _format_quantity(item.get("dh_vgder"))
-            if formula != "n/a":
-                lines.append(f"- Formula: `{formula}`")
-            lines.append(f"- h1_vgder: `{h1}`")
-            lines.append(f"- h2_vgder: `{h2}`")
-            if h3 != "n/a":
-                lines.append(f"- h3_vgder: `{h3}`")
-            if h4 != "n/a":
-                lines.append(f"- h4_vgder: `{h4}`")
-            lines.append(f"- dh_vgder: `{dh}`")
-            lines.append("")
-            continue
-        if note_id == "section_6_3.end_plate_geometry_vgizq_note":
-            formula = _format_text(item.get("formula"))
-            h1 = _format_quantity(item.get("h1_vgizq"))
-            h2 = _format_quantity(item.get("h2_vgizq"))
-            h3 = _format_quantity(item.get("h3_vgizq"))
-            h4 = _format_quantity(item.get("h4_vgizq"))
-            dh = _format_quantity(item.get("dh_vgizq"))
-            if formula != "n/a":
-                lines.append(f"- Formula: `{formula}`")
-            lines.append(f"- h1_vgizq: `{h1}`")
-            lines.append(f"- h2_vgizq: `{h2}`")
-            if h3 != "n/a":
-                lines.append(f"- h3_vgizq: `{h3}`")
-            if h4 != "n/a":
-                lines.append(f"- h4_vgizq: `{h4}`")
-            lines.append(f"- dh_vgizq: `{dh}`")
-            lines.append("")
-            continue
-        if note_id == "section_6_7.end_plate_standard_hole_diameter_note":
-            formula = _format_text(item.get("formula"))
-            db = _format_quantity(item.get("db"))
-            dh = _format_quantity(item.get("dh"))
-            hole_add_in = _format_text(item.get("hole_add_in"))
-            if formula != "n/a":
-                lines.append(f"- Formula: `{formula}`")
-            lines.append(f"- db (diametro perno): `{db}`")
-            lines.append(f"- dh (agujero estandar): `{dh}`")
-            lines.append(f"- Incremento aplicado (in): `{hole_add_in}`")
-            lines.append("")
-            continue
-        if note_id in {
-            "section_6_3.end_plate_height_derived",
-            "section_6_3.end_plate_height_derived_izq",
-        }:
-            formula = _format_text(item.get("formula"))
-            hpe_der = _format_quantity(item.get("hpe_vgder"))
-            hpe_izq = _format_quantity(item.get("hpe_vgizq"))
-            if formula != "n/a":
-                lines.append(f"- Formula: `{formula}`")
-            if hpe_der != "n/a":
-                lines.append(f"- Hpe_vgder: `{hpe_der}`")
-            if hpe_izq != "n/a":
-                lines.append(f"- Hpe_vgizq: `{hpe_izq}`")
-            lines.append("")
-            continue
-        if note_id == "section_2_3_4.protected_zone_length":
-            formula = _format_text(item.get("formula"))
-            protected_zone_der = _format_quantity(item.get("protected_zone_length_vgder"))
-            protected_zone_izq = _format_quantity(item.get("protected_zone_length_vgizq"))
-            if formula != "n/a":
-                lines.append(f"- Formula: `{formula}`")
-            if protected_zone_der != "n/a":
-                lines.append(f"- Lpz_vgder: `{protected_zone_der}`")
-            if protected_zone_izq != "n/a":
-                lines.append(f"- Lpz_vgizq: `{protected_zone_izq}`")
-            lines.append("")
-            continue
-        formula = _format_text(item.get("formula"))
-        if formula != "n/a":
-            candidate_a_label = _format_text(item.get("candidate_a_label"))
-            candidate_a = _format_quantity(item.get("candidate_a"))
-            candidate_b_label = _format_text(item.get("candidate_b_label"))
-            candidate_b = _format_quantity(item.get("candidate_b"))
-            protected_zone = _format_quantity(item.get("protected_zone_length"))
-            protected_zone_der = _format_quantity(item.get("protected_zone_length_vgder"))
-            protected_zone_izq = _format_quantity(item.get("protected_zone_length_vgizq"))
-            derived_value = _format_quantity(item.get("derived_value"))
-            lines.append(f"- Formula: `{formula}`")
-            lines.append(f"- Candidato A ({candidate_a_label}): `{candidate_a}`")
-            lines.append(f"- Candidato B ({candidate_b_label}): `{candidate_b}`")
-            if protected_zone_der != "n/a":
-                lines.append(f"- Longitud zona protegida viga derecha: `{protected_zone_der}`")
-            if protected_zone_izq != "n/a":
-                lines.append(f"- Longitud zona protegida viga izquierda: `{protected_zone_izq}`")
-            if derived_value != "n/a":
-                lines.append(f"- Valor derivado: `{derived_value}`")
-            elif protected_zone != "n/a" and protected_zone_der == "n/a" and protected_zone_izq == "n/a":
-                lines.append(f"- Longitud zona protegida requerida: `{protected_zone}`")
+        scope = _format_text(item.get("scope")).upper()
+        if scope not in grouped:
+            grouped[scope] = []
+            scope_order.append(scope)
+        grouped[scope].append(item)
+
+    def _scope_sort_key(scope: str) -> tuple[int, int, int]:
+        scope_upper = scope.upper()
+        if scope_upper == "CONTINUITY_PLATE_COL":
+            return (2, 98, 10)
+        if scope_upper == "DOUBLER_PLATE_COL":
+            return (2, 99, 9)
+        if scope_upper.startswith("WELD_"):
+            parts = scope_upper.split("_")
+            try:
+                weld_idx = int(parts[1])
+            except (IndexError, ValueError):
+                weld_idx = 99
+            side_rank = 9
+            if scope_upper.endswith("_VGDER"):
+                side_rank = 1
+            elif scope_upper.endswith("_VGIZQ"):
+                side_rank = 2
+            elif scope_upper.endswith("_COL"):
+                side_rank = 3
+            return (2, weld_idx, side_rank)
+        if scope in scope_order:
+            return (1, scope_order.index(scope), 0)
+        return (3, 999, 0)
+
+    ordered_scopes = sorted(scope_order, key=_scope_sort_key)
+    lines: list[str] = []
+    for section_offset, scope in enumerate(ordered_scopes, start=1):
+        lines.append(f"### {chapter_number}.{section_offset} Ámbito `{scope}`")
         lines.append("")
+        local_note_index = 1
+        for item in grouped[scope]:
+            note_id = _format_text(item.get("id"))
+            description = _translate_text_es(item.get("description"))
+            clause = _render_clause_text(
+                item.get("clause"),
+                item.get("source_document"),
+                item.get("rule_id"),
+            )
+            note_label = f"{chapter_number}.{section_offset}.{local_note_index}"
+            local_note_index += 1
+            lines.append(f"#### {note_label} Nota tecnica - {description}")
+            lines.append("")
+            lines.append(f"- Ambito: `{scope}`")
+            lines.append(f"- Clausula: `{clause}`")
+            requirement = _translate_text_es(item.get("requirement"))
+            if requirement != "n/a":
+                lines.append(f"- Requisito: `{requirement}`")
+            formula = _format_text(item.get("formula"))
+            if formula != "n/a":
+                lines.append(f"- Formula: `{formula}`")
+            lines.append("")
     return "\n".join(lines)
 
 
@@ -1209,11 +1400,11 @@ def _render_step_2_mpr(step_2: dict) -> str:
     mpr_der = _format_scalar_with_unit(inter.get("mpr_der"), "kN-mm")
     mpr_izq = _format_scalar_with_unit(inter.get("mpr_izq"), "kN-mm")
     lines = [
-        "## Paso 2 - Momento probable maximo en rotula plastica (Mpr)",
+        "## Paso 4 - Momento probable maximo en rotula plastica (Mpr)",
         "",
         "Calculo de momento probable por lado usando `Mpr = Cpr * Ry * Fy * Ze` (Ze = Zx del catalogo).",
         "",
-        "### 2.1 Calculo de Mpr para viga izquierda",
+        "### 4.1 Calculo de Mpr para viga izquierda",
         "",
         f"- Clausula: `{clause_text}`",
         "- Ecuacion: `Mpr_vgizq = Cpr_vgizq * Ry * Fy * Ze_vgizq`",
@@ -1224,7 +1415,7 @@ def _render_step_2_mpr(step_2: dict) -> str:
         f"- Cpr_vgizq: `{cpr_izq}`",
         f"- Mpr_vgizq: `{mpr_izq}`",
         "",
-        "### 2.2 Calculo de Mpr para viga derecha",
+        "### 4.2 Calculo de Mpr para viga derecha",
         "",
         f"- Clausula: `{clause_text}`",
         "- Ecuacion: `Mpr_vgder = Cpr_vgder * Ry * Fy * Ze_vgder`",
@@ -1246,9 +1437,9 @@ def _render_step_3_sh(step_3: dict) -> str:
     sh_izq = _format_scalar_with_unit(step_3.get("intermediates", {}).get("sh_izq"), "mm")
     sh_der = _format_scalar_with_unit(step_3.get("intermediates", {}).get("sh_der"), "mm")
     lines = [
-        "## Paso 3 - Distancia de rotula plastica desde la cara de la columna (Sh)",
+        "## Paso 5 - Distancia de rotula plastica desde la cara de la columna (Sh)",
         "",
-        "### 3.1 Calculo de Sh para viga izquierda",
+        "### 5.1 Calculo de Sh para viga izquierda",
         "",
         f"- Clausula: `{clause_text}`",
         f"- Tipo de conexion: `{ctype}`",
@@ -1257,7 +1448,7 @@ def _render_step_3_sh(step_3: dict) -> str:
         f"- bf_vgizq: `{_format_quantity(inputs.get('bf_vgizq'))}`",
         f"- Sh_vgizq: `{sh_izq}`",
         "",
-        "### 3.2 Calculo de Sh para viga derecha",
+        "### 5.2 Calculo de Sh para viga derecha",
         "",
         f"- Clausula: `{clause_text}`",
         f"- Tipo de conexion: `{ctype}`",
@@ -1276,7 +1467,7 @@ def _render_step_4_vh(step_4: dict) -> str:
     beam_connection_sides = _format_text(inputs.get("beam_connection_sides"))
     sides = ["izq", "der"] if beam_connection_sides == "both_sides" else ["der"]
     lines = [
-        "## Paso 4 - Cortante Probable En Rotula Plastica (Vhmax, Vhmin)",
+        "## Paso 6 - Cortante Probable En Rotula Plastica (Vhmax, Vhmin)",
         "",
         "Calculo segun Eq. (2.4-3): `Vhmax = 2*Mpr/Llb + Vg` y `Vhmin = 2*Mpr/Llb - Vg`.",
         "",
@@ -1284,7 +1475,7 @@ def _render_step_4_vh(step_4: dict) -> str:
     clause_text = _render_clause_text(step_4.get("clause"), step_4.get("source_document"), step_4.get("rule_id"))
     for side in sides:
         side_suffix = f"vg{side}"
-        subtitle = "### 4.1 Calculo de cortante probable para viga izquierda" if side == "izq" else "### 4.2 Calculo de cortante probable para viga derecha"
+        subtitle = "### 6.1 Calculo de cortante probable para viga izquierda" if side == "izq" else "### 6.2 Calculo de cortante probable para viga derecha"
         lines.extend(
             [
                 subtitle,
@@ -1314,14 +1505,14 @@ def _render_step_5_mf(step_5: dict) -> str:
         sides = ["der"]
     clause_text = _render_clause_text(step_5.get("clause"), step_5.get("source_document"), step_5.get("rule_id"))
     lines = [
-        "## Paso 5 - Momento Probable En Cara De Columna (Mfmax, Mfmin)",
+        "## Paso 7 - Momento Probable En Cara De Columna (Mfmax, Mfmin)",
         "",
         "Calculo segun Eq. (2.4-4): `Mfmax = Mpr + Vhmax*Sh` y `Mfmin = Mpr + Vhmin*Sh`.",
         "",
     ]
     for side in sides:
         side_suffix = f"vg{side}"
-        subtitle = "### 5.1 Calculo de momento probable en cara de columna para viga izquierda" if side == "izq" else "### 5.2 Calculo de momento probable en cara de columna para viga derecha"
+        subtitle = "### 7.1 Calculo de momento probable en cara de columna para viga izquierda" if side == "izq" else "### 7.2 Calculo de momento probable en cara de columna para viga derecha"
         lines.extend(
             [
                 subtitle,
@@ -1406,7 +1597,10 @@ def _render_step_7_end_plate(
     step_7_2_2: dict | None,
     step_7_3_1: dict | None,
     step_7_3_2: dict | None,
+    connection_type: str | None = None,
 ) -> str:
+    connection_type_norm = str(connection_type or "").strip().lower()
+    show_72_block = connection_type_norm == "bueep_4e"
     lines = [
         "## Paso 7 - Revision de resistencia platina extremo (vg_izq)",
         "",
@@ -1445,7 +1639,7 @@ def _render_step_7_end_plate(
                 "",
             ]
         )
-    if step_7_2_1 is not None:
+    if show_72_block and step_7_2_1 is not None:
         inputs = step_7_2_1.get("inputs", {})
         inter = step_7_2_1.get("intermediates", {})
         design_factors = step_7_2_1.get("design_factors", {})
@@ -1472,7 +1666,7 @@ def _render_step_7_end_plate(
                 "",
             ]
         )
-    if step_7_2_2 is not None:
+    if show_72_block and step_7_2_2 is not None:
         inputs = step_7_2_2.get("inputs", {})
         inter = step_7_2_2.get("intermediates", {})
         design_factors = step_7_2_2.get("design_factors", {})
@@ -1598,10 +1792,11 @@ def _render_step_8_stiffener_weld(step_8_1_1: dict | None) -> str:
     lines.extend(
         [
             f"- phi usado: `{_format_text(design_factors.get('phi'))}`",
-            "- l_w1_vgizq (longitud soldadura calculada): `l_w1_vgizq = h_pest_vgizq - c_pest_vgizq - 2*w_w1_vgizq`",
+            "- l_w1_vgizq (longitud soldadura calculada): `l_w1_vgizq = h_pest_vgizq - 2*L_gap_w1_vgizq - c_pest_vgizq`",
             f"- Fys_pest_vgizq: `{_format_quantity(inputs.get('fys_pest_vgizq'))}`",
             f"- t_pest_vgizq: `{_format_quantity(inputs.get('t_pest_vgizq'))}`",
             f"- h_pest_vgizq: `{_format_quantity(inputs.get('h_pest_vgizq'))}`",
+            f"- L_gap_w1_vgizq: `{_format_quantity(inputs.get('L_gap_w1_vgizq'))}`",
             f"- c_pest_vgizq: `{_format_quantity(inputs.get('c_pest_vgizq'))}`",
             f"- l_w1_vgizq: `{_format_quantity(inputs.get('l_w1_vgizq'))}`",
             f"- Fexx_w1_vgizq: `{_format_quantity(inputs.get('fexx_w1_vgizq') or inputs.get('fexx'))}`",
@@ -1652,11 +1847,12 @@ def _render_step_9_stiffener_beam_weld(step_9_1_1: dict | None) -> str:
     lines.extend(
         [
             f"- phi usado: `{_format_text(design_factors.get('phi'))}`",
-            "- l_w2_vgizq (longitud soldadura calculada): `l_w2_vgizq = L_pest_vgizq - c_pest_vgizq - 2*w_w2_vgizq`",
+            "- l_w2_vgizq (longitud soldadura calculada): `l_w2_vgizq = L_pest_vgizq - 2*L_gap_w2_vgizq - c_pest_vgizq`",
             f"- Fys_pest_vgizq: `{_format_quantity(inputs.get('fys_pest_vgizq') or inputs.get('fys'))}`",
             f"- t_pest_vgizq: `{_format_quantity(inputs.get('t_pest_vgizq') or inputs.get('ts'))}`",
             f"- h_pest_vgizq: `{_format_quantity(inputs.get('h_pest_vgizq') or inputs.get('hst'))}`",
             f"- L_pest_vgizq: `{_format_quantity(inputs.get('l_pest_vgizq') or inputs.get('lst'))}`",
+            f"- L_gap_w2_vgizq: `{_format_quantity(inputs.get('L_gap_w2_vgizq'))}`",
             f"- c_pest_vgizq: `{_format_quantity(inputs.get('c_pest_vgizq') or inputs.get('clip_st'))}`",
             f"- l_w2_vgizq: `{_format_quantity(inputs.get('l_w2_vgizq') or inputs.get('lst_w2'))}`",
             f"- Fexx_w2_vgizq: `{_format_quantity(inputs.get('fexx_w2_vgizq') or inputs.get('fexx'))}`",
@@ -2016,6 +2212,11 @@ def _render_step_12_column_flange_local_bending(
         if converted_phi_mn is not None:
             force_unit = "kN" if z_vgizq_q.unit == "mm" else "kip"
             phi_rn_cf_v2_col_q = Quantity(value=converted_phi_mn.value / z_vgizq_q.value, unit=force_unit)
+    if has_continuity_plate and ru_cf_v2_col_q is not None and phi_rn_cf_v2_col_q is not None:
+        ru_cf_v2_col_q = Quantity(
+            value=min(ru_cf_v2_col_q.value, phi_rn_cf_v2_col_q.value),
+            unit=ru_cf_v2_col_q.unit,
+        )
     if ru_cf_v2_col_q is not None and phi_rn_cf_v2_col_q is not None:
         try:
             dcr_cf_v2_col = compute_dcr(demand=ru_cf_v2_col_q, capacity=phi_rn_cf_v2_col_q)["dcr"]
@@ -2516,9 +2717,9 @@ def _render_fully_restrained_splice_outline(rows_viga: list[dict], notes_viga: l
     lines.extend(_render_scope_block(title="## Revision conexion: Pernos 2", scope="PERNOS_2"))
     return "\n".join(lines)
 
-def _render_step_1_list(rows: list[dict]) -> str:
+def _render_step_1_list(rows: list[dict], *, chapter_number: int = 1) -> str:
     lines: list[str] = []
-    lines.append("### 1.2 Revisiones de propiedades geometricas")
+    lines.append(f"### {chapter_number}.2 Revisiones de propiedades geometricas")
     lines.append("")
     for idx, item in enumerate(rows, start=1):
         scope = str(item.get("scope", "n/a")).upper()
@@ -2556,25 +2757,33 @@ def _render_step_1_list(rows: list[dict]) -> str:
             verification = f"{calculated_symbol} in {limit_symbol}; '{calculated_text}' in {{{allowed}}}"
         elif comparison_mode == "conditional_allowed_set":
             thickness = _format_quantity(item.get("thickness"))
-            thickness_limit = _format_quantity(item.get("thickness_limit"))
+            weld_size = _format_quantity(item.get("weld_size"))
+            required_weld_size = _format_quantity(item.get("required_weld_size"))
             calculated_text = _format_text(item.get("calculated_text"))
             allowed_values = item.get("allowed_values")
             allowed = ", ".join(str(v) for v in allowed_values) if isinstance(allowed_values, list) else limit_symbol
             governing = _format_text(item.get("governing_condition"))
-            if governing == "cjp_or_pjp_always_permitted":
+            if governing == "cjp_always_permitted":
                 verification = (
-                    f"weld_cp in {{cjp, pjp}} => cumple siempre; "
-                    f"tcp={thickness}; weld_cp='{calculated_text}'"
+                    f"tipo_w5_col='cjp' => cumple; "
+                    f"t_pc_col={thickness}; tipo_w5_col='{calculated_text}'"
                 )
-            elif governing == "double_sided_fillet_requires_tcp_le_limit":
+            elif governing == "fillet_requires_minimum_size_075_tcp":
                 verification = (
-                    f"if weld_cp='double_sided_fillet': tcp <= {thickness_limit}; "
-                    f"tcp={thickness}; weld_cp='{calculated_text}'"
+                    f"if tipo_w5_col='fillet': w_w5_col >= 0.75*t_pc_col; "
+                    f"w_w5_col={weld_size}; 0.75*t_pc_col={required_weld_size}; "
+                    f"t_pc_col={thickness}; tipo_w5_col='{calculated_text}'"
+                )
+            elif governing == "fillet_requires_size_input":
+                verification = (
+                    f"if tipo_w5_col='fillet': se requiere w_w5_col; "
+                    f"w_w5_col={weld_size}; 0.75*t_pc_col={required_weld_size}; "
+                    f"t_pc_col={thickness}; tipo_w5_col='{calculated_text}'"
                 )
             else:
                 verification = (
-                    f"weld_cp in {{{allowed}}} y regla de espesor para double_sided_fillet; "
-                    f"tcp={thickness}; weld_cp='{calculated_text}'"
+                    f"tipo_w5_col in {{{allowed}}}; "
+                    f"t_pc_col={thickness}; tipo_w5_col='{calculated_text}'"
                 )
         elif comparison_mode == "compound":
             verification = _format_text(item.get("verification_text"))
@@ -2587,7 +2796,7 @@ def _render_step_1_list(rows: list[dict]) -> str:
             limit = _format_quantity(item.get("limit"))
             verification = f"{calculated_symbol} {comparison} {limit_symbol}; {calculated} {comparison} {limit}"
 
-        lines.append(f"#### Chequeo 1.2.{idx} - {description} (`{calculated_symbol}`)")
+        lines.append(f"#### Chequeo {chapter_number}.2.{idx} - {description} (`{calculated_symbol}`)")
         lines.append("")
         lines.append(f"- Ambito: `{scope}`")
         lines.append(f"- Verificacion: `{verification}`")
@@ -2597,7 +2806,12 @@ def _render_step_1_list(rows: list[dict]) -> str:
     return "\n".join(lines)
 
 
-def _render_step_1_list_grouped_by_scope(rows: list[dict]) -> str:
+def _render_step_1_list_grouped_by_scope(
+    rows: list[dict],
+    *,
+    chapter_number: int = 1,
+    scope_template: list[str] | None = None,
+) -> str:
     grouped: dict[str, list[dict]] = {}
     scope_order: list[str] = []
     for item in rows:
@@ -2609,10 +2823,12 @@ def _render_step_1_list_grouped_by_scope(rows: list[dict]) -> str:
 
     def _scope_sort_key(scope: str) -> tuple[int, int, int]:
         scope_upper = scope.upper()
+        if scope_upper == "CONTINUITY_PLATE_COL":
+            # Keep continuity-plate validations near the end, before doubler-plate scope.
+            return (2, 98, 10)
         if scope_upper == "DOUBLER_PLATE_COL":
-            # Render doubler-plate checks after weld scopes to keep column-web check in 1.4
-            # and isolate doubler validations in a late dedicated subchapter.
-            return (2, 98, 9)
+            # Render doubler-plate checks after continuity-plate checks.
+            return (2, 99, 9)
         if scope_upper.startswith("WELD_"):
             parts = scope_upper.split("_")
             try:
@@ -2632,17 +2848,25 @@ def _render_step_1_list_grouped_by_scope(rows: list[dict]) -> str:
         return (3, 999, 0)
 
     ordered_scopes = sorted(scope_order, key=_scope_sort_key)
+    if scope_template:
+        normalized_template = [str(scope).upper() for scope in scope_template]
+        ordered_scopes = list(normalized_template)
 
     lines: list[str] = []
     scope_summary: list[dict[str, Any]] = []
-    for section_offset, scope in enumerate(ordered_scopes, start=2):
-        lines.append(f"### 1.{section_offset} Ambito `{scope}`")
+    for section_offset, scope in enumerate(ordered_scopes, start=1):
+        if chapter_number == 3 and scope.upper() == "CONTINUITY_PLATE_COL":
+            lines.append(f"### {chapter_number}.{section_offset} platina de continuidad")
+        elif chapter_number == 1 and scope.upper() == "DOUBLER_PLATE_COL":
+            lines.append(f"### {chapter_number}.{section_offset} platina de enchape del alma")
+        else:
+            lines.append(f"### {chapter_number}.{section_offset} Ambito `{scope}`")
         lines.append("")
         local_idx = 1
         total_checks = 0
         pass_checks = 0
         fail_numerals: list[str] = []
-        for item in grouped[scope]:
+        for item in grouped.get(scope, []):
             description = _translate_text_es(item.get("description"))
             calculated_symbol = str(item.get("calculated_symbol", "calc"))
             limit_symbol = str(item.get("limit_symbol", "lim"))
@@ -2678,25 +2902,33 @@ def _render_step_1_list_grouped_by_scope(rows: list[dict]) -> str:
                 verification = f"{calculated_symbol} in {limit_symbol}; '{calculated_text}' in {{{allowed}}}"
             elif comparison_mode == "conditional_allowed_set":
                 thickness = _format_quantity(item.get("thickness"))
-                thickness_limit = _format_quantity(item.get("thickness_limit"))
+                weld_size = _format_quantity(item.get("weld_size"))
+                required_weld_size = _format_quantity(item.get("required_weld_size"))
                 calculated_text = _format_text(item.get("calculated_text"))
                 allowed_values = item.get("allowed_values")
                 allowed = ", ".join(str(v) for v in allowed_values) if isinstance(allowed_values, list) else limit_symbol
                 governing = _format_text(item.get("governing_condition"))
-                if governing == "cjp_or_pjp_always_permitted":
+                if governing == "cjp_always_permitted":
                     verification = (
-                        f"weld_cp in {{cjp, pjp}} => cumple siempre; "
-                        f"tcp={thickness}; weld_cp='{calculated_text}'"
+                        f"tipo_w5_col='cjp' => cumple; "
+                        f"t_pc_col={thickness}; tipo_w5_col='{calculated_text}'"
                     )
-                elif governing == "double_sided_fillet_requires_tcp_le_limit":
+                elif governing == "fillet_requires_minimum_size_075_tcp":
                     verification = (
-                        f"if weld_cp='double_sided_fillet': tcp <= {thickness_limit}; "
-                        f"tcp={thickness}; weld_cp='{calculated_text}'"
+                        f"if tipo_w5_col='fillet': w_w5_col >= 0.75*t_pc_col; "
+                        f"w_w5_col={weld_size}; 0.75*t_pc_col={required_weld_size}; "
+                        f"t_pc_col={thickness}; tipo_w5_col='{calculated_text}'"
+                    )
+                elif governing == "fillet_requires_size_input":
+                    verification = (
+                        f"if tipo_w5_col='fillet': se requiere w_w5_col; "
+                        f"w_w5_col={weld_size}; 0.75*t_pc_col={required_weld_size}; "
+                        f"t_pc_col={thickness}; tipo_w5_col='{calculated_text}'"
                     )
                 else:
                     verification = (
-                        f"weld_cp in {{{allowed}}} y regla de espesor para double_sided_fillet; "
-                        f"tcp={thickness}; weld_cp='{calculated_text}'"
+                        f"tipo_w5_col in {{{allowed}}}; "
+                        f"t_pc_col={thickness}; tipo_w5_col='{calculated_text}'"
                     )
             elif comparison_mode == "compound":
                 verification = _format_text(item.get("verification_text"))
@@ -2709,14 +2941,14 @@ def _render_step_1_list_grouped_by_scope(rows: list[dict]) -> str:
                 limit = _format_quantity(item.get("limit"))
                 verification = f"{calculated_symbol} {comparison} {limit_symbol}; {calculated} {comparison} {limit}"
 
-            lines.append(f"#### Chequeo 1.{section_offset}.{local_idx} - {description} (`{calculated_symbol}`)")
+            lines.append(f"#### Chequeo {chapter_number}.{section_offset}.{local_idx} - {description} (`{calculated_symbol}`)")
             lines.append("")
             lines.append(f"- Ambito: `{scope}`")
             lines.append(f"- Verificacion: `{verification}`")
             lines.append(f"- Clausula: `{clause}`")
             lines.append(f"- Resultado: {result_text}")
             lines.append("")
-            numeral = f"1.{section_offset}.{local_idx}"
+            numeral = f"{chapter_number}.{section_offset}.{local_idx}"
             total_checks += 1
             if status_raw in {"PASS", "OK"}:
                 pass_checks += 1
@@ -2735,8 +2967,8 @@ def _render_step_1_list_grouped_by_scope(rows: list[dict]) -> str:
             }
         )
 
-    summary_section = len(scope_order) + 2
-    lines.append(f"### 1.{summary_section} Resumen de chequeos por ambito")
+    summary_section = len(ordered_scopes) + 1
+    lines.append(f"### {chapter_number}.{summary_section} Resumen de chequeos por ambito")
     lines.append("")
     for summary in scope_summary:
         fail_numerals = summary["fail_numerals"]
@@ -2744,11 +2976,697 @@ def _render_step_1_list_grouped_by_scope(rows: list[dict]) -> str:
         status_dot = "🟢" if summary["fail"] == 0 else "🔴"
         lines.append(
             f"- {status_dot} "
-            f"`1.{summary['section_offset']}` `{summary['scope']}`: "
+                f"`{chapter_number}.{summary['section_offset']}` `{summary['scope']}`: "
             f"total={summary['total']}, cumple={summary['pass']}, no_cumple={summary['fail']}, "
             f"numerales_no_cumplen={fail_text}"
         )
     lines.append("")
+    return "\n".join(lines)
+
+
+def _ordered_scopes_from_rows(rows: list[dict]) -> list[str]:
+    grouped: dict[str, list[dict]] = {}
+    scope_order: list[str] = []
+    for item in rows:
+        scope = str(item.get("scope", "n/a")).upper()
+        if scope not in grouped:
+            grouped[scope] = []
+            scope_order.append(scope)
+
+    def _scope_sort_key(scope: str) -> tuple[int, int, int]:
+        scope_upper = scope.upper()
+        if scope_upper == "DOUBLER_PLATE_COL":
+            return (2, 98, 9)
+        if scope_upper == "WELD_7_COL":
+            return (2, 100, 8)
+        if scope_upper == "WELD_6_COL":
+            return (2, 100, 9)
+        if scope_upper.startswith("WELD_"):
+            parts = scope_upper.split("_")
+            try:
+                weld_idx = int(parts[1])
+            except (IndexError, ValueError):
+                weld_idx = 99
+            side_rank = 9
+            if scope_upper.endswith("_VGDER"):
+                side_rank = 1
+            elif scope_upper.endswith("_VGIZQ"):
+                side_rank = 2
+            elif scope_upper.endswith("_COL"):
+                side_rank = 3
+            return (2, weld_idx, side_rank)
+        if scope in scope_order:
+            return (1, scope_order.index(scope), 0)
+        return (3, 999, 0)
+
+    return sorted(scope_order, key=_scope_sort_key)
+
+
+def _render_scope_subtitles_only(*, chapter_number: int, scopes: list[str]) -> str:
+    lines: list[str] = []
+    for section_offset, scope in enumerate(scopes, start=1):
+        if chapter_number == 1 and scope == "CONTINUITY_PLATE_COL":
+            lines.append(f"### {chapter_number}.{section_offset} platinas de continuidad")
+        elif chapter_number == 1 and scope == "DOUBLER_PLATE_COL":
+            lines.append(f"### {chapter_number}.{section_offset} platina de enchape del alma")
+        else:
+            lines.append(f"### {chapter_number}.{section_offset} Ámbito `{scope}`")
+        lines.append("")
+    return "\n".join(lines)
+
+
+def _render_step_1_notes_by_scope_template(
+    notes: list[dict],
+    *,
+    chapter_number: int,
+    scopes: list[str],
+    rows: list[dict] | None = None,
+    step_1_inputs: dict | None = None,
+    step_2: dict | None = None,
+    step_3: dict | None = None,
+    step_4: dict | None = None,
+    step_7_1_1_by_side: dict | None = None,
+    step_6_1_by_side: dict | None = None,
+    step_7_3_1_by_side: dict | None = None,
+    step_21_5_1_panel_zone: dict | None = None,
+) -> str:
+    if not notes:
+        return ""
+    grouped: dict[str, list[dict]] = {}
+    for item in notes:
+        note_id = _format_text(item.get("id"))
+        if note_id == "section_6_7.beam_flange_to_end_plate_weld_note":
+            continue
+        scope = _format_text(item.get("scope")).upper()
+        grouped.setdefault(scope, []).append(item)
+    rows_by_scope_symbol: dict[tuple[str, str], dict] = {}
+    for row in (rows or []):
+        rows_by_scope_symbol[(str(row.get("scope", "")).upper(), str(row.get("calculated_symbol", "")))] = row
+
+    lines: list[str] = []
+    for section_offset, scope in enumerate(scopes, start=1):
+        if chapter_number == 1 and scope == "CONTINUITY_PLATE_COL":
+            lines.append(f"### {chapter_number}.{section_offset} platinas de continuidad")
+        elif chapter_number == 1 and scope == "DOUBLER_PLATE_COL":
+            lines.append(f"### {chapter_number}.{section_offset} platina de enchape del alma")
+        else:
+            lines.append(f"### {chapter_number}.{section_offset} Ámbito `{scope}`")
+        lines.append("")
+        if chapter_number == 1 and scope == "BEAM_IZQ":
+            rows_map: dict[str, dict] = {}
+            for row in (rows or []):
+                if str(row.get("scope", "")).upper() == "BEAM_IZQ":
+                    rows_map[str(row.get("calculated_symbol", ""))] = row
+            step2_inputs = (step_2 or {}).get("inputs", {}) if isinstance(step_2, dict) else {}
+            step3_inputs = (step_3 or {}).get("inputs", {}) if isinstance(step_3, dict) else {}
+            step4_inputs = (step_4 or {}).get("inputs", {}) if isinstance(step_4, dict) else {}
+
+            perfil_vgizq = _format_text((rows_map.get("perfil_vgizq") or {}).get("calculated_text"))
+            tipo_acero_perfil_vgizq = _format_text(
+                step2_inputs.get("tipo_acero_perfil_vgizq")
+                or step2_inputs.get("beam_steel_type_vgizq")
+                or step2_inputs.get("beam_steel_type")
+            )
+            demanda_ductilidad_vgizq = _format_text(step2_inputs.get("member_ductility_demand_vgizq"))
+            llb_vgizq = _format_quantity(step4_inputs.get("lh_izq"))
+            lnc_vgizq = _format_quantity((rows_map.get("Lnc_vgizq") or {}).get("calculated"))
+
+            lpz_vgizq = "n/a"
+            for note_item in grouped.get("BEAM", []):
+                if _format_text(note_item.get("id")) == "section_2_3_4.protected_zone_length":
+                    lpz_vgizq = _format_quantity(note_item.get("protected_zone_length_vgizq"))
+                    break
+
+            lines.append(f"#### {chapter_number}.{section_offset}.1 Resumen de geometria")
+            lines.append("")
+            lines.append(f"- Perfil de viga izquierda (perfil_vgizq) (inp): `{perfil_vgizq}`")
+            lines.append(f"- Tipo de acero del perfil de viga izquierda (tipo_acero_perfil_vgizq) (inp): `{tipo_acero_perfil_vgizq}`")
+            lines.append(f"- Demanda de ductilidad de viga izquierda (demanda_ductilidad_vgizq) (inp): `{demanda_ductilidad_vgizq}`")
+            lines.append(f"- Luz libre de viga izquierda (Llb_vgizq) (inp): `{llb_vgizq}`")
+            lines.append(f"- Longitud sin conectores desde cara de columna (Lnc_vgizq) (inp): `{lnc_vgizq}`")
+            lines.append(f"- Longitud de zona protegida (Lpz_vgizq): `{lpz_vgizq}`")
+            lines.append("")
+            continue
+        if chapter_number == 1 and scope == "BEAM_DER":
+            rows_map: dict[str, dict] = {}
+            for row in (rows or []):
+                if str(row.get("scope", "")).upper() == "BEAM_DER":
+                    rows_map[str(row.get("calculated_symbol", ""))] = row
+            step2_inputs = (step_2 or {}).get("inputs", {}) if isinstance(step_2, dict) else {}
+            step4_inputs = (step_4 or {}).get("inputs", {}) if isinstance(step_4, dict) else {}
+
+            perfil_vgder = _format_text((rows_map.get("perfil_vgder") or {}).get("calculated_text"))
+            tipo_acero_perfil_vgder = _format_text(
+                step2_inputs.get("tipo_acero_perfil_vgder")
+                or step2_inputs.get("beam_steel_type_vgder")
+                or step2_inputs.get("beam_steel_type")
+            )
+            demanda_ductilidad_vgder = _format_text(step2_inputs.get("member_ductility_demand_vgder"))
+            llb_vgder = _format_quantity(step4_inputs.get("lh_der"))
+            lnc_vgder = _format_quantity((rows_map.get("Lnc_vgder") or {}).get("calculated"))
+
+            lpz_vgder = "n/a"
+            for note_item in grouped.get("BEAM", []):
+                if _format_text(note_item.get("id")) == "section_2_3_4.protected_zone_length":
+                    lpz_vgder = _format_quantity(note_item.get("protected_zone_length_vgder"))
+                    break
+
+            lines.append(f"#### {chapter_number}.{section_offset}.1 Resumen de geometria")
+            lines.append("")
+            lines.append(f"- Perfil de viga derecha (perfil_vgder) (inp): `{perfil_vgder}`")
+            lines.append(f"- Tipo de acero del perfil de viga derecha (tipo_acero_perfil_vgder) (inp): `{tipo_acero_perfil_vgder}`")
+            lines.append(f"- Demanda de ductilidad de viga derecha (demanda_ductilidad_vgder) (inp): `{demanda_ductilidad_vgder}`")
+            lines.append(f"- Luz libre de viga derecha (Llb_vgder) (inp): `{llb_vgder}`")
+            lines.append(f"- Longitud sin conectores desde cara de columna (Lnc_vgder) (inp): `{lnc_vgder}`")
+            lines.append(f"- Longitud de zona protegida (Lpz_vgder): `{lpz_vgder}`")
+            lines.append("")
+            continue
+        if chapter_number == 1 and scope == "COLUMN":
+            rows_map: dict[str, dict] = {}
+            for row in (rows or []):
+                if str(row.get("scope", "")).upper() == "COLUMN":
+                    rows_map[str(row.get("calculated_symbol", ""))] = row
+            step1_inputs = step_1_inputs if isinstance(step_1_inputs, dict) else {}
+            panel_inputs = (
+                (step_21_5_1_panel_zone or {}).get("inputs", {})
+                if isinstance(step_21_5_1_panel_zone, dict)
+                else {}
+            )
+
+            shape_col = _format_text((rows_map.get("shape_col") or {}).get("calculated_text"))
+            tipo_acero_perfil_col = _format_text(
+                step1_inputs.get("tipo_acero_perfil_col")
+                or step1_inputs.get("column_steel_type")
+            )
+            d_col = _format_quantity((rows_map.get("d_col") or {}).get("calculated"))
+            tw_col = _format_quantity((rows_map.get("tw_col") or {}).get("calculated"))
+            st_col = _format_quantity((rows_map.get("St_col") or {}).get("calculated"))
+            hb_col = _format_quantity(panel_inputs.get("hb_col"))
+            ht_col = _format_quantity(panel_inputs.get("ht_col"))
+            bf_col_q = panel_inputs.get("bcf_col")
+            tpc_col_q = step1_inputs.get("t_pc_col") or step1_inputs.get("tpc_col") or step1_inputs.get("continuity_plate_thickness_tcp")
+            b1_pc_col_q = step1_inputs.get("b1_pc_col")
+            usar_pc_col = step1_inputs.get("usar_pc_col")
+            if usar_pc_col is None:
+                usar_pc_col = step1_inputs.get("continuity_plate_enabled")
+            tipo_acero_pc_col = _format_text(
+                step1_inputs.get("tipo_acero_pc_col")
+                or step1_inputs.get("continuity_plate_steel_type")
+            )
+            kdet_col_q = step1_inputs.get("kdet_col")
+            k1_col_q = step1_inputs.get("k1_col")
+            tfdet_col_q = step1_inputs.get("tfdet_col")
+            tipo_w5_col = _format_text(
+                step1_inputs.get("tipo_w5_col")
+                or step1_inputs.get("continuity_plate_weld_type")
+            )
+            fexx_w5_col_q = step1_inputs.get("Fexx_w5_col") or step1_inputs.get("weld_fexx")
+            t_w5_col_q = step1_inputs.get("w_w5_col") or step1_inputs.get("t_w5_col")
+            nl_w5_col = step1_inputs.get("nl_w5_col")
+            l_gap_w5_col_q = step1_inputs.get("L_gap_w5_col")
+            kds_w5_col = step1_inputs.get("kds_w5_col")
+            tw_col_q = (rows_map.get("tw_col") or {}).get("calculated")
+            d_col_q = (rows_map.get("d_col") or {}).get("calculated")
+
+            def _const_like(q: object, mm_value: float) -> dict | None:
+                qq = _as_quantity(q)
+                if qq is None:
+                    return None
+                if qq.unit == "mm":
+                    return {"value": mm_value, "unit": "mm"}
+                if qq.unit == "in":
+                    return {"value": mm_value / 25.4, "unit": "in"}
+                return None
+
+            def _side_tag(side: str) -> str:
+                return "vgizq" if side == "izq" else "vgder"
+
+            def _qsum(a: object, b: object, c: object, *, factors: tuple[float, float, float] = (1.0, 1.0, 1.0)) -> dict | None:
+                qa = _as_quantity(a)
+                qb = _as_quantity(b)
+                qc = _as_quantity(c)
+                if qa is None or qb is None or qc is None:
+                    return None
+                if not (qa.unit == qb.unit == qc.unit):
+                    return None
+                return {"value": factors[0] * qa.value + factors[1] * qb.value + factors[2] * qc.value, "unit": qa.unit}
+
+            lines.append(f"#### {chapter_number}.{section_offset}.1 Resumen de geometria")
+            lines.append("")
+            lines.append(f"- Perfil de columna (shape_col) (inp): `{shape_col}`")
+            lines.append(f"- Tipo de acero del perfil de columna (tipo_acero_perfil_col) (inp): `{tipo_acero_perfil_col}`")
+            lines.append(f"- Altura de columna (d_col) (inp): `{d_col}`")
+            lines.append(f"- Espesor de alma de columna (tw_col) (inp): `{tw_col}`")
+            lines.append(f"- Proyeccion de columna sobre vigas (St_col) (inp): `{st_col}`")
+            lines.append(f"- Distancia al punto de inflexion superior (ht_col) (inp): `{ht_col}`")
+            lines.append(f"- Distancia al punto de inflexion inferior (hb_col) (inp): `{hb_col}`")
+            for side in ("izq", "der"):
+                side_label = "izquierda" if side == "izq" else "derecha"
+                tag = _side_tag(side)
+                step731_inputs = (
+                    ((step_7_3_1_by_side or {}).get(side) or {}).get("inputs", {})
+                    if isinstance((step_7_3_1_by_side or {}).get(side), dict)
+                    else {}
+                )
+                step61_inputs = (
+                    ((step_6_1_by_side or {}).get(side) or {}).get("inputs", {})
+                    if isinstance((step_6_1_by_side or {}).get(side), dict)
+                    else {}
+                )
+                pfo_q = step731_inputs.get(f"pfo_pe_{tag}")
+                pfi_q = step731_inputs.get(f"pfi_pe_{tag}")
+                tf_q = step731_inputs.get(f"tf_{tag}")
+                dh_q = step731_inputs.get(f"dh_pe_{tag}")
+                g_b_q = (rows_by_scope_symbol.get((f"BEAM_{side.upper()}", f"g_b_{tag}")) or {}).get("calculated")
+
+                pso_q = _qsum(pfo_q, tf_q, tpc_col_q, factors=(1.0, 0.5, -0.5))
+                psi_q = _qsum(pfi_q, tf_q, tpc_col_q, factors=(1.0, 0.5, -0.5))
+                c_col_q = _qsum(pfi_q, tf_q, pfo_q)
+                s_col_q = None
+                bf_col = _as_quantity(bf_col_q)
+                g_col = _as_quantity(g_b_q)
+                if bf_col is not None and g_col is not None and bf_col.unit == g_col.unit:
+                    s_col_q = {"value": 0.5 * math.sqrt(bf_col.value * g_col.value), "unit": bf_col.unit}
+
+                lines.append(f"- gage horizontal de pernos en columna lado {side_label} (g_b_col_{tag}) (inp): `{_format_quantity(g_b_q)}`")
+                lines.append(f"- Distancia exterior ajustada lado {side_label} (pso_{tag}): `{_format_quantity(pso_q)}`")
+                lines.append(f"- Distancia interior ajustada lado {side_label} (psi_{tag}): `{_format_quantity(psi_q)}`")
+                lines.append(f"- Diametro de perforacion en columna lado {side_label} (dh_col_{tag}): `{_format_quantity(dh_q)}`")
+                lines.append(f"- Parametro C de columna lado {side_label} (C_col_{tag}): `{_format_quantity(c_col_q)}`")
+                lines.append(f"- Parametro s de columna lado {side_label} (s_col_{tag}): `{_format_quantity(s_col_q)}`")
+                lines.append(
+                    f"- Distancia h1 de columna lado {side_label} (h1_col_{tag}): "
+                    f"`{_format_quantity(step61_inputs.get(f'h1_pe_{tag}'))}`"
+                )
+                lines.append(
+                    f"- Distancia h2 de columna lado {side_label} (h2_col_{tag}): "
+                    f"`{_format_quantity(step61_inputs.get(f'h2_pe_{tag}'))}`"
+                )
+                h3_val = step61_inputs.get(f"h3_pe_{tag}")
+                if h3_val is not None:
+                    lines.append(
+                        f"- Distancia h3 de columna lado {side_label} (h3_col_{tag}): "
+                        f"`{_format_quantity(h3_val)}`"
+                    )
+                h4_val = step61_inputs.get(f"h4_pe_{tag}")
+                if h4_val is not None:
+                    lines.append(
+                        f"- Distancia h4 de columna lado {side_label} (h4_col_{tag}): "
+                        f"`{_format_quantity(h4_val)}`"
+                    )
+
+            lines.append("")
+            continue
+        if chapter_number == 1 and scope == "WELD_5_COL":
+            step1_inputs = step_1_inputs if isinstance(step_1_inputs, dict) else {}
+            rows_map: dict[str, dict] = {}
+            for row in (rows or []):
+                if str(row.get("scope", "")).upper() == "COLUMN":
+                    rows_map[str(row.get("calculated_symbol", ""))] = row
+
+            tipo_w5_col = _format_text(
+                step1_inputs.get("tipo_w5_col")
+                or step1_inputs.get("continuity_plate_weld_type")
+            )
+            fexx_w5_col_q = step1_inputs.get("Fexx_w5_col") or step1_inputs.get("weld_fexx")
+            t_w5_col_q = step1_inputs.get("w_w5_col") or step1_inputs.get("t_w5_col")
+            nl_w5_col = step1_inputs.get("nl_w5_col")
+            l_gap_w5_col_q = step1_inputs.get("L_gap_w5_col")
+            kds_w5_col = step1_inputs.get("kds_w5_col")
+            b2_pc_col_q = step1_inputs.get("b2_pc_col")
+            l_w5_col_text = "n/a"
+            gap_q = _as_quantity(l_gap_w5_col_q)
+            b2_q = _as_quantity(b2_pc_col_q)
+            if b2_q is not None and gap_q is not None:
+                if gap_q.unit == b2_q.unit:
+                    gap_value = gap_q.value
+                elif gap_q.unit == "mm" and b2_q.unit == "in":
+                    gap_value = gap_q.value / 25.4
+                elif gap_q.unit == "in" and b2_q.unit == "mm":
+                    gap_value = gap_q.value * 25.4
+                else:
+                    gap_value = None
+                if gap_value is not None:
+                    l_w5_col_text = _format_quantity({"value": b2_q.value - 2.0 * gap_value, "unit": b2_q.unit})
+
+            lines.append(f"#### {chapter_number}.{section_offset}.1 Resumen de geometria")
+            lines.append("")
+            lines.append(f"- Tipo de soldadura #5 de platina de continuidad (tipo_w5_col) (inp): `{tipo_w5_col}`")
+            lines.append(f"- Resistencia del electrodo de soldadura #5 (Fexx_w5_col) (inp): `{_format_quantity(fexx_w5_col_q)}`")
+            lines.append(f"- Espesor/size de soldadura #5 (w_w5_col) (inp): `{_format_quantity(t_w5_col_q)}`")
+            lines.append(f"- Numero de lineas de soldadura #5 (nl_w5_col) (inp): `{_format_text(nl_w5_col)}`")
+            lines.append(f"- Separacion de extremos de soldadura #5 (L_gap_w5_col) (inp): `{_format_quantity(l_gap_w5_col_q)}`")
+            lines.append(f"- Factor de direccion/sistema de soldadura #5 (kds_w5_col) (inp): `{_format_text(kds_w5_col)}`")
+            lines.append(f"- Longitud efectiva de soldadura #5 (L_w5_col): `{l_w5_col_text}`")
+            lines.append("")
+            continue
+        if chapter_number == 1 and scope == "CONTINUITY_PLATE_COL":
+            rows_map: dict[str, dict] = {}
+            for row in (rows or []):
+                if str(row.get("scope", "")).upper() == "COLUMN":
+                    rows_map[str(row.get("calculated_symbol", ""))] = row
+            step1_inputs = step_1_inputs if isinstance(step_1_inputs, dict) else {}
+
+            tpc_col_q = step1_inputs.get("t_pc_col") or step1_inputs.get("tpc_col") or step1_inputs.get("continuity_plate_thickness_tcp")
+            b1_pc_col_q = step1_inputs.get("b1_pc_col")
+            t_dp_col_q = step1_inputs.get("t_dp_col")
+            n_dp_col = step1_inputs.get("n_dp_col")
+            usar_pc_col = step1_inputs.get("usar_pc_col")
+            if usar_pc_col is None:
+                usar_pc_col = step1_inputs.get("continuity_plate_enabled")
+            tipo_acero_pc_col = _format_text(
+                step1_inputs.get("tipo_acero_pc_col")
+                or step1_inputs.get("continuity_plate_steel_type")
+            )
+            kdet_col_q = step1_inputs.get("kdet_col")
+            k1_col_q = step1_inputs.get("k1_col")
+            tfdet_col_q = step1_inputs.get("tfdet_col")
+            tw_col_q = (rows_map.get("tw_col") or {}).get("calculated")
+            d_col_q = (rows_map.get("d_col") or {}).get("calculated")
+
+            def _const_like(q: object, mm_value: float) -> dict | None:
+                qq = _as_quantity(q)
+                if qq is None:
+                    return None
+                if qq.unit == "mm":
+                    return {"value": mm_value, "unit": "mm"}
+                if qq.unit == "in":
+                    return {"value": mm_value / 25.4, "unit": "in"}
+                return None
+
+            def _qsum(a: object, b: object, c: object, *, factors: tuple[float, float, float] = (1.0, 1.0, 1.0)) -> dict | None:
+                qa = _as_quantity(a)
+                qb = _as_quantity(b)
+                qc = _as_quantity(c)
+                if qa is None or qb is None or qc is None:
+                    return None
+                if not (qa.unit == qb.unit == qc.unit):
+                    return None
+                return {"value": factors[0] * qa.value + factors[1] * qb.value + factors[2] * qc.value, "unit": qa.unit}
+
+            clip1_pc_col_q = _qsum(kdet_col_q, tfdet_col_q, _const_like(kdet_col_q, 38.0), factors=(1.0, -1.0, 1.0))
+            l1_pc_col_q = _qsum(d_col_q, tfdet_col_q, _const_like(d_col_q, -3.0), factors=(1.0, -2.0, 1.0))
+            l2_pc_col_q = _qsum(l1_pc_col_q, clip1_pc_col_q, _const_like(l1_pc_col_q, 0.0), factors=(1.0, -2.0, 0.0))
+            clip2_core_q = _qsum(k1_col_q, tw_col_q, _const_like(k1_col_q, 0.0), factors=(1.0, -1.0, 0.0))
+            clip2_pc_col_q = _qsum(
+                clip2_core_q,
+                _const_like(clip2_core_q, 0.0),
+                _const_like(clip2_core_q, 12.0),
+                factors=(0.5, 0.0, 1.0),
+            )
+            b2_pc_col_q = _qsum(b1_pc_col_q, clip2_pc_col_q, _const_like(b1_pc_col_q, 0.0), factors=(1.0, -1.0, 0.0))
+            b11_pc_col_q = b1_pc_col_q
+            b12_pc_col_q: dict | None = None
+            b1_q = _as_quantity(b1_pc_col_q)
+            tpc_q = _as_quantity(tpc_col_q)
+            n_dp_int: int | None = None
+            try:
+                if n_dp_col is not None:
+                    n_dp_int = int(n_dp_col)
+            except (TypeError, ValueError):
+                n_dp_int = None
+            if b1_q is not None:
+                if n_dp_int == 1 and tpc_q is not None:
+                    if tpc_q.unit == b1_q.unit:
+                        b12_pc_col_q = {"value": b1_q.value + tpc_q.value, "unit": b1_q.unit}
+                    elif tpc_q.unit == "mm" and b1_q.unit == "in":
+                        b12_pc_col_q = {"value": b1_q.value + (tpc_q.value / 25.4), "unit": "in"}
+                    elif tpc_q.unit == "in" and b1_q.unit == "mm":
+                        b12_pc_col_q = {"value": b1_q.value + (tpc_q.value * 25.4), "unit": "mm"}
+                elif n_dp_int == 2:
+                    b12_pc_col_q = {"value": b1_q.value, "unit": b1_q.unit}
+            lines.append(f"#### {chapter_number}.{section_offset}.1 Resumen de geometria")
+            lines.append("")
+            lines.append(f"- Uso de platinas de continuidad (usar_pc_col) (inp): `{_format_text(usar_pc_col)}`")
+            lines.append(f"- Tipo de acero de platina de continuidad (tipo_acero_pc_col) (inp): `{tipo_acero_pc_col}`")
+            lines.append(f"- Espesor de platina de continuidad (t_pc_col) (inp): `{_format_quantity(tpc_col_q)}`")
+            lines.append(f"- Ancho base de platina de continuidad (b1_pc_col) (inp): `{_format_quantity(b1_pc_col_q)}`")
+            lines.append(f"- Ancho b1.1 de platina de continuidad (b1.1_pc_col): `{_format_quantity(b11_pc_col_q)}`")
+            lines.append(f"- Ancho b1.2 de platina de continuidad (b1.2_pc_col): `{_format_quantity(b12_pc_col_q)}`")
+            lines.append(f"- Distancia de recorte 1 de platina de continuidad (Clip1_pc_col): `{_format_quantity(clip1_pc_col_q)}`")
+            lines.append(f"- Longitud util 1 de platina de continuidad (L1_pc_col): `{_format_quantity(l1_pc_col_q)}`")
+            lines.append(f"- Longitud util 2 de platina de continuidad (L2_pc_col): `{_format_quantity(l2_pc_col_q)}`")
+            lines.append(f"- Distancia de recorte 2 de platina de continuidad (Clip2_pc_col): `{_format_quantity(clip2_pc_col_q)}`")
+            lines.append(f"- Ancho neto de platina de continuidad (b2_pc_col): `{_format_quantity(b2_pc_col_q)}`")
+            lines.append("")
+            continue
+        if chapter_number == 1 and scope == "DOUBLER_PLATE_COL":
+            step1_inputs = step_1_inputs if isinstance(step_1_inputs, dict) else {}
+            lines.append(f"#### {chapter_number}.{section_offset}.1 Resumen de geometria")
+            lines.append("")
+            lines.append(
+                f"- Uso de platina de enchape del alma (usar_dp_col) (inp): "
+                f"`{_format_text(step1_inputs.get('doubler_plate_enabled'))}`"
+            )
+            lines.append(
+                f"- Tipo de acero de platina de enchape del alma (tipo_acero_dp_col) (inp): "
+                f"`{_format_text(step1_inputs.get('tipo_acero_dp_col'))}`"
+            )
+            lines.append(
+                f"- Espesor de platina de enchape del alma (t_dp_col) (inp): "
+                f"`{_format_quantity(step1_inputs.get('t_dp_col'))}`"
+            )
+            lines.append(
+                f"- Numero de platinas de enchape del alma (n_dp_col) (inp): "
+                f"`{_format_text(step1_inputs.get('n_dp_col'))}`"
+            )
+            lines.append(
+                f"- Altura neta de panel zone en columna para enchape (dz_dp_col): "
+                f"`{_format_quantity(step1_inputs.get('dz_dp_col'))}`"
+            )
+            lines.append(
+                f"- Ancho neto gobernante entre vigas para enchape (wz_dp_col): "
+                f"`{_format_quantity(step1_inputs.get('wz_dp_col'))}`"
+            )
+            lines.append("")
+            continue
+        if chapter_number == 1 and scope == "WELD_7_COL":
+            step1_inputs = step_1_inputs if isinstance(step_1_inputs, dict) else {}
+            lines.append(f"#### {chapter_number}.{section_offset}.1 Resumen de geometria")
+            lines.append("")
+            lines.append(
+                f"- Tipo de soldadura #7 (tipo_w7_col) (inp): "
+                f"`{_format_text(step1_inputs.get('tipo_w7_col'))}`"
+            )
+            lines.append(
+                f"- Resistencia del electrodo de soldadura #7 (Fexx_w7_col) (inp): "
+                f"`{_format_quantity(step1_inputs.get('Fexx_w7_col') or step1_inputs.get('weld_fexx'))}`"
+            )
+            lines.append(
+                f"- Espesor/size de soldadura #7 (w_w7_col) (inp): "
+                f"`{_format_quantity(step1_inputs.get('w_w7_col') or step1_inputs.get('t_w7_col'))}`"
+            )
+            lines.append(
+                f"- Numero de lineas de soldadura #7 (nl_w7_col) (inp): "
+                f"`{_format_text(step1_inputs.get('nl_w7_col'))}`"
+            )
+            lines.append("")
+            continue
+        if chapter_number == 1 and scope == "END_PLATE_DER":
+            step731_inputs_der = (
+                ((step_7_3_1_by_side or {}).get("der") or {}).get("inputs", {})
+                if isinstance((step_7_3_1_by_side or {}).get("der"), dict)
+                else {}
+            )
+            step711_inter_der = (
+                ((step_7_1_1_by_side or {}).get("der") or {}).get("intermediates", {})
+                if isinstance((step_7_1_1_by_side or {}).get("der"), dict)
+                else {}
+            )
+            step61_inputs_der = (
+                ((step_6_1_by_side or {}).get("der") or {}).get("inputs", {})
+                if isinstance((step_6_1_by_side or {}).get("der"), dict)
+                else {}
+            )
+
+            bpe_vgder = _format_quantity((rows_by_scope_symbol.get(("END_PLATE_DER", "bp_pe_vgder")) or {}).get("calculated"))
+            tpe_vgder = _format_quantity(step731_inputs_der.get("tpe_vgder"))
+            de_pe_vgder = _format_quantity(
+                step731_inputs_der.get("de_pe_vgder")
+                or (rows_by_scope_symbol.get(("TABLE_6_1_DER", "de_pe_vgder")) or {}).get("calculated")
+            )
+            pb_pe_vgder = _format_quantity(step731_inputs_der.get("pb_pe_vgder"))
+            pfo_pe_vgder = _format_quantity(step731_inputs_der.get("pfo_pe_vgder"))
+            pfi_pe_vgder = _format_quantity(step731_inputs_der.get("pfi_pe_vgder"))
+            dh_pe_vgder = _format_quantity(step731_inputs_der.get("dh_pe_vgder"))
+            g_pe_vgder = _format_quantity(
+                (rows_by_scope_symbol.get(("BEAM_DER", "g_b_vgder")) or {}).get("calculated")
+            )
+            s_pe_vgder = _format_quantity(step711_inter_der.get("s"))
+            h1_pe_vgder = _format_quantity(step61_inputs_der.get("h1_pe_vgder"))
+            h2_pe_vgder = _format_quantity(step61_inputs_der.get("h2_pe_vgder"))
+            h3_pe_vgder = _format_quantity(step61_inputs_der.get("h3_pe_vgder"))
+            h4_pe_vgder = _format_quantity(step61_inputs_der.get("h4_pe_vgder"))
+
+            hpe_vgder = "n/a"
+            for note_item in grouped.get("END_PLATE_DER", []):
+                maybe_hpe = note_item.get("hpe_vgder")
+                if isinstance(maybe_hpe, dict):
+                    hpe_vgder = _format_quantity(maybe_hpe)
+                    break
+
+            lines.append(f"#### {chapter_number}.{section_offset}.1 Resumen de geometria")
+            lines.append("")
+            lines.append(f"- Altura de platina extremo de viga derecha (Hpe_vgder): `{hpe_vgder}`")
+            lines.append(f"- Ancho de platina extremo de viga derecha (Bpe_vgder) (inp): `{bpe_vgder}`")
+            lines.append(f"- Espesor de platina extremo de viga derecha (tpe_vgder) (inp): `{tpe_vgder}`")
+            lines.append(f"- Distancia de borde a fila 1 de pernos (de_pe_vgder) (inp): `{de_pe_vgder}`")
+            lines.append(f"- Distancia entre filas de pernos (pb_pe_vgder) (inp): `{pb_pe_vgder}`")
+            lines.append(f"- Distancia exterior a fila de pernos (pfo_pe_vgder) (inp): `{pfo_pe_vgder}`")
+            lines.append(f"- Distancia interior a fila de pernos (pfi_pe_vgder) (inp): `{pfi_pe_vgder}`")
+            lines.append(f"- Diametro de perforacion de perno (dh_pe_vgder): `{dh_pe_vgder}`")
+            lines.append(f"- Distancia horizontal entre pernos en platina (g_pe_vgder) (inp): `{g_pe_vgder}`")
+            lines.append(f"- Parametro s de platina extremo derecha (s_pe_vgder): `{s_pe_vgder}`")
+            lines.append(f"- Distancia h1 de platina extremo derecha (h1_pe_vgder): `{h1_pe_vgder}`")
+            lines.append(f"- Distancia h2 de platina extremo derecha (h2_pe_vgder): `{h2_pe_vgder}`")
+            if h3_pe_vgder != "n/a":
+                lines.append(f"- Distancia h3 de platina extremo derecha (h3_pe_vgder): `{h3_pe_vgder}`")
+            if h4_pe_vgder != "n/a":
+                lines.append(f"- Distancia h4 de platina extremo derecha (h4_pe_vgder): `{h4_pe_vgder}`")
+            lines.append("")
+            continue
+        if chapter_number == 1 and scope == "END_PLATE_IZQ":
+            step731_inputs_izq = (
+                ((step_7_3_1_by_side or {}).get("izq") or {}).get("inputs", {})
+                if isinstance((step_7_3_1_by_side or {}).get("izq"), dict)
+                else {}
+            )
+            step711_inter_izq = (
+                ((step_7_1_1_by_side or {}).get("izq") or {}).get("intermediates", {})
+                if isinstance((step_7_1_1_by_side or {}).get("izq"), dict)
+                else {}
+            )
+            step61_inputs_izq = (
+                ((step_6_1_by_side or {}).get("izq") or {}).get("inputs", {})
+                if isinstance((step_6_1_by_side or {}).get("izq"), dict)
+                else {}
+            )
+
+            bpe_vgizq = _format_quantity((rows_by_scope_symbol.get(("END_PLATE_IZQ", "bp_pe_vgizq")) or {}).get("calculated"))
+            tpe_vgizq = _format_quantity(step731_inputs_izq.get("tpe_vgizq"))
+            de_pe_vgizq = _format_quantity(
+                step731_inputs_izq.get("de_pe_vgizq")
+                or (rows_by_scope_symbol.get(("TABLE_6_1_IZQ", "de_pe_vgizq")) or {}).get("calculated")
+            )
+            pb_pe_vgizq = _format_quantity(step731_inputs_izq.get("pb_pe_vgizq"))
+            pfo_pe_vgizq = _format_quantity(step731_inputs_izq.get("pfo_pe_vgizq"))
+            pfi_pe_vgizq = _format_quantity(step731_inputs_izq.get("pfi_pe_vgizq"))
+            dh_pe_vgizq = _format_quantity(step731_inputs_izq.get("dh_pe_vgizq"))
+            g_pe_vgizq = _format_quantity(
+                (rows_by_scope_symbol.get(("BEAM_IZQ", "g_b_vgizq")) or {}).get("calculated")
+            )
+            s_pe_vgizq = _format_quantity(step711_inter_izq.get("s"))
+            h1_pe_vgizq = _format_quantity(step61_inputs_izq.get("h1_pe_vgizq"))
+            h2_pe_vgizq = _format_quantity(step61_inputs_izq.get("h2_pe_vgizq"))
+            h3_pe_vgizq = _format_quantity(step61_inputs_izq.get("h3_pe_vgizq"))
+            h4_pe_vgizq = _format_quantity(step61_inputs_izq.get("h4_pe_vgizq"))
+
+            hpe_vgizq = "n/a"
+            for note_item in grouped.get("END_PLATE_IZQ", []):
+                maybe_hpe = note_item.get("hpe_vgizq")
+                if isinstance(maybe_hpe, dict):
+                    hpe_vgizq = _format_quantity(maybe_hpe)
+                    break
+
+            lines.append(f"#### {chapter_number}.{section_offset}.1 Resumen de geometria")
+            lines.append("")
+            lines.append(f"- Altura de platina extremo de viga izquierda (Hpe_vgizq): `{hpe_vgizq}`")
+            lines.append(f"- Ancho de platina extremo de viga izquierda (Bpe_vgizq) (inp): `{bpe_vgizq}`")
+            lines.append(f"- Espesor de platina extremo de viga izquierda (tpe_vgizq) (inp): `{tpe_vgizq}`")
+            lines.append(f"- Distancia de borde a fila 1 de pernos (de_pe_vgizq) (inp): `{de_pe_vgizq}`")
+            lines.append(f"- Distancia entre filas de pernos (pb_pe_vgizq) (inp): `{pb_pe_vgizq}`")
+            lines.append(f"- Distancia exterior a fila de pernos (pfo_pe_vgizq) (inp): `{pfo_pe_vgizq}`")
+            lines.append(f"- Distancia interior a fila de pernos (pfi_pe_vgizq) (inp): `{pfi_pe_vgizq}`")
+            lines.append(f"- Diametro de perforacion de perno (dh_pe_vgizq): `{dh_pe_vgizq}`")
+            lines.append(f"- Distancia horizontal entre pernos en platina (g_pe_vgizq) (inp): `{g_pe_vgizq}`")
+            lines.append(f"- Parametro s de platina extremo izquierda (s_pe_vgizq): `{s_pe_vgizq}`")
+            lines.append(f"- Distancia h1 de platina extremo izquierda (h1_pe_vgizq): `{h1_pe_vgizq}`")
+            lines.append(f"- Distancia h2 de platina extremo izquierda (h2_pe_vgizq): `{h2_pe_vgizq}`")
+            if h3_pe_vgizq != "n/a":
+                lines.append(f"- Distancia h3 de platina extremo izquierda (h3_pe_vgizq): `{h3_pe_vgizq}`")
+            if h4_pe_vgizq != "n/a":
+                lines.append(f"- Distancia h4 de platina extremo izquierda (h4_pe_vgizq): `{h4_pe_vgizq}`")
+            lines.append("")
+            continue
+        if chapter_number == 1 and scope == "WELD_6_COL":
+            step1_inputs = step_1_inputs if isinstance(step_1_inputs, dict) else {}
+            rows_map: dict[str, dict] = {}
+            for row in (rows or []):
+                if str(row.get("scope", "")).upper() == "COLUMN":
+                    rows_map[str(row.get("calculated_symbol", ""))] = row
+
+            tipo_w6_col = _format_text(step1_inputs.get("tipo_w6_col"))
+            fexx_w6_col_q = step1_inputs.get("Fexx_w6_col")
+            t_w6_col_q = step1_inputs.get("w_w6_col") or step1_inputs.get("t_w6_col")
+            nl_w6_col = step1_inputs.get("nl_w6_col")
+            l_gap_w6_col_q = step1_inputs.get("L_gap_w6_col")
+            kds_w6_col = step1_inputs.get("kds_w6_col")
+            kdet_col_q = step1_inputs.get("kdet_col")
+            tfdet_col_q = step1_inputs.get("tfdet_col")
+            d_col_q = (rows_map.get("d_col") or {}).get("calculated")
+            l_w6_col_text = "n/a"
+
+            def _mm_in_unit(mm_value: float, unit: str) -> float | None:
+                if unit == "mm":
+                    return mm_value
+                if unit == "in":
+                    return mm_value / 25.4
+                return None
+
+            kdet_q = _as_quantity(kdet_col_q)
+            tfdet_q = _as_quantity(tfdet_col_q)
+            d_q = _as_quantity(d_col_q)
+            gap_q = _as_quantity(l_gap_w6_col_q)
+            if kdet_q is not None and tfdet_q is not None and d_q is not None and gap_q is not None:
+                c38 = _mm_in_unit(38.0, kdet_q.unit)
+                c3 = _mm_in_unit(3.0, d_q.unit)
+                if c38 is not None and c3 is not None:
+                    clip1 = {"value": kdet_q.value - tfdet_q.value + c38, "unit": kdet_q.unit}
+                    if clip1["unit"] == d_q.unit:
+                        l1 = {"value": d_q.value - 2.0 * tfdet_q.value - c3, "unit": d_q.unit}
+                        l2 = {"value": l1["value"] - 2.0 * clip1["value"], "unit": l1["unit"]}
+                        if gap_q.unit == l2["unit"]:
+                            gap_value = gap_q.value
+                        elif gap_q.unit == "mm" and l2["unit"] == "in":
+                            gap_value = gap_q.value / 25.4
+                        elif gap_q.unit == "in" and l2["unit"] == "mm":
+                            gap_value = gap_q.value * 25.4
+                        else:
+                            gap_value = None
+                        if gap_value is not None:
+                            l_w6_col_text = _format_quantity({"value": l2["value"] - 2.0 * gap_value, "unit": l2["unit"]})
+
+            lines.append(f"#### {chapter_number}.{section_offset}.1 Resumen de geometria")
+            lines.append("")
+            lines.append(f"- Tipo de soldadura #6 de platina de continuidad (tipo_w6_col) (inp): `{tipo_w6_col}`")
+            lines.append(f"- Resistencia del electrodo de soldadura #6 (Fexx_w6_col) (inp): `{_format_quantity(fexx_w6_col_q)}`")
+            lines.append(f"- Espesor/size de soldadura #6 (w_w6_col) (inp): `{_format_quantity(t_w6_col_q)}`")
+            lines.append(f"- Numero de lineas de soldadura #6 (nl_w6_col) (inp): `{_format_text(nl_w6_col)}`")
+            lines.append(f"- Separacion de extremos de soldadura #6 (L_gap_w6_col) (inp): `{_format_quantity(l_gap_w6_col_q)}`")
+            lines.append(f"- Factor de direccion/sistema de soldadura #6 (kds_w6_col) (inp): `{_format_text(kds_w6_col)}`")
+            lines.append(f"- Longitud efectiva de soldadura #6 (Lws_col): `{l_w6_col_text}`")
+            lines.append("")
+            continue
+        local_note_index = 1
+        for item in grouped.get(scope, []):
+            description = _translate_text_es(item.get("description"))
+            clause = _render_clause_text(
+                item.get("clause"),
+                item.get("source_document"),
+                item.get("rule_id"),
+            )
+            lines.append(f"#### {chapter_number}.{section_offset}.{local_note_index} Nota tecnica - {description}")
+            local_note_index += 1
+            lines.append("")
+            lines.append(f"- Ambito: `{scope}`")
+            lines.append(f"- Clausula: `{clause}`")
+            requirement = _translate_text_es(item.get("requirement"))
+            if requirement != "n/a":
+                lines.append(f"- Requisito: `{requirement}`")
+            formula = _format_text(item.get("formula"))
+            if formula != "n/a":
+                lines.append(f"- Formula: `{formula}`")
+            lines.append("")
     return "\n".join(lines)
 
 
@@ -2832,6 +3750,41 @@ def _render_step_21_5_panel_zone_shear_wpzs(
 def render_memory_markdown(result: DetailedRunResult) -> str:
     rows = _collect_step_1_rows(result)
     notes = _collect_step_1_notes(result)
+    step_1_inputs = _collect_step_1_inputs(result)
+    def _to_bool(value: Any) -> bool:
+        if isinstance(value, bool):
+            return value
+        if isinstance(value, str):
+            return value.strip().lower() in {"true", "1", "yes", "si", "sí"}
+        if isinstance(value, (int, float)):
+            return value != 0
+        return False
+
+    use_pc_col = _to_bool(step_1_inputs.get("usar_pc_col")) or _to_bool(
+        step_1_inputs.get("continuity_plate_enabled")
+    )
+    use_dp_col = _to_bool(step_1_inputs.get("usar_dp_col")) or _to_bool(
+        step_1_inputs.get("doubler_plate_enabled")
+    )
+
+    excluded_scopes: set[str] = set()
+    if not use_pc_col:
+        excluded_scopes.update({"CONTINUITY_PLATE_COL", "WELD_5_COL", "WELD_6_COL"})
+    if not use_dp_col:
+        excluded_scopes.update({"DOUBLER_PLATE_COL", "WELD_7_COL"})
+
+    if excluded_scopes:
+        rows = [
+            item
+            for item in rows
+            if str(item.get("scope", "")).upper() not in excluded_scopes
+        ]
+        notes = [
+            item
+            for item in notes
+            if str(item.get("scope", "")).upper() not in excluded_scopes
+        ]
+
     splice_rows_viga = _collect_splice_step_1_rows(result)
     splice_notes_viga = _collect_splice_step_1_notes(result)
     splice_step_2_pernos1 = _collect_splice_step_2_method(result)
@@ -2884,20 +3837,102 @@ def render_memory_markdown(result: DetailedRunResult) -> str:
     ]
     connection_family_normalized = str(result.connection_family).strip().lower()
     if connection_family_normalized == "moment_prequalified":
+        scope_template = _ordered_scopes_from_rows(rows)
+        if use_pc_col and "CONTINUITY_PLATE_COL" not in scope_template:
+            scope_template.append("CONTINUITY_PLATE_COL")
+        if use_pc_col and "WELD_5_COL" not in scope_template:
+            scope_template.append("WELD_5_COL")
+        if use_pc_col and "WELD_6_COL" not in scope_template:
+            scope_template.append("WELD_6_COL")
+        if use_dp_col and "DOUBLER_PLATE_COL" not in scope_template:
+            scope_template.append("DOUBLER_PLATE_COL")
+        if use_dp_col and "WELD_7_COL" not in scope_template:
+            scope_template.append("WELD_7_COL")
+        step2_note_ids = {
+            "section_6_3.end_plate_connection_location",
+            "section_4_2.installation_requirements_der",
+            "section_4_2.installation_requirements_izq",
+            "section_4_2.installation_requirements_vgder",
+            "section_4_2.installation_requirements_vgizq",
+            "section_4_3.quality_control_assurance_der",
+            "section_4_3.quality_control_assurance_izq",
+            "section_4_3.quality_control_assurance_vgder",
+            "section_4_3.quality_control_assurance_vgizq",
+        }
+        notes_step2 = [n for n in notes if _format_text(n.get("id")) in step2_note_ids] if notes else []
+        notes_step1 = [n for n in notes if _format_text(n.get("id")) not in step2_note_ids] if notes else []
         content.extend(
             [
-                "## Paso 1 - Limites de precalificacion",
+                "## Paso 1 - Propiedades geometricas, mecanicas y fabricacion",
+                "",
+                "Propiedades organizadas por ambito.",
+                "",
+            ]
+        )
+        if notes_step1:
+            content.append(
+                _render_step_1_notes_by_scope_template(
+                    notes_step1,
+                    chapter_number=1,
+                    scopes=scope_template,
+                    rows=rows,
+                    step_1_inputs=step_1_inputs,
+                    step_2=step_2,
+                    step_3=step_3,
+                    step_4=step_4,
+                    step_7_1_1_by_side=step_7_1_1_by_side,
+                    step_6_1_by_side=step_6_1_by_side,
+                    step_7_3_1_by_side=step_7_3_1_by_side,
+                    step_21_5_1_panel_zone=step_21_5_1_panel_zone,
+                )
+            )
+        else:
+            content.append("No hay propiedades disponibles para este caso.")
+        content.extend(
+            [
+                "",
+                "## Paso 2 - Especificaciones tecnicas",
+                "",
+                "Especificaciones tecnicas organizadas por ambito.",
+                "",
+            ]
+        )
+        if scope_template:
+            if notes_step2:
+                content.append(
+                    _render_step_1_notes_by_scope_template(
+                        notes_step2,
+                        chapter_number=2,
+                        scopes=scope_template,
+                    )
+                )
+            else:
+                content.append(_render_scope_subtitles_only(chapter_number=2, scopes=scope_template))
+        else:
+            content.append("No hay especificaciones tecnicas disponibles para este caso.")
+        content.extend(
+            [
+                "",
+                "## Paso 3 - Revisiones de requerimientos de propiedades mecanicas y geometricas",
                 "",
                 "Comparacion directa de valor calculado contra limite normativo (sin formato DCR).",
                 "",
             ]
         )
-        if notes:
-            content.append(_render_step_1_notes(notes))
         if rows:
-            content.append(_render_step_1_list_grouped_by_scope(rows))
+            scope_template_step3 = list(scope_template)
+            has_weld6_step3_checks = any(str(item.get("scope", "")).upper() == "WELD_6_COL" for item in rows)
+            if not has_weld6_step3_checks and "WELD_6_COL" in scope_template_step3:
+                scope_template_step3 = [s for s in scope_template_step3 if s != "WELD_6_COL"]
+            content.append(
+                _render_step_1_list_grouped_by_scope(
+                    rows,
+                    chapter_number=3,
+                    scope_template=scope_template_step3,
+                )
+            )
         else:
-            content.append("No hay subchequeos de prequalification disponibles para este caso.")
+            content.append("No hay revisiones de requerimientos disponibles para este caso.")
     elif connection_family_normalized == "fully_restrained_moment":
         content.append(_render_fully_restrained_splice_outline(splice_rows_viga, splice_notes_viga, splice_step_2_pernos1))
     if step_2 is not None:
@@ -2919,7 +3954,16 @@ def render_memory_markdown(result: DetailedRunResult) -> str:
         step_groups: list[tuple[object, list[dict[str, dict | None]]]] = [
             (_render_step_6_bolts, [step_6_1_by_side, step_6_2_by_side]),
             (
-                _render_step_7_end_plate,
+                (
+                    lambda s71, s721, s722, s731, s732: _render_step_7_end_plate(
+                        s71,
+                        s721,
+                        s722,
+                        s731,
+                        s732,
+                        connection_type=result.connection_type,
+                    )
+                ),
                 [
                     step_7_1_1_by_side,
                     step_7_2_1_by_side,
@@ -3036,9 +4080,1171 @@ def render_memory_markdown(result: DetailedRunResult) -> str:
             block_14 = _align_nested_heading_numbers_with_step(block_14, step_number=assigned_step_number)
             content.append(block_14)
             next_step_number += 1
+    if connection_family_normalized == "moment_prequalified":
+        def _render_step_24_continuity_plate_web_review(
+            *,
+            step_number: int,
+            step12_by_side: dict[str, dict | None],
+            step13_by_side: dict[str, dict | None],
+            step14_2_1_by_side_local: dict[str, dict | None],
+        ) -> str:
+            def _convert_force_to_unit_local(force: Quantity | None, target_unit: str) -> Quantity | None:
+                if force is None:
+                    return None
+                if force.unit == target_unit:
+                    return force
+                if force.unit == "kN" and target_unit == "kip":
+                    return Quantity(value=force.value / 4.4482216152605, unit="kip")
+                if force.unit == "kip" and target_unit == "kN":
+                    return Quantity(value=force.value * 4.4482216152605, unit="kN")
+                return None
+
+            def _compute_ru_pc_for_side(side: str) -> dict[str, Any]:
+                side_tag = "vgizq" if side == "izq" else "vgder"
+                step12 = step12_by_side.get(side) if isinstance(step12_by_side, dict) else None
+                step13 = step13_by_side.get(side) if isinstance(step13_by_side, dict) else None
+                step14 = step14_2_1_by_side_local.get(side) if isinstance(step14_2_1_by_side_local, dict) else None
+
+                i12 = step12.get("inputs", {}) if isinstance(step12, dict) else {}
+                i13 = step13.get("inputs", {}) if isinstance(step13, dict) else {}
+                i14 = step14.get("inputs", {}) if isinstance(step14, dict) else {}
+
+                mf_q = _as_quantity(
+                    i12.get("mf")
+                    or i12.get("mf_vgizq_critico")
+                    or i12.get("mf_vgder_critico")
+                    or i13.get("mf_vgizq_critico")
+                    or i13.get("mf_vgder_critico")
+                )
+                d_q = _as_quantity(i13.get("d_vgizq") or i13.get("d_vgder") or i12.get("d_vgizq") or i12.get("d_vgder"))
+                tf_q = _as_quantity(
+                    i13.get("tf_vgizq") or i13.get("tf_vgder") or i12.get("tf_vgizq") or i12.get("tf_vgder")
+                )
+
+                z_q: Quantity | None = None
+                term_mf_over_z_q: Quantity | None = None
+                if mf_q is not None and d_q is not None and tf_q is not None:
+                    z_val = d_q.value - tf_q.value
+                    if z_val > 0:
+                        z_q = Quantity(value=z_val, unit=d_q.unit)
+                        mf_conv = _convert_moment_to_unit(mf_q, "kN-mm" if z_q.unit == "mm" else "kip-in")
+                        if mf_conv is not None:
+                            force_unit = "kN" if z_q.unit == "mm" else "kip"
+                            term_mf_over_z_q = Quantity(value=mf_conv.value / z_q.value, unit=force_unit)
+
+                c22_q: Quantity | None = None
+                if isinstance(step12, dict):
+                    df12 = step12.get("design_factors", {}) if isinstance(step12.get("design_factors", {}), dict) else {}
+                    phi12 = df12.get("phi_d")
+                    try:
+                        phi12_val = float(phi12)
+                    except (TypeError, ValueError):
+                        phi12_val = None
+                    tf_col_q = _as_quantity(step12.get("capacity"))
+                    i12_col = step12.get("inputs", {}) if isinstance(step12.get("inputs", {}), dict) else {}
+                    fy_col_q = _as_quantity(i12_col.get("column_fy"))
+                    yc_q = _as_quantity(i12_col.get("yc"))
+                    if (
+                        phi12_val is not None
+                        and tf_col_q is not None
+                        and fy_col_q is not None
+                        and yc_q is not None
+                        and z_q is not None
+                        and tf_col_q.unit == "mm"
+                        and fy_col_q.unit == "MPa"
+                        and yc_q.unit == "mm"
+                        and z_q.unit == "mm"
+                    ):
+                        # phi*Rn (force) = phi * ((tf_col^2 * Fy_col * Y)/(1.11*(d-tf))) in N; convert to kN.
+                        c22_kN = (
+                            phi12_val
+                            * ((tf_col_q.value ** 2) * fy_col_q.value * yc_q.value)
+                            / (1.11 * z_q.value)
+                            / 1000.0
+                        )
+                        c22_q = Quantity(value=c22_kN, unit="kN")
+                c23_1_q = _as_quantity(step13.get("capacity")) if isinstance(step13, dict) else None
+                c23_2_q = _as_quantity(step14.get("capacity")) if isinstance(step14, dict) else None
+
+                caps = [q for q in (c22_q, c23_1_q, c23_2_q) if isinstance(q, Quantity)]
+                min_cap_q: Quantity | None = None
+                if caps:
+                    ref_unit = caps[0].unit
+                    caps_conv: list[Quantity] = []
+                    for q in caps:
+                        q_conv = _convert_force_to_unit_local(q, ref_unit)
+                        if q_conv is not None:
+                            caps_conv.append(q_conv)
+                    if caps_conv:
+                        min_cap_q = min(caps_conv, key=lambda x: x.value)
+
+                ru_pc_q: Quantity | None = None
+                if term_mf_over_z_q is not None and min_cap_q is not None:
+                    min_cap_in_term = _convert_force_to_unit_local(min_cap_q, term_mf_over_z_q.unit)
+                    if min_cap_in_term is not None:
+                        ru_pc_q = Quantity(value=term_mf_over_z_q.value - min_cap_in_term.value, unit=term_mf_over_z_q.unit)
+
+                return {
+                    "side_tag": side_tag,
+                    "mf": mf_q,
+                    "d": d_q,
+                    "tf": tf_q,
+                    "z": z_q,
+                    "term_mf_over_z": term_mf_over_z_q,
+                    "phi_rn_22": c22_q,
+                    "phi_rn_23_1": c23_1_q,
+                    "phi_rn_23_2": c23_2_q,
+                    "min_cap": min_cap_q,
+                    "ru_pc": ru_pc_q,
+                }
+
+            left = _compute_ru_pc_for_side("izq")
+            right = _compute_ru_pc_for_side("der")
+
+            ru_pc_col_q: Quantity | None = None
+            ru_candidates = [q for q in (left.get("ru_pc"), right.get("ru_pc")) if isinstance(q, Quantity)]
+            if ru_candidates:
+                ref_u = ru_candidates[0].unit
+                ru_conv: list[Quantity] = []
+                for q in ru_candidates:
+                    q_conv = _convert_force_to_unit_local(q, ref_u)
+                    if q_conv is not None:
+                        ru_conv.append(q_conv)
+                if ru_conv:
+                    ru_pc_col_q = max(ru_conv, key=lambda x: x.value)
+
+            phi_pc = 0.9
+            phi_rn_pc_col_q: Quantity | None = None
+            dcr_pc_col: float | None = None
+            result_pc_col: str = "n/a"
+            fy_pc_col_q: Quantity | None = None
+            phi_rn_pc_pminus_col_q: Quantity | None = None
+            fcr_pc_col_q: Quantity | None = None
+            e_pc_col_q: Quantity | None = None
+            fe_pc_col_q: Quantity | None = None
+            lp_pc_col_q: Quantity | None = None
+            r_pc_col_q: Quantity | None = None
+            klr_pc_col: float | None = None
+            dcr_pc_pminus_col: float | None = None
+            result_pc_pminus_col: str = "n/a"
+            ru_pc_pminus_col_q: Quantity | None = None
+            eq_fcr_used = "n/a"
+            ru_pc_v2_col_q: Quantity | None = None
+            phi_rn_pc_v2_col_q: Quantity | None = None
+            dcr_pc_v2_col: float | None = None
+            result_pc_v2_col: str = "n/a"
+            n_pc_col_val: float | None = None
+            steel_type_pc = _format_text((step_1_inputs or {}).get("tipo_acero_pc_col"))
+            b1_pc_q = _as_quantity((step_1_inputs or {}).get("b1_pc_col"))
+            t_pc_q = _as_quantity((step_1_inputs or {}).get("t_pc_col"))
+            try:
+                n_pc_raw = (step_1_inputs or {}).get("n_pc_col")
+                n_pc_col_val = float(n_pc_raw) if n_pc_raw is not None else 1.0
+            except (TypeError, ValueError):
+                n_pc_col_val = None
+            unit_system_pc: UnitSystem | None = None
+            if isinstance(b1_pc_q, Quantity):
+                unit_system_pc = _infer_unit_system_from_quantity(b1_pc_q.model_dump())
+            elif isinstance(t_pc_q, Quantity):
+                unit_system_pc = _infer_unit_system_from_quantity(t_pc_q.model_dump())
+            if (
+                steel_type_pc != "n/a"
+                and isinstance(b1_pc_q, Quantity)
+                and isinstance(t_pc_q, Quantity)
+                and b1_pc_q.unit == t_pc_q.unit
+                and unit_system_pc is not None
+            ):
+                try:
+                    plate_props = get_plate_steel_properties(
+                        steel_type=steel_type_pc,
+                        unit_system=unit_system_pc,
+                    )
+                    fy_pc_col_q = plate_props.get("fy") if isinstance(plate_props.get("fy"), Quantity) else None
+                    if isinstance(fy_pc_col_q, Quantity):
+                        if unit_system_pc == UnitSystem.SI and fy_pc_col_q.unit == "MPa" and b1_pc_q.unit == "mm":
+                            if n_pc_col_val is None:
+                                raise ValueError("Invalid n_pc_col")
+                            rn_n = fy_pc_col_q.value * b1_pc_q.value * t_pc_q.value * n_pc_col_val
+                            phi_rn_pc_col_q = Quantity(value=phi_pc * rn_n / 1000.0, unit="kN")
+                        elif unit_system_pc == UnitSystem.US and fy_pc_col_q.unit == "ksi" and b1_pc_q.unit == "in":
+                            if n_pc_col_val is None:
+                                raise ValueError("Invalid n_pc_col")
+                            rn_kip = fy_pc_col_q.value * b1_pc_q.value * t_pc_q.value * n_pc_col_val
+                            phi_rn_pc_col_q = Quantity(value=phi_pc * rn_kip, unit="kip")
+                except Exception:
+                    phi_rn_pc_col_q = None
+
+            if isinstance(ru_pc_col_q, Quantity) and isinstance(phi_rn_pc_col_q, Quantity):
+                phi_rn_conv = _convert_force_to_unit_local(phi_rn_pc_col_q, ru_pc_col_q.unit)
+                if phi_rn_conv is not None and phi_rn_conv.value > 0:
+                    dcr_pc_col = ru_pc_col_q.value / phi_rn_conv.value
+                    result_pc_col = "Cumple" if dcr_pc_col <= 1.0 else "No cumple"
+
+            # Compression (P-) per user-provided image:
+            # Fcr by KL/r regions with K=0.65 and r=0.29*t_pc_col
+            k_pc = 0.65
+            if (
+                isinstance(b1_pc_q, Quantity)
+                and isinstance(t_pc_q, Quantity)
+                and isinstance(fy_pc_col_q, Quantity)
+                and n_pc_col_val is not None
+                and unit_system_pc is not None
+            ):
+                d_col_q = _as_quantity((step_1_inputs or {}).get("column_depth_d_col"))
+                kdet_col_q = _as_quantity((step_1_inputs or {}).get("kdet_col"))
+                tfdet_col_q = _as_quantity((step_1_inputs or {}).get("tfdet_col"))
+
+                if (
+                    isinstance(d_col_q, Quantity)
+                    and isinstance(kdet_col_q, Quantity)
+                    and isinstance(tfdet_col_q, Quantity)
+                    and d_col_q.unit == kdet_col_q.unit == tfdet_col_q.unit
+                ):
+                    unit_l = d_col_q.unit
+                    add_38 = 38.0 if unit_l == "mm" else 38.0 / 25.4
+                    sub_3 = 3.0 if unit_l == "mm" else 3.0 / 25.4
+                    clip1_val = kdet_col_q.value - tfdet_col_q.value + add_38
+                    l1_val = d_col_q.value - 2.0 * tfdet_col_q.value - sub_3
+                    l2_val = l1_val - 2.0 * clip1_val
+                    if l2_val > 0:
+                        lp_pc_col_q = Quantity(value=l2_val, unit=unit_l)
+
+                if isinstance(lp_pc_col_q, Quantity) and lp_pc_col_q.unit == t_pc_q.unit:
+                    r_val = 0.29 * t_pc_q.value
+                    if r_val > 0:
+                        r_pc_col_q = Quantity(value=r_val, unit=t_pc_q.unit)
+                        klr_pc_col = (k_pc * lp_pc_col_q.value) / r_pc_col_q.value
+
+                if klr_pc_col is not None and klr_pc_col > 0:
+                    if unit_system_pc == UnitSystem.SI:
+                        e_pc_val = 200000.0  # MPa
+                        e_pc_unit = "MPa"
+                    else:
+                        e_pc_val = 29000.0  # ksi
+                        e_pc_unit = "ksi"
+                    e_pc_col_q = Quantity(value=e_pc_val, unit=e_pc_unit)
+                    e_over_fy = e_pc_val / fy_pc_col_q.value if fy_pc_col_q.value > 0 else None
+                    if e_over_fy is not None and e_over_fy > 0:
+                        fe_val = (math.pi ** 2) * e_pc_val / (klr_pc_col ** 2)
+                        fe_pc_col_q = Quantity(value=fe_val, unit=e_pc_unit)
+                        klr_limit_2 = 4.71 * math.sqrt(e_over_fy)
+                        if klr_pc_col <= 25.0:
+                            fcr_val = fy_pc_col_q.value
+                        elif klr_pc_col <= klr_limit_2:
+                            fcr_val = (0.658 ** (fy_pc_col_q.value / fe_val)) * fy_pc_col_q.value
+                        else:
+                            fcr_val = 0.877 * fe_val
+                        fcr_pc_col_q = Quantity(value=fcr_val, unit=e_pc_unit)
+
+                if isinstance(fcr_pc_col_q, Quantity):
+                    if unit_system_pc == UnitSystem.SI and fcr_pc_col_q.unit == "MPa" and b1_pc_q.unit == "mm":
+                        rn_n_pminus = fcr_pc_col_q.value * b1_pc_q.value * t_pc_q.value * n_pc_col_val
+                        phi_rn_pc_pminus_col_q = Quantity(value=phi_pc * rn_n_pminus / 1000.0, unit="kN")
+                    elif unit_system_pc == UnitSystem.US and fcr_pc_col_q.unit == "ksi" and b1_pc_q.unit == "in":
+                        rn_kip_pminus = fcr_pc_col_q.value * b1_pc_q.value * t_pc_q.value * n_pc_col_val
+                        phi_rn_pc_pminus_col_q = Quantity(value=phi_pc * rn_kip_pminus, unit="kip")
+
+            ru_pc_pminus_col_q = ru_pc_col_q
+            if isinstance(ru_pc_pminus_col_q, Quantity) and isinstance(phi_rn_pc_pminus_col_q, Quantity):
+                phi_rn_pminus_conv = _convert_force_to_unit_local(phi_rn_pc_pminus_col_q, ru_pc_pminus_col_q.unit)
+                if phi_rn_pminus_conv is not None and phi_rn_pminus_conv.value > 0:
+                    dcr_pc_pminus_col = ru_pc_pminus_col_q.value / phi_rn_pminus_conv.value
+                    result_pc_pminus_col = "Cumple" if dcr_pc_pminus_col <= 1.0 else "No cumple"
+
+            if isinstance(klr_pc_col, float) and isinstance(fy_pc_col_q, Quantity):
+                if klr_pc_col <= 25.0:
+                    eq_fcr_used = "Fcr_pc_col = Fy_pc_col"
+                elif (
+                    isinstance(e_pc_col_q, Quantity)
+                    and isinstance(fe_pc_col_q, Quantity)
+                    and fy_pc_col_q.value > 0
+                    and e_pc_col_q.value > 0
+                    and klr_pc_col <= 4.71 * math.sqrt(e_pc_col_q.value / fy_pc_col_q.value)
+                ):
+                    eq_fcr_used = "Fcr_pc_col = 0.658^(Fy_pc_col/Fe_pc_col)*Fy_pc_col"
+                else:
+                    eq_fcr_used = "Fcr_pc_col = 0.877*Fe_pc_col"
+
+            # Shear (V2) on continuity-plate web per user request:
+            # Ru_pc_v2_col = Ru_pc_p+_col_vgder + Ru_pc_p+_col_vgizq
+            # phi = 1.0
+            # phi*Rn_pc_v2_col = phi * 0.6 * Fy_pc_col * t_pc_col * n_pc_col * L2_pc_col
+            ru_left_q = left.get("ru_pc") if isinstance(left.get("ru_pc"), Quantity) else None
+            ru_right_q = right.get("ru_pc") if isinstance(right.get("ru_pc"), Quantity) else None
+            if isinstance(ru_left_q, Quantity) and isinstance(ru_right_q, Quantity):
+                ru_right_conv = _convert_force_to_unit_local(ru_right_q, ru_left_q.unit)
+                if ru_right_conv is not None:
+                    ru_pc_v2_col_q = Quantity(value=ru_left_q.value + ru_right_conv.value, unit=ru_left_q.unit)
+            elif isinstance(ru_left_q, Quantity):
+                ru_pc_v2_col_q = ru_left_q
+            elif isinstance(ru_right_q, Quantity):
+                ru_pc_v2_col_q = ru_right_q
+
+            phi_pc_v2 = 1.0
+            l2_pc_col_q = lp_pc_col_q
+            if (
+                isinstance(fy_pc_col_q, Quantity)
+                and isinstance(t_pc_q, Quantity)
+                and isinstance(l2_pc_col_q, Quantity)
+                and n_pc_col_val is not None
+                and t_pc_q.unit == l2_pc_col_q.unit
+                and unit_system_pc is not None
+            ):
+                if unit_system_pc == UnitSystem.SI and fy_pc_col_q.unit == "MPa" and t_pc_q.unit == "mm":
+                    rn_n_v2 = 0.6 * fy_pc_col_q.value * t_pc_q.value * n_pc_col_val * l2_pc_col_q.value
+                    phi_rn_pc_v2_col_q = Quantity(value=phi_pc_v2 * rn_n_v2 / 1000.0, unit="kN")
+                elif unit_system_pc == UnitSystem.US and fy_pc_col_q.unit == "ksi" and t_pc_q.unit == "in":
+                    rn_kip_v2 = 0.6 * fy_pc_col_q.value * t_pc_q.value * n_pc_col_val * l2_pc_col_q.value
+                    phi_rn_pc_v2_col_q = Quantity(value=phi_pc_v2 * rn_kip_v2, unit="kip")
+
+            if isinstance(ru_pc_v2_col_q, Quantity) and isinstance(phi_rn_pc_v2_col_q, Quantity):
+                phi_rn_v2_conv = _convert_force_to_unit_local(phi_rn_pc_v2_col_q, ru_pc_v2_col_q.unit)
+                if phi_rn_v2_conv is not None and phi_rn_v2_conv.value > 0:
+                    dcr_pc_v2_col = ru_pc_v2_col_q.value / phi_rn_v2_conv.value
+                    result_pc_v2_col = "Cumple" if dcr_pc_v2_col <= 1.0 else "No cumple"
+
+            lines = [
+                f"## Paso {step_number} - Revision de resistencia del alma de platinas de continuidad",
+                "",
+                f"### {step_number}.1. Revision de capacidad a traccion",
+                "",
+                f"#### {step_number}.1.1. ELR #1: Fluencia por traccion area bruta",
+                "",
+                "- Clausula: `Documento: AISC 358-22 | Seccion: Desarrollo interno de demanda para alma de platinas de continuidad`",
+                (
+                    f"- Ecuacion: `Ru_pc_p+_col_vgizq = Mf_vgizq_critico/(d_vgizq - tf_vgizq) - min{{phi*Rn_(23.1.1), "
+                    f"phi*Rn_(23.2.1), phi*Rn_(22.1.1)}}; "
+                    f"Ru_pc_p+_col_vgder = Mf_vgder_critico/(d_vgder - tf_vgder) - min{{phi*Rn_(23.3.1), "
+                    f"phi*Rn_(23.4.1), phi*Rn_(22.2.1)}}; "
+                    f"Ru_pc_p+_col = max{{Ru_pc_p+_col_vgder, Ru_pc_p+_col_vgizq}}; "
+                    f"phi*Rn_pc_p+_col = phi * Fy_pc_col * b1_pc_col * t_pc_col * n_pc_col`"
+                ),
+                f"- Mf_vgizq_critico: `{_format_quantity(left.get('mf').model_dump() if isinstance(left.get('mf'), Quantity) else None)}`",
+                f"- d_vgizq: `{_format_quantity(left.get('d').model_dump() if isinstance(left.get('d'), Quantity) else None)}`",
+                f"- tf_vgizq: `{_format_quantity(left.get('tf').model_dump() if isinstance(left.get('tf'), Quantity) else None)}`",
+                f"- phi*Rn_cw_v2_col_vgizq (22.1.1): `{_format_quantity(left.get('phi_rn_22').model_dump() if isinstance(left.get('phi_rn_22'), Quantity) else None)}`",
+                f"- phi*Rn_cw_v2_col_vgizq (23.1.1): `{_format_quantity(left.get('phi_rn_23_1').model_dump() if isinstance(left.get('phi_rn_23_1'), Quantity) else None)}`",
+                f"- phi*Rn_cw_v2_col_vgizq (23.2.1): `{_format_quantity(left.get('phi_rn_23_2').model_dump() if isinstance(left.get('phi_rn_23_2'), Quantity) else None)}`",
+                f"- min_capacidad_vgizq: `{_format_quantity(left.get('min_cap').model_dump() if isinstance(left.get('min_cap'), Quantity) else None)}`",
+                f"- Ru_pc_p+_col_vgizq: `{_format_quantity(left.get('ru_pc').model_dump() if isinstance(left.get('ru_pc'), Quantity) else None)}`",
+                f"- Mf_vgder_critico: `{_format_quantity(right.get('mf').model_dump() if isinstance(right.get('mf'), Quantity) else None)}`",
+                f"- d_vgder: `{_format_quantity(right.get('d').model_dump() if isinstance(right.get('d'), Quantity) else None)}`",
+                f"- tf_vgder: `{_format_quantity(right.get('tf').model_dump() if isinstance(right.get('tf'), Quantity) else None)}`",
+                f"- phi*Rn_cw_v2_col_vgder (22.2.1): `{_format_quantity(right.get('phi_rn_22').model_dump() if isinstance(right.get('phi_rn_22'), Quantity) else None)}`",
+                f"- phi*Rn_cw_v2_col_vgder (23.3.1): `{_format_quantity(right.get('phi_rn_23_1').model_dump() if isinstance(right.get('phi_rn_23_1'), Quantity) else None)}`",
+                f"- phi*Rn_cw_v2_col_vgder (23.4.1): `{_format_quantity(right.get('phi_rn_23_2').model_dump() if isinstance(right.get('phi_rn_23_2'), Quantity) else None)}`",
+                f"- min_capacidad_vgder: `{_format_quantity(right.get('min_cap').model_dump() if isinstance(right.get('min_cap'), Quantity) else None)}`",
+                f"- Ru_pc_p+_col_vgder: `{_format_quantity(right.get('ru_pc').model_dump() if isinstance(right.get('ru_pc'), Quantity) else None)}`",
+                f"- Ru_pc_p+_col: `{_format_quantity(ru_pc_col_q.model_dump() if isinstance(ru_pc_col_q, Quantity) else None)}`",
+                f"- phi usado: `{_format_decimal(phi_pc)}`",
+                f"- Fy_pc_col: `{_format_quantity(fy_pc_col_q.model_dump() if isinstance(fy_pc_col_q, Quantity) else None)}`",
+                f"- b1_pc_col: `{_format_quantity(b1_pc_q.model_dump() if isinstance(b1_pc_q, Quantity) else None)}`",
+                f"- t_pc_col: `{_format_quantity(t_pc_q.model_dump() if isinstance(t_pc_q, Quantity) else None)}`",
+                f"- n_pc_col: `{_format_text(n_pc_col_val)}`",
+                f"- phi*Rn_pc_p+_col: `{_format_quantity(phi_rn_pc_col_q.model_dump() if isinstance(phi_rn_pc_col_q, Quantity) else None)}`",
+                f"- DCR_pc_p+_col: `{_format_decimal(dcr_pc_col) if dcr_pc_col is not None else 'n/a'}`",
+                f"- Resultado: `{_render_result_plain_es(result_pc_col)}`",
+                "",
+                f"### {step_number}.2. Revision de capacidad a compresion",
+                "",
+                f"#### {step_number}.2.1. ELR #1: Pandeo por flexion",
+                "",
+                "- Clausula: `Documento: AISC 358-22 | Seccion: Formula de Fcr segun imagen de usuario (K=0.65)`",
+                (
+                    f"- Ecuacion: `"
+                    f"{eq_fcr_used}; "
+                    f"phi*Rn_pc_p-_col = phi * Fcr_pc_col * b1_pc_col * t_pc_col * n_pc_col`"
+                ),
+                f"- Mf_vgizq_critico: `{_format_quantity(left.get('mf').model_dump() if isinstance(left.get('mf'), Quantity) else None)}`",
+                f"- d_vgizq: `{_format_quantity(left.get('d').model_dump() if isinstance(left.get('d'), Quantity) else None)}`",
+                f"- tf_vgizq: `{_format_quantity(left.get('tf').model_dump() if isinstance(left.get('tf'), Quantity) else None)}`",
+                f"- phi*Rn_cw_v2_col_vgizq (22.1.1): `{_format_quantity(left.get('phi_rn_22').model_dump() if isinstance(left.get('phi_rn_22'), Quantity) else None)}`",
+                f"- phi*Rn_cw_v2_col_vgizq (23.1.1): `{_format_quantity(left.get('phi_rn_23_1').model_dump() if isinstance(left.get('phi_rn_23_1'), Quantity) else None)}`",
+                f"- phi*Rn_cw_v2_col_vgizq (23.2.1): `{_format_quantity(left.get('phi_rn_23_2').model_dump() if isinstance(left.get('phi_rn_23_2'), Quantity) else None)}`",
+                f"- min_capacidad_vgizq: `{_format_quantity(left.get('min_cap').model_dump() if isinstance(left.get('min_cap'), Quantity) else None)}`",
+                f"- Ru_pc_p-_col_vgizq: `{_format_quantity(left.get('ru_pc').model_dump() if isinstance(left.get('ru_pc'), Quantity) else None)}`",
+                f"- Mf_vgder_critico: `{_format_quantity(right.get('mf').model_dump() if isinstance(right.get('mf'), Quantity) else None)}`",
+                f"- d_vgder: `{_format_quantity(right.get('d').model_dump() if isinstance(right.get('d'), Quantity) else None)}`",
+                f"- tf_vgder: `{_format_quantity(right.get('tf').model_dump() if isinstance(right.get('tf'), Quantity) else None)}`",
+                f"- phi*Rn_cw_v2_col_vgder (22.2.1): `{_format_quantity(right.get('phi_rn_22').model_dump() if isinstance(right.get('phi_rn_22'), Quantity) else None)}`",
+                f"- phi*Rn_cw_v2_col_vgder (23.3.1): `{_format_quantity(right.get('phi_rn_23_1').model_dump() if isinstance(right.get('phi_rn_23_1'), Quantity) else None)}`",
+                f"- phi*Rn_cw_v2_col_vgder (23.4.1): `{_format_quantity(right.get('phi_rn_23_2').model_dump() if isinstance(right.get('phi_rn_23_2'), Quantity) else None)}`",
+                f"- min_capacidad_vgder: `{_format_quantity(right.get('min_cap').model_dump() if isinstance(right.get('min_cap'), Quantity) else None)}`",
+                f"- Ru_pc_p-_col_vgder: `{_format_quantity(right.get('ru_pc').model_dump() if isinstance(right.get('ru_pc'), Quantity) else None)}`",
+                f"- Ru_pc_p-_col: `{_format_quantity(ru_pc_pminus_col_q.model_dump() if isinstance(ru_pc_pminus_col_q, Quantity) else None)}`",
+                f"- phi usado: `{_format_decimal(phi_pc)}`",
+                f"- K: `{_format_decimal(k_pc)}`",
+                f"- Lp_pc_col: `{_format_quantity(lp_pc_col_q.model_dump() if isinstance(lp_pc_col_q, Quantity) else None)}`",
+                f"- r_pc_col: `{_format_quantity(r_pc_col_q.model_dump() if isinstance(r_pc_col_q, Quantity) else None)}`",
+                f"- KLr_pc_col: `{_format_decimal(klr_pc_col) if klr_pc_col is not None else 'n/a'}`",
+                f"- E_pc_col: `{_format_quantity(e_pc_col_q.model_dump() if isinstance(e_pc_col_q, Quantity) else None)}`",
+                f"- Fy_pc_col: `{_format_quantity(fy_pc_col_q.model_dump() if isinstance(fy_pc_col_q, Quantity) else None)}`",
+                f"- Fe_pc_col: `{_format_quantity(fe_pc_col_q.model_dump() if isinstance(fe_pc_col_q, Quantity) else None)}`",
+                f"- Fcr_pc_col: `{_format_quantity(fcr_pc_col_q.model_dump() if isinstance(fcr_pc_col_q, Quantity) else None)}`",
+                f"- b1_pc_col: `{_format_quantity(b1_pc_q.model_dump() if isinstance(b1_pc_q, Quantity) else None)}`",
+                f"- t_pc_col: `{_format_quantity(t_pc_q.model_dump() if isinstance(t_pc_q, Quantity) else None)}`",
+                f"- n_pc_col: `{_format_text(n_pc_col_val)}`",
+                f"- phi*Rn_pc_p-_col: `{_format_quantity(phi_rn_pc_pminus_col_q.model_dump() if isinstance(phi_rn_pc_pminus_col_q, Quantity) else None)}`",
+                f"- DCR_pc_p-_col: `{_format_decimal(dcr_pc_pminus_col) if dcr_pc_pminus_col is not None else 'n/a'}`",
+                f"- Resultado: `{_render_result_plain_es(result_pc_pminus_col)}`",
+                "",
+                f"### {step_number}.3. Revision de capacidad a cortante",
+                "",
+                f"#### {step_number}.3.1. ELR #1: Fluencia por cortante del area bruta",
+                "",
+                "- Clausula: `Documento: AISC 360-22 | Seccion: G2.1 (adaptado a demanda de alma de platina de continuidad)`",
+                (
+                    "- Ecuacion: `Ru_pc_v2_col = Ru_pc_p+_col_vgder + Ru_pc_p+_col_vgizq; "
+                    "phi*Rn_pc_v2_col = phi * 0.6 * Fy_pc_col * t_pc_col * n_pc_col * L2_pc_col; "
+                    "DCR_pc_v2_col = Ru_pc_v2_col / phi*Rn_pc_v2_col`"
+                ),
+                f"- Mf_vgizq_critico: `{_format_quantity(left.get('mf').model_dump() if isinstance(left.get('mf'), Quantity) else None)}`",
+                f"- d_vgizq: `{_format_quantity(left.get('d').model_dump() if isinstance(left.get('d'), Quantity) else None)}`",
+                f"- tf_vgizq: `{_format_quantity(left.get('tf').model_dump() if isinstance(left.get('tf'), Quantity) else None)}`",
+                f"- phi*Rn_cw_v2_col_vgizq (22.1.1): `{_format_quantity(left.get('phi_rn_22').model_dump() if isinstance(left.get('phi_rn_22'), Quantity) else None)}`",
+                f"- phi*Rn_cw_v2_col_vgizq (23.1.1): `{_format_quantity(left.get('phi_rn_23_1').model_dump() if isinstance(left.get('phi_rn_23_1'), Quantity) else None)}`",
+                f"- phi*Rn_cw_v2_col_vgizq (23.2.1): `{_format_quantity(left.get('phi_rn_23_2').model_dump() if isinstance(left.get('phi_rn_23_2'), Quantity) else None)}`",
+                f"- min_capacidad_vgizq: `{_format_quantity(left.get('min_cap').model_dump() if isinstance(left.get('min_cap'), Quantity) else None)}`",
+                f"- Ru_pc_p+_col_vgizq: `{_format_quantity(left.get('ru_pc').model_dump() if isinstance(left.get('ru_pc'), Quantity) else None)}`",
+                f"- Mf_vgder_critico: `{_format_quantity(right.get('mf').model_dump() if isinstance(right.get('mf'), Quantity) else None)}`",
+                f"- d_vgder: `{_format_quantity(right.get('d').model_dump() if isinstance(right.get('d'), Quantity) else None)}`",
+                f"- tf_vgder: `{_format_quantity(right.get('tf').model_dump() if isinstance(right.get('tf'), Quantity) else None)}`",
+                f"- phi*Rn_cw_v2_col_vgder (22.2.1): `{_format_quantity(right.get('phi_rn_22').model_dump() if isinstance(right.get('phi_rn_22'), Quantity) else None)}`",
+                f"- phi*Rn_cw_v2_col_vgder (23.3.1): `{_format_quantity(right.get('phi_rn_23_1').model_dump() if isinstance(right.get('phi_rn_23_1'), Quantity) else None)}`",
+                f"- phi*Rn_cw_v2_col_vgder (23.4.1): `{_format_quantity(right.get('phi_rn_23_2').model_dump() if isinstance(right.get('phi_rn_23_2'), Quantity) else None)}`",
+                f"- min_capacidad_vgder: `{_format_quantity(right.get('min_cap').model_dump() if isinstance(right.get('min_cap'), Quantity) else None)}`",
+                f"- Ru_pc_p+_col_vgder: `{_format_quantity(right.get('ru_pc').model_dump() if isinstance(right.get('ru_pc'), Quantity) else None)}`",
+                f"- Ru_pc_v2_col: `{_format_quantity(ru_pc_v2_col_q.model_dump() if isinstance(ru_pc_v2_col_q, Quantity) else None)}`",
+                f"- phi usado: `{_format_decimal(phi_pc_v2)}`",
+                f"- Fy_pc_col: `{_format_quantity(fy_pc_col_q.model_dump() if isinstance(fy_pc_col_q, Quantity) else None)}`",
+                f"- t_pc_col: `{_format_quantity(t_pc_q.model_dump() if isinstance(t_pc_q, Quantity) else None)}`",
+                f"- n_pc_col: `{_format_text(n_pc_col_val)}`",
+                f"- L2_pc_col: `{_format_quantity(l2_pc_col_q.model_dump() if isinstance(l2_pc_col_q, Quantity) else None)}`",
+                f"- phi*Rn_pc_v2_col: `{_format_quantity(phi_rn_pc_v2_col_q.model_dump() if isinstance(phi_rn_pc_v2_col_q, Quantity) else None)}`",
+                f"- DCR_pc_v2_col: `{_format_decimal(dcr_pc_v2_col) if dcr_pc_v2_col is not None else 'n/a'}`",
+                f"- Resultado: `{_render_result_plain_es(result_pc_v2_col)}`",
+                "",
+            ]
+            return "\n".join(lines)
+
+        assigned_step_number = next_step_number
+        block_24 = _render_step_24_continuity_plate_web_review(
+            step_number=assigned_step_number,
+            step12_by_side=step_12_1_1_by_side,
+            step13_by_side=step_13_1_1_by_side,
+            step14_2_1_by_side_local=step_14_2_1_by_side,
+        )
+        block_24 = _align_nested_heading_numbers_with_step(block_24, step_number=assigned_step_number)
+        content.append(block_24)
+        next_step_number += 1
+        use_pc_col_25 = _to_bool(
+            step_1_inputs.get("continuity_plate_enabled")
+            if isinstance(step_1_inputs, dict)
+            else None
+        )
+        if isinstance(step_1_inputs, dict) and not use_pc_col_25:
+            use_pc_col_25 = _to_bool(step_1_inputs.get("usar_pc_col"))
+        if use_pc_col_25:
+            assigned_step_number = next_step_number
+            step1 = step_1_inputs if isinstance(step_1_inputs, dict) else {}
+            tipo_w5_raw = _format_text(step1.get("tipo_w5_col"))
+            tipo_w5_norm = tipo_w5_raw.strip().lower()
+            if tipo_w5_norm in {"complete_joint_penetration"}:
+                tipo_w5_norm = "cjp"
+            elif tipo_w5_norm in {"single_sided_fillet", "double_sided_fillet"}:
+                tipo_w5_norm = "fillet"
+
+            n_pc_val = 1.0
+            try:
+                if step1.get("n_pc_col") is not None:
+                    n_pc_val = float(step1.get("n_pc_col"))
+            except (TypeError, ValueError):
+                n_pc_val = 1.0
+
+            phi_fragil = 0.75
+            try:
+                if step1.get("phi_fragil") is not None:
+                    phi_fragil = float(step1.get("phi_fragil"))
+            except (TypeError, ValueError):
+                phi_fragil = 0.75
+
+            b2_pc_q = _as_quantity(step1.get("b2_pc_col"))
+            t_pc_q = _as_quantity(step1.get("t_pc_col"))
+            l_w5_col_q = _as_quantity(step1.get("L_w5_col")) or _as_quantity(step1.get("l_w5_col"))
+            fexx_w5_q = _as_quantity(step1.get("Fexx_w5_col"))
+            t_w5_q = _as_quantity(step1.get("w_w5_col")) or _as_quantity(step1.get("t_w5_col"))
+            unit_system_w5: UnitSystem | None = None
+            if isinstance(b2_pc_q, Quantity):
+                unit_system_w5 = _infer_unit_system_from_quantity(b2_pc_q.model_dump())
+            elif isinstance(t_pc_q, Quantity):
+                unit_system_w5 = _infer_unit_system_from_quantity(t_pc_q.model_dump())
+
+            fy_pc_col_q: Quantity | None = None
+            steel_type_pc = _format_text(step1.get("tipo_acero_pc_col"))
+            if steel_type_pc != "n/a" and unit_system_w5 is not None:
+                try:
+                    fy_pc_col_q = get_plate_steel_properties(
+                        steel_type=steel_type_pc,
+                        unit_system=unit_system_w5,
+                    ).get("fy")
+                except Exception:
+                    fy_pc_col_q = None
+
+            ru_w3_p_pos_col_q: Quantity | None = None
+            if (
+                isinstance(fy_pc_col_q, Quantity)
+                and isinstance(b2_pc_q, Quantity)
+                and isinstance(t_pc_q, Quantity)
+                and b2_pc_q.unit == t_pc_q.unit
+                and unit_system_w5 is not None
+            ):
+                if unit_system_w5 == UnitSystem.SI and fy_pc_col_q.unit == "MPa" and b2_pc_q.unit == "mm":
+                    ru_w3_p_pos_col_q = Quantity(
+                        value=(fy_pc_col_q.value * b2_pc_q.value * t_pc_q.value * n_pc_val) / 1000.0,
+                        unit="kN",
+                    )
+                elif unit_system_w5 == UnitSystem.US and fy_pc_col_q.unit == "ksi" and b2_pc_q.unit == "in":
+                    ru_w3_p_pos_col_q = Quantity(
+                        value=fy_pc_col_q.value * b2_pc_q.value * t_pc_q.value * n_pc_val,
+                        unit="kip",
+                    )
+
+            phi_rn_w3_p_pos_col_q: Quantity | None = None
+            dcr_w3_p_pos_col: float | None = None
+            result_w3_p_pos_col = "n/a"
+            nl_w5_col = None
+            try:
+                if step1.get("nl_w5_col") is not None:
+                    nl_w5_col = int(step1.get("nl_w5_col"))
+            except (TypeError, ValueError):
+                nl_w5_col = None
+            kds_w5_col = None
+            try:
+                if step1.get("kds_w5_col") is not None:
+                    kds_w5_col = float(step1.get("kds_w5_col"))
+            except (TypeError, ValueError):
+                kds_w5_col = None
+
+            if tipo_w5_norm == "fillet":
+                if (
+                    isinstance(ru_w3_p_pos_col_q, Quantity)
+                    and isinstance(fexx_w5_q, Quantity)
+                    and isinstance(t_w5_q, Quantity)
+                    and isinstance(l_w5_col_q, Quantity)
+                    and nl_w5_col is not None
+                    and kds_w5_col is not None
+                    and unit_system_w5 is not None
+                ):
+                    try:
+                        weld_check_w5 = compute_fillet_weld_check_with_kds(
+                            demand=ru_w3_p_pos_col_q,
+                            fexx=fexx_w5_q,
+                            weld_size=t_w5_q,
+                            weld_length=l_w5_col_q,
+                            weld_lines=nl_w5_col,
+                            unit_system=unit_system_w5,
+                            kds=kds_w5_col,
+                            phi=phi_fragil,
+                        )
+                        base_cap = weld_check_w5.get("phi_rn")
+                        if isinstance(base_cap, Quantity):
+                            phi_rn_w3_p_pos_col_q = Quantity(
+                                value=base_cap.value * n_pc_val,
+                                unit=base_cap.unit,
+                            )
+                    except Exception:
+                        phi_rn_w3_p_pos_col_q = None
+                if isinstance(ru_w3_p_pos_col_q, Quantity) and isinstance(phi_rn_w3_p_pos_col_q, Quantity) and phi_rn_w3_p_pos_col_q.value > 0:
+                    phi_rn_conv = phi_rn_w3_p_pos_col_q
+                    if phi_rn_w3_p_pos_col_q.unit != ru_w3_p_pos_col_q.unit:
+                        if phi_rn_w3_p_pos_col_q.unit == "kN" and ru_w3_p_pos_col_q.unit == "kip":
+                            phi_rn_conv = Quantity(value=phi_rn_w3_p_pos_col_q.value / 4.4482216152605, unit="kip")
+                        elif phi_rn_w3_p_pos_col_q.unit == "kip" and ru_w3_p_pos_col_q.unit == "kN":
+                            phi_rn_conv = Quantity(value=phi_rn_w3_p_pos_col_q.value * 4.4482216152605, unit="kN")
+                    if phi_rn_conv.value > 0:
+                        dcr_w3_p_pos_col = ru_w3_p_pos_col_q.value / phi_rn_conv.value
+                        result_w3_p_pos_col = "Cumple" if dcr_w3_p_pos_col <= 1.0 else "No cumple"
+                elif isinstance(ru_w3_p_pos_col_q, Quantity):
+                    result_w3_p_pos_col = "No cumple"
+            elif tipo_w5_norm == "cjp":
+                result_w3_p_pos_col = "Cumple"
+
+            block_25_lines = [
+                f"## Paso {assigned_step_number}- Revisión de resistencia de soldadura # 5 ( Platina de continuidad con aleta de columna)",
+                "",
+                f"### {assigned_step_number}.1. Revisión de capacidad a tracción",
+                "",
+                f"#### {assigned_step_number}.1.1. ELR #1: Rotura de soldadura",
+                "",
+                "- Clausula: `Documento: AISC 358-22 | Seccion: Capitulo 6 / Seccion 6.7 + AISC 360-22 J2.4`",
+                "- Ecuacion: `Ru_w5_p+_col = Fy_pc_col * b2_pc_col * t_pc_col * n_pc_col; Fillet: phi*Rn_w5_p+_col = phi_fragil * kds_w5_col * nl_w5_col * 0.6 * Fexx_w5_col * 0.707 * L_w5_col * w_w5_col * n_pc_col; DCR_w5_p+_col = Ru_w5_p+_col / phi*Rn_w5_p+_col`",
+                f"- tipo_w5_col: `{tipo_w5_raw}`",
+            ]
+            if tipo_w5_norm == "cjp":
+                block_25_lines.extend(
+                    [
+                        "- CJP: `Cumple`",
+                        f"- Resultado: `{_render_result_plain_es(result_w3_p_pos_col)}`",
+                        "",
+                    ]
+                )
+            else:
+                block_25_lines.extend(
+                    [
+                        f"- phi usado (phi_fragil): `{_format_decimal(phi_fragil)}`",
+                        f"- Fy_pc_col: `{_format_quantity(fy_pc_col_q.model_dump() if isinstance(fy_pc_col_q, Quantity) else None)}`",
+                        f"- b2_pc_col: `{_format_quantity(b2_pc_q.model_dump() if isinstance(b2_pc_q, Quantity) else None)}`",
+                        f"- t_pc_col: `{_format_quantity(t_pc_q.model_dump() if isinstance(t_pc_q, Quantity) else None)}`",
+                        f"- n_pc_col: `{_format_text(n_pc_val)}`",
+                        f"- Ru_w5_p+_col: `{_format_quantity(ru_w3_p_pos_col_q.model_dump() if isinstance(ru_w3_p_pos_col_q, Quantity) else None)}`",
+                        f"- Fexx_w5_col: `{_format_quantity(fexx_w5_q.model_dump() if isinstance(fexx_w5_q, Quantity) else None)}`",
+                        f"- w_w5_col: `{_format_quantity(t_w5_q.model_dump() if isinstance(t_w5_q, Quantity) else None)}`",
+                        f"- L_w5_col: `{_format_quantity(l_w5_col_q.model_dump() if isinstance(l_w5_col_q, Quantity) else None)}`",
+                        f"- nl_w5_col: `{_format_text(nl_w5_col)}`",
+                        f"- kds_w5_col: `{_format_text(kds_w5_col)}`",
+                        f"- phi*Rn_w5_p+_col: `{_format_quantity(phi_rn_w3_p_pos_col_q.model_dump() if isinstance(phi_rn_w3_p_pos_col_q, Quantity) else None)}`",
+                        f"- DCR_w5_p+_col: `{_format_decimal(dcr_w3_p_pos_col) if dcr_w3_p_pos_col is not None else 'n/a'}`",
+                        f"- Resultado: `{_render_result_plain_es(result_w3_p_pos_col)}`",
+                        "",
+                    ]
+                )
+
+            block_25 = "\n".join(block_25_lines)
+            block_25 = _align_nested_heading_numbers_with_step(block_25, step_number=assigned_step_number)
+            content.append(block_25)
+            next_step_number += 1
+
+            # Paso 26 - Soldadura #6 (platina de continuidad con alma de columna)
+            assigned_step_number = next_step_number
+            tipo_w6_raw = _format_text(step1.get("tipo_w6_col"))
+            tipo_w6_norm = tipo_w6_raw.strip().lower()
+            if tipo_w6_norm in {"complete_joint_penetration"}:
+                tipo_w6_norm = "cjp"
+            elif tipo_w6_norm in {"single_sided_fillet", "double_sided_fillet"}:
+                tipo_w6_norm = "fillet"
+
+            l2_pc_col_q = _as_quantity(step1.get("L2_pc_col"))
+            l_w6_col_q = _as_quantity(step1.get("L_w6_col")) or _as_quantity(step1.get("l_w6_col"))
+            if not isinstance(l_w6_col_q, Quantity):
+                l_gap_w6_q = _as_quantity(step1.get("L_gap_w6_col"))
+                if isinstance(l2_pc_col_q, Quantity) and isinstance(l_gap_w6_q, Quantity):
+                    if l_gap_w6_q.unit == l2_pc_col_q.unit:
+                        l_gap_v = l_gap_w6_q.value
+                    elif l_gap_w6_q.unit == "mm" and l2_pc_col_q.unit == "in":
+                        l_gap_v = l_gap_w6_q.value / 25.4
+                    elif l_gap_w6_q.unit == "in" and l2_pc_col_q.unit == "mm":
+                        l_gap_v = l_gap_w6_q.value * 25.4
+                    else:
+                        l_gap_v = None
+                    if l_gap_v is not None:
+                        l_w6_col_q = Quantity(
+                            value=l2_pc_col_q.value - 2.0 * l_gap_v,
+                            unit=l2_pc_col_q.unit,
+                        )
+            fexx_w6_q = _as_quantity(step1.get("Fexx_w6_col")) or _as_quantity(step1.get("weld_fexx"))
+            t_w6_q = _as_quantity(step1.get("w_w6_col")) or _as_quantity(step1.get("t_w6_col"))
+            fy_pc_col_w6_q: Quantity | None = None
+            fu_pc_col_w6_q: Quantity | None = None
+            ru1_w5_v2_col_q: Quantity | None = None
+            ru2_w5_v2_col_q: Quantity | None = None
+            ru3_w5_v2_col_q: Quantity | None = None
+            ru4_w5_v2_col_q: Quantity | None = None
+            ru5_w5_v2_col_q: Quantity | None = None
+            ru6_w5_v2_col_q: Quantity | None = None
+            ru7_w5_v2_col_q: Quantity | None = None
+            ru8_w5_v2_col_q: Quantity | None = None
+            ru9_w5_v2_col_q: Quantity | None = None
+            ru_w5_v2_col_q: Quantity | None = None
+            cv1_col: float | None = None
+            phi_rn_w6_p_pos_col_q: Quantity | None = None
+            dcr_w6_p_pos_col: float | None = None
+            result_w6_p_pos_col = "n/a"
+            nl_w6_col = None
+            try:
+                if step1.get("nl_w6_col") is not None:
+                    nl_w6_col = int(step1.get("nl_w6_col"))
+            except (TypeError, ValueError):
+                nl_w6_col = None
+            kds_w6_col = None
+            try:
+                if step1.get("kds_w6_col") is not None:
+                    kds_w6_col = float(step1.get("kds_w6_col"))
+            except (TypeError, ValueError):
+                kds_w6_col = None
+
+            unit_system_w6: UnitSystem | None = None
+            if isinstance(l2_pc_col_q, Quantity):
+                unit_system_w6 = _infer_unit_system_from_quantity(l2_pc_col_q.model_dump())
+            elif isinstance(t_pc_q, Quantity):
+                unit_system_w6 = _infer_unit_system_from_quantity(t_pc_q.model_dump())
+
+            if steel_type_pc != "n/a" and unit_system_w6 is not None:
+                try:
+                    pc_props = get_plate_steel_properties(
+                        steel_type=steel_type_pc,
+                        unit_system=unit_system_w6,
+                    )
+                    fy_pc_col_w6_q = pc_props.get("fy") if isinstance(pc_props.get("fy"), Quantity) else None
+                    fu_pc_col_w6_q = pc_props.get("fu") if isinstance(pc_props.get("fu"), Quantity) else None
+                except Exception:
+                    fy_pc_col_w6_q = None
+                    fu_pc_col_w6_q = None
+
+            if (
+                isinstance(fy_pc_col_w6_q, Quantity)
+                and isinstance(l2_pc_col_q, Quantity)
+                and isinstance(t_pc_q, Quantity)
+                and l2_pc_col_q.unit == t_pc_q.unit
+                and unit_system_w6 is not None
+            ):
+                if unit_system_w6 == UnitSystem.SI and fy_pc_col_w6_q.unit == "MPa" and l2_pc_col_q.unit == "mm":
+                    ru1_w5_v2_col_q = Quantity(
+                        value=(0.6 * fy_pc_col_w6_q.value * l2_pc_col_q.value * t_pc_q.value) / 1000.0,
+                        unit="kN",
+                    )
+                elif unit_system_w6 == UnitSystem.US and fy_pc_col_w6_q.unit == "ksi" and l2_pc_col_q.unit == "in":
+                    ru1_w5_v2_col_q = Quantity(
+                        value=0.6 * fy_pc_col_w6_q.value * l2_pc_col_q.value * t_pc_q.value,
+                        unit="kip",
+                    )
+
+            d_col_q = _as_quantity(step1.get("d_col"))
+            tw_col_q_local = _as_quantity(step1.get("tw_col"))
+            wz_dp_col_q = _as_quantity(step1.get("wz_dp_col"))
+            kdes_col_q = _as_quantity(step1.get("kdes_col") or step1.get("kdet_col"))
+            e_col_q = _as_quantity(step1.get("elastic_modulus"))
+            if e_col_q is None:
+                e_col_q = _as_quantity(step1.get("E_col"))
+            phi_no_ductil = 0.9
+            try:
+                if step1.get("phi_no_ductil") is not None:
+                    phi_no_ductil = float(step1.get("phi_no_ductil"))
+            except (TypeError, ValueError):
+                phi_no_ductil = 0.9
+            t_dp_col_q = _as_quantity(step1.get("t_dp_col"))
+            tipo_acero_dp_col = _format_text(step1.get("tipo_acero_dp_col"))
+            tipo_acero_perfil_col = _format_text(step1.get("tipo_acero_perfil_col"))
+            fy_dp_col_q: Quantity | None = None
+            fu_dp_col_q: Quantity | None = None
+            fy_col_q: Quantity | None = None
+            fu_col_q: Quantity | None = None
+            if unit_system_w6 is not None:
+                if tipo_acero_dp_col != "n/a":
+                    try:
+                        dp_props = get_plate_steel_properties(
+                            steel_type=tipo_acero_dp_col,
+                            unit_system=unit_system_w6,
+                        )
+                        fy_dp_col_q = dp_props.get("fy") if isinstance(dp_props.get("fy"), Quantity) else None
+                        fu_dp_col_q = dp_props.get("fu") if isinstance(dp_props.get("fu"), Quantity) else None
+                    except Exception:
+                        fy_dp_col_q = None
+                        fu_dp_col_q = None
+                if tipo_acero_perfil_col != "n/a":
+                    try:
+                        col_props = get_hrs_steel_properties(
+                            steel_type=tipo_acero_perfil_col,
+                            unit_system=unit_system_w6,
+                        )
+                        fy_col_q = col_props.get("fy") if isinstance(col_props.get("fy"), Quantity) else None
+                        fu_col_q = col_props.get("fu") if isinstance(col_props.get("fu"), Quantity) else None
+                    except Exception:
+                        fy_col_q = None
+                        fu_col_q = None
+
+            def _ru_strength(
+                *,
+                stress_q: Quantity | None,
+                thickness_q: Quantity | None,
+                length_q: Quantity | None,
+                unit_system: UnitSystem | None,
+                factor: float = 0.6,
+                extra_factor: float = 1.0,
+            ) -> Quantity | None:
+                if (
+                    unit_system is None
+                    or not isinstance(stress_q, Quantity)
+                    or not isinstance(thickness_q, Quantity)
+                    or not isinstance(length_q, Quantity)
+                ):
+                    return None
+                if thickness_q.unit != length_q.unit:
+                    if thickness_q.unit == "mm" and length_q.unit == "in":
+                        t_conv = Quantity(value=thickness_q.value / 25.4, unit="in")
+                    elif thickness_q.unit == "in" and length_q.unit == "mm":
+                        t_conv = Quantity(value=thickness_q.value * 25.4, unit="mm")
+                    else:
+                        return None
+                else:
+                    t_conv = thickness_q
+                if unit_system == UnitSystem.SI and stress_q.unit == "MPa" and t_conv.unit == "mm":
+                    return Quantity(
+                        value=factor * stress_q.value * t_conv.value * length_q.value * extra_factor / 1000.0,
+                        unit="kN",
+                    )
+                if unit_system == UnitSystem.US and stress_q.unit == "ksi" and t_conv.unit == "in":
+                    return Quantity(
+                        value=factor * stress_q.value * t_conv.value * length_q.value * extra_factor,
+                        unit="kip",
+                    )
+                return None
+
+            # Ru2..Ru9 solicitados para 26.1.1
+            ru2_w5_v2_col_q = _ru_strength(
+                stress_q=fu_dp_col_q,
+                thickness_q=t_dp_col_q,
+                length_q=l_w6_col_q,
+                unit_system=unit_system_w6,
+            )
+            ru3_w5_v2_col_q = _ru_strength(
+                stress_q=fy_dp_col_q,
+                thickness_q=t_dp_col_q,
+                length_q=l_w6_col_q,
+                unit_system=unit_system_w6,
+            )
+            ru4_w5_v2_col_q = _ru_strength(
+                stress_q=fu_col_q,
+                thickness_q=tw_col_q_local,
+                length_q=l_w6_col_q,
+                unit_system=unit_system_w6,
+            )
+            ru5_w5_v2_col_q = _ru_strength(
+                stress_q=fy_col_q,
+                thickness_q=tw_col_q_local,
+                length_q=l_w6_col_q,
+                unit_system=unit_system_w6,
+            )
+            ru6_w5_v2_col_q = _ru_strength(
+                stress_q=fu_col_q,
+                thickness_q=tw_col_q_local,
+                length_q=d_col_q,
+                unit_system=unit_system_w6,
+            )
+            if (
+                isinstance(fy_col_q, Quantity)
+                and isinstance(tw_col_q_local, Quantity)
+                and isinstance(d_col_q, Quantity)
+                and isinstance(kdes_col_q, Quantity)
+                and isinstance(e_col_q, Quantity)
+                and unit_system_w6 is not None
+            ):
+                try:
+                    shear_col = compute_beam_web_shear_yielding_strength(
+                        fy=fy_col_q,
+                        tw=tw_col_q_local,
+                        d=d_col_q,
+                        kdes=kdes_col_q,
+                        elastic_modulus=e_col_q,
+                        unit_system=unit_system_w6,
+                        phi=1.0,
+                    )
+                    cv1_col = float(shear_col.get("cv1")) if shear_col.get("cv1") is not None else None
+                except Exception:
+                    cv1_col = None
+            ru7_w5_v2_col_q = _ru_strength(
+                stress_q=fy_col_q,
+                thickness_q=tw_col_q_local,
+                length_q=d_col_q,
+                unit_system=unit_system_w6,
+                extra_factor=(cv1_col if cv1_col is not None else 1.0),
+            ) if cv1_col is not None else None
+            ru8_w5_v2_col_q = _ru_strength(
+                stress_q=fu_dp_col_q,
+                thickness_q=t_dp_col_q,
+                length_q=wz_dp_col_q,
+                unit_system=unit_system_w6,
+            )
+            ru9_w5_v2_col_q = _ru_strength(
+                stress_q=fy_dp_col_q,
+                thickness_q=t_dp_col_q,
+                length_q=wz_dp_col_q,
+                unit_system=unit_system_w6,
+            )
+
+            ru_candidates: list[Quantity] = []
+            for q in (
+                ru1_w5_v2_col_q,
+                ru2_w5_v2_col_q,
+                ru3_w5_v2_col_q,
+                ru4_w5_v2_col_q,
+                ru5_w5_v2_col_q,
+                ru6_w5_v2_col_q,
+                ru7_w5_v2_col_q,
+                ru8_w5_v2_col_q,
+                ru9_w5_v2_col_q,
+            ):
+                if isinstance(q, Quantity):
+                    ru_candidates.append(q)
+            if ru_candidates:
+                base_unit = ru_candidates[0].unit
+                converted_ru: list[Quantity] = []
+                for q in ru_candidates:
+                    if q.unit == base_unit:
+                        converted_ru.append(q)
+                    elif q.unit == "kN" and base_unit == "kip":
+                        converted_ru.append(Quantity(value=q.value / 4.4482216152605, unit="kip"))
+                    elif q.unit == "kip" and base_unit == "kN":
+                        converted_ru.append(Quantity(value=q.value * 4.4482216152605, unit="kN"))
+                if converted_ru:
+                    ru_w5_v2_col_q = min(converted_ru, key=lambda x: x.value)
+
+            if tipo_w6_norm == "fillet":
+                if (
+                    isinstance(ru_w5_v2_col_q, Quantity)
+                    and isinstance(fexx_w6_q, Quantity)
+                    and isinstance(t_w6_q, Quantity)
+                    and isinstance(l_w6_col_q, Quantity)
+                    and nl_w6_col is not None
+                    and kds_w6_col is not None
+                    and unit_system_w6 is not None
+                ):
+                    try:
+                        weld_check_w6 = compute_fillet_weld_check_with_kds(
+                            demand=ru_w5_v2_col_q,
+                            fexx=fexx_w6_q,
+                            weld_size=t_w6_q,
+                            weld_length=l_w6_col_q,
+                            weld_lines=nl_w6_col,
+                            unit_system=unit_system_w6,
+                            kds=kds_w6_col,
+                            phi=phi_fragil,
+                        )
+                        base_cap_w6 = weld_check_w6.get("phi_rn")
+                        if isinstance(base_cap_w6, Quantity):
+                            phi_rn_w6_p_pos_col_q = base_cap_w6
+                    except Exception:
+                        phi_rn_w6_p_pos_col_q = None
+                if (
+                    isinstance(ru_w5_v2_col_q, Quantity)
+                    and isinstance(phi_rn_w6_p_pos_col_q, Quantity)
+                    and phi_rn_w6_p_pos_col_q.value > 0
+                ):
+                    phi_rn_conv_w6 = phi_rn_w6_p_pos_col_q
+                    if phi_rn_w6_p_pos_col_q.unit != ru_w5_v2_col_q.unit:
+                        if phi_rn_w6_p_pos_col_q.unit == "kN" and ru_w5_v2_col_q.unit == "kip":
+                            phi_rn_conv_w6 = Quantity(value=phi_rn_w6_p_pos_col_q.value / 4.4482216152605, unit="kip")
+                        elif phi_rn_w6_p_pos_col_q.unit == "kip" and ru_w5_v2_col_q.unit == "kN":
+                            phi_rn_conv_w6 = Quantity(value=phi_rn_w6_p_pos_col_q.value * 4.4482216152605, unit="kN")
+                    if phi_rn_conv_w6.value > 0:
+                        dcr_w6_p_pos_col = ru_w5_v2_col_q.value / phi_rn_conv_w6.value
+                        result_w6_p_pos_col = "Cumple" if dcr_w6_p_pos_col <= 1.0 else "No cumple"
+                elif isinstance(ru_w5_v2_col_q, Quantity):
+                    result_w6_p_pos_col = "No cumple"
+            elif tipo_w6_norm == "cjp":
+                result_w6_p_pos_col = "Cumple"
+
+            # ELR adicional 26.6.2 - Rotura del material base
+
+            def _phi_rn_base_metal(
+                *,
+                phi: float,
+                stress_q: Quantity | None,
+                thickness_q: Quantity | None,
+                length_q: Quantity | None,
+                unit_system: UnitSystem | None,
+            ) -> Quantity | None:
+                if (
+                    unit_system is None
+                    or not isinstance(stress_q, Quantity)
+                    or not isinstance(thickness_q, Quantity)
+                    or not isinstance(length_q, Quantity)
+                ):
+                    return None
+                if thickness_q.unit != length_q.unit:
+                    if thickness_q.unit == "mm" and length_q.unit == "in":
+                        t_conv = Quantity(value=thickness_q.value / 25.4, unit="in")
+                    elif thickness_q.unit == "in" and length_q.unit == "mm":
+                        t_conv = Quantity(value=thickness_q.value * 25.4, unit="mm")
+                    else:
+                        return None
+                else:
+                    t_conv = thickness_q
+                if unit_system == UnitSystem.SI and stress_q.unit == "MPa" and t_conv.unit == "mm":
+                    return Quantity(
+                        value=phi * 0.6 * stress_q.value * t_conv.value * length_q.value / 1000.0,
+                        unit="kN",
+                    )
+                if unit_system == UnitSystem.US and stress_q.unit == "ksi" and t_conv.unit == "in":
+                    return Quantity(
+                        value=phi * 0.6 * stress_q.value * t_conv.value * length_q.value,
+                        unit="kip",
+                    )
+                return None
+
+            phi_rn1_w6_dp_v2_col_q = _phi_rn_base_metal(
+                phi=phi_fragil,
+                stress_q=fu_dp_col_q,
+                thickness_q=t_dp_col_q,
+                length_q=l_w6_col_q,
+                unit_system=unit_system_w6,
+            )
+            phi_rn2_w6_dp_v2_col_q = _phi_rn_base_metal(
+                phi=phi_no_ductil,
+                stress_q=fy_dp_col_q,
+                thickness_q=t_dp_col_q,
+                length_q=l_w6_col_q,
+                unit_system=unit_system_w6,
+            )
+            phi_rn1_w6_cw_v2_col_q = _phi_rn_base_metal(
+                phi=phi_fragil,
+                stress_q=fu_col_q,
+                thickness_q=tw_col_q_local,
+                length_q=l_w6_col_q,
+                unit_system=unit_system_w6,
+            )
+            phi_rn2_w6_cw_v2_col_q = _phi_rn_base_metal(
+                phi=phi_no_ductil,
+                stress_q=fy_col_q,
+                thickness_q=tw_col_q_local,
+                length_q=l_w6_col_q,
+                unit_system=unit_system_w6,
+            )
+
+            phi_rn_candidates: list[Quantity] = []
+            for q in (
+                phi_rn1_w6_dp_v2_col_q,
+                phi_rn2_w6_dp_v2_col_q,
+                phi_rn1_w6_cw_v2_col_q,
+                phi_rn2_w6_cw_v2_col_q,
+            ):
+                if isinstance(q, Quantity):
+                    phi_rn_candidates.append(q)
+
+            phi_rn_w6_v2_col_base_q: Quantity | None = None
+            if phi_rn_candidates:
+                base_unit = phi_rn_candidates[0].unit
+                converted: list[Quantity] = []
+                for q in phi_rn_candidates:
+                    if q.unit == base_unit:
+                        converted.append(q)
+                    elif q.unit == "kN" and base_unit == "kip":
+                        converted.append(Quantity(value=q.value / 4.4482216152605, unit="kip"))
+                    elif q.unit == "kip" and base_unit == "kN":
+                        converted.append(Quantity(value=q.value * 4.4482216152605, unit="kN"))
+                if converted:
+                    phi_rn_w6_v2_col_base_q = min(converted, key=lambda x: x.value)
+
+            dcr_w6_v2_col_base: float | None = None
+            result_w6_v2_col_base = "n/a"
+            if isinstance(ru_w5_v2_col_q, Quantity) and isinstance(phi_rn_w6_v2_col_base_q, Quantity):
+                phi_rn_conv = phi_rn_w6_v2_col_base_q
+                if phi_rn_w6_v2_col_base_q.unit != ru_w5_v2_col_q.unit:
+                    if phi_rn_w6_v2_col_base_q.unit == "kN" and ru_w5_v2_col_q.unit == "kip":
+                        phi_rn_conv = Quantity(value=phi_rn_w6_v2_col_base_q.value / 4.4482216152605, unit="kip")
+                    elif phi_rn_w6_v2_col_base_q.unit == "kip" and ru_w5_v2_col_q.unit == "kN":
+                        phi_rn_conv = Quantity(value=phi_rn_w6_v2_col_base_q.value * 4.4482216152605, unit="kN")
+                if phi_rn_conv.value > 0:
+                    dcr_w6_v2_col_base = ru_w5_v2_col_q.value / phi_rn_conv.value
+                    result_w6_v2_col_base = "Cumple" if dcr_w6_v2_col_base <= 1.0 else "No cumple"
+
+            block_26_lines = [
+                f"## Paso {assigned_step_number}- Revisión de resistencia de soldadura # 6 ( Platina de continuidad con alma de columna)",
+                "",
+                f"### {assigned_step_number}.1. Revisión de capacidad a cortante",
+                "",
+                f"#### {assigned_step_number}.1.1. ELR #1: Rotura de soldadura",
+                "",
+                "- Clausula: `Documento: AISC 358-22 | Seccion: Capitulo 6 / Seccion 6.7 + AISC 360-22 J2.4`",
+                "- Ecuacion: `Ru1_w5_v2_col = 0.6 * Fy_pc_col * L2_pc_col * t_pc_col; Ru2_w5_v2_col = 0.6 * fu_dp_col * t_dp_col * L_w6_col; Ru3_w5_v2_col = 0.6 * fy_dp_col * t_dp_col * L_w6_col; Ru4_w5_v2_col = 0.6 * fu_col * tw_col * L_w6_col; Ru5_w5_v2_col = 0.6 * fy_col * tw_col * L_w6_col; Ru6_w5_v2_col = 0.6 * fu_col * tw_col * d_col; Ru7_w5_v2_col = 0.6 * fy_col * tw_col * d_col * Cv1; Ru8_w5_v2_col = 0.6 * fu_dp_col * t_dp_col * wz_dp_col; Ru9_w5_v2_col = 0.6 * fy_dp_col * t_dp_col * wz_dp_col; Ru_w5_v2_col = MIN{Ru1..Ru9}; Fillet: phi*Rn_w6_v2_col = phi_fragil * kds_w6_col * nl_w6_col * 0.6 * Fexx_w6_col * 0.707 * L_w6_col * w_w6_col; DCR_w6_v2_col = Ru_w5_v2_col / phi*Rn_w6_v2_col`",
+                f"- tipo_w6_col: `{tipo_w6_raw}`",
+            ]
+            if tipo_w6_norm == "cjp":
+                block_26_lines.extend(
+                    [
+                        "- CJP: `Cumple`",
+                        f"- Resultado: `{_render_result_plain_es(result_w6_p_pos_col)}`",
+                        "",
+                    ]
+                )
+            else:
+                block_26_lines.extend(
+                    [
+                        f"- phi usado (phi_fragil): `{_format_decimal(phi_fragil)}`",
+                        f"- Fy_pc_col: `{_format_quantity(fy_pc_col_w6_q.model_dump() if isinstance(fy_pc_col_w6_q, Quantity) else None)}`",
+                        f"- Fu_pc_col: `{_format_quantity(fu_pc_col_w6_q.model_dump() if isinstance(fu_pc_col_w6_q, Quantity) else None)}`",
+                        f"- L2_pc_col: `{_format_quantity(l2_pc_col_q.model_dump() if isinstance(l2_pc_col_q, Quantity) else None)}`",
+                        f"- t_pc_col: `{_format_quantity(t_pc_q.model_dump() if isinstance(t_pc_q, Quantity) else None)}`",
+                        f"- Fu_dp_col: `{_format_quantity(fu_dp_col_q.model_dump() if isinstance(fu_dp_col_q, Quantity) else None)}`",
+                        f"- Fy_dp_col: `{_format_quantity(fy_dp_col_q.model_dump() if isinstance(fy_dp_col_q, Quantity) else None)}`",
+                        f"- t_dp_col: `{_format_quantity(t_dp_col_q.model_dump() if isinstance(t_dp_col_q, Quantity) else None)}`",
+                        f"- Fu_col: `{_format_quantity(fu_col_q.model_dump() if isinstance(fu_col_q, Quantity) else None)}`",
+                        f"- Fy_col: `{_format_quantity(fy_col_q.model_dump() if isinstance(fy_col_q, Quantity) else None)}`",
+                        f"- tw_col: `{_format_quantity(tw_col_q_local.model_dump() if isinstance(tw_col_q_local, Quantity) else None)}`",
+                        f"- d_col: `{_format_quantity(d_col_q.model_dump() if isinstance(d_col_q, Quantity) else None)}`",
+                        f"- wz_dp_col: `{_format_quantity(wz_dp_col_q.model_dump() if isinstance(wz_dp_col_q, Quantity) else None)}`",
+                        f"- Cv1: `{_format_decimal(cv1_col) if cv1_col is not None else 'n/a'}`",
+                        f"- Ru1_w5_v2_col: `{_format_quantity(ru1_w5_v2_col_q.model_dump() if isinstance(ru1_w5_v2_col_q, Quantity) else None)}`",
+                        f"- Ru2_w5_v2_col: `{_format_quantity(ru2_w5_v2_col_q.model_dump() if isinstance(ru2_w5_v2_col_q, Quantity) else None)}`",
+                        f"- Ru3_w5_v2_col: `{_format_quantity(ru3_w5_v2_col_q.model_dump() if isinstance(ru3_w5_v2_col_q, Quantity) else None)}`",
+                        f"- Ru4_w5_v2_col: `{_format_quantity(ru4_w5_v2_col_q.model_dump() if isinstance(ru4_w5_v2_col_q, Quantity) else None)}`",
+                        f"- Ru5_w5_v2_col: `{_format_quantity(ru5_w5_v2_col_q.model_dump() if isinstance(ru5_w5_v2_col_q, Quantity) else None)}`",
+                        f"- Ru6_w5_v2_col: `{_format_quantity(ru6_w5_v2_col_q.model_dump() if isinstance(ru6_w5_v2_col_q, Quantity) else None)}`",
+                        f"- Ru7_w5_v2_col: `{_format_quantity(ru7_w5_v2_col_q.model_dump() if isinstance(ru7_w5_v2_col_q, Quantity) else None)}`",
+                        f"- Ru8_w5_v2_col: `{_format_quantity(ru8_w5_v2_col_q.model_dump() if isinstance(ru8_w5_v2_col_q, Quantity) else None)}`",
+                        f"- Ru9_w5_v2_col: `{_format_quantity(ru9_w5_v2_col_q.model_dump() if isinstance(ru9_w5_v2_col_q, Quantity) else None)}`",
+                        f"- Ru_w5_v2_col: `{_format_quantity(ru_w5_v2_col_q.model_dump() if isinstance(ru_w5_v2_col_q, Quantity) else None)}`",
+                        f"- Fexx_w6_col: `{_format_quantity(fexx_w6_q.model_dump() if isinstance(fexx_w6_q, Quantity) else None)}`",
+                        f"- w_w6_col: `{_format_quantity(t_w6_q.model_dump() if isinstance(t_w6_q, Quantity) else None)}`",
+                        f"- L_w6_col: `{_format_quantity(l_w6_col_q.model_dump() if isinstance(l_w6_col_q, Quantity) else None)}`",
+                        f"- nl_w6_col: `{_format_text(nl_w6_col)}`",
+                        f"- kds_w6_col: `{_format_text(kds_w6_col)}`",
+                        f"- phi*Rn_w6_v2_col: `{_format_quantity(phi_rn_w6_p_pos_col_q.model_dump() if isinstance(phi_rn_w6_p_pos_col_q, Quantity) else None)}`",
+                        f"- DCR_w6_v2_col: `{_format_decimal(dcr_w6_p_pos_col) if dcr_w6_p_pos_col is not None else 'n/a'}`",
+                        f"- Resultado: `{_render_result_plain_es(result_w6_p_pos_col)}`",
+                        "",
+                    ]
+                )
+            block_26_lines.extend(
+                [
+                    f"### {assigned_step_number}.6. Revisión de capacidad del material base",
+                    "",
+                    f"#### {assigned_step_number}.6.2. ELR #1: Rotura del material base",
+                    "",
+                    "- Clausula: `AISC 360-22 J4 (material base)`",
+                    "- Ecuacion: `Ru_w5_v2_col = MIN{Ru1..Ru9}; phi*Rn1_w6-dp_v2_col = phi_fragil * 0.6 * fu_dp_col * t_dp_col * L_w6_col; phi*Rn2_w6-dp_v2_col = phi_no_ductil * 0.6 * fy_dp_col * t_dp_col * L_w6_col; phi*Rn1_w6-cw_v2_col = phi_fragil * 0.6 * fu_col * tw_col * L_w6_col; phi*Rn2_w6-cw_v2_col = phi_no_ductil * 0.6 * fy_col * tw_col * L_w6_col; phi*Rn_w6_v2_col = min(phi*Rn1_w6-dp_v2_col, phi*Rn2_w6-dp_v2_col, phi*Rn1_w6-cw_v2_col, phi*Rn2_w6-cw_v2_col); DCR_w6_v2_col = Ru_w5_v2_col / phi*Rn_w6_v2_col`",
+                ]
+            )
+            if tipo_w6_norm == "cjp":
+                block_26_lines.extend(
+                    [
+                        f"- tipo_w6_col: `{tipo_w6_raw}`",
+                        "- CJP: `Cumple`",
+                        "- Resultado: `🟢 Cumple`",
+                        "",
+                    ]
+                )
+            else:
+                block_26_lines.extend(
+                    [
+                        f"- phi fragil: `{_format_decimal(phi_fragil)}`",
+                        f"- phi no ductil: `{_format_decimal(phi_no_ductil)}`",
+                        f"- fu_dp_col: `{_format_quantity(fu_dp_col_q.model_dump() if isinstance(fu_dp_col_q, Quantity) else None)}`",
+                        f"- fy_dp_col: `{_format_quantity(fy_dp_col_q.model_dump() if isinstance(fy_dp_col_q, Quantity) else None)}`",
+                        f"- t_dp_col: `{_format_quantity(t_dp_col_q.model_dump() if isinstance(t_dp_col_q, Quantity) else None)}`",
+                        f"- fu_col: `{_format_quantity(fu_col_q.model_dump() if isinstance(fu_col_q, Quantity) else None)}`",
+                        f"- fy_col: `{_format_quantity(fy_col_q.model_dump() if isinstance(fy_col_q, Quantity) else None)}`",
+                        f"- tw_col: `{_format_quantity(tw_col_q_local.model_dump() if isinstance(tw_col_q_local, Quantity) else None)}`",
+                        f"- L_w6_col: `{_format_quantity(l_w6_col_q.model_dump() if isinstance(l_w6_col_q, Quantity) else None)}`",
+                        f"- Ru_w5_v2_col: `{_format_quantity(ru_w5_v2_col_q.model_dump() if isinstance(ru_w5_v2_col_q, Quantity) else None)}`",
+                        f"- phi*Rn1_w6-dp_v2_col: `{_format_quantity(phi_rn1_w6_dp_v2_col_q.model_dump() if isinstance(phi_rn1_w6_dp_v2_col_q, Quantity) else None)}`",
+                        f"- phi*Rn2_w6-dp_v2_col: `{_format_quantity(phi_rn2_w6_dp_v2_col_q.model_dump() if isinstance(phi_rn2_w6_dp_v2_col_q, Quantity) else None)}`",
+                        f"- phi*Rn1_w6-cw_v2_col: `{_format_quantity(phi_rn1_w6_cw_v2_col_q.model_dump() if isinstance(phi_rn1_w6_cw_v2_col_q, Quantity) else None)}`",
+                        f"- phi*Rn2_w6-cw_v2_col: `{_format_quantity(phi_rn2_w6_cw_v2_col_q.model_dump() if isinstance(phi_rn2_w6_cw_v2_col_q, Quantity) else None)}`",
+                        f"- phi*Rn_w6_v2_col: `{_format_quantity(phi_rn_w6_v2_col_base_q.model_dump() if isinstance(phi_rn_w6_v2_col_base_q, Quantity) else None)}`",
+                        f"- DCR_w6_v2_col: `{_format_decimal(dcr_w6_v2_col_base) if dcr_w6_v2_col_base is not None else 'n/a'}`",
+                        f"- Resultado: `{_render_result_plain_es(result_w6_v2_col_base)}`",
+                        "",
+                    ]
+                )
+            block_26 = "\n".join(block_26_lines)
+            block_26 = _align_nested_heading_numbers_with_step(block_26, step_number=assigned_step_number)
+            content.append(block_26)
+            next_step_number += 1
     content.append("")
     rendered = "\n".join(content)
-    return _normalize_markdown_spacing(rendered) + "\n"
+    rendered = _normalize_markdown_spacing(rendered)
+    rendered = _normalize_memory_spanish_labels(rendered)
+    return rendered + "\n"
 
 
 def write_memory_markdown(result: DetailedRunResult, target_dir: str | Path) -> Path:

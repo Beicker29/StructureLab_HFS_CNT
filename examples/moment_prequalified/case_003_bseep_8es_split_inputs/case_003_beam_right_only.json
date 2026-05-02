@@ -1,6 +1,6 @@
 {
   "viga": {
-    "perfil_vgder": "W24X76",
+    "perfil_vgder": "W21X68",
     "tipo_acero_perfil_vgder": "ASTM A572 Gr 50",
     "demanda_ductilidad_vgder": "high",
     "E_vgder": {
@@ -8,7 +8,7 @@
       "unit": "MPa"
     },
     "Llb_vgder": {
-      "value": 5691,
+      "value": 7500,
       "unit": "mm"
     },
     "Lnc_vgder": {
@@ -19,11 +19,11 @@
   "placa_extremo": {
     "tipo_acero": "ASTM A572 Gr 50",
     "Bpe_vgder": {
-      "value": 270.0,
+      "value": 235.0,
       "unit": "mm"
     },
     "tpe_vgder": {
-      "value": 40,
+      "value": 25.4,
       "unit": "mm"
     },
     "de_pe_vgder": {
@@ -52,7 +52,7 @@
   },
   "pernos": {
     "g_b_vgder": {
-      "value": 140,
+      "value": 150,
       "unit": "mm"
     },
     "tipo_apriete_b_vgder": "pretensioned",
@@ -74,6 +74,10 @@
         "unit": "mm"
       },
       "nl_w1_vgder": 2,
+      "L_gap_w1_vgder": {
+        "value": 25.0,
+        "unit": "mm"
+      },
       "kds_w1_vgder": 1.0
     },
     "weld_2": {
@@ -88,6 +92,10 @@
         "unit": "mm"
       },
       "nl_w2_vgder": 2,
+      "L_gap_w2_vgder": {
+        "value": 25.0,
+        "unit": "mm"
+      },
       "kds_w2_vgder": 1.0
     },
     "weld_3": {
@@ -129,15 +137,15 @@
       "unit": "kN"
     },
     "Vu2_vgder": {
-      "value": 514.13,
+      "value": 160.21,
       "unit": "kN"
     },
     "Mu3_vgder": {
-      "value": 1542490.0,
-      "unit": "kN-mm"
+      "value": 353.56,
+      "unit": "kN-m"
     },
     "Vg_vgder": {
-      "value": 91.43,
+      "value": 97.11,
       "unit": "kN"
     }
   }

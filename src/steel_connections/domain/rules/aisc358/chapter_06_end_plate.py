@@ -46,9 +46,6 @@ from steel_connections.codes.engineering.customized import (
     compute_moment_prequalified_step6_1_bolt_tension_demand,
     compute_moment_prequalified_step6_2_bolt_shear_demand,
 )
-from steel_connections.codes.engineering.geometry import (
-    compute_minimum_panel_zone_plate_thickness_e3_6 as compute_minimum_panel_zone_plate_thickness_e3_6_eq,
-)
 from steel_connections.codes.engineering.geometry import compute_protected_zone_length as compute_protected_zone_length_eq
 from steel_connections.codes.engineering.shear import compute_beam_web_shear_yielding_strength
 from steel_connections.codes.engineering.weld import (
@@ -62,6 +59,7 @@ from steel_connections.codes.engineering.weld import (
     compute_plate_tension_demand_from_yielding,
     compute_total_weld_4_thickness,
 )
+from steel_connections.data.materials_repository import get_plate_steel_properties
 from steel_connections.data.sections_repository import get_beam_profile_properties, get_column_profile_properties
 from steel_connections.models.errors import missing_required_input_error
 from steel_connections.models.input import AISC358MomentCase
@@ -200,10 +198,14 @@ def _column_yc_parameter_details(case: AISC358MomentCase, rule_binding: object) 
     pb = _optional_pb_for_connection(case, rule_binding)
     continuity_enabled = bool(case.geometry.continuity_plate_enabled)
 
+    continuity_plate_thickness = _require(case, "geometry.continuity_plate_thickness", rule_binding)
     c = Quantity(value=pfo.value + pfi.value + beam_profile["tf"].value, unit=pfo.unit)
-    pso = pfo
+    pso = Quantity(
+        value=pfo.value + 0.5 * beam_profile["tf"].value - 0.5 * continuity_plate_thickness.value,
+        unit=pfo.unit,
+    )
     psi = Quantity(
-        value=pfi.value + beam_profile["tf"].value - _require(case, "geometry.continuity_plate_thickness", rule_binding).value,
+        value=pfi.value + 0.5 * beam_profile["tf"].value - 0.5 * continuity_plate_thickness.value,
         unit=pfi.unit,
     )
     y_parameter, metadata = compute_column_flange_yield_line_parameter(
@@ -227,6 +229,7 @@ def _column_yc_parameter_details(case: AISC358MomentCase, rule_binding: object) 
         "c": c.model_dump(),
         "pso": pso.model_dump(),
         "psi_computed": psi.model_dump(),
+        "continuity_plate_thickness": continuity_plate_thickness.model_dump(),
         "h1": h["h1"].model_dump(),
         "h2": h["h2"].model_dump(),
         "h3": h.get("h3").model_dump() if h.get("h3") is not None else None,
@@ -484,6 +487,10 @@ def _adapt_case_for_side_as_left(case: AISC358MomentCase, *, side: str) -> AISC3
     adapted.geometry.pfo = _geometry_primary_or_common("pfo")
     adapted.geometry.pfi = _geometry_primary_or_common("pfi")
     adapted.geometry.bolt_gage = _geometry_primary_or_common("bolt_gage")
+    adapted.geometry.bolt_diameter = _geometry_primary_or_common("bolt_diameter")
+    adapted.geometry.bolt_tightening_type = _geometry_primary_or_common("bolt_tightening_type")
+    adapted.geometry.clear_distance_end_plate = _geometry_primary_or_common("clear_distance_end_plate")
+    adapted.geometry.clear_distance_column_flange = _geometry_primary_or_common("clear_distance_column_flange")
     adapted.geometry.stiffener_thickness = _geometry_primary_or_common("stiffener_thickness")
     adapted.geometry.end_plate_beam_web_weld_type = _geometry_primary_or_common("end_plate_beam_web_weld_type")
     adapted.geometry.end_plate_beam_web_weld_thickness_twe = _geometry_primary_or_common(
@@ -491,9 +498,11 @@ def _adapt_case_for_side_as_left(case: AISC358MomentCase, *, side: str) -> AISC3
     )
     adapted.geometry.end_plate_beam_web_weld_lines_nl = _geometry_primary_or_common("end_plate_beam_web_weld_lines_nl")
     adapted.geometry.end_plate_stiffener_weld_type = _geometry_primary_or_common("end_plate_stiffener_weld_type")
+    adapted.geometry.L_gap_w1 = _geometry_primary_or_common("L_gap_w1")
     adapted.geometry.end_plate_stiffener_weld_size_wst = _geometry_primary_or_common("end_plate_stiffener_weld_size_wst")
     adapted.geometry.end_plate_stiffener_weld_lines_nl = _geometry_primary_or_common("end_plate_stiffener_weld_lines_nl")
     adapted.geometry.beam_stiffener_weld_type = _geometry_primary_or_common("beam_stiffener_weld_type")
+    adapted.geometry.L_gap_w2 = _geometry_primary_or_common("L_gap_w2")
     adapted.geometry.beam_stiffener_weld_size_wst2 = _geometry_primary_or_common("beam_stiffener_weld_size_wst2")
     adapted.geometry.beam_stiffener_weld_lines_nl_w2 = _geometry_primary_or_common("beam_stiffener_weld_lines_nl_w2")
 
@@ -506,14 +515,20 @@ def _adapt_case_for_side_as_left(case: AISC358MomentCase, *, side: str) -> AISC3
         "pfo",
         "pfi",
         "bolt_gage",
+        "bolt_diameter",
+        "bolt_tightening_type",
+        "clear_distance_end_plate",
+        "clear_distance_column_flange",
         "stiffener_thickness",
         "end_plate_beam_web_weld_type",
         "end_plate_beam_web_weld_thickness_twe",
         "end_plate_beam_web_weld_lines_nl",
         "end_plate_stiffener_weld_type",
+        "L_gap_w1",
         "end_plate_stiffener_weld_size_wst",
         "end_plate_stiffener_weld_lines_nl",
         "beam_stiffener_weld_type",
+        "L_gap_w2",
         "beam_stiffener_weld_size_wst2",
         "beam_stiffener_weld_lines_nl_w2",
     ):
@@ -536,6 +551,38 @@ def _adapt_case_for_side_as_left(case: AISC358MomentCase, *, side: str) -> AISC3
     secondary_w4_fexx = getattr(case.materials, f"weld_fexx_w4_{secondary_tag}", None)
     adapted.materials.weld_fexx_w4_vgizq = primary_w4_fexx or case.materials.weld_fexx_w4_vgizq
     adapted.materials.weld_fexx_w4_vgder = secondary_w4_fexx or case.materials.weld_fexx_w4_vgder
+
+    # Map side-specific bolt properties into legacy/common fields used by evaluators.
+    primary_bolt_fnt = getattr(case.materials, f"bolt_fnt_{primary_tag}", None)
+    secondary_bolt_fnt = getattr(case.materials, f"bolt_fnt_{secondary_tag}", None)
+    primary_bolt_fnv = getattr(case.materials, f"bolt_fnv_{primary_tag}", None)
+    secondary_bolt_fnv = getattr(case.materials, f"bolt_fnv_{secondary_tag}", None)
+    adapted.materials.bolt_fnt = primary_bolt_fnt or case.materials.bolt_fnt
+    adapted.materials.bolt_fnv = primary_bolt_fnv or case.materials.bolt_fnv
+    adapted.materials.bolt_fnt_vgizq = primary_bolt_fnt or case.materials.bolt_fnt_vgizq
+    adapted.materials.bolt_fnt_vgder = secondary_bolt_fnt or case.materials.bolt_fnt_vgder
+    adapted.materials.bolt_fnv_vgizq = primary_bolt_fnv or case.materials.bolt_fnv_vgizq
+    adapted.materials.bolt_fnv_vgder = secondary_bolt_fnv or case.materials.bolt_fnv_vgder
+
+    for root in (
+        "bolt_fabrication_standard",
+        "bolt_description",
+        "bolt_shape",
+        "bolt_thread_condition",
+    ):
+        primary_value = getattr(case.materials, f"{root}_{primary_tag}", None)
+        secondary_value = getattr(case.materials, f"{root}_{secondary_tag}", None)
+        setattr(adapted.materials, root, primary_value or getattr(case.materials, root, None))
+        setattr(
+            adapted.materials,
+            f"{root}_vgizq",
+            primary_value or getattr(case.materials, f"{root}_vgizq", None),
+        )
+        setattr(
+            adapted.materials,
+            f"{root}_vgder",
+            secondary_value or getattr(case.materials, f"{root}_vgder", None),
+        )
 
     primary_ductility = getattr(case.design_factors, f"member_ductility_demand_beam_{primary_tag}", None)
     secondary_ductility = getattr(case.design_factors, f"member_ductility_demand_beam_{secondary_tag}", None)
@@ -994,6 +1041,8 @@ def _normalize_end_plate_stiffener_weld_type(raw: str | None) -> str:
         return "cjp"
     if normalized in {"cjp", "complete_joint_penetration"}:
         return "cjp"
+    if normalized in {"pjp", "partial_joint_penetration"}:
+        return "pjp"
     if normalized in {"fillet", "double_sided_fillet", "single_sided_fillet", "single_sided_fille"}:
         return "fillet"
     return normalized
@@ -1041,6 +1090,7 @@ def run_step1_probable_moment_plastic_hinge(case: AISC358MomentCase, rule_bindin
 
     input_payload: dict[str, Any] = {
         "beam_fy": fy.model_dump(),
+        "beam_steel_type": case.materials.profile_steel_type,
         "ry": ry,
         "ze_source": "sections_catalog_zx_by_side",
         "ze_input": ze_input.model_dump() if ze_input is not None else None,
@@ -1531,7 +1581,7 @@ def run_step7_1_1_end_plate_flexural_yielding(case: AISC358MomentCase, rule_bind
     fyp = _require(case, "materials.end_plate_fy", rule_binding)
     yp, yp_intermediates = _derive_yp_from_tables_6_2_6_3_6_4(case, rule_binding)
 
-    phi = 0.9
+    phi = _require(case, "design_factors.phi_d", rule_binding)
     flexural_strength = compute_yield_line_flexural_strength(
         thickness=tp,
         fy=fyp,
@@ -1609,7 +1659,7 @@ def run_step7_2_1_end_plate_shear_yielding(case: AISC358MomentCase, rule_binding
     bpe_vgizq = _require(case, "geometry.end_plate_width", rule_binding)
     tpe_vgizq = _require(case, "geometry.end_plate_thickness", rule_binding)
     fyp_pe_vgizq = _require(case, "materials.end_plate_fy", rule_binding)
-    phi = 0.9
+    phi = _require(case, "design_factors.phi_d", rule_binding)
     nominal_shear = 0.6 * fyp_pe_vgizq.value * bpe_vgizq.value * tpe_vgizq.value
     design_shear = phi * nominal_shear
     if case.units_system == UnitSystem.SI:
@@ -1933,6 +1983,8 @@ def run_step8_1_1_stiffener_weld_tension_rupture(case: AISC358MomentCase, rule_b
     h_pest_vgizq = _derive_stiffener_height_from_de_pfo(de=de, pfo=pfo, pb=pb)
     weld_fexx = _require(case, "materials.weld_fexx", rule_binding)
     c_pest_vgizq = _stiffener_clip_distance(case.units_system)
+    l_gap_w1_vgizq = case.geometry.L_gap_w1 or c_pest_vgizq
+    l_gap_w1_source = "geometry.L_gap_w1" if case.geometry.L_gap_w1 is not None else "fallback:c_pest_vgizq"
     kds_w1_vgizq = _require(case, "geometry.kds_w1_vgizq", rule_binding)
 
     wst = case.geometry.end_plate_stiffener_weld_size_wst
@@ -1948,13 +2000,24 @@ def run_step8_1_1_stiffener_weld_tension_rupture(case: AISC358MomentCase, rule_b
             ),
         )
 
+    if l_gap_w1_vgizq.unit == h_pest_vgizq.unit:
+        l_gap_w1_for_calc = l_gap_w1_vgizq.value
+    elif l_gap_w1_vgizq.unit == "mm" and h_pest_vgizq.unit == "in":
+        l_gap_w1_for_calc = l_gap_w1_vgizq.value / 25.4
+    elif l_gap_w1_vgizq.unit == "in" and h_pest_vgizq.unit == "mm":
+        l_gap_w1_for_calc = l_gap_w1_vgizq.value * 25.4
+    else:
+        raise ValueError(
+            f"Unsupported mixed units for l_w1_vgizq derivation: {h_pest_vgizq.unit} vs {l_gap_w1_vgizq.unit}"
+        )
+
     l_w1_vgizq = Quantity(
-        value=h_pest_vgizq.value - c_pest_vgizq.value - (2.0 * wst.value),
+        value=h_pest_vgizq.value - (2.0 * l_gap_w1_for_calc) - c_pest_vgizq.value,
         unit=h_pest_vgizq.unit,
     )
-    lst_source = "derived_hst_minus_clip_st_minus_2w_st"
+    lst_source = "derived_hst_minus_2L_gap_w1_minus_clip_st"
     if l_w1_vgizq.value <= 0.0:
-        raise ValueError("Derived weld_1 length (l_st = hst - clip_st - 2*w_st) must be positive.")
+        raise ValueError("Derived weld_1 length (l_w1 = h_pest - 2*L_gap_w1 - c_pest) must be positive.")
 
     nl = case.geometry.end_plate_stiffener_weld_lines_nl if case.geometry.end_plate_stiffener_weld_lines_nl is not None else 2
     if nl <= 0:
@@ -1986,7 +2049,7 @@ def run_step8_1_1_stiffener_weld_tension_rupture(case: AISC358MomentCase, rule_b
         capacity=phi_rn_w1_p_pos_vgizq,
         equation=(
             "Fillet: Ru_w1_p+_vgizq = Fys_pest_vgizq * t_pest_vgizq * h_pest_vgizq; "
-            "l_w1_vgizq = h_pest_vgizq - c_pest_vgizq - 2*w_w1_vgizq; "
+            "l_w1_vgizq = h_pest_vgizq - 2*L_gap_w1_vgizq - c_pest_vgizq; "
             "phi*Rn_w1_p+_vgizq = phi * kds_w1_vgizq * nl_w1_vgizq * 0.6 * Fexx_w1_vgizq "
             "* 0.707 * l_w1_vgizq * w_w1_vgizq; "
             "DCR_w1_p+_vgizq = Ru_w1_p+_vgizq / phi*Rn_w1_p+_vgizq "
@@ -2000,6 +2063,8 @@ def run_step8_1_1_stiffener_weld_tension_rupture(case: AISC358MomentCase, rule_b
             "t_pest_vgizq": stiffener_thickness.model_dump(),
             "h_pest_vgizq": h_pest_vgizq.model_dump(),
             "c_pest_vgizq": c_pest_vgizq.model_dump(),
+            "L_gap_w1_vgizq": l_gap_w1_vgizq.model_dump(),
+            "L_gap_w1_source": l_gap_w1_source,
             "fexx": weld_fexx.model_dump(),
             "fexx_w1_vgizq": weld_fexx.model_dump(),
             "l_w1_vgizq": l_w1_vgizq.model_dump(),
@@ -2065,6 +2130,8 @@ def run_step9_1_1_stiffener_beam_weld_shear_rupture(case: AISC358MomentCase, rul
     h_pest_vgizq = _derive_stiffener_height_from_de_pfo(de=de, pfo=pfo, pb=pb)
     l_pest_vgizq = _derive_stiffener_length_from_hst(stiffener_height=h_pest_vgizq, unit_system=case.units_system)
     c_pest_vgizq = _stiffener_clip_distance(case.units_system)
+    l_gap_w2_vgizq = case.geometry.L_gap_w2 or c_pest_vgizq
+    l_gap_w2_source = "geometry.L_gap_w2" if case.geometry.L_gap_w2 is not None else "fallback:c_pest_vgizq"
 
     wst2 = case.geometry.beam_stiffener_weld_size_wst2
     wst2_source = "geometry.beam_stiffener_weld_size_wst2"
@@ -2082,13 +2149,23 @@ def run_step9_1_1_stiffener_beam_weld_shear_rupture(case: AISC358MomentCase, rul
             ),
         )
 
+    if l_gap_w2_vgizq.unit == l_pest_vgizq.unit:
+        l_gap_w2_for_calc = l_gap_w2_vgizq.value
+    elif l_gap_w2_vgizq.unit == "mm" and l_pest_vgizq.unit == "in":
+        l_gap_w2_for_calc = l_gap_w2_vgizq.value / 25.4
+    elif l_gap_w2_vgizq.unit == "in" and l_pest_vgizq.unit == "mm":
+        l_gap_w2_for_calc = l_gap_w2_vgizq.value * 25.4
+    else:
+        raise ValueError(
+            f"Unsupported mixed units for l_w2_vgizq derivation: {l_pest_vgizq.unit} vs {l_gap_w2_vgizq.unit}"
+        )
     l_w2_vgizq = Quantity(
-        value=l_pest_vgizq.value - c_pest_vgizq.value - (2.0 * wst2.value),
+        value=l_pest_vgizq.value - (2.0 * l_gap_w2_for_calc) - c_pest_vgizq.value,
         unit=l_pest_vgizq.unit,
     )
-    lst_w2_source = "derived_lst_minus_clip_st_minus_2w_st"
+    lst_w2_source = "derived_lst_minus_2L_gap_w2_minus_clip_st"
     if l_w2_vgizq.value <= 0.0:
-        raise ValueError("Derived weld_2 length (l_st,w2 = Lst - clip_st - 2*w_st) must be positive.")
+        raise ValueError("Derived weld_2 length (l_w2 = L_pest - 2*L_gap_w2 - c_pest) must be positive.")
 
     nl_w2 = case.geometry.beam_stiffener_weld_lines_nl_w2
     nl_w2_source = "geometry.beam_stiffener_weld_lines_nl_w2"
@@ -2140,7 +2217,7 @@ def run_step9_1_1_stiffener_beam_weld_shear_rupture(case: AISC358MomentCase, rul
         capacity=phi_rn_w2_v2_vgizq,
         equation=(
             "Fillet: Ru_w2_v2_vgizq = Fys_pest_vgizq * 0.6 * t_pest_vgizq * l_w2_vgizq; "
-            "l_w2_vgizq = L_pest_vgizq - c_pest_vgizq - 2*w_w2_vgizq; "
+            "l_w2_vgizq = L_pest_vgizq - 2*L_gap_w2_vgizq - c_pest_vgizq; "
             "phi*Rn_w2_v2_vgizq = phi * kds_w2_vgizq * nl_w2_vgizq * 0.6 * Fexx_w2_vgizq * 0.707 * l_w2_vgizq * w_w2_vgizq; "
             "DCR_w2_v2_vgizq = Ru_w2_v2_vgizq / phi*Rn_w2_v2_vgizq "
             "(AISC 360-22W J2b(g))"
@@ -2162,6 +2239,8 @@ def run_step9_1_1_stiffener_beam_weld_shear_rupture(case: AISC358MomentCase, rul
             "l_pest_vgizq": l_pest_vgizq.model_dump(),
             "clip_st": c_pest_vgizq.model_dump(),
             "c_pest_vgizq": c_pest_vgizq.model_dump(),
+            "L_gap_w2_vgizq": l_gap_w2_vgizq.model_dump(),
+            "L_gap_w2_source": l_gap_w2_source,
             "lst_w2": l_w2_vgizq.model_dump(),
             "l_w2_vgizq": l_w2_vgizq.model_dump(),
             "lst_w2_source": lst_w2_source,
@@ -2523,9 +2602,6 @@ def run_step5_preliminary_geometry_selection(case: AISC358MomentCase, rule_bindi
 
 
 def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding: object) -> CheckResult:
-    db = _require(case, "geometry.bolt_diameter", rule_binding)
-    bolt_tightening_type = case.geometry.bolt_tightening_type
-    bolt_fabrication_standard = case.materials.bolt_fabrication_standard
     beam_connection_sides = _require(case, "design_factors.beam_connection_sides", rule_binding)
 
     def _get_geometry_by_side(
@@ -2555,7 +2631,35 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
             message=f"Required input 'geometry.{field_root}' is missing for applicable rule.",
         )
 
+    def _get_material_by_side(
+        field_root: str,
+        side_suffix: str,
+        *,
+        require_explicit_for_both_sides: bool = False,
+    ) -> Any:
+        side_attr = f"{field_root}_vg{side_suffix}"
+        side_value = getattr(case.materials, side_attr, None)
+        if side_value is not None:
+            return side_value
+        if beam_connection_sides == "both_sides" and require_explicit_for_both_sides:
+            raise missing_required_input_error(
+                rule_id=rule_binding.rule_id,
+                source_document=rule_binding.source_document,
+                missing_fields=[f"materials.{side_attr}"],
+                message=f"Required input 'materials.{side_attr}' is missing for applicable rule.",
+            )
+        common_value = getattr(case.materials, field_root, None)
+        if common_value is not None:
+            return common_value
+        raise missing_required_input_error(
+            rule_id=rule_binding.rule_id,
+            source_document=rule_binding.source_document,
+            missing_fields=[f"materials.{field_root}"],
+            message=f"Required input 'materials.{field_root}' is missing for applicable rule.",
+        )
+
     g_der = _get_geometry_by_side("bolt_gage", "der")
+    db_der = _get_geometry_by_side("bolt_diameter", "der")
     bp_der = _get_geometry_by_side("end_plate_width", "der")
     de_der = _get_geometry_by_side("de", "der")
     pfo_der = _get_geometry_by_side("pfo", "der")
@@ -2569,6 +2673,7 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
     )
 
     g_izq: Quantity | None = None
+    db_izq: Quantity | None = None
     bp_izq: Quantity | None = None
     de_izq: Quantity | None = None
     pfo_izq: Quantity | None = None
@@ -2578,6 +2683,7 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
     pb_izq: Quantity | None = None
     if beam_connection_sides == "both_sides":
         g_izq = _get_geometry_by_side("bolt_gage", "izq", require_explicit_for_both_sides=True)
+        db_izq = _get_geometry_by_side("bolt_diameter", "izq", require_explicit_for_both_sides=True)
         bp_izq = _get_geometry_by_side("end_plate_width", "izq", require_explicit_for_both_sides=True)
         de_izq = _get_geometry_by_side("de", "izq", require_explicit_for_both_sides=True)
         pfo_izq = _get_geometry_by_side("pfo", "izq", require_explicit_for_both_sides=True)
@@ -2592,14 +2698,35 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
 
     # Keep legacy aliases for non-side-specific checks and reporting fields.
     g = g_der
+    db = db_der
     bp = bp_der
     de = de_der
     pfo = pfo_der
     pfi = pfi_der
     tp = tp_der
     pb = pb_der
-    tcp = _require(case, "geometry.continuity_plate_thickness", rule_binding)
-    continuity_plate_weld_type_raw = case.geometry.continuity_plate_weld_type
+    bolt_tightening_type = _get_geometry_by_side("bolt_tightening_type", "der")
+    bolt_fabrication_standard = _get_material_by_side("bolt_fabrication_standard", "der")
+    continuity_plate_enabled = bool(case.geometry.continuity_plate_enabled)
+    doubler_plate_enabled = bool(case.geometry.doubler_plate_enabled)
+    tcp = (
+        _require(case, "geometry.continuity_plate_thickness", rule_binding)
+        if continuity_plate_enabled
+        else case.geometry.continuity_plate_thickness
+    )
+    continuity_plate_weld_type_raw = (
+        case.geometry.continuity_plate_weld_type_col
+        or case.geometry.continuity_plate_weld_type
+    )
+    continuity_plate_web_weld_type_raw = case.geometry.continuity_plate_web_weld_type_col
+    w_w5_col = case.geometry.w_w5_col or case.geometry.t_w5_col
+    nl_w5_col = case.geometry.nl_w5_col
+    l_gap_w5_col = case.geometry.L_gap_w5_col
+    kds_w5_col = case.geometry.kds_w5_col
+    w_w6_col = case.geometry.w_w6_col or case.geometry.t_w6_col
+    nl_w6_col = case.geometry.nl_w6_col
+    l_gap_w6_col = case.geometry.L_gap_w6_col
+    kds_w6_col = case.geometry.kds_w6_col
     end_plate_beam_web_weld_type_raw = case.geometry.end_plate_beam_web_weld_type
     weld_fexx = _require(case, "materials.weld_fexx", rule_binding)
     beam_clear_span_length = _require(case, "geometry.beam_clear_span_length", rule_binding)
@@ -2757,21 +2884,45 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
         unit_system=case.units_system,
     )
 
-    min_spacing = compute_minimum_bolt_spacing(
-        bolt_diameter=db,
+    min_spacing_der = compute_minimum_bolt_spacing(
+        bolt_diameter=db_der,
         unit_system=case.units_system,
+    )
+    min_spacing_izq = (
+        compute_minimum_bolt_spacing(
+            bolt_diameter=db_izq,
+            unit_system=case.units_system,
+        )
+        if db_izq is not None
+        else None
     )
     bp_margin = 1.0 if case.units_system.value == "US" else 25.0
     bp_margin_mm = bp_margin * 25.4 if case.units_system.value == "US" else bp_margin
     bp_margin_mm_label = f"{bp_margin_mm:.3f} mm" if case.units_system.value == "US" else f"{bp_margin_mm:.0f} mm"
     min_bp = Quantity(value=bf.value + bp_margin, unit=bf.unit)
-    min_edge, edge_intermediate = compute_minimum_edge_distance_standard_hole(
-        bolt_diameter=db,
+    min_edge_der, edge_intermediate_der = compute_minimum_edge_distance_standard_hole(
+        bolt_diameter=db_der,
         unit_system=case.units_system,
     )
-    standard_hole_diameter, standard_hole_intermediate = _compute_standard_hole_diameter(
-        bolt_diameter=db,
+    min_edge_izq, edge_intermediate_izq = (
+        compute_minimum_edge_distance_standard_hole(
+            bolt_diameter=db_izq,
+            unit_system=case.units_system,
+        )
+        if db_izq is not None
+        else (None, None)
+    )
+    standard_hole_diameter_der, _ = _compute_standard_hole_diameter(
+        bolt_diameter=db_der,
         unit_system=case.units_system,
+    )
+    standard_hole_diameter_izq, _ = (
+        _compute_standard_hole_diameter(
+            bolt_diameter=db_izq,
+            unit_system=case.units_system,
+        )
+        if db_izq is not None
+        else (None, None)
     )
 
     def _table61_length(*, us_in: float, si_mm: float) -> Quantity:
@@ -3079,6 +3230,19 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
         normalized = raw.strip().lower().replace("-", "_").replace(" ", "_")
         if not normalized:
             return "not_provided"
+        if normalized in {
+            "fillet",
+            "double_sided_fillet",
+            "double_fillet",
+            "fillet_double_sided",
+            "single_sided_fillet",
+            "single_fillet",
+            "fillet_single_sided",
+            "filete",
+            "filete_doble_cara",
+            "filete_simple_cara",
+        }:
+            return "fillet"
         if normalized in {"double_sided_fillet", "double_fillet", "fillet_double_sided", "filete_doble_cara"}:
             return "double_sided_fillet"
         if normalized in {"cjp", "complete_joint_penetration"}:
@@ -3108,18 +3272,34 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
         clause: str,
         description: str,
         continuity_plate_thickness: Quantity,
-        thickness_limit: Quantity,
+        weld_size: Quantity | None,
         weld_type_raw: str | None,
     ) -> dict[str, Any]:
         weld_type = _normalize_continuity_plate_weld_type(weld_type_raw)
-        allowed_values = ["double_sided_fillet", "cjp", "pjp"]
-        condition_applies = continuity_plate_thickness.value <= (thickness_limit.value + 1e-9)
-        if weld_type in {"cjp", "pjp"}:
+        allowed_values = ["fillet", "cjp"]
+        required_size = Quantity(
+            value=0.75 * continuity_plate_thickness.value,
+            unit=continuity_plate_thickness.unit,
+        )
+        condition_applies = weld_type == "fillet"
+        weld_size_same_unit: Quantity | None = None
+        if weld_size is not None:
+            if weld_size.unit == continuity_plate_thickness.unit:
+                weld_size_same_unit = weld_size
+            elif weld_size.unit == "in" and continuity_plate_thickness.unit == "mm":
+                weld_size_same_unit = Quantity(value=weld_size.value * 25.4, unit="mm")
+            elif weld_size.unit == "mm" and continuity_plate_thickness.unit == "in":
+                weld_size_same_unit = Quantity(value=weld_size.value / 25.4, unit="in")
+        if weld_type == "cjp":
             passes = True
-            governing_condition = "cjp_or_pjp_always_permitted"
-        elif weld_type == "double_sided_fillet":
-            passes = condition_applies
-            governing_condition = "double_sided_fillet_requires_tcp_le_limit"
+            governing_condition = "cjp_always_permitted"
+        elif weld_type == "fillet":
+            if weld_size_same_unit is None:
+                passes = False
+                governing_condition = "fillet_requires_size_input"
+            else:
+                passes = weld_size_same_unit.value >= (required_size.value - 1e-9)
+                governing_condition = "fillet_requires_minimum_size_075_tcp"
         else:
             passes = False
             governing_condition = "weld_type_not_permitted"
@@ -3130,12 +3310,13 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
             "scope": scope,
             "clause": clause,
             "description": description,
-            "calculated_symbol": "weld_cp",
-            "limit_symbol": "{double_sided_fillet, cjp, pjp} if tcp<=tcp_limit",
+            "calculated_symbol": "tipo_w5_col",
+            "limit_symbol": "{fillet, cjp}; si fillet => w_w5_col >= 0.75*t_pc_col",
             "comparison": "conditional_allowed_set",
             "comparison_text": "in_if",
             "thickness": continuity_plate_thickness.model_dump(),
-            "thickness_limit": thickness_limit.model_dump(),
+            "weld_size": weld_size_same_unit.model_dump() if weld_size_same_unit is not None else None,
+            "required_weld_size": required_size.model_dump(),
             "condition_applies": condition_applies,
             "governing_condition": governing_condition,
             "calculated_text": weld_type,
@@ -3226,7 +3407,7 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
             "h2_vgder": h_terms_der["h2"].model_dump(),
             "h3_vgder": h_terms_der["h3"].model_dump() if h_terms_der["h3"] is not None else None,
             "h4_vgder": h_terms_der["h4"].model_dump() if h_terms_der["h4"] is not None else None,
-            "dh_vgder": standard_hole_diameter.model_dump(),
+            "dh_vgder": standard_hole_diameter_der.model_dump(),
         },
         {
             "step": "1",
@@ -3274,28 +3455,35 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
                 "una soldadura de ranura PJP de profundidad completa."
             ),
         },
-        {
-            "step": "1",
-            "id": "section_4_2.installation_requirements",
-            "scope": "bolts",
-            "clause": "Section 4.2",
-            "description": "Installation requirements for bolted assemblies",
-            "requirement": (
-                "Los requisitos de instalacion deben cumplir con las AISC Seismic Provisions y con la "
-                "especificacion RCSC, salvo que este estandar indique lo contrario."
-            ),
-        },
-        {
-            "step": "1",
-            "id": "section_4_3.quality_control_assurance",
-            "scope": "bolts",
-            "clause": "Section 4.3",
-            "description": "Quality control and quality assurance for bolted assemblies",
-            "requirement": (
-                "El control de calidad y el aseguramiento de calidad deben cumplir con las AISC Seismic Provisions."
-            ),
-        },
     ]
+    for side_tag in _active_beam_sides(case):
+        side_scope = f"bolts_{side_tag}"
+        side_label = "right beam" if side_tag == "der" else "left beam"
+        step_1_notes.extend(
+            [
+                {
+                    "step": "1",
+                    "id": f"section_4_2.installation_requirements_{side_tag}",
+                    "scope": side_scope,
+                    "clause": "Section 4.2",
+                    "description": f"Installation requirements for bolted assemblies ({side_label})",
+                    "requirement": (
+                        "Los requisitos de instalacion deben cumplir con las AISC Seismic Provisions y con la "
+                        "especificacion RCSC, salvo que este estandar indique lo contrario."
+                    ),
+                },
+                {
+                    "step": "1",
+                    "id": f"section_4_3.quality_control_assurance_{side_tag}",
+                    "scope": side_scope,
+                    "clause": "Section 4.3",
+                    "description": f"Quality control and quality assurance for bolted assemblies ({side_label})",
+                    "requirement": (
+                        "El control de calidad y el aseguramiento de calidad deben cumplir con las AISC Seismic Provisions."
+                    ),
+                },
+            ]
+        )
     if case.design_factors.beam_connection_sides == "both_sides":
         step_1_notes.insert(
             4,
@@ -3330,7 +3518,11 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
                     if h_terms_izq is not None and h_terms_izq["h4"] is not None
                     else None
                 ),
-                "dh_vgizq": standard_hole_diameter.model_dump(),
+                "dh_vgizq": (
+                    standard_hole_diameter_izq.model_dump()
+                    if standard_hole_diameter_izq is not None
+                    else standard_hole_diameter_der.model_dump()
+                ),
             },
         )
         step_1_notes.insert(
@@ -3595,7 +3787,7 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
                     calculated_symbol="g_b_vgizq",
                     limit_symbol="3db",
                     calculated=g_izq,
-                    limit=min_spacing,
+                    limit=min_spacing_izq if min_spacing_izq is not None else min_spacing_der,
                     comparison="ge",
                 ),
                 _step1_limit(
@@ -3682,7 +3874,7 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
                 calculated_symbol="g_b_vgder",
                 limit_symbol="3db",
                 calculated=g_der,
-                limit=min_spacing,
+                limit=min_spacing_der,
                 comparison="ge",
             ),
             _step1_limit(
@@ -3833,23 +4025,57 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
     ]
 
     doubler_plate_limits: list[dict[str, Any]] = []
-    deeper_side = "izq" if beam_connection_sides == "left_only" else "der"
-    deeper_beam_profile = beam_profile_der
-    if beam_connection_sides == "both_sides" and beam_profile_izq is not None:
-        if beam_profile_izq["d"].value >= beam_profile_der["d"].value:
-            deeper_side = "izq"
-            deeper_beam_profile = beam_profile_izq
-    e36_check = compute_minimum_panel_zone_plate_thickness_e3_6_eq(
-        beam_depth=deeper_beam_profile["d"],
-        beam_flange_thickness=deeper_beam_profile["tf"],
-        panel_zone_width=bcf,
-        unit_system=case.units_system,
+    d_col_for_dz = column_profile["d"]
+    tf_col_for_dz = column_profile["tf"]
+    dz_dp_col = Quantity(
+        value=d_col_for_dz.value - 2.0 * tf_col_for_dz.value,
+        unit=d_col_for_dz.unit,
     )
-    t_req_e3_6 = e36_check["t_required"]
-    dz_e3_6 = e36_check["d_z"]
+    wz_candidates: list[Quantity] = []
+    if beam_connection_sides in {"both_sides", "left_only"} and beam_profile_izq is not None:
+        wz_candidates.append(
+            Quantity(
+                value=beam_profile_izq["d"].value - 2.0 * beam_profile_izq["tf"].value,
+                unit=beam_profile_izq["d"].unit,
+            )
+        )
+    if beam_connection_sides in {"both_sides", "right_only"}:
+        wz_candidates.append(
+            Quantity(
+                value=beam_profile_der["d"].value - 2.0 * beam_profile_der["tf"].value,
+                unit=beam_profile_der["d"].unit,
+            )
+        )
+
+    def _to_unit_length_local(q: Quantity, target_unit: str) -> Quantity | None:
+        if q.unit == target_unit:
+            return q
+        if q.unit == "mm" and target_unit == "in":
+            return Quantity(value=q.value / 25.4, unit="in")
+        if q.unit == "in" and target_unit == "mm":
+            return Quantity(value=q.value * 25.4, unit="mm")
+        return None
+
+    wz_dp_col: Quantity | None = None
+    if wz_candidates:
+        converted: list[Quantity] = []
+        for q in wz_candidates:
+            q_conv = _to_unit_length_local(q, dz_dp_col.unit)
+            if q_conv is not None:
+                converted.append(q_conv)
+        if converted:
+            wz_dp_col = min(converted, key=lambda x: x.value)
+
+    t_req_e3_6 = (
+        Quantity(value=(dz_dp_col.value + wz_dp_col.value) / 90.0, unit=dz_dp_col.unit)
+        if wz_dp_col is not None
+        else None
+    )
     column_ductility_normalized = str(column_ductility or "").strip().lower()
     ductility_applies = column_ductility_normalized in {"high", "moderate"}
     if ductility_applies:
+        if t_req_e3_6 is None:
+            raise ValueError("Unable to compute t_req_e3_6 because wz_dp_col could not be resolved.")
         column_limits.append(
             _step1_limit(
                 check_id="section_e3_6_2.column_web_thickness_minimum",
@@ -3857,15 +4083,15 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
                 clause="AISC 341-22w E3.6e.2",
                 description="Espesor individual minimo del alma de columna",
                 calculated_symbol="tw_col",
-                limit_symbol=f"(d_z + w_z)/90 con d_z=d_{deeper_side}-2tf_{deeper_side}, w_z=bcf_col",
+                limit_symbol="(dz_dp_col + wz_dp_col)/90 con dz_dp_col=d_col-2*tf_col, wz_dp_col=min{d_<lado>-2*tf_<lado>}",
                 calculated=column_profile["tw"],
                 limit=t_req_e3_6,
                 comparison="ge",
             )
         )
-        if case.geometry.doubler_plate_enabled:
-            tdp_col = case.geometry.doubler_plate_thickness
-            if tdp_col is None:
+        if doubler_plate_enabled:
+            t_dp_col = case.geometry.doubler_plate_thickness
+            if t_dp_col is None:
                 raise missing_required_input_error(
                     rule_id=rule_binding.rule_id,
                     source_document=rule_binding.source_document,
@@ -3880,24 +4106,12 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
                     check_id="section_e3_6_2.doubler_plate_thickness_minimum",
                     scope="doubler_plate_col",
                     clause="AISC 341-22w E3.6e.2",
-                    description="Espesor individual minimo de doubler plate",
-                    calculated_symbol="tdp_col",
-                    limit_symbol=f"(d_z + w_z)/90 con d_z=d_{deeper_side}-2tf_{deeper_side}, w_z=bcf_col",
-                    calculated=tdp_col,
+                    description="Espesor individual minimo de platina de enchape del alma",
+                    calculated_symbol="t_dp_col",
+                    limit_symbol="(dz_dp_col + wz_dp_col)/90 con dz_dp_col=d_col-2*tf_col, wz_dp_col=min{d_<lado>-2*tf_<lado>}",
+                    calculated=t_dp_col,
                     limit=t_req_e3_6,
                     comparison="ge",
-                )
-            )
-        else:
-            doubler_plate_limits.append(
-                _step1_verification_only_limit(
-                    check_id="section_e3_6_2.doubler_plate_thickness_minimum",
-                    scope="doubler_plate_col",
-                    clause="AISC 341-22w E3.6e.2",
-                    description="Espesor individual minimo de doubler plate",
-                    calculated_symbol="tdp_col",
-                    verification_text="No aplica: usar_dp_col = false",
-                    passes=True,
                 )
             )
     else:
@@ -3910,27 +4124,28 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
                 calculated_symbol="tw_col",
                 verification_text=(
                     "No aplica para demanda_ductilidad_col='low'. "
-                    f"Formula de referencia: t >= (d_z + w_z)/90 con d_z=d_{deeper_side}-2tf_{deeper_side}, "
-                    "w_z=bcf_col"
+                    "Formula de referencia: t >= (dz_dp_col + wz_dp_col)/90 con dz_dp_col=d_col-2*tf_col, "
+                    "wz_dp_col=min{d_<lado>-2*tf_<lado>}"
                 ),
                 passes=True,
             )
         )
-        doubler_plate_limits.append(
-            _step1_verification_only_limit(
-                check_id="section_e3_6_2.doubler_plate_thickness_minimum",
-                scope="doubler_plate_col",
-                clause="AISC 341-22w E3.6e.2",
-                description="Espesor individual minimo de doubler plate",
-                calculated_symbol="tdp_col",
-                verification_text=(
-                    "No aplica para demanda_ductilidad_col='low'. "
-                    f"Formula de referencia: t >= (d_z + w_z)/90 con d_z=d_{deeper_side}-2tf_{deeper_side}, "
-                    "w_z=bcf_col"
-                ),
-                passes=True,
+        if doubler_plate_enabled:
+            doubler_plate_limits.append(
+                _step1_verification_only_limit(
+                    check_id="section_e3_6_2.doubler_plate_thickness_minimum",
+                    scope="doubler_plate_col",
+                    clause="AISC 341-22w E3.6e.2",
+                    description="Espesor individual minimo de platina de enchape del alma",
+                    calculated_symbol="t_dp_col",
+                    verification_text=(
+                        "No aplica para demanda_ductilidad_col='low'. "
+                        "Formula de referencia: t >= (dz_dp_col + wz_dp_col)/90 con dz_dp_col=d_col-2*tf_col, "
+                        "wz_dp_col=min{d_<lado>-2*tf_<lado>}"
+                    ),
+                    passes=True,
+                )
             )
-        )
 
     bp_bounds = active_table_61.get("bp")
     end_plate_limits: list[dict[str, Any]] = []
@@ -4058,7 +4273,7 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
         stiffener_fy_izq = case.materials.stiffener_fy_vgizq or stiffener_fy_der
         ts = ts_der
         tbw = beam_profile_der["tw"]
-        g_min_stiffener = Quantity(value=(2.0 * min_edge.value) + ts.value, unit=g_der.unit)
+        g_min_stiffener = Quantity(value=(2.0 * min_edge_der.value) + ts.value, unit=g_der.unit)
         ts_required = compute_required_stiffener_thickness(
             beam_web_thickness=tbw,
             beam_fy=beam_fy,
@@ -4133,7 +4348,8 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
                 stiffener_fy=stiffener_fy_izq,
                 unit_system=case.units_system,
             )
-            g_min_stiffener_izq = Quantity(value=(2.0 * min_edge.value) + ts_izq.value, unit=g_izq.unit)
+            min_edge_for_izq = min_edge_izq if min_edge_izq is not None else min_edge_der
+            g_min_stiffener_izq = Quantity(value=(2.0 * min_edge_for_izq.value) + ts_izq.value, unit=g_izq.unit)
             end_plate_stiffener_limits.extend(
                 [
                     _step1_limit(
@@ -4173,11 +4389,19 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
             )
 
     continuity_plate_limits: list[dict[str, object]] = []
+    l_w5_col_computed: Quantity | None = None
+    l_w6_col_computed: Quantity | None = None
+    weld6_type_norm = _normalize_end_plate_stiffener_weld_type(continuity_plate_web_weld_type_raw)
     continuity_plate_weld_thickness_limit = Quantity(
         value=3.0 / 8.0 if case.units_system == UnitSystem.US else 10.0,
         unit="in" if case.units_system == UnitSystem.US else "mm",
     )
-    if continuity_plate_weld_type_raw is not None and str(continuity_plate_weld_type_raw).strip():
+    if (
+        continuity_plate_enabled
+        and tcp is not None
+        and continuity_plate_weld_type_raw is not None
+        and str(continuity_plate_weld_type_raw).strip()
+    ):
         continuity_plate_weld_type_normalized = _normalize_continuity_plate_weld_type(continuity_plate_weld_type_raw)
         continuity_plate_limits = [
             _step1_text_in_set_limit(
@@ -4185,23 +4409,397 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
                 scope="weld_5_col",
                 clause="Section 6.3 (continuity plate weld detail)",
                 description="Continuity-plate weld type shall be explicitly declared with an allowed weld category",
-                calculated_symbol="weld_cp",
-                limit_symbol="{double_sided_fillet, cjp, pjp}",
+                calculated_symbol="tipo_w5_col",
+                limit_symbol="{fillet, cjp}",
                 calculated_text=continuity_plate_weld_type_normalized,
-                allowed_values=("double_sided_fillet", "cjp", "pjp"),
+                allowed_values=("fillet", "cjp"),
             ),
             _step1_continuity_plate_weld_limit(
                 check_id="section_6_3.continuity_plate_weld_type_for_thin_plate",
                 scope="weld_5_col",
                 clause="Section 6.3 (continuity plate weld detail)",
-                description=(
-                    "Continuity-plate weld type when plate thickness is less than or equal to 3/8 in (10 mm)"
-                ),
+                description="Tamano minimo de soldadura #5 cuando tipo_w5_col es fillet",
                 continuity_plate_thickness=tcp,
-                thickness_limit=continuity_plate_weld_thickness_limit,
+                weld_size=w_w5_col,
                 weld_type_raw=continuity_plate_weld_type_raw,
             ),
         ]
+
+    kdet_for_pc = column_profile.get("kdet") or column_profile.get("kdes")
+    tfdet_for_pc = column_profile.get("tfdet") or column_profile.get("tf")
+    def _mm_to_unit_value(mm_value: float, unit: str) -> float:
+        if unit == "mm":
+            return mm_value
+        if unit == "in":
+            return mm_value / 25.4
+        raise ValueError(f"Unsupported length unit for continuity-plate weld 5 derivation: {unit}")
+
+    l2_pc_col_q: Quantity | None = None
+    b2_pc_col_q: Quantity | None = None
+    if (
+        kdet_for_pc is not None
+        and tfdet_for_pc is not None
+        and column_profile.get("d") is not None
+    ):
+        clip1_pc_col_q = Quantity(
+            value=kdet_for_pc.value - tfdet_for_pc.value + _mm_to_unit_value(38.0, kdet_for_pc.unit),
+            unit=kdet_for_pc.unit,
+        )
+        l1_pc_col_q = Quantity(
+            value=column_profile["d"].value
+            - 2.0 * tfdet_for_pc.value
+            - _mm_to_unit_value(3.0, column_profile["d"].unit),
+            unit=column_profile["d"].unit,
+        )
+        l2_pc_col_q = Quantity(
+            value=l1_pc_col_q.value - 2.0 * clip1_pc_col_q.value,
+            unit=l1_pc_col_q.unit,
+        )
+    if (
+        continuity_plate_enabled
+        and case.geometry.continuity_plate_width_b1 is not None
+        and column_profile.get("k1") is not None
+        and column_profile.get("tw") is not None
+        and case.geometry.continuity_plate_width_b1.unit == column_profile["k1"].unit == column_profile["tw"].unit
+    ):
+        clip2_pc_col_q = Quantity(
+            value=((column_profile["k1"].value - column_profile["tw"].value) / 2.0)
+            + _mm_to_unit_value(12.0, column_profile["k1"].unit),
+            unit=column_profile["k1"].unit,
+        )
+        b2_pc_col_q = Quantity(
+            value=case.geometry.continuity_plate_width_b1.value - clip2_pc_col_q.value,
+            unit=case.geometry.continuity_plate_width_b1.unit,
+        )
+    if continuity_plate_enabled and b2_pc_col_q is not None and l_gap_w5_col is not None:
+        if l_gap_w5_col.unit == b2_pc_col_q.unit:
+            l_gap_for_lw5 = l_gap_w5_col.value
+        elif l_gap_w5_col.unit == "mm" and b2_pc_col_q.unit == "in":
+            l_gap_for_lw5 = l_gap_w5_col.value / 25.4
+        elif l_gap_w5_col.unit == "in" and b2_pc_col_q.unit == "mm":
+            l_gap_for_lw5 = l_gap_w5_col.value * 25.4
+        else:
+            raise ValueError(
+                f"Unsupported mixed units for L_w5_col derivation: {b2_pc_col_q.unit} vs {l_gap_w5_col.unit}"
+            )
+        l_w5_col_computed = Quantity(
+            value=b2_pc_col_q.value - 2.0 * l_gap_for_lw5,
+            unit=b2_pc_col_q.unit,
+        )
+    if continuity_plate_enabled and l2_pc_col_q is not None and l_gap_w6_col is not None:
+        if l_gap_w6_col.unit == l2_pc_col_q.unit:
+            l_gap_for_lw6 = l_gap_w6_col.value
+        elif l_gap_w6_col.unit == "mm" and l2_pc_col_q.unit == "in":
+            l_gap_for_lw6 = l_gap_w6_col.value / 25.4
+        elif l_gap_w6_col.unit == "in" and l2_pc_col_q.unit == "mm":
+            l_gap_for_lw6 = l_gap_w6_col.value * 25.4
+        else:
+            raise ValueError(
+                f"Unsupported mixed units for L_w6_col derivation: {l2_pc_col_q.unit} vs {l_gap_w6_col.unit}"
+            )
+        l_w6_col_computed = Quantity(
+            value=l2_pc_col_q.value - 2.0 * l_gap_for_lw6,
+            unit=l2_pc_col_q.unit,
+        )
+    if continuity_plate_enabled and l_w6_col_computed is not None and weld6_type_norm == "fillet":
+        tw_col = column_profile.get("tw")
+        d_col = column_profile.get("d")
+        if kdet_for_pc is None or tw_col is None or d_col is None:
+            raise ValueError("Missing d_col/tw_col/kdet_col to evaluate weld_6_col limits.")
+        if not (l_w6_col_computed.unit == d_col.unit == tw_col.unit == kdet_for_pc.unit):
+            raise ValueError(
+                "Inconsistent units for weld_6_col length checks: "
+                f"Lws_col={l_w6_col_computed.unit}, d_col={d_col.unit}, tw_col={tw_col.unit}, kdet_col={kdet_for_pc.unit}"
+            )
+        lws_max = Quantity(
+            value=d_col.value - 2.0 * (kdet_for_pc.value + 6.0 * tw_col.value),
+            unit=d_col.unit,
+        )
+        lws_min = Quantity(
+            value=d_col.value - 2.0 * (kdet_for_pc.value + 4.0 * tw_col.value),
+            unit=d_col.unit,
+        )
+        continuity_plate_limits.extend(
+            [
+                _step1_limit(
+                    check_id="section_6_3.weld_6_length_max",
+                    scope="weld_6_col",
+                    clause="AISC 358-22 Section 6.3",
+                    description="Longitud maxima de soldadura #6 en columna",
+                    calculated_symbol="Lws_col",
+                    limit_symbol="d_col - 2*(kdet_col + 6*tw_col)",
+                    calculated=l_w6_col_computed,
+                    limit=lws_max,
+                    comparison="le",
+                ),
+                _step1_limit(
+                    check_id="section_6_3.weld_6_length_min",
+                    scope="weld_6_col",
+                    clause="AISC 358-22 Section 6.3",
+                    description="Longitud minima de soldadura #6 en columna",
+                    calculated_symbol="Lws_col",
+                    limit_symbol="d_col - 2*(kdet_col + 4*tw_col)",
+                    calculated=l_w6_col_computed,
+                    limit=lws_min,
+                    comparison="ge",
+                ),
+            ]
+        )
+
+    # Continuity plate geometry checks (AISC 360 J10.8 + SDH 4th ed. 2024)
+    b1_pc_col = case.geometry.continuity_plate_width_b1
+    t_pc_col = case.geometry.continuity_plate_thickness
+    tipo_acero_pc_col = case.materials.continuity_plate_steel_type or case.materials.plate_steel_type
+    n_dp_col = case.geometry.doubler_plate_count
+    if case.geometry.doubler_plate_enabled and n_dp_col is None:
+        raise missing_required_input_error(
+            rule_id=rule_binding.rule_id,
+            source_document=rule_binding.source_document,
+            missing_fields=["geometry.doubler_plate_count"],
+            message="Required input 'geometry.doubler_plate_count' is missing when 'geometry.doubler_plate_enabled' is true.",
+        )
+    t_dp_col = case.geometry.doubler_plate_thickness
+    dp_extra = 0.0
+    if case.geometry.doubler_plate_enabled:
+        if t_dp_col is None:
+            raise missing_required_input_error(
+                rule_id=rule_binding.rule_id,
+                source_document=rule_binding.source_document,
+                missing_fields=["geometry.doubler_plate_thickness"],
+                message="Required input 'geometry.doubler_plate_thickness' is missing when 'geometry.doubler_plate_enabled' is true.",
+            )
+        n_dp_value = float(n_dp_col or 0)
+        dp_extra = n_dp_value * t_dp_col.value
+    if continuity_plate_enabled and b1_pc_col is not None and t_pc_col is not None and tipo_acero_pc_col is not None:
+        plate_props_pc = get_plate_steel_properties(
+            steel_type=str(tipo_acero_pc_col),
+            unit_system=case.units_system,
+        )
+        fy_pc_col = plate_props_pc["fy"]
+        ry_pc_col = float(plate_props_pc["ry"])
+        e_pc_col = elastic_modulus
+        if not isinstance(fy_pc_col, Quantity) or not isinstance(e_pc_col, Quantity):
+            raise ValueError("Invalid continuity plate material properties for Fy/E evaluation.")
+
+        # Global bound independent of side.
+        b1_pc_col_max = Quantity(
+            value=(bcf.value - column_profile["tw"].value - dp_extra) / 2.0,
+            unit=bcf.unit,
+        )
+        continuity_plate_limits.append(
+            _step1_limit(
+                check_id="section_j10_8.continuity_plate_width_max",
+                scope="continuity_plate_col",
+                clause="AISC 360-22 J10.8 / SDH 4th ed. 2024",
+                description="Ancho maximo de platina de continuidad",
+                calculated_symbol="b1_pc_col",
+                limit_symbol="(bf_col - tw_col - n_dp_col*t_dp_col)/2",
+                calculated=b1_pc_col,
+                limit=b1_pc_col_max,
+                comparison="le",
+            )
+        )
+
+        active_sides_for_cp = _active_beam_sides(case)
+        for side_suffix in active_sides_for_cp:
+            side_profile = beam_profile_izq if side_suffix == "izq" else beam_profile_der
+            if side_profile is None:
+                continue
+            bf_side = side_profile["bf"]
+            tw_col = column_profile["tw"]
+            side_tag = f"vg{side_suffix}"
+
+            b1_min_j108 = Quantity(
+                value=bf_side.value / 2.0 + 0.5 * tw_col.value + 0.5 * dp_extra,
+                unit=bf_side.unit,
+            )
+            continuity_plate_limits.append(
+                _step1_limit(
+                    check_id=f"section_j10_8.continuity_plate_width_min_{side_suffix}",
+                    scope="continuity_plate_col",
+                    clause="AISC 360-22 J10.8",
+                    description=f"Ancho minimo de platina de continuidad (viga {side_suffix})",
+                    calculated_symbol="b1_pc_col",
+                    limit_symbol=f"bf_vg{side_suffix}/2 + 0.5*tw_col + 0.5*n_dp_col*t_dp_col",
+                    calculated=b1_pc_col,
+                    limit=b1_min_j108,
+                    comparison="ge",
+                )
+            )
+
+            b1_min_sdh = Quantity(
+                value=(bf_side.value - tw_col.value) / 2.0,
+                unit=bf_side.unit,
+            )
+            continuity_plate_limits.append(
+                _step1_limit(
+                    check_id=f"section_sdh_2024.continuity_plate_width_min_{side_suffix}",
+                    scope="continuity_plate_col",
+                    clause="SDH 4th ed. 2024",
+                    description=f"Ancho minimo alterno de platina de continuidad (viga {side_suffix})",
+                    calculated_symbol="b1_pc_col",
+                    limit_symbol=f"(bf_vg{side_suffix} - tw_col)/2",
+                    calculated=b1_pc_col,
+                    limit=b1_min_sdh,
+                    comparison="ge",
+                )
+            )
+
+            fy_over_e = fy_pc_col.value / e_pc_col.value
+            if fy_over_e < 0.0:
+                raise ValueError("Fy_pc_col / E_pc_col must be non-negative.")
+            tf_candidates: list[Quantity] = []
+            if beam_profile_izq is not None:
+                tf_candidates.append(
+                    Quantity(
+                        value=beam_profile_izq["tf"].value / 2.0,
+                        unit=beam_profile_izq["tf"].unit,
+                    )
+                )
+            if beam_profile_der is not None:
+                tf_candidates.append(
+                    Quantity(
+                        value=beam_profile_der["tf"].value / 2.0,
+                        unit=beam_profile_der["tf"].unit,
+                    )
+                )
+            if not tf_candidates:
+                tf_candidates.append(
+                    Quantity(
+                        value=side_profile["tf"].value / 2.0,
+                        unit=side_profile["tf"].unit,
+                    )
+                )
+            t_req_1 = min(tf_candidates, key=lambda q: q.value)
+            t_req_2 = Quantity(value=b1_pc_col.value / 16.0, unit=b1_pc_col.unit)
+            t_req_3 = Quantity(
+                value=(b1_pc_col.value / 0.55) * math.sqrt(fy_over_e),
+                unit=b1_pc_col.unit,
+            )
+            t_req_min = min((t_req_1, t_req_2, t_req_3), key=lambda q: q.value)
+            if beam_profile_izq is not None and beam_profile_der is not None:
+                t_limit_symbol = (
+                    "min{tf_vgizq/2, tf_vgder/2, b1_pc_col/16, "
+                    "(b1_pc_col/0.55)*sqrt(Fy_pc_col/E_pc_col)}"
+                )
+            else:
+                active_tf_tag = "tf_vgizq" if beam_profile_izq is not None else "tf_vgder"
+                t_limit_symbol = (
+                    f"min{{{active_tf_tag}/2, b1_pc_col/16, "
+                    "(b1_pc_col/0.55)*sqrt(Fy_pc_col/E_pc_col)}}"
+                )
+            # In both-sides cases this verification is identical for left/right;
+            # keep a single rendered check to avoid duplication.
+            if not (len(active_sides_for_cp) == 2 and side_suffix == "der"):
+                continuity_plate_limits.append(
+                    _step1_limit(
+                        check_id=f"section_j10_8.continuity_plate_thickness_min_{side_suffix}",
+                        scope="continuity_plate_col",
+                        clause="AISC 360-22 J10.8",
+                        description=f"Espesor minimo de platina de continuidad (viga {side_suffix})",
+                        calculated_symbol="t_pc_col",
+                        limit_symbol=t_limit_symbol,
+                        calculated=t_pc_col,
+                        limit=t_req_min,
+                        comparison="ge",
+                    )
+                )
+
+        # Global continuity-plate thickness lower bound requested by user.
+        # Applies whenever continuity plates are enabled.
+        fy_over_e_global = fy_pc_col.value / e_pc_col.value
+        if fy_over_e_global < 0.0:
+            raise ValueError("Fy_pc_col / E_pc_col must be non-negative.")
+        t_req_global_045 = Quantity(
+            value=(b1_pc_col.value / 0.45) * math.sqrt(fy_over_e_global),
+            unit=b1_pc_col.unit,
+        )
+        continuity_plate_limits.append(
+            _step1_limit(
+                check_id="project.continuity_plate_thickness_min_global_045",
+                scope="continuity_plate_col",
+                clause="Requisito de proyecto (si usar_pc_col=true)",
+                description="Espesor minimo global de platina de continuidad",
+                calculated_symbol="t_pc_col",
+                limit_symbol="(b1_pc_col/0.45)*sqrt(Fy_pc_col/E_pc_col)",
+                calculated=t_pc_col,
+                limit=t_req_global_045,
+                comparison="ge",
+            )
+        )
+
+        # Additional continuity-plate requirements for moderate/high ductility.
+        # E3.6f(1)(b): one-sided -> t >= 0.50*tf_side; two-sided -> t >= 0.75*max(tf_left, tf_right)
+        # E3-9: b/t <= 0.56*sqrt(E/(Ry*Fy)) -> t >= (b/0.56)*sqrt(Ry*Fy/E), with b = max(b1, b2)
+        column_ductility_norm = str(column_ductility or "").strip().lower()
+        if column_ductility_norm in {"moderate", "high"}:
+            two_sided_connection = len(active_sides_for_cp) == 2
+            if two_sided_connection:
+                tf_candidates_341: list[Quantity] = []
+                if beam_profile_izq is not None:
+                    tf_candidates_341.append(beam_profile_izq["tf"])
+                if beam_profile_der is not None:
+                    tf_candidates_341.append(beam_profile_der["tf"])
+                if not tf_candidates_341:
+                    raise ValueError("Two-sided continuity plate check requires beam flange thickness.")
+                tf_thicker = max(tf_candidates_341, key=lambda q: q.value)
+                t_req_341_tf = Quantity(value=0.75 * tf_thicker.value, unit=tf_thicker.unit)
+                t_limit_341_symbol = "0.75*max(tf_vgizq, tf_vgder)"
+                t_desc_341 = "Espesor minimo de platina de continuidad (conexion a dos lados, 75% del ala mas gruesa)"
+            else:
+                side_for_tf = active_sides_for_cp[0] if active_sides_for_cp else "izq"
+                profile_for_tf = beam_profile_izq if side_for_tf == "izq" else beam_profile_der
+                if profile_for_tf is None:
+                    raise ValueError("One-sided continuity plate check requires active beam flange thickness.")
+                tf_side = profile_for_tf["tf"]
+                t_req_341_tf = Quantity(value=0.50 * tf_side.value, unit=tf_side.unit)
+                t_limit_341_symbol = f"0.50*tf_vg{side_for_tf}"
+                t_desc_341 = f"Espesor minimo de platina de continuidad (conexion a un lado, 50% de tf_vg{side_for_tf})"
+
+            k1_col = column_profile.get("k1")
+            b2_pc_col: Quantity | None = None
+            if isinstance(k1_col, Quantity):
+                tw_col_k1 = column_profile["tw"]
+                clip2_pc_col = Quantity(
+                    value=((k1_col.value - tw_col_k1.value) / 2.0) + 12.0,
+                    unit=k1_col.unit,
+                )
+                b2_pc_col = Quantity(
+                    value=b1_pc_col.value - clip2_pc_col.value,
+                    unit=b1_pc_col.unit,
+                )
+            b_eff_pc_col = b2_pc_col if (b2_pc_col is not None and b2_pc_col.value > b1_pc_col.value) else b1_pc_col
+            t_req_341_ry = Quantity(
+                value=(b_eff_pc_col.value / 0.56) * math.sqrt((ry_pc_col * fy_pc_col.value) / e_pc_col.value),
+                unit=b_eff_pc_col.unit,
+            )
+            continuity_plate_limits.append(
+                _step1_limit(
+                    check_id="section_e3_9.continuity_plate_width_to_thickness_limit",
+                    scope="continuity_plate_col",
+                    clause="AISC 341-22 Eq. (E3-9)",
+                    description="Limite ancho/espesor de platina de continuidad (b/t)",
+                    calculated_symbol="t_pc_col",
+                    limit_symbol="(max(b1_pc_col, b2_pc_col)/0.56)*sqrt(Ry_pc_col*Fy_pc_col/E_pc_col)",
+                    calculated=t_pc_col,
+                    limit=t_req_341_ry,
+                    comparison="ge",
+                )
+            )
+            continuity_plate_limits.append(
+                _step1_limit(
+                    check_id="section_e3_6f_1b.continuity_plate_thickness_min_by_connection",
+                    scope="continuity_plate_col",
+                    clause="AISC 341-22w E3.6f(1)(b)",
+                    description=t_desc_341,
+                    calculated_symbol="t_pc_col",
+                    limit_symbol=t_limit_341_symbol,
+                    calculated=t_pc_col,
+                    limit=t_req_341_tf,
+                    comparison="ge",
+                )
+            )
+
 
     weld_limits: list[dict[str, object]] = []
     for side_suffix in _active_beam_sides(case):
@@ -4216,8 +4814,17 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
         weld_type_side_raw = getattr(case.geometry, f"tipo_w4_{side_tag}", None)
         weld_type_side = _normalize_end_plate_stiffener_weld_type(weld_type_side_raw)
         backing_thickness_side = getattr(case.geometry, f"t_w4_1_{side_tag}", None)
-        backing_zero = backing_thickness_side is None or abs(backing_thickness_side.value) <= 1e-9
-        passes_w4 = (weld_type_side == "cjp") and backing_zero
+        required_backing_mm = 8.0
+        backing_matches = False
+        if backing_thickness_side is not None:
+            if backing_thickness_side.unit == "mm":
+                backing_value_mm = backing_thickness_side.value
+            elif backing_thickness_side.unit == "in":
+                backing_value_mm = backing_thickness_side.value * 25.4
+            else:
+                backing_value_mm = float("nan")
+            backing_matches = abs(backing_value_mm - required_backing_mm) <= 1e-6
+        passes_w4 = (weld_type_side == "cjp") and backing_matches
         backing_text = (
             "0 mm"
             if backing_thickness_side is None
@@ -4235,7 +4842,7 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
                 calculated_symbol=f"tipo_w4_{side_tag}",
                 verification_text=(
                     f"si demanda_ductilidad_{side_tag} in {{high, moderate}}: "
-                    f"tipo_w4_{side_tag} == cjp; t_w4_1_{side_tag} == 0 mm; "
+                    f"tipo_w4_{side_tag} == cjp; t_w4_1_{side_tag} == 8 mm; "
                     f"demanda_ductilidad_{side_tag} = {ductility_side}; "
                     f"tipo_w4_{side_tag} = {weld_type_side}; "
                     f"t_w4_1_{side_tag} = {backing_text}"
@@ -4291,6 +4898,148 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
             )
         )
 
+    def _append_fillet_limit_suite(
+        *,
+        weld_index: str,
+        scope: str,
+        size_symbol: str,
+        length_symbol: str,
+        weld_size: Quantity | None,
+        weld_length: Quantity | None,
+        thinner_part: Quantity | None,
+        description_suffix: str,
+        check_id_suffix: str,
+    ) -> None:
+        if weld_size is None or thinner_part is None:
+            missing = []
+            if weld_size is None:
+                missing.append(size_symbol)
+            if thinner_part is None:
+                missing.append(f"t_delgado_w{weld_index}_{check_id_suffix}")
+            _append_fillet_missing_limit(
+                check_id=f"section_j2_4.weld_{weld_index}_minimum_size_{check_id_suffix}",
+                scope=scope,
+                description=f"Tamano minimo de soldadura de filete {description_suffix}",
+                calculated_symbol=size_symbol,
+                missing_fields=tuple(missing),
+            )
+        else:
+            minimum_size = compute_fillet_weld_minimum_size_table_j24(
+                thinner_part_thickness=thinner_part,
+                unit_system=case.units_system,
+            )["w_min"]
+            weld_limits.append(
+                _step1_limit(
+                    check_id=f"section_j2_4.weld_{weld_index}_minimum_size_{check_id_suffix}",
+                    scope=scope,
+                    clause="AISC 360-22 Table J2.4",
+                    description=f"Tamano minimo de soldadura de filete {description_suffix}",
+                    calculated_symbol=size_symbol,
+                    limit_symbol=f"wmin_j24_w{weld_index}_{check_id_suffix}",
+                    calculated=weld_size,
+                    limit=minimum_size,
+                    comparison="ge",
+                )
+            )
+
+        if weld_size is None or thinner_part is None:
+            missing = []
+            if weld_size is None:
+                missing.append(size_symbol)
+            if thinner_part is None:
+                missing.append(f"t_delgado_w{weld_index}_{check_id_suffix}")
+            _append_fillet_missing_limit(
+                check_id=f"section_j2_b.weld_{weld_index}_maximum_size_{check_id_suffix}",
+                scope=scope,
+                description=f"Tamano maximo de soldadura de filete {description_suffix}",
+                calculated_symbol=size_symbol,
+                missing_fields=tuple(missing),
+            )
+        else:
+            maximum_size = compute_fillet_weld_maximum_size_j2b(
+                thinner_part_thickness=thinner_part,
+                unit_system=case.units_system,
+            )["w_max"]
+            weld_limits.append(
+                _step1_limit(
+                    check_id=f"section_j2_b.weld_{weld_index}_maximum_size_{check_id_suffix}",
+                    scope=scope,
+                    clause="AISC 360-22 Section J2b",
+                    description=f"Tamano maximo de soldadura de filete {description_suffix}",
+                    calculated_symbol=size_symbol,
+                    limit_symbol=f"wmax_j2b_w{weld_index}_{check_id_suffix}",
+                    calculated=weld_size,
+                    limit=maximum_size,
+                    comparison="le",
+                )
+            )
+
+        if weld_size is None or weld_length is None:
+            missing = []
+            if weld_size is None:
+                missing.append(size_symbol)
+            if weld_length is None:
+                missing.append(length_symbol)
+            _append_fillet_missing_limit(
+                check_id=f"section_j2_2_c.weld_{weld_index}_minimum_length_{check_id_suffix}",
+                scope=scope,
+                description=f"Longitud minima de soldadura de filete para diseno por resistencia {description_suffix}",
+                calculated_symbol=length_symbol,
+                missing_fields=tuple(missing),
+            )
+            _append_fillet_missing_limit(
+                check_id=f"section_j2_2_d.weld_{weld_index}_effective_length_{check_id_suffix}",
+                scope=scope,
+                description=f"Longitud efectiva de soldadura de filete cargada en el extremo {description_suffix}",
+                calculated_symbol=length_symbol,
+                missing_fields=tuple(missing),
+            )
+            return
+
+        minimum_length = compute_fillet_weld_minimum_length_strength_j2c(
+            weld_size=weld_size,
+            weld_length=weld_length,
+            unit_system=case.units_system,
+        )["l_min"]
+        weld_limits.append(
+            _step1_limit(
+                check_id=f"section_j2_2_c.weld_{weld_index}_minimum_length_{check_id_suffix}",
+                scope=scope,
+                clause="AISC 360-22 Section J2.2(c)",
+                description=f"Longitud minima de soldadura de filete para diseno por resistencia {description_suffix}",
+                calculated_symbol=length_symbol,
+                limit_symbol=f"4*{size_symbol}",
+                calculated=weld_length,
+                limit=minimum_length,
+                comparison="ge",
+            )
+        )
+
+        effective_length_result = compute_end_loaded_fillet_weld_effective_length_j2d(
+            weld_size=weld_size,
+            weld_length=weld_length,
+            unit_system=case.units_system,
+        )
+        l_over_w = effective_length_result["l_over_w"]
+        beta = effective_length_result["beta"]
+        l_eff = effective_length_result["l_eff"]
+        passes_effective = beta > 0.0 and beta <= 1.0 + 1e-9
+        weld_limits.append(
+            _step1_verification_only_limit(
+                check_id=f"section_j2_2_d.weld_{weld_index}_effective_length_{check_id_suffix}",
+                scope=scope,
+                clause="AISC 360-22 Section J2.2(d) + Eq. (J2-1)",
+                description=f"Longitud efectiva de soldadura de filete cargada en el extremo {description_suffix}",
+                calculated_symbol=length_symbol,
+                verification_text=(
+                    f"l/w = {l_over_w:.3f}; beta = {beta:.3f}; "
+                    f"l_eff_w{weld_index}_{check_id_suffix} = {l_eff.value:.3f} {l_eff.unit}; "
+                    "si l/w<=100 => l_eff=l; si 100<l/w<=300 => l_eff=beta*l; si l/w>300 => l_eff=180w"
+                ),
+                passes=passes_effective,
+            )
+        )
+
     for side_suffix in _active_beam_sides(case):
         side_tag = f"vg{side_suffix}"
         side_label = "viga izquierda" if side_suffix == "izq" else "viga derecha"
@@ -4343,10 +5092,13 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
                 "weld_name": "weld_1",
                 "type_raw": _geometry_by_side("end_plate_stiffener_weld_type", side_tag),
                 "size": _geometry_by_side("end_plate_stiffener_weld_size_wst", side_tag),
+                "gap": _geometry_by_side("L_gap_w1", side_tag) or clip_st_side,
                 "size_symbol": f"w_w1_{side_tag}",
                 "length": (
                     Quantity(
-                        value=h_pest_side.value - clip_st_side.value - 2.0 * _geometry_by_side("end_plate_stiffener_weld_size_wst", side_tag).value,
+                        value=h_pest_side.value
+                        - 2.0 * ((_geometry_by_side("L_gap_w1", side_tag) or clip_st_side).value)
+                        - clip_st_side.value,
                         unit=h_pest_side.unit,
                     )
                     if h_pest_side is not None and _geometry_by_side("end_plate_stiffener_weld_size_wst", side_tag) is not None
@@ -4362,16 +5114,13 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
                 or _geometry_by_side("end_plate_stiffener_weld_type", side_tag),
                 "size": _geometry_by_side("beam_stiffener_weld_size_wst2", side_tag)
                 or _geometry_by_side("end_plate_stiffener_weld_size_wst", side_tag),
+                "gap": _geometry_by_side("L_gap_w2", side_tag) or clip_st_side,
                 "size_symbol": f"w_w2_{side_tag}",
                 "length": (
                     Quantity(
                         value=l_pest_side.value
-                        - clip_st_side.value
-                        - 2.0
-                        * (
-                            (_geometry_by_side("beam_stiffener_weld_size_wst2", side_tag)
-                             or _geometry_by_side("end_plate_stiffener_weld_size_wst", side_tag)).value
-                        ),
+                        - 2.0 * ((_geometry_by_side("L_gap_w2", side_tag) or clip_st_side).value)
+                        - clip_st_side.value,
                         unit=l_pest_side.unit,
                     )
                     if l_pest_side is not None
@@ -4525,139 +5274,207 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
             size_symbol = weld_ctx["size_symbol"]
             length_symbol = weld_ctx["length_symbol"]
             description_suffix = f"(#{weld_index}, {side_label})"
-
-            if weld_size is None or thinner_part is None:
-                missing = []
-                if weld_size is None:
-                    missing.append(size_symbol)
-                if thinner_part is None:
-                    missing.append(f"t_delgado_w{weld_index}_{side_tag}")
-                _append_fillet_missing_limit(
-                    check_id=f"section_j2_4.weld_{weld_index}_minimum_size_{side_tag}",
-                    scope=weld_scope,
-                    description=f"Tamano minimo de soldadura de filete {description_suffix}",
-                    calculated_symbol=size_symbol,
-                    missing_fields=tuple(missing),
-                )
-            else:
-                minimum_size = compute_fillet_weld_minimum_size_table_j24(
-                    thinner_part_thickness=thinner_part,
-                    unit_system=case.units_system,
-                )["w_min"]
-                weld_limits.append(
-                    _step1_limit(
-                        check_id=f"section_j2_4.weld_{weld_index}_minimum_size_{side_tag}",
-                        scope=weld_scope,
-                        clause="AISC 360-22 Table J2.4",
-                        description=f"Tamano minimo de soldadura de filete {description_suffix}",
-                        calculated_symbol=size_symbol,
-                        limit_symbol=f"wmin_j24_w{weld_index}_{side_tag}",
-                        calculated=weld_size,
-                        limit=minimum_size,
-                        comparison="ge",
+            _append_fillet_limit_suite(
+                weld_index=weld_index,
+                scope=weld_scope,
+                size_symbol=size_symbol,
+                length_symbol=length_symbol,
+                weld_size=weld_size,
+                weld_length=weld_length,
+                thinner_part=thinner_part,
+                description_suffix=description_suffix,
+                check_id_suffix=side_tag,
+            )
+            if (
+                weld_index == "1"
+                and weld_length is not None
+                and weld_size is not None
+                and h_pest_side is not None
+            ):
+                if weld_size.unit == h_pest_side.unit:
+                    w_size_for_limit = weld_size
+                elif weld_size.unit == "mm" and h_pest_side.unit == "in":
+                    w_size_for_limit = Quantity(value=weld_size.value / 25.4, unit="in")
+                elif weld_size.unit == "in" and h_pest_side.unit == "mm":
+                    w_size_for_limit = Quantity(value=weld_size.value * 25.4, unit="mm")
+                else:
+                    w_size_for_limit = None
+                if w_size_for_limit is not None:
+                    max_l_w1 = Quantity(
+                        value=h_pest_side.value - 2.0 * w_size_for_limit.value,
+                        unit=h_pest_side.unit,
                     )
-                )
+                    weld_limits.append(
+                        _step1_limit(
+                            check_id=f"section_6_7.weld_1_fillet_length_max_{side_tag}",
+                            scope=f"weld_1_{side_tag}",
+                            clause="Section 6.7",
+                            description=f"Longitud maxima de soldadura #1 cuando tipo_w1_{side_tag} es fillet ({side_label})",
+                            calculated_symbol=f"l_w1_{side_tag}",
+                            limit_symbol=f"h_pest_{side_tag} - 2*w_w1_{side_tag}",
+                            calculated=weld_length,
+                            limit=max_l_w1,
+                            comparison="le",
+                        )
+                    )
+            if (
+                weld_index == "2"
+                and weld_length is not None
+                and weld_size is not None
+                and l_pest_side is not None
+            ):
+                if weld_size.unit == l_pest_side.unit:
+                    w_size_for_limit = weld_size
+                elif weld_size.unit == "mm" and l_pest_side.unit == "in":
+                    w_size_for_limit = Quantity(value=weld_size.value / 25.4, unit="in")
+                elif weld_size.unit == "in" and l_pest_side.unit == "mm":
+                    w_size_for_limit = Quantity(value=weld_size.value * 25.4, unit="mm")
+                else:
+                    w_size_for_limit = None
+                if w_size_for_limit is not None:
+                    max_l_w2 = Quantity(
+                        value=l_pest_side.value - 2.0 * w_size_for_limit.value,
+                        unit=l_pest_side.unit,
+                    )
+                    weld_limits.append(
+                        _step1_limit(
+                            check_id=f"section_6_7.weld_2_fillet_length_max_{side_tag}",
+                            scope=f"weld_2_{side_tag}",
+                            clause="Section 6.7",
+                            description=f"Longitud maxima de soldadura #2 cuando tipo_w2_{side_tag} es fillet ({side_label})",
+                            calculated_symbol=f"l_w2_{side_tag}",
+                            limit_symbol=f"L_pest_{side_tag} - 2*w_w2_{side_tag}",
+                            calculated=weld_length,
+                            limit=max_l_w2,
+                            comparison="le",
+                        )
+                    )
 
-            if weld_size is None or thinner_part is None:
-                missing = []
-                if weld_size is None:
-                    missing.append(size_symbol)
-                if thinner_part is None:
-                    missing.append(f"t_delgado_w{weld_index}_{side_tag}")
-                _append_fillet_missing_limit(
-                    check_id=f"section_j2_b.weld_{weld_index}_maximum_size_{side_tag}",
-                    scope=weld_scope,
-                    description=f"Tamano maximo de soldadura de filete {description_suffix}",
-                    calculated_symbol=size_symbol,
-                    missing_fields=tuple(missing),
-                )
+    # Reusable fillet-weld detailing checks for column weld scopes (#5 and #6).
+    column_flange_thickness = column_profile.get("tf")
+    column_web_thickness = column_profile.get("tw")
+
+    weld5_type_norm = _normalize_end_plate_stiffener_weld_type(continuity_plate_weld_type_raw)
+    if continuity_plate_enabled and tcp is not None and weld5_type_norm == "fillet":
+        _append_fillet_limit_suite(
+            weld_index="5",
+            scope="weld_5_col",
+            size_symbol="w_w5_col",
+            length_symbol="L_w5_col",
+            weld_size=w_w5_col,
+            weld_length=l_w5_col_computed,
+            thinner_part=_minimum_thickness(tcp, column_flange_thickness),
+            description_suffix="(#5, columna)",
+            check_id_suffix="col",
+        )
+        k1_col = column_profile.get("k1")
+        tw_col = column_profile.get("tw")
+        if (
+            b1_pc_col is not None
+            and w_w5_col is not None
+            and l_w5_col_computed is not None
+            and k1_col is not None
+            and tw_col is not None
+            and k1_col.unit == tw_col.unit == b1_pc_col.unit
+        ):
+            clip2_pc_col = Quantity(
+                value=((k1_col.value - tw_col.value) / 2.0) + _mm_to_unit_value(12.0, k1_col.unit),
+                unit=k1_col.unit,
+            )
+            b2_pc_col_local = Quantity(
+                value=b1_pc_col.value - clip2_pc_col.value,
+                unit=b1_pc_col.unit,
+            )
+            if w_w5_col.unit == b2_pc_col_local.unit:
+                t_w5_for_limit = w_w5_col
+            elif w_w5_col.unit == "mm" and b2_pc_col_local.unit == "in":
+                t_w5_for_limit = Quantity(value=w_w5_col.value / 25.4, unit="in")
+            elif w_w5_col.unit == "in" and b2_pc_col_local.unit == "mm":
+                t_w5_for_limit = Quantity(value=w_w5_col.value * 25.4, unit="mm")
             else:
-                maximum_size = compute_fillet_weld_maximum_size_j2b(
-                    thinner_part_thickness=thinner_part,
-                    unit_system=case.units_system,
-                )["w_max"]
+                t_w5_for_limit = None
+            if t_w5_for_limit is not None:
+                l_w5_max = Quantity(
+                    value=b2_pc_col_local.value - 2.0 * t_w5_for_limit.value,
+                    unit=b2_pc_col_local.unit,
+                )
                 weld_limits.append(
                     _step1_limit(
-                        check_id=f"section_j2_b.weld_{weld_index}_maximum_size_{side_tag}",
-                        scope=weld_scope,
-                        clause="AISC 360-22 Section J2b",
-                        description=f"Tamano maximo de soldadura de filete {description_suffix}",
-                        calculated_symbol=size_symbol,
-                        limit_symbol=f"wmax_j2b_w{weld_index}_{side_tag}",
-                        calculated=weld_size,
-                        limit=maximum_size,
+                        check_id="section_6_7.weld_5_fillet_length_max_col",
+                        scope="weld_5_col",
+                        clause="Section 6.7",
+                        description="Longitud maxima de soldadura #5 cuando tipo_w5_col es fillet",
+                        calculated_symbol="L_w5_col",
+                        limit_symbol="b2_pc_col - 2*w_w5_col",
+                        calculated=l_w5_col_computed,
+                        limit=l_w5_max,
                         comparison="le",
                     )
                 )
 
-            if weld_size is None or weld_length is None:
-                missing = []
-                if weld_size is None:
-                    missing.append(size_symbol)
-                if weld_length is None:
-                    missing.append(length_symbol)
-                _append_fillet_missing_limit(
-                    check_id=f"section_j2_2_c.weld_{weld_index}_minimum_length_{side_tag}",
-                    scope=weld_scope,
-                    description=f"Longitud minima de soldadura de filete para diseno por resistencia {description_suffix}",
-                    calculated_symbol=length_symbol,
-                    missing_fields=tuple(missing),
-                )
-                _append_fillet_missing_limit(
-                    check_id=f"section_j2_2_d.weld_{weld_index}_effective_length_{side_tag}",
-                    scope=weld_scope,
-                    description=f"Longitud efectiva de soldadura de filete cargada en el extremo {description_suffix}",
-                    calculated_symbol=length_symbol,
-                    missing_fields=tuple(missing),
-                )
-                continue
-
-            minimum_length = compute_fillet_weld_minimum_length_strength_j2c(
-                weld_size=weld_size,
-                weld_length=weld_length,
-                unit_system=case.units_system,
-            )["l_min"]
-            weld_limits.append(
-                _step1_limit(
-                    check_id=f"section_j2_2_c.weld_{weld_index}_minimum_length_{side_tag}",
-                    scope=weld_scope,
-                    clause="AISC 360-22 Section J2.2(c)",
-                    description=f"Longitud minima de soldadura de filete para diseno por resistencia {description_suffix}",
-                    calculated_symbol=length_symbol,
-                    limit_symbol=f"4*{size_symbol}",
-                    calculated=weld_length,
-                    limit=minimum_length,
-                    comparison="ge",
-                )
+    if (
+        continuity_plate_enabled
+        and tcp is not None
+        and continuity_plate_web_weld_type_raw is not None
+        and str(continuity_plate_web_weld_type_raw).strip()
+    ):
+        weld_limits.append(
+            _step1_text_in_set_limit(
+                check_id="section_6_7.weld_6_type_allowed_col",
+                scope="weld_6_col",
+                clause="Section 6.7",
+                description="Tipo de soldadura #6 permitido",
+                calculated_symbol="tipo_w6_col",
+                limit_symbol="{cjp, pjp, fillet}",
+                calculated_text=weld6_type_norm,
+                allowed_values=("cjp", "pjp", "fillet"),
             )
+        )
 
-            effective_length_result = compute_end_loaded_fillet_weld_effective_length_j2d(
-                weld_size=weld_size,
-                weld_length=weld_length,
-                unit_system=case.units_system,
-            )
-            l_over_w = effective_length_result["l_over_w"]
-            beta = effective_length_result["beta"]
-            l_eff = effective_length_result["l_eff"]
-            passes_effective = beta > 0.0 and beta <= 1.0 + 1e-9
-            weld_limits.append(
-                _step1_verification_only_limit(
-                    check_id=f"section_j2_2_d.weld_{weld_index}_effective_length_{side_tag}",
-                    scope=weld_scope,
-                    clause="AISC 360-22 Section J2.2(d) + Eq. (J2-1)",
-                    description=f"Longitud efectiva de soldadura de filete cargada en el extremo {description_suffix}",
-                    calculated_symbol=length_symbol,
-                    verification_text=(
-                        f"l/w = {l_over_w:.3f}; beta = {beta:.3f}; "
-                        f"l_eff_w{weld_index}_{side_tag} = {l_eff.value:.3f} {l_eff.unit}; "
-                        "si l/w<=100 => l_eff=l; si 100<l/w<=300 => l_eff=beta*l; si l/w>300 => l_eff=180w"
-                    ),
-                    passes=passes_effective,
+    if continuity_plate_enabled and tcp is not None and weld6_type_norm == "fillet":
+        _append_fillet_limit_suite(
+            weld_index="6",
+            scope="weld_6_col",
+            size_symbol="w_w6_col",
+            length_symbol="L_w6_col",
+            weld_size=w_w6_col,
+            weld_length=l_w6_col_computed,
+            thinner_part=_minimum_thickness(tcp, column_web_thickness),
+            description_suffix="(#6, columna)",
+            check_id_suffix="col",
+        )
+        if (
+            l2_pc_col_q is not None
+            and w_w6_col is not None
+            and l_w6_col_computed is not None
+        ):
+            if w_w6_col.unit == l2_pc_col_q.unit:
+                w_w6_for_limit = w_w6_col
+            elif w_w6_col.unit == "mm" and l2_pc_col_q.unit == "in":
+                w_w6_for_limit = Quantity(value=w_w6_col.value / 25.4, unit="in")
+            elif w_w6_col.unit == "in" and l2_pc_col_q.unit == "mm":
+                w_w6_for_limit = Quantity(value=w_w6_col.value * 25.4, unit="mm")
+            else:
+                w_w6_for_limit = None
+            if w_w6_for_limit is not None:
+                l_w6_max = Quantity(
+                    value=l2_pc_col_q.value - 2.0 * w_w6_for_limit.value,
+                    unit=l2_pc_col_q.unit,
                 )
-            )
+                weld_limits.append(
+                    _step1_limit(
+                        check_id="section_6_7.weld_6_fillet_length_max_col",
+                        scope="weld_6_col",
+                        clause="Section 6.7",
+                        description="Longitud maxima de soldadura #6 cuando tipo_w6_col es fillet",
+                        calculated_symbol="L_w6_col",
+                        limit_symbol="L2_pc_col - 2*w_w6_col",
+                        calculated=l_w6_col_computed,
+                        limit=l_w6_max,
+                        comparison="le",
+                    )
+                )
 
-    tightening_type_normalized = _normalize_bolt_tightening(bolt_tightening_type)
-    bolt_standard_text = str(bolt_fabrication_standard or "not_provided")
     required_bolt_standards = (
         "ASTM F3125/F3125M",
         "ASTM A325",
@@ -4667,39 +5484,50 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
         "ASTM F1852",
         "ASTM F2280",
     )
-    bolt_limits = [
-        _step1_text_in_set_limit(
-            check_id="section_4_1.bolt_tightening_type_valid",
-            scope="bolts",
-            clause="Section 4.1 FASTENER ASSEMBLIES",
-            description="Bolt tightening type must be one recognized category",
-            calculated_symbol="tight_bolt",
-            limit_symbol="{pretensioned, snug_tight}",
-            calculated_text=tightening_type_normalized,
-            allowed_values=("pretensioned", "snug_tight"),
-        ),
-        _step1_text_limit(
-            check_id="section_4_1.bolt_tightening_required_pretensioned",
-            scope="bolts",
-            clause="Section 4.1 FASTENER ASSEMBLIES",
-            description="Bolts shall be pretensioned unless a specific connection permits otherwise",
-            calculated_symbol="tight_bolt",
-            limit_symbol="pretensioned",
-            calculated_text=tightening_type_normalized,
-            expected_text="pretensioned",
-        ),
-        _step1_text_in_set_limit(
-            check_id="section_4_1.bolt_fabrication_standard_permitted",
-            scope="bolts",
-            clause="Section 4.1 FASTENER ASSEMBLIES",
-            description="Bolt fabrication standard must be an allowed high-strength ASTM designation",
-            calculated_symbol="std_bolt",
-            limit_symbol="{ASTM F3125/F3125M, ASTM A325, ASTM A325M, ASTM A490, ASTM A490M, ASTM F1852, ASTM F2280}",
-            calculated_text=bolt_standard_text,
-            allowed_values=required_bolt_standards,
-            normalizer=_normalize_bolt_standard,
-        ),
-    ]
+    bolt_limits: list[dict[str, Any]] = []
+    for side_tag in _active_beam_sides(case):
+        side_scope = f"bolts_{side_tag}"
+        side_symbol = f"vg{side_tag}"
+        side_label = "right beam" if side_tag == "der" else "left beam"
+        bolt_tightening_type_side = _get_geometry_by_side("bolt_tightening_type", side_tag)
+        tightening_type_normalized = _normalize_bolt_tightening(str(bolt_tightening_type_side))
+        bolt_fabrication_standard_side = _get_material_by_side("bolt_fabrication_standard", side_tag)
+        bolt_standard_text = str(bolt_fabrication_standard_side or "not_provided")
+        bolt_limits.extend(
+            [
+                _step1_text_in_set_limit(
+                    check_id=f"section_4_1.bolt_tightening_type_valid_{side_tag}",
+                    scope=side_scope,
+                    clause="Section 4.1 FASTENER ASSEMBLIES",
+                    description=f"Bolt tightening type must be one recognized category ({side_label})",
+                    calculated_symbol=f"tight_bolt_{side_symbol}",
+                    limit_symbol="{pretensioned, snug_tight}",
+                    calculated_text=tightening_type_normalized,
+                    allowed_values=("pretensioned", "snug_tight"),
+                ),
+                _step1_text_limit(
+                    check_id=f"section_4_1.bolt_tightening_required_pretensioned_{side_tag}",
+                    scope=side_scope,
+                    clause="Section 4.1 FASTENER ASSEMBLIES",
+                    description=f"Bolts shall be pretensioned unless a specific connection permits otherwise ({side_label})",
+                    calculated_symbol=f"tight_bolt_{side_symbol}",
+                    limit_symbol="pretensioned",
+                    calculated_text=tightening_type_normalized,
+                    expected_text="pretensioned",
+                ),
+                _step1_text_in_set_limit(
+                    check_id=f"section_4_1.bolt_fabrication_standard_permitted_{side_tag}",
+                    scope=side_scope,
+                    clause="Section 4.1 FASTENER ASSEMBLIES",
+                    description=f"Bolt fabrication standard must be an allowed high-strength ASTM designation ({side_label})",
+                    calculated_symbol=f"std_bolt_{side_symbol}",
+                    limit_symbol="{ASTM F3125/F3125M, ASTM A325, ASTM A325M, ASTM A490, ASTM A490M, ASTM F1852, ASTM F2280}",
+                    calculated_text=bolt_standard_text,
+                    allowed_values=required_bolt_standards,
+                    normalizer=_normalize_bolt_standard,
+                ),
+            ]
+        )
 
     pfo_bounds = active_table_61.get("pfo")
     pfi_bounds = active_table_61.get("pfi")
@@ -4717,6 +5545,9 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
             pfi_side = pfi_der
             pb_side = pb_der
             g_side = g_der
+            db_side = db_der
+            min_edge_side = min_edge_der
+            min_spacing_side = min_spacing_der
             bp_side = bp_der
             tp_side = tp_der
         else:
@@ -4725,8 +5556,18 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
             pfi_side = pfi_izq
             pb_side = pb_izq
             g_side = g_izq
+            db_side = db_izq
+            min_edge_side = min_edge_izq
+            min_spacing_side = min_spacing_izq
             bp_side = bp_izq
             tp_side = tp_izq
+        if db_side is None or min_edge_side is None or min_spacing_side is None:
+            raise missing_required_input_error(
+                rule_id=rule_binding.rule_id,
+                source_document=rule_binding.source_document,
+                missing_fields=[f"geometry.bolt_diameter_{side_suffix}"],
+                message=f"Required side-specific bolt diameter is missing for side '{side_tag}'.",
+            )
         if (
             de_side is None
             or pfo_side is None
@@ -4755,9 +5596,15 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
                 message=f"Required side-specific geometry is missing for Table 6.1 checks on side '{side_tag}'.",
             )
 
-        pso = pfo_side
         tfb = side_profile["tf"]
-        psi = Quantity(value=pfi_side.value + tfb.value - tcp.value, unit=pfi_side.unit)
+        pso = Quantity(
+            value=pfo_side.value + 0.5 * tfb.value - 0.5 * tcp.value,
+            unit=pfo_side.unit,
+        )
+        psi = Quantity(
+            value=pfi_side.value + 0.5 * tfb.value - 0.5 * tcp.value,
+            unit=pfi_side.unit,
+        )
 
         table_61_checks.append(
             _step1_limit(
@@ -4768,7 +5615,7 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
                 calculated_symbol=f"de_pe_{side_suffix}",
                 limit_symbol="emin",
                 calculated=de_side,
-                limit=min_edge,
+                limit=min_edge_side,
                 comparison="ge",
             )
         )
@@ -4781,7 +5628,7 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
                 f"{pfo_max.value:.0f} {pfo_max.unit}" if pfo_max.unit == "mm" else f"{pfo_max.value:.3f} {pfo_max.unit}"
             )
             pfo_pass = (
-                (pfo_side.value >= min_edge.value)
+                (pso.value >= min_edge_side.value)
                 and (pfo_side.value >= pfo_min.value)
                 and (pfo_side.value <= pfo_max.value)
             )
@@ -4793,7 +5640,8 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
                     description=f"Outside bolt-row distance limits ({side_label})",
                     calculated_symbol=f"pfo_pe_{side_suffix} - pso_pe_{side_suffix}",
                     verification_text=(
-                        f"pso_pe_{side_suffix} (=pfo_pe_{side_suffix}) >= emin; "
+                        f"pso_pe_{side_suffix} = pfo_pe_{side_suffix} + 0.5*tf_{side_suffix} - 0.5*t_pc_col; "
+                        f"pso_pe_{side_suffix} >= emin; "
                         f"pfo_pe_{side_suffix} <= {pfo_max_label}; pfo_pe_{side_suffix} >= {pfo_min_label}"
                     ),
                     passes=pfo_pass,
@@ -4812,7 +5660,7 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
             )
             psi_pass = psi.value > 0.0
             pfi_pass = (
-                (pfi_side.value >= min_edge.value)
+                (pfi_side.value >= min_edge_side.value)
                 and (pfi_side.value >= pfi_min.value)
                 and (pfi_side.value <= pfi_max.value)
                 and psi_pass
@@ -4827,7 +5675,7 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
                     verification_text=(
                         f"pfi_pe_{side_suffix} >= emin; pfi_pe_{side_suffix} <= {pfi_max_label}; "
                         f"pfi_pe_{side_suffix} >= {pfi_min_label}; "
-                        f"psi_pe_{side_suffix} = pfi_pe_{side_suffix} + tf_{side_suffix} - tcp_col; psi_pe_{side_suffix} > 0"
+                        f"psi_pe_{side_suffix} = pfi_pe_{side_suffix} + 0.5*tf_{side_suffix} - 0.5*t_pc_col; psi_pe_{side_suffix} > 0"
                     ),
                     passes=pfi_pass,
                     calculated=pfi_side,
@@ -4842,7 +5690,7 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
             pb_8es_max = _table61_length(us_in=95.0 / 25.4, si_mm=95.0)
             pb_tol = 1e-3
             pb_passes = (
-                (pb_side.value >= (min_spacing.value - pb_tol))
+                (pb_side.value >= (min_spacing_side.value - pb_tol))
                 and (pb_side.value <= (pb_8es_max.value + pb_tol))
                 and (pb_side.value >= (pb_8es_min.value - pb_tol))
             )
@@ -4865,7 +5713,7 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
                     ),
                     passes=pb_passes,
                     calculated=pb_side,
-                    limit_3db=min_spacing,
+                    limit_3db=min_spacing_side,
                     minimum=pb_8es_min,
                     maximum=pb_8es_max,
                 )
@@ -4915,6 +5763,21 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
     )
 
     overall_status = CheckStatus.PASS if all(item["status"] == CheckStatus.PASS.value for item in step_1_limits) else CheckStatus.FAIL
+    b2_pc_col_input: Quantity | None = None
+    if (
+        case.geometry.continuity_plate_width_b1 is not None
+        and column_profile.get("k1") is not None
+        and column_profile.get("tw") is not None
+        and column_profile["k1"].unit == column_profile["tw"].unit
+    ):
+        clip2_input = Quantity(
+            value=((column_profile["k1"].value - column_profile["tw"].value) / 2.0) + 12.0,
+            unit=column_profile["k1"].unit,
+        )
+        b2_pc_col_input = Quantity(
+            value=case.geometry.continuity_plate_width_b1.value - clip2_input.value,
+            unit=case.geometry.continuity_plate_width_b1.unit,
+        )
 
     return CheckResult(
         name=rule_binding.name,
@@ -4932,9 +5795,93 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
                 "column_flange_width_bcf": bcf.model_dump(),
                 "column_depth_d_col": column_profile["d"].model_dump(),
                 "column_depth_limit_max": column_depth_max.model_dump(),
-                "continuity_plate_thickness_tcp": tcp.model_dump(),
+                "continuity_plate_thickness_tcp": tcp.model_dump() if tcp is not None else None,
+                "t_pc_col": tcp.model_dump() if tcp is not None else None,
+                "b1_pc_col": (
+                    case.geometry.continuity_plate_width_b1.model_dump()
+                    if case.geometry.continuity_plate_width_b1 is not None
+                    else None
+                ),
+                "n_pc_col": case.geometry.continuity_plate_count,
+                "usar_pc_col": case.geometry.continuity_plate_enabled,
+                "tipo_acero_pc_col": (
+                    case.materials.continuity_plate_steel_type
+                    or case.materials.plate_steel_type
+                ),
+                "kdet_col": (
+                    (column_profile.get("kdet") or column_profile.get("kdes")).model_dump()
+                    if (column_profile.get("kdet") or column_profile.get("kdes")) is not None
+                    else None
+                ),
+                "k1_col": (
+                    column_profile.get("k1").model_dump()
+                    if column_profile.get("k1") is not None
+                    else None
+                ),
+                "tw_col": (
+                    column_profile.get("tw").model_dump()
+                    if column_profile.get("tw") is not None
+                    else None
+                ),
+                "b2_pc_col": (
+                    b2_pc_col_input.model_dump()
+                    if b2_pc_col_input is not None
+                    else None
+                ),
+                "L2_pc_col": (
+                    l2_pc_col_q.model_dump()
+                    if l2_pc_col_q is not None
+                    else None
+                ),
+                "L_w5_col": (
+                    l_w5_col_computed.model_dump()
+                    if l_w5_col_computed is not None
+                    else None
+                ),
+                "phi_fragil": case.design_factors.phi_f,
+                "tfdet_col": (
+                    (column_profile.get("tfdet") or column_profile.get("tf")).model_dump()
+                    if (column_profile.get("tfdet") or column_profile.get("tf")) is not None
+                    else None
+                ),
                 "continuity_plate_enabled": case.geometry.continuity_plate_enabled,
                 "continuity_plate_weld_type": continuity_plate_weld_type_raw,
+                "tipo_w5_col": continuity_plate_weld_type_raw,
+                "Fexx_w5_col": weld_fexx.model_dump(),
+                "w_w5_col": w_w5_col.model_dump() if w_w5_col is not None else None,
+                "t_w5_col": w_w5_col.model_dump() if w_w5_col is not None else None,
+                "nl_w5_col": nl_w5_col,
+                "L_gap_w5_col": l_gap_w5_col.model_dump() if l_gap_w5_col is not None else None,
+                "kds_w5_col": kds_w5_col,
+                "Fexx_w6_col": weld_fexx.model_dump(),
+                "tipo_w6_col": continuity_plate_web_weld_type_raw,
+                "w_w6_col": w_w6_col.model_dump() if w_w6_col is not None else None,
+                "t_w6_col": w_w6_col.model_dump() if w_w6_col is not None else None,
+                "nl_w6_col": nl_w6_col,
+                "L_gap_w6_col": l_gap_w6_col.model_dump() if l_gap_w6_col is not None else None,
+                "kds_w6_col": kds_w6_col,
+                "tipo_acero_dp_col": case.materials.doubler_plate_steel_type,
+                "tipo_w7_col": case.geometry.doubler_plate_web_plug_weld_type,
+                "Fexx_w7_col": weld_fexx.model_dump(),
+                "w_w7_col": (
+                    case.geometry.doubler_plate_web_plug_weld_size.model_dump()
+                    if case.geometry.doubler_plate_web_plug_weld_size is not None
+                    else None
+                ),
+                "t_w7_col": (
+                    case.geometry.doubler_plate_web_plug_weld_size.model_dump()
+                    if case.geometry.doubler_plate_web_plug_weld_size is not None
+                    else None
+                ),
+                "nl_w7_col": case.geometry.doubler_plate_web_plug_weld_lines_nl,
+                # Legacy aliases (compatibility while migrating naming).
+                "tipo_wdp_plug": case.geometry.doubler_plate_web_plug_weld_type,
+                "t_wdp_plug": (
+                    case.geometry.doubler_plate_web_plug_weld_size.model_dump()
+                    if case.geometry.doubler_plate_web_plug_weld_size is not None
+                    else None
+                ),
+                "nl_wdp_plug": case.geometry.doubler_plate_web_plug_weld_lines_nl,
                 "end_plate_beam_web_weld_type": end_plate_beam_web_weld_type_raw,
                 "weld_fexx": weld_fexx.model_dump(),
                 "end_plate_beam_web_weld_thickness_twe": (
@@ -4943,6 +5890,26 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
                     else None
                 ),
                 "end_plate_beam_web_weld_lines_nl": case.geometry.end_plate_beam_web_weld_lines_nl,
+                "L_gap_w1_vgder": (
+                    case.geometry.L_gap_w1_vgder.model_dump()
+                    if case.geometry.L_gap_w1_vgder is not None
+                    else None
+                ),
+                "L_gap_w1_vgizq": (
+                    case.geometry.L_gap_w1_vgizq.model_dump()
+                    if case.geometry.L_gap_w1_vgizq is not None
+                    else None
+                ),
+                "L_gap_w2_vgder": (
+                    case.geometry.L_gap_w2_vgder.model_dump()
+                    if case.geometry.L_gap_w2_vgder is not None
+                    else None
+                ),
+                "L_gap_w2_vgizq": (
+                    case.geometry.L_gap_w2_vgizq.model_dump()
+                    if case.geometry.L_gap_w2_vgizq is not None
+                    else None
+                ),
                 "bolt_tightening_type": bolt_tightening_type,
                 "bolt_fabrication_standard": bolt_fabrication_standard,
                 "end_plate_width_bp": bp.model_dump(),
@@ -4955,6 +5922,13 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
                 "stiffener_height": stiffener_height.model_dump(),
                 "stiffener_length": stiffener_length_derived.model_dump(),
                 "beam_connection_sides": beam_connection_sides,
+                "t_dp_col": (
+                    case.geometry.doubler_plate_thickness.model_dump()
+                    if case.geometry.doubler_plate_thickness is not None
+                    else None
+                ),
+                "n_dp_col": case.geometry.doubler_plate_count,
+                "doubler_plate_enabled": case.geometry.doubler_plate_enabled,
                 "beam_clear_span_length_der": beam_clear_span_length_der.model_dump(),
                 "beam_shear_connector_free_length_from_column_face_der": shear_connector_free_length_der.model_dump(),
                 "beam_clear_span_length_izq": beam_clear_span_length_izq.model_dump()
@@ -4968,8 +5942,17 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
                 "beam_clear_span_length": beam_clear_span_length.model_dump(),
                 "beam_shear_connector_free_length_from_column_face": shear_connector_free_length.model_dump(),
                 "column_slab_connection_condition": slab_connection_condition,
+                "tipo_acero_perfil_col": case.materials.profile_steel_type,
                 "column_end_distance_to_beam_flange_st_col": stc.model_dump(),
                 "column_st_col_min": stc_min.model_dump(),
+                "d_col": column_profile["d"].model_dump(),
+                "tf_col": column_profile["tf"].model_dump(),
+                "kdes_col": (
+                    (column_profile.get("kdes") or column_profile.get("kdet")).model_dump()
+                    if (column_profile.get("kdes") or column_profile.get("kdet")) is not None
+                    else None
+                ),
+                "elastic_modulus": case.materials.elastic_modulus.model_dump(),
                 "beam_sc_vgder": sc_der.model_dump(),
                 "beam_s_threshold_vgder": s_threshold_der.model_dump(),
                 "beam_sc_vgizq": sc_izq.model_dump() if sc_izq is not None else None,
@@ -4982,12 +5965,16 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
                 "ag_columna": column_ag.model_dump(),
                 "compactness_ca_beam_calculated": ca_beam,
                 "compactness_ca_column_calculated": ca_column,
+                "dz_dp_col": dz_dp_col.model_dump(),
+                "wz_dp_col": wz_dp_col.model_dump() if wz_dp_col is not None else None,
             },
             intermediates={
-                "minimum_spacing_3db": min_spacing.model_dump(),
+                "minimum_spacing_3db": min_spacing_der.model_dump(),
+                "minimum_spacing_3db_vgizq": min_spacing_izq.model_dump() if min_spacing_izq is not None else None,
                 "minimum_bp_bf_plus_margin": min_bp.model_dump(),
                 "bp_margin": bp_margin,
-                "minimum_edge_distance_j34": min_edge.model_dump(),
+                "minimum_edge_distance_j34": min_edge_der.model_dump(),
+                "minimum_edge_distance_j34_vgizq": min_edge_izq.model_dump() if min_edge_izq is not None else None,
                 "clear_span_to_depth_ratio_der": clear_span_to_depth_ratio_der.model_dump(),
                 "clear_span_to_depth_ratio_izq": (
                     clear_span_to_depth_ratio_izq.model_dump() if clear_span_to_depth_ratio_izq is not None else None
@@ -5007,7 +5994,12 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
                 "ca_beam_trace": ca_beam_trace,
                 "ca_column_trace": ca_column_trace,
                 "continuity_plate_weld_thickness_limit": continuity_plate_weld_thickness_limit.model_dump(),
-                "j34_lookup": edge_intermediate,
+                "L_w5_col": l_w5_col_computed.model_dump() if l_w5_col_computed is not None else None,
+                "L_w5_col_formula": "L_w5_col = b2_pc_col - 2*(L_gap_w5_col)",
+                "L_w6_col": l_w6_col_computed.model_dump() if l_w6_col_computed is not None else None,
+                "L_w6_col_formula": "L_w6_col = L2_pc_col - 2*(L_gap_w6_col)",
+                "j34_lookup": edge_intermediate_der,
+                "j34_lookup_vgizq": edge_intermediate_izq,
                 "step_1_notes": step_1_notes,
                 "step_1_limits": step_1_limits,
                 "prequalification_limits": step_1_limits,
@@ -5795,9 +6787,14 @@ def run_column_step3_web_local_yielding(case: AISC358MomentCase, rule_binding: o
         unit_system=case.units_system,
     )
     use_continuity_plate = bool(case.geometry.continuity_plate_enabled)
-    demand_force = capacity if use_continuity_plate else ffu
+    ru_base = ffu
+    demand_force = (
+        Quantity(value=min(ru_base.value, capacity.value), unit=ru_base.unit)
+        if use_continuity_plate
+        else ru_base
+    )
     demand_source = (
-        "continuity_plate_enabled => Ru_cw_v2_col_vgizq = phi*Rn_cf_v2_col_vgizq"
+        "continuity_plate_enabled => Ru_adoptado = min(Ru_base, phi*Rn_cf_v2_col_vgizq)"
         if use_continuity_plate
         else "Ru_cw_v2_col_vgizq = Mf_vgizq_critico/(d_vgizq - tf_vgizq)"
     )
@@ -5812,6 +6809,8 @@ def run_column_step3_web_local_yielding(case: AISC358MomentCase, rule_binding: o
         ),
         inputs={
             "column_shape": case.sections.column_shape,
+            "ru_cf_v2_col_vgizq_base": ru_base.model_dump(),
+            "ru_cf_v2_col_vgizq_adoptado": demand_force.model_dump(),
             "ru_cf_v2_col_vgizq": demand_force.model_dump(),
             "ru_cf_v2_col_vgizq_source": demand_source,
             "mf_vgizq_critico": mf_vgizq_critico.model_dump(),
@@ -5902,9 +6901,14 @@ def run_column_step4_web_local_crippling(case: AISC358MomentCase, rule_binding: 
         unit_system=case.units_system,
     )
     use_continuity_plate = bool(case.geometry.continuity_plate_enabled)
-    demand_force = capacity if use_continuity_plate else ffu
+    ru_base = ffu
+    demand_force = (
+        Quantity(value=min(ru_base.value, capacity.value), unit=ru_base.unit)
+        if use_continuity_plate
+        else ru_base
+    )
     demand_source = (
-        "continuity_plate_enabled => Ru_cw_v2_col_vgizq = phi*Rn_cw_v2_col_vgizq"
+        "continuity_plate_enabled => Ru_adoptado = min(Ru_base, phi*Rn_cw_v2_col_vgizq)"
         if use_continuity_plate
         else "Ru_cw_v2_col_vgizq = Mf_vgizq_critico/(d_vgizq - tf_vgizq)"
     )
@@ -5920,6 +6924,8 @@ def run_column_step4_web_local_crippling(case: AISC358MomentCase, rule_binding: 
         ),
         inputs={
             "mf_vgizq_critico": mf_vgizq_critico.model_dump(),
+            "ru_cw_v2_col_vgizq_base": ru_base.model_dump(),
+            "ru_cw_v2_col_vgizq_adoptado": demand_force.model_dump(),
             "ru_cw_v2_col_vgizq_source": demand_source,
             "st_col": distance_to_end.model_dump(),
             "d_col": column_profile["d"].model_dump(),
@@ -6095,9 +7101,20 @@ def run_column_step4_2_web_local_buckling(case: AISC358MomentCase, rule_binding:
         phi=phi_wcb,
         unit_system=case.units_system,
     )
+    use_continuity_plate = bool(case.geometry.continuity_plate_enabled)
+    demand_force = (
+        Quantity(value=min(ru.value, capacity.value), unit=ru.unit)
+        if use_continuity_plate
+        else ru
+    )
+    demand_source = (
+        "continuity_plate_enabled => Ru_adoptado = min(Ru_base, phi*Rn_cw_v2_col_vgizq)"
+        if use_continuity_plate
+        else "Ru_cw_v2_col_vgizq = max(|-Mu3/(d-tf)+Pu|, |Mu3/(d-tf)+Pu|)"
+    )
     return _build_result(
         rule_binding=rule_binding,
-        demand=ru,
+        demand=demand_force,
         capacity=capacity,
         equation=(
             "Condicion aplicabilidad: "
@@ -6128,6 +7145,10 @@ def run_column_step4_2_web_local_buckling(case: AISC358MomentCase, rule_binding:
             "ductility_vgizq": ductility_vgizq,
             "total_weld_thickness_w4_vgizq": total_weld_thickness.model_dump(),
             "total_weld_thickness_w4_formula": total_weld["equation"],
+            "ru_cw_v2_col_vgizq_base": ru.model_dump(),
+            "ru_cw_v2_col_vgizq_adoptado": demand_force.model_dump(),
+            "ru_cw_v2_col_vgizq_source": demand_source,
+            "continuity_plate_enabled": use_continuity_plate,
         },
         intermediates={
             **intermediates,
@@ -6139,6 +7160,7 @@ def run_column_step4_2_web_local_buckling(case: AISC358MomentCase, rule_binding:
             "ru_expr_neg": ru_expr_neg,
             "ru_expr_pos": ru_expr_pos,
             "phi_rn_cf_v2_col_vgizq_eq_wcb": capacity.value,
+            "continuity_plate_enabled": use_continuity_plate,
         },
         design_factors={"phi_wcb": phi_wcb},
         units_trace={"demand": ru.unit, "capacity": capacity.unit},

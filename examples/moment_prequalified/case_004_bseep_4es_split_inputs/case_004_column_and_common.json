@@ -43,43 +43,62 @@
   "platina_continuidad": {
     "usar_pc_col": true,
     "tipo_acero_pc_col": "ASTM A572 Gr 50",
-    "tpc_col": {
+    "t_pc_col": {
       "value": 15.9,
       "unit": "mm"
     }
   },
-  "platina_dobladora": {
+  "platina_enchape_alma": {
     "usar_dp_col": false,
     "tipo_acero_dp_col": "ASTM A572 Gr 50",
-    "tdp_col": {
+    "t_dp_col": {
       "value": 12.7,
       "unit": "mm"
-    }
-  },
-  "soldaduras": {
-    "weld_5": {
-      "description": "Platina de continuidad con aleta de columna",
-      "Fexx_w5": {
-        "value": 490.0,
-        "unit": "MPa"
-      },
-      "tipo_w5": "CJP",
-      "t_w5": null,
-      "nl_w5": null
     },
-    "weld_dp_tapon": {
-      "description": "Soldadura de tapon entre alma de columna y doubler plates",
-      "Fexx_wdp_tapon": {
-        "value": 490.0,
-        "unit": "MPa"
-      },
-      "tipo_wdp_tapon": "fillet",
-      "t_wdp_tapon": {
-        "value": 8.0,
-        "unit": "mm"
-      },
-      "nl_wdp_tapon": 1
-    }
+    "n_dp_col": 0
+  },
+  "weld_5": {
+    "description": "Platina de continuidad con aleta de columna",
+    "Fexx_w5_col": {
+      "value": 490.0,
+      "unit": "MPa"
+    },
+    "tipo_w5_col": "CJP",
+    "t_w5_col": null,
+    "nl_w5_col": null,
+    "L_gap_w5_col": {
+      "value": 0.0,
+      "unit": "mm"
+    },
+    "kds_w5_col": 1.0
+  },
+  "weld_6": {
+    "description": "Platina de continuidad con alma de columna",
+    "Fexx_w6_col": {
+      "value": 490.0,
+      "unit": "MPa"
+    },
+    "tipo_w6_col": "CJP",
+    "t_w6_col": null,
+    "nl_w6_col": null,
+    "L_gap_w6_col": {
+      "value": 0.0,
+      "unit": "mm"
+    },
+    "kds_w6_col": 1.0
+  },
+  "weld_7": {
+    "description": "Soldadura de plug entre alma de columna y doubler plates",
+    "Fexx_w7_col": {
+      "value": 490.0,
+      "unit": "MPa"
+    },
+    "tipo_w7_col": "plug",
+    "t_w7_col": {
+      "value": 8.0,
+      "unit": "mm"
+    },
+    "nl_w7_col": 1
   },
   "loads": {
     "Pu_col": {
