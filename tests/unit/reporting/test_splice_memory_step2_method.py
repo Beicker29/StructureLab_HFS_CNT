@@ -132,7 +132,8 @@ def test_splice_memory_includes_step2_method_block(monkeypatch) -> None:
     )
     result = run_case_payload(payload)
     memory = render_memory_markdown(result)
-    assert "### Punto 2 - Metodo ICR/Elastic" in memory
+    assert "## Paso 3 - Metodo ICR/Elastic para grupo de pernos 1" in memory
+    assert "### 3.1 Metodo ICR/Elastic" in memory
     assert "Metodo seleccionado: `elastic_superposition`" in memory
     assert "Picr comparativo" in memory
 

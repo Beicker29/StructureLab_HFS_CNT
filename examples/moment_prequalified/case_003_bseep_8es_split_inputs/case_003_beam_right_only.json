@@ -2,7 +2,6 @@
   "viga": {
     "perfil_vgder": "W21X68",
     "tipo_acero_perfil_vgder": "ASTM A572 Gr 50",
-    "demanda_ductilidad_vgder": "high",
     "E_vgder": {
       "value": 200000,
       "unit": "MPa"
@@ -18,6 +17,8 @@
   },
   "placa_extremo": {
     "tipo_acero": "ASTM A572 Gr 50",
+    "cond_pe_vgder": "painted",
+    "cond_amb_pe_vgder": "non_corrosive",
     "Bpe_vgder": {
       "value": 235.0,
       "unit": "mm"
@@ -70,10 +71,10 @@
       },
       "tipo_w1_vgder": "CJP",
       "w_w1_vgder": {
-        "value": 9.525,
+        "value": 0.0,
         "unit": "mm"
       },
-      "nl_w1_vgder": 2,
+      "nl_w1_vgder": 1,
       "L_gap_w1_vgder": {
         "value": 25.0,
         "unit": "mm"
@@ -88,10 +89,10 @@
       },
       "tipo_w2_vgder": "CJP",
       "w_w2_vgder": {
-        "value": 9.525,
+        "value": 0.0,
         "unit": "mm"
       },
-      "nl_w2_vgder": 2,
+      "nl_w2_vgder": 1,
       "L_gap_w2_vgder": {
         "value": 25.0,
         "unit": "mm"

@@ -2,7 +2,6 @@
   "viga": {
     "perfil_vgder": "W18X76",
     "tipo_acero_perfil_vgder": "ASTM A572 Gr 50",
-    "demanda_ductilidad_vgder": "high",
     "E_vgder": {
       "value": 199947.965,
       "unit": "MPa"

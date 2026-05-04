@@ -141,6 +141,12 @@ class AISC358MomentGeometry(StrictModel):
     pfo_vgizq: Quantity | None = None
     pfi_vgder: Quantity | None = None
     pfi_vgizq: Quantity | None = None
+    cond_pe_vgder: str | None = None
+    cond_pe_vgizq: str | None = None
+    cond_amb_pe_vgder: str | None = None
+    cond_amb_pe_vgizq: str | None = None
+    cond_col: str | None = None
+    cond_amb_col: str | None = None
     bolt_gage_vgder: Quantity | None = None
     bolt_gage_vgizq: Quantity | None = None
     stiffener_thickness_vgder: Quantity | None = None
@@ -171,12 +177,31 @@ class AISC358MomentGeometry(StrictModel):
     nl_w6_col: int | None = None
     L_gap_w6_col: Quantity | None = None
     kds_w6_col: float | None = None
+    use_weld_7_col: bool | None = None
+    tipo_w8_col: str | None = None
+    t_w8_col: Quantity | None = None
+    w_w8_col: Quantity | None = None
+    nl_w8_col: int | None = None
+    L_gap_w8_col: Quantity | None = None
+    kds_w8_col: float | None = None
+    tipo_w9_col: str | None = None
+    use_weld_9_col: bool | None = None
+    t_w9_col: Quantity | None = None
+    w_w9_col: Quantity | None = None
+    nl_w9_col: int | None = None
+    L_gap_w9_col: Quantity | None = None
+    kds_w9_col: float | None = None
     doubler_plate_thickness: Quantity | None = None
     doubler_plate_count: int | None = None
+    gap_dp_col: Quantity | None = None
+    extended_dp_col: bool | None = None
     doubler_plate_enabled: bool | None = None
     doubler_plate_web_plug_weld_type: str | None = None
     doubler_plate_web_plug_weld_size: Quantity | None = None
     w_w7_col: Quantity | None = None
+    d_hole_w7_col: Quantity | None = None
+    nfilas_w7_col: int | None = None
+    ncolumna_w7_col: int | None = None
     doubler_plate_web_plug_weld_lines_nl: int | None = None
     bolt_diameter: Quantity | None = None
     bolt_diameter_vgder: Quantity | None = None
@@ -264,6 +289,40 @@ class AISC358MomentGeometry(StrictModel):
             "'isolated' or 'not_isolated' (also accepts 'aislada'/'no_aislada')."
         )
 
+    @field_validator(
+        "cond_pe_vgder",
+        "cond_pe_vgizq",
+        "cond_col",
+    )
+    @classmethod
+    def normalize_surface_condition_fields(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        normalized = value.strip().lower().replace("-", "_").replace(" ", "_")
+        if normalized in {"painted", "pintada"}:
+            return "painted"
+        if normalized in {"unpainted", "not_painted", "no_pintada", "sin_pintura"}:
+            return "unpainted"
+        raise ValueError("Surface condition must be 'painted'/'pintada' or 'unpainted'/'no pintada'.")
+
+    @field_validator(
+        "cond_amb_pe_vgder",
+        "cond_amb_pe_vgizq",
+        "cond_amb_col",
+    )
+    @classmethod
+    def normalize_atmospheric_condition_fields(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        normalized = value.strip().lower().replace("-", "_").replace(" ", "_")
+        if normalized in {"corrosive", "corrosiva"}:
+            return "corrosive"
+        if normalized in {"non_corrosive", "not_corrosive", "no_corrosiva"}:
+            return "non_corrosive"
+        raise ValueError(
+            "Atmospheric condition must be 'corrosive'/'corrosiva' or 'non_corrosive'/'no corrosiva'."
+        )
+
     @field_validator("panel_zone_equation_package")
     @classmethod
     def validate_panel_zone_equation_package(cls, value: str | None) -> str | None:
@@ -295,6 +354,8 @@ class AISC358MomentGeometry(StrictModel):
         "tipo_w4_vgder",
         "tipo_w4_vgizq",
         "doubler_plate_web_plug_weld_type",
+        "tipo_w8_col",
+        "tipo_w9_col",
     )
     @classmethod
     def normalize_weld_type_fields(cls, value: str | None) -> str | None:
@@ -321,6 +382,15 @@ class AISC358MomentGeometry(StrictModel):
             return None
         if value <= 0:
             raise ValueError("geometry.doubler_plate_web_plug_weld_lines_nl must be >= 1.")
+        return value
+
+    @field_validator("nfilas_w7_col", "ncolumna_w7_col")
+    @classmethod
+    def validate_w7_grid_counts(cls, value: int | None) -> int | None:
+        if value is None:
+            return None
+        if value <= 0:
+            raise ValueError("geometry.nfilas_w7_col / geometry.ncolumna_w7_col must be >= 1.")
         return value
 
     @field_validator("doubler_plate_count")
@@ -357,6 +427,24 @@ class AISC358MomentGeometry(StrictModel):
             return None
         if value <= 0:
             raise ValueError("geometry.nl_w6_col must be >= 1.")
+        return value
+
+    @field_validator("nl_w8_col")
+    @classmethod
+    def validate_continuity_plate_extra_weld_lines(cls, value: int | None) -> int | None:
+        if value is None:
+            return None
+        if value <= 0:
+            raise ValueError("geometry.nl_w8_col must be >= 1.")
+        return value
+
+    @field_validator("nl_w9_col")
+    @classmethod
+    def validate_continuity_plate_extra_weld_lines_9(cls, value: int | None) -> int | None:
+        if value is None:
+            return None
+        if value <= 0:
+            raise ValueError("geometry.nl_w9_col must be >= 1.")
         return value
 
     @field_validator("end_plate_beam_web_weld_lines_nl_vgder", "end_plate_beam_web_weld_lines_nl_vgizq")
@@ -423,6 +511,7 @@ class AISC358MomentGeometry(StrictModel):
         "kds_w4_vgder",
         "kds_w4_vgizq",
         "kds_w5_col",
+        "kds_w9_col",
     )
     @classmethod
     def validate_kds_positive(cls, value: float | None) -> float | None:
@@ -705,6 +794,7 @@ class AISC358MomentCase(CaseBase):
             "continuity_plate_thickness",
             "continuity_plate_width_b1",
             "doubler_plate_thickness",
+            "gap_dp_col",
             "bolt_diameter",
             "bolt_diameter_vgder",
             "bolt_diameter_vgizq",
@@ -745,7 +835,14 @@ class AISC358MomentCase(CaseBase):
             "L_gap_w5_col",
             "t_w6_col",
             "w_w6_col",
+            "t_w8_col",
+            "w_w8_col",
+            "L_gap_w8_col",
+            "t_w9_col",
+            "w_w9_col",
+            "L_gap_w9_col",
             "w_w7_col",
+            "d_hole_w7_col",
             "doubler_plate_web_plug_weld_size",
         ):
             value = getattr(self.geometry, field_name)
@@ -865,6 +962,8 @@ class BeamBeamMomentBoltedSections(StrictModel):
 
 class BeamBeamMomentBoltedMaterials(StrictModel):
     steel_vg: str
+    steel_plt_web: str | None = None
+    steel_plt_flange: str | None = None
     Fy_vg: Quantity | None = None
     Fu_vg: Quantity | None = None
     E_vg: Quantity | None = None
@@ -893,6 +992,16 @@ class BeamBeamMomentBoltedMaterials(StrictModel):
             raise ValueError("Text material fields cannot be empty.")
         return normalized
 
+    @field_validator("steel_plt_web", "steel_plt_flange")
+    @classmethod
+    def normalize_optional_steel_fields(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        normalized = value.strip()
+        if not normalized:
+            raise ValueError("Optional steel material fields cannot be empty when provided.")
+        return normalized
+
     @field_validator("thread_blt_web", "thread_blt_flange")
     @classmethod
     def validate_bolt_thread_condition(cls, value: str) -> str:
@@ -911,8 +1020,7 @@ class BeamBeamMomentBoltedGeometry(StrictModel):
     type_hole_plt_web: str
     cond_sup_plt_web: str | None = None
     cond_amb_plt_web: str | None = None
-    t_plt_ftop: Quantity
-    t_plt_fbot: Quantity
+    t_plt_flange: Quantity
     type_hole_plt_flange: str
     cond_sup_plt_flange: str | None = None
     cond_amb_plt_flange: str | None = None
@@ -924,7 +1032,6 @@ class BeamBeamMomentBoltedGeometry(StrictModel):
     Le_blt_web_x2: Quantity
     Le_blt_web_y1: Quantity
     Le_blt_web_y2: Quantity
-    Le_blt_web_y3: Quantity | None = None
     type_tight_blt_web: str | None = None
     n_blt_flange_x: int
     n_blt_flange_z: int
@@ -947,10 +1054,8 @@ class BeamBeamMomentBoltedGeometry(StrictModel):
     @field_validator("n_blt_flange_z")
     @classmethod
     def validate_flange_rows_per_side(cls, value: int) -> int:
-        if value < 2:
-            raise ValueError("geometry.n_blt_flange_z must be >= 2.")
-        if value % 2 != 0:
-            raise ValueError("geometry.n_blt_flange_z must be an even number (2, 4, 6, ...).")
+        if value < 1:
+            raise ValueError("geometry.n_blt_flange_z must be >= 1.")
         return value
 
     @field_validator(
@@ -1143,15 +1248,13 @@ class BeamBeamMomentBoltedCase(CaseBase):
             "gap_sp",
             "tol_L_vg",
             "t_plt_web",
-            "t_plt_ftop",
-            "t_plt_fbot",
+            "t_plt_flange",
             "g_blt_web",
             "p_blt_web",
             "Le_blt_web_x1",
             "Le_blt_web_x2",
             "Le_blt_web_y1",
             "Le_blt_web_y2",
-            "Le_blt_web_y3",
             "p_blt_flange",
             "g_blt_flange",
             "Le_blt_flange_x1",
@@ -1248,6 +1351,7 @@ def parse_input_case(payload: dict[str, Any]) -> InputCase:
 
 def parse_input_case_file(path: str | Path) -> InputCase:
     input_path = Path(path)
-    with input_path.open("r", encoding="utf-8") as stream:
+    # Use utf-8-sig so payloads saved with UTF-8 BOM are also accepted.
+    with input_path.open("r", encoding="utf-8-sig") as stream:
         payload = json.load(stream)
     return parse_input_case(payload)

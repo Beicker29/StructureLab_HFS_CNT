@@ -176,6 +176,8 @@ def _render_result_label(raw_result: object) -> str:
     value = _format_text(raw_result).strip().upper()
     if value in {"OK", "PASS"}:
         return "🟢 Cumple"
+    if value in {"NOT_APPLICABLE", "NO_APLICA", "NO APLICA", "NA"}:
+        return "🟠 No aplica (cumple)"
     if value in {"NO_OK", "FAIL", "ERROR", "NOT_IMPLEMENTED"}:
         return "🔴 No cumple"
     return _format_text(raw_result)
@@ -185,6 +187,8 @@ def _render_result_plain_es(raw_result: object) -> str:
     value = _format_text(raw_result).strip().upper()
     if value in {"OK", "PASS", "CUMPLE"}:
         return "🟢 Cumple"
+    if value in {"NOT_APPLICABLE", "NO_APLICA", "NO APLICA", "NA"}:
+        return "🟠 No aplica (cumple)"
     if value in {"NO_OK", "FAIL", "ERROR", "NOT_IMPLEMENTED", "NO CUMPLE"}:
         return "🔴 No cumple"
     return _format_text(raw_result)
@@ -1017,6 +1021,25 @@ def _normalize_markdown_spacing(text: str) -> str:
     return "\n".join(lines)
 
 
+def _dedupe_markdown_headings(text: str) -> str:
+    lines = text.splitlines()
+    seen: dict[tuple[int, str], int] = {}
+    deduped: list[str] = []
+    heading_pattern = re.compile(r"^(#{1,6})\s+(.+?)\s*$")
+    for line in lines:
+        match = heading_pattern.match(line)
+        if not match:
+            deduped.append(line)
+            continue
+        hashes, title = match.group(1), match.group(2).strip()
+        key = (len(hashes), title.lower())
+        seen[key] = seen.get(key, 0) + 1
+        if seen[key] > 1:
+            line = f"{hashes} {title} [{seen[key]}]"
+        deduped.append(line)
+    return "\n".join(deduped)
+
+
 def _normalize_memory_spanish_labels(text: str) -> str:
     heading_replacements = {
         "Revision": "Revisión",
@@ -1580,7 +1603,8 @@ def _render_step_6_bolts(step_6_1: dict | None, step_6_2: dict | None) -> str:
                 f"- Vh_vgizq_critico: `{_format_quantity(inputs.get('vh_vgizq_critico'))}`",
                 f"- n_b_vgizq: `{_format_text(inputs.get('n_b_vgizq'))}`",
                 f"- A_b_vgizq: `{_format_quantity(inter.get('a_b_vgizq'))}`",
-                f"- Fnt_b_vgizq: `{_format_quantity(inputs.get('fnt_b_vgizq'))}`",
+                f"- Fnv_b_vgizq: `{_format_quantity(inputs.get('fnv_b_vgizq'))}`",
+                f"- thread_b_vgizq: `{_format_text(inputs.get('thread_b_vgizq'))}`",
                 f"- Ru_b_v2_vgizq: `{_format_quantity(step_6_2.get('demand'))}`",
                 f"- phi*Rn_b_v2_vgizq: `{_format_quantity(step_6_2.get('capacity'))}`",
                 f"- DCR_b_v2_vgizq: `{_format_text(step_6_2.get('dcr'))}`",
@@ -2476,7 +2500,7 @@ def _render_splice_step_1_notes(notes: list[dict], *, allowed_scopes: set[str] |
         if note_id == "bbmb_splice.step1.geometry_note":
             lines.extend(
                 [
-                    "### Nota tecnica - Geometria",
+                    "### 1.1.1 Resumen de geometria",
                     "",
                     "- Ambito: `VIGA`",
                     f"- Clausula: `{_render_clause_text(item.get('clause'), item.get('source_document'), item.get('rule_id'))}`",
@@ -2489,8 +2513,6 @@ def _render_splice_step_1_notes(notes: list[dict], *, allowed_scopes: set[str] |
                     f"- Distancia de borde ajustada ({_format_text(item.get('le1x1_prime_var'))}): `{_format_quantity(item.get('le1x1_prime'))}`",
                     f"- Altura de viga ({_format_text(item.get('dvg_var'))}): `{_format_quantity(item.get('dvg'))}`",
                     f"- Distancia vertical entre cara exterior de aleta inferior y fila inferior de pernos ({_format_text(item.get('le1y3_var'))}): `{_format_quantity(item.get('le1y3'))}`",
-                    f"- Formula: `{_format_text(item.get('le1y4_formula'))}`",
-                    f"- Distancia complementaria vertical ({_format_text(item.get('le1y4_var'))}): `{_format_quantity(item.get('le1y4'))}`",
                     f"- Diametro de perforacion para pernos 1 (dh.1): `{_format_quantity(item.get('dh_1'))}`",
                     f"- Diametro de perforacion para pernos 2 (dh.2): `{_format_quantity(item.get('dh_2'))}`",
                     f"- Formula Area neta de cortante 1: `{_format_text(item.get('anv1_formula'))}`",
@@ -2608,11 +2630,14 @@ def _render_splice_step_1_notes(notes: list[dict], *, allowed_scopes: set[str] |
     return "\n".join(lines)
 
 
-def _render_splice_step_2_method_block(step2: dict | None) -> str:
+def _render_splice_step_2_method_block(step2: dict | None, *, chapter_number: int | None = None) -> str:
+    heading = "### Punto 2 - Metodo ICR/Elastic"
+    if chapter_number is not None:
+        heading = f"### {chapter_number}.1 Metodo ICR/Elastic"
     if not isinstance(step2, dict):
         return "\n".join(
             [
-                "### Punto 2 - Metodo ICR/Elastic",
+                heading,
                 "",
                 "Sin resultados de metodo ICR/Elastic para este caso.",
                 "",
@@ -2637,14 +2662,16 @@ def _render_splice_step_2_method_block(step2: dict | None) -> str:
     final_residual = _format_text(report.get("final_residual"))
     n_iterations = _format_text(report.get("n_iterations"))
     lines = [
-        "### Punto 2 - Metodo ICR/Elastic",
+        heading,
         "",
         f"- Metodo seleccionado: `{method}`",
         f"- Pu_sp: `{px}`",
         f"- Vu2_sp: `{py}`",
+        "- Formula ex_blt_web: `ex_blt_web = gap_sp + 2*Le_blt_web_x1 + (n_blt_web_x - 1)*g_blt_web`",
         f"- ex_blt_web: `{ex}`",
         f"- ey_blt_web: `{ey}`",
         f"- Fuente excentricidad: `{e_source}`",
+        "- Formula Muz_blt_web: `Muz_blt_web = Vu2_sp*ex_blt_web - Pu_sp*ey_blt_web`",
         f"- Muz_blt_web: `{mz}`",
         f"- Demanda (metodo activo): `{demand}`",
         f"- Capacidad (metodo activo): `{capacity}`",
@@ -2674,52 +2701,613 @@ def _render_fully_restrained_splice_outline(rows_viga: list[dict], notes_viga: l
         target = scope.upper()
         return [item for item in rows_viga if str(item.get("scope", "")).upper() == target]
 
-    def _render_scope_block(*, title: str, scope: str) -> list[str]:
-        section_lines: list[str] = [
-            title,
-            "",
-            "### Punto 1 - Revision geometrica de detalle (detailing checks)",
-            "",
-        ]
-        scoped_rows = _rows_for_scope(scope)
-        if scoped_rows:
-            section_lines.append(_render_step_1_list(scoped_rows))
-        else:
-            section_lines.append("No hay chequeos de detailing en punto 1 para este ambito.")
+    scope_template = ["VIGA", "PLATINA_1", "PERNOS_1", "PLATINA_2", "PERNOS_2"]
+    notes_by_id_scope: dict[tuple[str, str], dict] = {}
+    for note in notes_viga:
+        nid = _format_text(note.get("id")).strip()
+        nscope = _format_text(note.get("scope")).upper().strip()
+        if nid and nscope:
+            notes_by_id_scope[(nid, nscope)] = note
 
-        scoped_notes = _render_splice_step_1_notes(notes_viga, allowed_scopes={scope.upper()})
-        if scoped_notes:
-            section_lines.append(scoped_notes)
-        else:
-            section_lines.extend(["", "Sin notas tecnicas en punto 1."])
-        section_lines.append("")
-        return section_lines
-
-    lines = [
-        "## Revision conexion: Viga",
+    lines: list[str] = [
+        "## Paso 1 - Propiedades geometricas, mecanicas y fabricacion",
         "",
-        "### Punto 1 - Revision geometrica de detalle (detailing checks)",
+        "Propiedades organizadas por ambito.",
         "",
     ]
-    rows_viga_scope = _rows_for_scope("VIGA")
-    if rows_viga_scope:
-        lines.append(_render_step_1_list(rows_viga_scope))
-    else:
-        lines.append("No hay chequeos de detailing en punto 1 para este ambito.")
-    rendered_notes = _render_splice_step_1_notes(notes_viga, allowed_scopes={"VIGA"})
-    if rendered_notes:
-        lines.append(rendered_notes)
+    for section_offset, scope in enumerate(scope_template, start=1):
+        lines.append(f"### 1.{section_offset} Ambito `{scope}`")
+        lines.append("")
+        if scope == "VIGA":
+            note = notes_by_id_scope.get(("bbmb_splice.step1.geometry_note", "VIGA"), {})
+            if note:
+                lines.extend(
+                    [
+                        f"#### 1.{section_offset}.1 Resumen de geometria",
+                        "",
+                        f"- Perfil de viga ({_format_text(note.get('shape_vg_var'))}) (inp): `{_format_text(note.get('shape_vg'))}`",
+                        f"- Tipo de acero de viga ({_format_text(note.get('steel_vg_var'))}) (inp): `{_format_text(note.get('steel_vg'))}`",
+                        f"- Condicion superficial del ala ({_format_text(note.get('cond_sup_vg_var'))}) (inp): `{_format_text(note.get('cond_sup_vg'))}`",
+                        f"- Condicion ambiental ala ({_format_text(note.get('cond_amb_vg_var'))}) (inp): `{_format_text(note.get('cond_amb_vg'))}`",
+                        f"- Fluencia de viga ({_format_text(note.get('fy_vg_var'))}): `{_format_quantity(note.get('fy_vg'))}`",
+                        f"- Resistencia ultima de viga ({_format_text(note.get('fu_vg_var'))}): `{_format_quantity(note.get('fu_vg'))}`",
+                        f"- Modulo elastico de viga ({_format_text(note.get('e_vg_var'))}): `{_format_quantity(note.get('e_vg'))}`",
+                        f"- Altura total de la seccion ({_format_text(note.get('d_vg_var'))}): `{_format_quantity(note.get('d_vg'))}`",
+                        f"- Altura libre del alma ({_format_text(note.get('t_vg_var'))}): `{_format_quantity(note.get('t_vg'))}`",
+                        f"- Ancho del ala ({_format_text(note.get('bf_vg_var'))}): `{_format_quantity(note.get('bf_vg'))}`",
+                        f"- Ancho del ala para detallado ({_format_text(note.get('bfdet_vg_var'))}): `{_format_quantity(note.get('bfdet_vg'))}`",
+                        f"- Espesor del alma ({_format_text(note.get('tw_vg_var'))}): `{_format_quantity(note.get('tw_vg'))}`",
+                        f"- Espesor del alma para detallado ({_format_text(note.get('twdet_vg_var'))}): `{_format_quantity(note.get('twdet_vg'))}`",
+                        f"- Espesor del ala ({_format_text(note.get('tf_vg_var'))}): `{_format_quantity(note.get('tf_vg'))}`",
+                        f"- Espesor del ala para detallado ({_format_text(note.get('tfdet_vg_var'))}): `{_format_quantity(note.get('tfdet_vg'))}`",
+                        f"- Distancia k de diseno ({_format_text(note.get('kdes_vg_var'))}): `{_format_quantity(note.get('kdes_vg'))}`",
+                        f"- Distancia k detallada ({_format_text(note.get('kdet_vg_var'))}): `{_format_quantity(note.get('kdet_vg'))}`",
+                        f"- Distancia desde el eje del alma al inicio del radio interno de al viga ({_format_text(note.get('k1_vg_var'))}): `{_format_quantity(note.get('k1_vg'))}`",
+                        "",
+                        f"#### 1.{section_offset}.2 Resumen de geometria del alma",
+                        "",
+                        f"- Separacion entre vigas (gap_sp) (inp): `{_format_quantity(note.get('alpha'))}`",
+                        f"- Tolerancia de fabricacion en longitud de viga ({_format_text(note.get('beam_length_tolerance_var'))}) (inp): `{_format_quantity(note.get('beam_length_tolerance'))}`",
+                        f"- Referencia tolerancia: `{_format_text(note.get('beam_length_tolerance_ref'))}`",
+                        f"- Numero de pernos en direccion X del alma ({_format_text(note.get('n1x_var'))}) (inp): `{_format_text(note.get('n1x'))}`",
+                        f"- Separacion horizontal entre columnas de pernos del alma ({_format_text(note.get('s1x_var'))}) (inp): `{_format_quantity(note.get('s1x'))}`",
+                        f"- Distancia de borde en direccion X del grupo de pernos del alma ({_format_text(note.get('le1x1_var'))}) (inp): `{_format_quantity(note.get('le1x1'))}`",
+                        f"- Distancia de borde ajustada ({_format_text(note.get('le1x1_prime_var'))}): `{_format_quantity(note.get('le1x1_prime'))}`",
+                        f"- Numero de pernos en direccion Y del alma ({_format_text(note.get('n1y_var'))}) (inp): `{_format_text(note.get('n1y'))}`",
+                        f"- Separacion vertical entre filas de pernos del alma ({_format_text(note.get('s1y_var'))}) (inp): `{_format_quantity(note.get('s1y'))}`",
+                        f"- Tipo de perforacion por pernos grupo 1 alma ({_format_text(note.get('type_hole_web_var'))}) (inp): `{_format_text(note.get('type_hole_web'))}`",
+                        f"- Distancia vertical entre cara exterior de aleta inferior y fila inferior de pernos ({_format_text(note.get('le1y3_var'))}): `{_format_quantity(note.get('le1y3'))}`",
+                        f"- Distancia neta respecto a kdet en alma ({_format_text(note.get('le1y3_1_var'))}): `{_format_quantity(note.get('le1y3_1'))}`",
+                        f"- Diametro de perforacion para pernos 1 (dh.1): `{_format_quantity(note.get('dh_1'))}`",
+                        "",
+                        f"#### 1.{section_offset}.3 Resumen de geometria de la aleta",
+                        "",
+                        f"- Numero de pernos en direccion X del ala ({_format_text(note.get('n2x_var'))}) (inp): `{_format_text(note.get('n2x'))}`",
+                        f"- Separacion entre filas de pernos del ala ({_format_text(note.get('s2x_var'))}) (inp): `{_format_quantity(note.get('s2x'))}`",
+                        f"- Distancia de borde en direccion X del grupo de pernos del ala ({_format_text(note.get('le2x1_var'))}) (inp): `{_format_quantity(note.get('le2x1'))}`",
+                        f"- Numero de pernos en na mitad de aleta en direccion Z de la aleta ({_format_text(note.get('n2z_var'))}) (inp): `{_format_text(note.get('n2z'))}`",
+                        f"- Distancia de borde en direccion Z del grupo de pernos del ala ({_format_text(note.get('le2z3_var'))}) (inp): `{_format_quantity(note.get('le2z3'))}`",
+                        f"- Distancia complementaria de borde en aleta ({_format_text(note.get('le2z4_var'))}): `{_format_quantity(note.get('le2z4'))}`",
+                        f"- Gage entre columnas de pernos del ala ({_format_text(note.get('s2z1_var'))}) (inp): `{_format_quantity(note.get('s2z1'))}`",
+                        f"- Tipo de perforacion por pernos grupo 2 ala ({_format_text(note.get('type_hole_flange_var'))}) (inp): `{_format_text(note.get('type_hole_flange'))}`",
+                        f"- Distancia util entre filas internas de pernos de aleta ({_format_text(note.get('g1_blt_flange_var'))}): `{_format_quantity(note.get('g1_blt_flange'))}`",
+                        f"- Diametro de perforacion para pernos 2 (dh.2): `{_format_quantity(note.get('dh_2'))}`",
+                        "",
+                        f"#### 1.{section_offset}.4 Formulas de calculo",
+                        "",
+                        f"- Formula ajuste distancia de borde: `{_format_text(note.get('le1x1_prime_formula'))}`",
+                        "- Formula distancia vertical borde ala/pernos alma: `Le_blt_web_y3 = 0.5*(d_vg - (n_blt_web_y - 1)*p_blt_web)`",
+                        f"- Formula distancia neta respecto a kdet en alma: `{_format_text(note.get('le1y3_1_formula'))}`",
+                        f"- Formula distancia util entre filas internas de pernos de aleta: `{_format_text(note.get('g1_blt_flange_formula'))}`",
+                        f"- Formula distancia complementaria de borde en aleta: `{_format_text(note.get('le2z4_formula'))}`",
+                        "",
+                    ]
+                )
+            else:
+                lines.append("Sin notas tecnicas disponibles para este ambito.")
+                lines.append("")
+            continue
+        if scope == "PLATINA_1":
+            note_geom = notes_by_id_scope.get(("bbmb_splice.step1.geometry_formulas_plt1_note", "PLATINA_1"), {})
+            note_hole = notes_by_id_scope.get(("bbmb_splice.step1.plate_1_hole_diameter_note", "PLATINA_1"), {})
+            if note_geom or note_hole:
+                lines.extend(
+                    [
+                        f"#### 1.{section_offset}.1 Resumen de geometria",
+                        "",
+                        f"- Tipo de acero de platina de alma ({_format_text(note_geom.get('steel_plt_web_var'))}) (inp): `{_format_text(note_geom.get('steel_plt_web'))}`",
+                        f"- Fluencia de platina de alma ({_format_text(note_geom.get('fy_plt_web_var'))}): `{_format_quantity(note_geom.get('fy_plt_web'))}`",
+                        f"- Resistencia ultima de platina de alma ({_format_text(note_geom.get('fu_plt_web_var'))}): `{_format_quantity(note_geom.get('fu_plt_web'))}`",
+                        f"- Modulo elastico de platina de alma ({_format_text(note_geom.get('e_plt_web_var'))}): `{_format_quantity(note_geom.get('e_plt_web'))}`",
+                        f"- Tipo de perforacion por pernos grupo 1 alma ({_format_text(note_geom.get('type_hole_plt_web_var'))}) (inp): `{_format_text(note_geom.get('type_hole_plt_web'))}`",
+                        f"- Condicion superficial platina alma ({_format_text(note_geom.get('cond_sup_plt_web_var'))}) (inp): `{_format_text(note_geom.get('cond_sup_plt_web'))}`",
+                        f"- Condicion ambiental platina alma ({_format_text(note_geom.get('cond_amb_plt_web_var'))}) (inp): `{_format_text(note_geom.get('cond_amb_plt_web'))}`",
+                        f"- Espesor de platina de alma ({_format_text(note_geom.get('t_plt_web_var'))}) (inp): `{_format_quantity(note_geom.get('t_plt_web'))}`",
+                        f"- Numero de pernos en direccion X del alma ({_format_text('n_plt_web_x')}) (inp): `{_format_text(note_geom.get('n_blt_web_x'))}`",
+                        f"- Separacion horizontal entre columnas de pernos del alma ({_format_text('g_plt_web')}) (inp): `{_format_quantity(note_geom.get('g_blt_web'))}`",
+                        f"- Distancia al borde en direccion X de platina de alma ({_format_text('Le_plt_web_x2')}) (inp): `{_format_quantity(note_geom.get('le_blt_web_x2'))}`",
+                        f"- Numero de pernos en direccion Y del alma ({_format_text('n_plt_web_y')}) (inp): `{_format_text(note_geom.get('n_blt_web_y'))}`",
+                        f"- Separacion vertical entre filas de pernos del alma ({_format_text('p_plt_web')}) (inp): `{_format_quantity(note_geom.get('p_blt_web'))}`",
+                        f"- Distancia al borde inferior de platina de alma ({_format_text('Le_plt_web_y1')}) (inp): `{_format_quantity(note_geom.get('le_blt_web_y1'))}`",
+                        f"- Distancia al borde superior de platina de alma ({_format_text('Le_plt_web_y2')}) (inp): `{_format_quantity(note_geom.get('le_blt_web_y2'))}`",
+                        f"- Longitud de platina de alma ({_format_text(note_geom.get('l_plt_web_var'))}): `{_format_quantity(note_geom.get('l_plt_web'))}`",
+                        f"- Altura de platina de alma ({_format_text(note_geom.get('h_plt_web_var'))}): `{_format_quantity(note_geom.get('h_plt_web'))}`",
+                        f"- {_format_text(note_hole.get('dh_var'))}: `{_format_quantity(note_hole.get('dh'))}`",
+                        "",
+                        f"#### 1.{section_offset}.2 Formulas de calculo",
+                        "",
+                        "- Formula trazabilidad: `n_plt_web_x = n_blt_web_x`",
+                        "- Formula trazabilidad: `g_plt_web = g_blt_web`",
+                        "- Formula trazabilidad: `n_plt_web_y = n_blt_web_y`",
+                        "- Formula trazabilidad: `p_plt_web = p_blt_web`",
+                        "- Formula trazabilidad: `Le_plt_web_x2 = Le_blt_web_x2`",
+                        "- Formula trazabilidad: `Le_plt_web_y1 = Le_blt_web_y1`",
+                        "- Formula trazabilidad: `Le_plt_web_y2 = Le_blt_web_y2`",
+                        f"- Formula H_plt_web: `{_format_text(note_geom.get('hp1_formula'))}`",
+                        f"- Formula L_plt_web: `{_format_text(note_geom.get('bp1_formula'))}`",
+                        f"- Formula dh_plt_web: `{_format_text(note_hole.get('formula'))}`",
+                        "",
+                    ]
+                )
+            else:
+                lines.append("Sin notas tecnicas disponibles para este ambito.")
+                lines.append("")
+            continue
+        if scope == "PERNOS_1":
+            note = notes_by_id_scope.get(("bbmb_splice.step1.bolt_group_1_properties_note", "PERNOS_1"), {})
+            if note:
+                lines.extend(
+                    [
+                        f"#### 1.{section_offset}.1 Resumen de geometria",
+                        "",
+                        f"- Tipo de acero/perno ({_format_text('shape_blt_web')}) (inp): `{_format_text(note.get('bolt_shape'))}`",
+                        f"- Norma de fabricacion (inp): `{_format_text(note.get('fabrication_standard'))}`",
+                        f"- Clasificacion: `{_format_text(note.get('classification'))}`",
+                        f"- Condicion de rosca (inp): `{_format_text(note.get('thread_condition'))}`",
+                        f"- Tipo de apriete (inp): `{_format_text(note.get('tightening_type'))}`",
+                        f"- Resistencia nominal a traccion ({_format_text(note.get('fnt_var'))}): `{_format_quantity(note.get('fnt'))}`",
+                        f"- Resistencia nominal a cortante ({_format_text(note.get('fnv_var'))}): `{_format_quantity(note.get('fnv'))}`",
+                        f"- Diametro nominal (db_blt_web): `{_format_quantity(note.get('diameter_nominal'))}`",
+                        f"- Longitud de vastago: `{_format_quantity(note.get('length_shank'))}`",
+                        f"- Width across flats: `{_format_quantity(note.get('width_across_flats'))}`",
+                        f"- Diametro de cabeza: `{_format_quantity(note.get('head_diameter'))}`",
+                        f"- Altura de cabeza: `{_format_quantity(note.get('head_height'))}`",
+                        "",
+                    ]
+                )
+            else:
+                lines.append("Sin notas tecnicas disponibles para este ambito.")
+                lines.append("")
+            continue
+        if scope == "PLATINA_2":
+            note_geom = notes_by_id_scope.get(("bbmb_splice.step1.geometry_formulas_plt2_note", "PLATINA_2"), {})
+            note_hole = notes_by_id_scope.get(("bbmb_splice.step1.plate_2_hole_diameter_note", "PLATINA_2"), {})
+            if note_geom or note_hole:
+                lines.extend(
+                    [
+                        f"#### 1.{section_offset}.1 Resumen de geometria",
+                        "",
+                        f"- Tipo de acero de platina de ala ({_format_text(note_geom.get('steel_plt_flange_var'))}) (inp): `{_format_text(note_geom.get('steel_plt_flange'))}`",
+                        f"- Fluencia de platina de ala ({_format_text(note_geom.get('fy_plt_flange_var'))}): `{_format_quantity(note_geom.get('fy_plt_flange'))}`",
+                        f"- Resistencia ultima de platina de ala ({_format_text(note_geom.get('fu_plt_flange_var'))}): `{_format_quantity(note_geom.get('fu_plt_flange'))}`",
+                        f"- Modulo elastico de platina de ala ({_format_text(note_geom.get('e_plt_flange_var'))}): `{_format_quantity(note_geom.get('e_plt_flange'))}`",
+                        f"- Tipo de perforacion por pernos grupo 2 ala ({_format_text(note_geom.get('type_hole_plt_flange_var'))}) (inp): `{_format_text(note_geom.get('type_hole_plt_flange'))}`",
+                        f"- Condicion superficial platina ala ({_format_text(note_geom.get('cond_sup_plt_flange_var'))}) (inp): `{_format_text(note_geom.get('cond_sup_plt_flange'))}`",
+                        f"- Condicion ambiental platina ala ({_format_text(note_geom.get('cond_amb_plt_flange_var'))}) (inp): `{_format_text(note_geom.get('cond_amb_plt_flange'))}`",
+                        f"- Espesor de platina de ala ({_format_text(note_geom.get('t_plt_flange_var'))}) (inp): `{_format_quantity(note_geom.get('t_plt_flange'))}`",
+                        f"- Numero de pernos en direccion X del ala ({_format_text('n_plt_flange_x')}) (inp): `{_format_text(note_geom.get('n_blt_flange_x'))}`",
+                        f"- Separacion entre filas de pernos del ala ({_format_text('p_plt_flange')}) (inp): `{_format_quantity(note_geom.get('p_blt_flange'))}`",
+                        f"- Distancia al borde de la platina de ala en x ({_format_text('Le_plt_flange_x2')}) (inp): `{_format_quantity(note_geom.get('le_blt_flange_x2'))}`",
+                        f"- Numero de pernos en direccion Z del ala ({_format_text('n_plt_flange_z')}) (inp): `{_format_text(note_geom.get('n_blt_flange_z'))}`",
+                        f"- Gage entre columnas de pernos del ala ({_format_text('g_plt_flange')}) (inp): `{_format_quantity(note_geom.get('g_blt_flange'))}`",
+                        f"- Distancia de borde interior 1 en direccion Z del ala ({_format_text('Le_plt_flange_z1')}) (inp): `{_format_quantity(note_geom.get('le_blt_flange_z1'))}`",
+                        f"- Distancia de borde interior 2 en direccion Z del ala ({_format_text('Le_plt_flange_z2')}) (inp): `{_format_quantity(note_geom.get('le_blt_flange_z2'))}`",
+                        f"- Distancia util entre filas internas de pernos de aleta ({_format_text('g1_plt_flange')}): `{_format_quantity(note_geom.get('g1_blt_flange'))}`",
+                        f"- Longitud de platina de ala ({_format_text(note_geom.get('l_plt_flange_var'))}): `{_format_quantity(note_geom.get('l_plt_flange'))}`",
+                        f"- Ancho de platina de ala ({_format_text(note_geom.get('b_plt_flange_var'))}): `{_format_quantity(note_geom.get('b_plt_flange'))}`",
+                        f"- {_format_text(note_hole.get('dh_var'))}: `{_format_quantity(note_hole.get('dh'))}`",
+                        "",
+                        f"#### 1.{section_offset}.2 Formulas de calculo",
+                        "",
+                        "- Formula trazabilidad: `n_plt_flange_x = n_blt_flange_x`",
+                        "- Formula trazabilidad: `p_plt_flange = p_blt_flange`",
+                        "- Formula trazabilidad: `Le_plt_flange_x2 = Le_blt_flange_x2`",
+                        "- Formula trazabilidad: `n_plt_flange_z = n_blt_flange_z`",
+                        "- Formula trazabilidad: `g_plt_flange = g_blt_flange`",
+                        "- Formula trazabilidad: `Le_plt_flange_z1 = Le_blt_flange_z1`",
+                        "- Formula trazabilidad: `Le_plt_flange_z2 = Le_blt_flange_z2`",
+                        "- Formula calculo: `g1_plt_flange = bf_vg - 2*(Le_blt_flange_z3 + (n_blt_flange_z - 1)*g_blt_flange)`",
+                        "- Formula trazabilidad: `g1_plt_flange = g1_blt_flange`",
+                        f"- Formula B_plt_flange: `{_format_text(note_geom.get('bp2_formula'))}`",
+                        f"- Formula L_plt_flange: `{_format_text(note_geom.get('lp2_formula'))}`",
+                        f"- Formula dh_plt_flange: `{_format_text(note_hole.get('formula'))}`",
+                        "",
+                    ]
+                )
+            else:
+                lines.append("Sin notas tecnicas disponibles para este ambito.")
+                lines.append("")
+            continue
+        if scope == "PERNOS_2":
+            note = notes_by_id_scope.get(("bbmb_splice.step1.bolt_group_2_properties_note", "PERNOS_2"), {})
+            if note:
+                lines.extend(
+                    [
+                        f"#### 1.{section_offset}.1 Resumen de geometria",
+                        "",
+                        f"- Tipo de acero/perno ({_format_text('shape_blt_flange')}) (inp): `{_format_text(note.get('bolt_shape'))}`",
+                        f"- Norma de fabricacion (inp): `{_format_text(note.get('fabrication_standard'))}`",
+                        f"- Clasificacion: `{_format_text(note.get('classification'))}`",
+                        f"- Condicion de rosca (inp): `{_format_text(note.get('thread_condition'))}`",
+                        f"- Tipo de apriete (inp): `{_format_text(note.get('tightening_type'))}`",
+                        f"- Resistencia nominal a traccion ({_format_text(note.get('fnt_var'))}): `{_format_quantity(note.get('fnt'))}`",
+                        f"- Resistencia nominal a cortante ({_format_text(note.get('fnv_var'))}): `{_format_quantity(note.get('fnv'))}`",
+                        f"- Diametro nominal (db_blt_flange): `{_format_quantity(note.get('diameter_nominal'))}`",
+                        f"- Longitud de vastago: `{_format_quantity(note.get('length_shank'))}`",
+                        f"- Width across flats: `{_format_quantity(note.get('width_across_flats'))}`",
+                        f"- Diametro de cabeza: `{_format_quantity(note.get('head_diameter'))}`",
+                        f"- Altura de cabeza: `{_format_quantity(note.get('head_height'))}`",
+                        "",
+                    ]
+                )
+            else:
+                lines.append("Sin notas tecnicas disponibles para este ambito.")
+                lines.append("")
+            continue
+        lines.append("Sin notas tecnicas disponibles para este ambito.")
+        lines.append("")
+
+    lines.extend(
+        [
+            "## Paso 2 - Revisiones de requerimientos de propiedades mecanicas y geometricas",
+            "",
+        ]
+    )
+    all_rows = [item for scope in scope_template for item in _rows_for_scope(scope)]
+    g_blt_web_rows = [
+        item
+        for item in all_rows
+        if str(item.get("calculated_symbol", "")).strip() == "g_blt_web"
+        and "direccion X" in _translate_text_es(item.get("description"))
+    ]
+    if not g_blt_web_rows:
+        g_blt_web_rows = [
+            item for item in all_rows if str(item.get("calculated_symbol", "")).strip() == "g_blt_web"
+        ]
+    g_blt_web_rows.sort(key=lambda r: 0 if str(r.get("comparison_text", "")).strip() == ">=" else 1)
+    g_plt_web_rows_for_step2 = [
+        item
+        for item in all_rows
+        if str(item.get("calculated_symbol", "")).strip() == "g_plt_web"
+        and str(item.get("scope", "")).strip().upper() == "PLATINA_1"
+    ]
+    g_plt_web_rows_for_step2.sort(key=lambda r: 0 if str(r.get("comparison_text", "")).strip() == ">=" else 1)
+    if not g_plt_web_rows_for_step2:
+        g_plt_web_rows_for_step2 = []
+        for base_row in g_blt_web_rows[:2]:
+            alias_row = dict(base_row)
+            alias_row["calculated_symbol"] = "g_plt_web"
+            g_plt_web_rows_for_step2.append(alias_row)
+    le_plt_web_x2_rows_for_step2 = [
+        item
+        for item in all_rows
+        if str(item.get("calculated_symbol", "")).strip() == "Le_plt_web_x2"
+        and str(item.get("scope", "")).strip().upper() == "PLATINA_1"
+    ]
+    le_plt_web_x2_rows_for_step2.sort(key=lambda r: 0 if str(r.get("comparison_text", "")).strip() == ">=" else 1)
+    p_plt_web_rows_for_step2 = [
+        item
+        for item in all_rows
+        if str(item.get("calculated_symbol", "")).strip() == "p_plt_web"
+        and str(item.get("scope", "")).strip().upper() == "PLATINA_1"
+    ]
+    p_plt_web_rows_for_step2.sort(key=lambda r: 0 if str(r.get("comparison_text", "")).strip() == ">=" else 1)
+    le_plt_web_y1_rows_for_step2 = [
+        item
+        for item in all_rows
+        if str(item.get("calculated_symbol", "")).strip() == "Le_plt_web_y1"
+        and str(item.get("scope", "")).strip().upper() == "PLATINA_1"
+    ]
+    le_plt_web_y1_rows_for_step2.sort(key=lambda r: 0 if str(r.get("comparison_text", "")).strip() == ">=" else 1)
+    le_plt_web_y2_rows_for_step2 = [
+        item
+        for item in all_rows
+        if str(item.get("calculated_symbol", "")).strip() == "Le_plt_web_y2"
+        and str(item.get("scope", "")).strip().upper() == "PLATINA_1"
+    ]
+    le_plt_web_y2_rows_for_step2.sort(key=lambda r: 0 if str(r.get("comparison_text", "")).strip() == ">=" else 1)
+    p_plt_flange_rows_for_step2 = [
+        item
+        for item in all_rows
+        if str(item.get("calculated_symbol", "")).strip() == "p_plt_flange"
+        and str(item.get("scope", "")).strip().upper() == "PLATINA_2"
+    ]
+    p_plt_flange_rows_for_step2.sort(key=lambda r: 0 if str(r.get("comparison_text", "")).strip() == ">=" else 1)
+    le_plt_flange_x2_rows_for_step2 = [
+        item
+        for item in all_rows
+        if str(item.get("calculated_symbol", "")).strip() == "Le_plt_flange_x2"
+        and str(item.get("scope", "")).strip().upper() == "PLATINA_2"
+    ]
+    le_plt_flange_x2_rows_for_step2.sort(key=lambda r: 0 if str(r.get("comparison_text", "")).strip() == ">=" else 1)
+    g_plt_flange_rows_for_step2 = [
+        item
+        for item in all_rows
+        if str(item.get("calculated_symbol", "")).strip() == "g_plt_flange"
+        and str(item.get("scope", "")).strip().upper() == "PLATINA_2"
+    ]
+    g_plt_flange_rows_for_step2.sort(key=lambda r: 0 if str(r.get("comparison_text", "")).strip() == ">=" else 1)
+    le_plt_flange_z1_rows_for_step2 = [
+        item
+        for item in all_rows
+        if str(item.get("calculated_symbol", "")).strip() == "Le_plt_flange_z1"
+        and str(item.get("scope", "")).strip().upper() == "PLATINA_2"
+    ]
+    le_plt_flange_z1_rows_for_step2.sort(key=lambda r: 0 if str(r.get("comparison_text", "")).strip() == ">=" else 1)
+    le_plt_flange_z2_rows_for_step2 = [
+        item
+        for item in all_rows
+        if str(item.get("calculated_symbol", "")).strip() == "Le_plt_flange_z2"
+        and str(item.get("scope", "")).strip().upper() == "PLATINA_2"
+    ]
+    le_plt_flange_z2_rows_for_step2.sort(key=lambda r: 0 if str(r.get("comparison_text", "")).strip() == ">=" else 1)
+    g1_plt_flange_rows_for_step2 = [
+        item
+        for item in all_rows
+        if str(item.get("calculated_symbol", "")).strip() == "g1_plt_flange"
+        and str(item.get("scope", "")).strip().upper() == "PLATINA_2"
+    ]
+    g1_plt_flange_rows_for_step2.sort(key=lambda r: 0 if str(r.get("comparison_text", "")).strip() == ">=" else 1)
+    le_blt_web_x1_rows = [
+        item for item in all_rows if str(item.get("calculated_symbol", "")).strip() == "Le_blt_web_x1"
+    ]
+    le_blt_web_x1_rows.sort(key=lambda r: 0 if str(r.get("comparison_text", "")).strip() == ">=" else 1)
+    p_blt_web_rows = [
+        item
+        for item in all_rows
+        if str(item.get("calculated_symbol", "")).strip() == "p_blt_web"
+        and "direccion Z" in _translate_text_es(item.get("description"))
+    ]
+    if not p_blt_web_rows:
+        p_blt_web_rows = [
+            item for item in all_rows if str(item.get("calculated_symbol", "")).strip() == "p_blt_web"
+    ]
+    p_blt_web_rows.sort(key=lambda r: 0 if str(r.get("comparison_text", "")).strip() == ">=" else 1)
+    le_blt_web_y31_rows = [
+        item for item in all_rows if str(item.get("calculated_symbol", "")).strip() == "Le_blt_web_y3.1"
+    ]
+    le_blt_web_y31_rows.sort(key=lambda r: 0 if str(r.get("comparison_text", "")).strip() == ">=" else 1)
+    p_blt_flange_rows = [
+        item
+        for item in all_rows
+        if str(item.get("calculated_symbol", "")).strip() == "p_blt_flange"
+        and "direccion X" in _translate_text_es(item.get("description"))
+    ]
+    if not p_blt_flange_rows:
+        p_blt_flange_rows = [
+            item for item in all_rows if str(item.get("calculated_symbol", "")).strip() == "p_blt_flange"
+    ]
+    p_blt_flange_rows.sort(key=lambda r: 0 if str(r.get("comparison_text", "")).strip() == ">=" else 1)
+    le_blt_flange_x1_rows = [
+        item for item in all_rows if str(item.get("calculated_symbol", "")).strip() == "Le_blt_flange_x1"
+    ]
+    le_blt_flange_x1_rows.sort(key=lambda r: 0 if str(r.get("comparison_text", "")).strip() == ">=" else 1)
+    le_blt_flange_z3_rows = [
+        item for item in all_rows if str(item.get("calculated_symbol", "")).strip() == "Le_blt_flange_z3"
+    ]
+    le_blt_flange_z3_rows.sort(key=lambda r: 0 if str(r.get("comparison_text", "")).strip() == ">=" else 1)
+    le_blt_flange_z4_rows = [
+        item for item in all_rows if str(item.get("calculated_symbol", "")).strip() == "Le_blt_flange_z4"
+    ]
+    le_blt_flange_z4_rows.sort(key=lambda r: 0 if str(r.get("comparison_text", "")).strip() == ">=" else 1)
+    g_blt_flange_rows = [
+        item
+        for item in all_rows
+        if str(item.get("calculated_symbol", "")).strip() == "g_blt_flange"
+        and "direccion Z" in _translate_text_es(item.get("description"))
+    ]
+    if not g_blt_flange_rows:
+        g_blt_flange_rows = [
+            item for item in all_rows if str(item.get("calculated_symbol", "")).strip() == "g_blt_flange"
+    ]
+    g_blt_flange_rows.sort(key=lambda r: 0 if str(r.get("comparison_text", "")).strip() == ">=" else 1)
+    g1_blt_flange_rows = [
+        item for item in all_rows if str(item.get("calculated_symbol", "")).strip() == "g1_blt_flange"
+    ]
+    g1_blt_flange_rows.sort(key=lambda r: 0 if str(r.get("comparison_text", "")).strip() == ">=" else 1)
+    tight_allowed = ["pretensioned", "snug_tight"]
+    std_allowed = [
+        "ASTM F3125/F3125M",
+        "ASTM A325",
+        "ASTM A325M",
+        "ASTM A490",
+        "ASTM A490M",
+        "ASTM F1852",
+        "ASTM F2280",
+    ]
+    pernos1_note = notes_by_id_scope.get(("bbmb_splice.step1.bolt_group_1_properties_note", "PERNOS_1"), {})
+    pernos2_note = notes_by_id_scope.get(("bbmb_splice.step1.bolt_group_2_properties_note", "PERNOS_2"), {})
+    tight_1 = _format_text(pernos1_note.get("tightening_type"))
+    std_1 = _format_text(pernos1_note.get("fabrication_standard"))
+    tight_2 = _format_text(pernos2_note.get("tightening_type"))
+    std_2 = _format_text(pernos2_note.get("fabrication_standard"))
+    pernos1_step2_rows = [
+        {
+            "description": "Tipo de apriete permitido para pernos grupo 1",
+            "calculated_symbol": "tight_bolt_vgder",
+            "comparison": "in_set",
+            "calculated_text": tight_1,
+            "allowed_values": tight_allowed,
+            "clause": "Criterio de proyecto splice",
+            "result": "PASS" if tight_1 in tight_allowed else "FAIL",
+        },
+        {
+            "description": "Norma de fabricacion permitida para pernos grupo 1",
+            "calculated_symbol": "std_bolt_vgder",
+            "comparison": "in_set",
+            "calculated_text": std_1,
+            "allowed_values": std_allowed,
+            "clause": "Criterio de proyecto splice",
+            "result": "PASS" if std_1 in std_allowed else "FAIL",
+        },
+    ]
+    pernos2_step2_rows = [
+        {
+            "description": "Tipo de apriete permitido para pernos grupo 2",
+            "calculated_symbol": "tight_bolt_vgder",
+            "comparison": "in_set",
+            "calculated_text": tight_2,
+            "allowed_values": tight_allowed,
+            "clause": "Criterio de proyecto splice",
+            "result": "PASS" if tight_2 in tight_allowed else "FAIL",
+        },
+        {
+            "description": "Norma de fabricacion permitida para pernos grupo 2",
+            "calculated_symbol": "std_bolt_vgder",
+            "comparison": "in_set",
+            "calculated_text": std_2,
+            "allowed_values": std_allowed,
+            "clause": "Criterio de proyecto splice",
+            "result": "PASS" if std_2 in std_allowed else "FAIL",
+        },
+    ]
+    viga_rows_for_step2 = (
+        g_blt_web_rows[:2]
+        + le_blt_web_x1_rows[:2]
+        + p_blt_web_rows[:2]
+        + le_blt_web_y31_rows[:2]
+        + p_blt_flange_rows[:2]
+        + le_blt_flange_x1_rows[:2]
+        + le_blt_flange_z3_rows[:2]
+        + le_blt_flange_z4_rows[:2]
+        + g_blt_flange_rows[:2]
+        + g1_blt_flange_rows[:2]
+    )
+
+    def _render_simple_check(
+        *,
+        chapter: int,
+        section: int,
+        idx: int,
+        scope_label: str,
+        item: dict,
+    ) -> None:
+        comparison_mode = str(item.get("comparison", "")).strip()
+        description = _translate_text_es(item.get("description"))
+        calculated_symbol = str(item.get("calculated_symbol", "calc"))
+        limit_symbol = str(item.get("limit_symbol", "lim"))
+        comparison = str(item.get("comparison_text", "vs"))
+        calculated = _format_quantity(item.get("calculated"))
+        limit = _format_quantity(item.get("limit"))
+        raw_result_value = str(item.get("result", item.get("status", "UNKNOWN"))).strip().upper()
+        clause = _render_clause_text(
+            item.get("clause"),
+            item.get("source_document"),
+            item.get("rule_id"),
+        )
+        if comparison_mode == "in_set":
+            calculated_text = _format_text(item.get("calculated_text"))
+            allowed_values = item.get("allowed_values")
+            allowed = ", ".join(str(v) for v in allowed_values) if isinstance(allowed_values, list) else limit_symbol
+            verification = f"{calculated_symbol} in {{{allowed}}}; '{calculated_text}' in {{{allowed}}}"
+        else:
+            limit_symbol_text = limit_symbol
+            if (
+                calculated_symbol == "Le_blt_web_x1"
+                and comparison == ">="
+                and str(limit_symbol).strip().lower().startswith("max(le_min")
+            ):
+                limit_symbol_text = "Le_min"
+            if raw_result_value in {"NOT_APPLICABLE", "NO_APLICA", "NO APLICA", "NA"}:
+                applicability = _format_text(item.get("applicability"))
+                if applicability != "n/a":
+                    verification = applicability
+                else:
+                    verification = f"{calculated_symbol} {comparison} {limit_symbol_text}; {calculated} {comparison} {limit}"
+            else:
+                verification = f"{calculated_symbol} {comparison} {limit_symbol_text}; {calculated} {comparison} {limit}"
+        result_text = _render_result_label(item.get("result", item.get("status", "UNKNOWN")))
+        lines.append(f"#### Chequeo {chapter}.{section}.{idx} - {description} (`{calculated_symbol}`)")
+        lines.append("")
+        lines.append(f"- Ambito: `{scope_label}`")
+        lines.append(f"- Verificacion: `{verification}`")
+        lines.append(f"- Clausula: `{clause}`")
+        lines.append(f"- Resultado: {result_text}")
+        lines.append("")
+
+    scope_summary: list[dict[str, Any]] = []
+    for section_offset, scope in enumerate(scope_template, start=1):
+        lines.append(f"### 2.{section_offset} Ámbito `{scope}`")
+        lines.append("")
+        if section_offset == 1:
+            items_for_scope: list[dict] = viga_rows_for_step2
+        elif section_offset == 2:
+            items_for_scope = (
+                g_plt_web_rows_for_step2
+                + le_plt_web_x2_rows_for_step2
+                + p_plt_web_rows_for_step2
+                + le_plt_web_y1_rows_for_step2
+                + le_plt_web_y2_rows_for_step2
+            )
+        elif section_offset == 3:
+            items_for_scope = pernos1_step2_rows
+        elif section_offset == 4:
+            items_for_scope = (
+                p_plt_flange_rows_for_step2
+                + le_plt_flange_x2_rows_for_step2
+                + g_plt_flange_rows_for_step2
+                + le_plt_flange_z1_rows_for_step2
+                + le_plt_flange_z2_rows_for_step2
+                + g1_plt_flange_rows_for_step2
+            )
+        elif section_offset == 5:
+            items_for_scope = pernos2_step2_rows
+        else:
+            items_for_scope = []
+        local_idx = 1
+        total_checks = 0
+        pass_checks = 0
+        fail_numerals: list[str] = []
+        for item in items_for_scope:
+            _render_simple_check(
+                chapter=2,
+                section=section_offset,
+                idx=local_idx,
+                scope_label=scope,
+                item=item,
+            )
+            total_checks += 1
+            status_raw = str(item.get("status", item.get("result", ""))).strip().upper()
+            if status_raw in {"PASS", "OK", "NOT_APPLICABLE", "NO_APLICA", "NO APLICA", "NA"}:
+                pass_checks += 1
+            else:
+                fail_numerals.append(f"2.{section_offset}.{local_idx}")
+            local_idx += 1
+        scope_summary.append(
+            {
+                "scope": scope,
+                "section_offset": section_offset,
+                "total": total_checks,
+                "pass": pass_checks,
+                "fail": total_checks - pass_checks,
+                "fail_numerals": fail_numerals,
+            }
+        )
+
+    lines.append(f"### 2.{len(scope_template)+1} Resumen de chequeos por ámbito")
     lines.append("")
-    lines.extend(_render_scope_block(title="## Revision conexion: Platina 1", scope="PLATINA_1"))
-    lines.extend(_render_scope_block(title="## Revision conexion: Pernos 1", scope="PERNOS_1"))
-    lines.append(_render_splice_step_2_method_block(step2_pernos1))
-    lines.extend(_render_scope_block(title="## Revision conexion: Platina 2", scope="PLATINA_2"))
-    lines.extend(_render_scope_block(title="## Revision conexion: Pernos 2", scope="PERNOS_2"))
+    for summary in scope_summary:
+        fail_numerals = summary["fail_numerals"]
+        fail_text = ", ".join(fail_numerals) if fail_numerals else "ninguno"
+        status_dot = "🟢" if summary["fail"] == 0 else "🔴"
+        lines.append(
+            f"- {status_dot} "
+            f"`2.{summary['section_offset']}` `{summary['scope']}`: "
+            f"total={summary['total']}, cumple={summary['pass']}, no_cumple={summary['fail']}, "
+            f"numerales_no_cumplen={fail_text}"
+        )
+
+    lines.extend(
+        [
+            "",
+            "## Paso 3 - Metodo ICR/Elastic para grupo de pernos 1",
+            "",
+        ]
+    )
+    lines.append(_render_splice_step_2_method_block(step2_pernos1, chapter_number=3))
     return "\n".join(lines)
 
-def _render_step_1_list(rows: list[dict], *, chapter_number: int = 1) -> str:
+def _render_step_1_list(
+    rows: list[dict],
+    *,
+    chapter_number: int = 1,
+    heading_scope_label: str | None = None,
+) -> str:
     lines: list[str] = []
-    lines.append(f"### {chapter_number}.2 Revisiones de propiedades geometricas")
+    if heading_scope_label:
+        lines.append(f"### {chapter_number}.2 Revisiones de propiedades geometricas [{heading_scope_label}]")
+    else:
+        lines.append(f"### {chapter_number}.2 Revisiones de propiedades geometricas")
     lines.append("")
     for idx, item in enumerate(rows, start=1):
         scope = str(item.get("scope", "n/a")).upper()
@@ -2794,7 +3382,14 @@ def _render_step_1_list(rows: list[dict], *, chapter_number: int = 1) -> str:
         else:
             comparison = str(item.get("comparison_text", "vs"))
             limit = _format_quantity(item.get("limit"))
-            verification = f"{calculated_symbol} {comparison} {limit_symbol}; {calculated} {comparison} {limit}"
+            limit_symbol_text = limit_symbol
+            if (
+                calculated_symbol == "Le_blt_web_x1"
+                and comparison == ">="
+                and str(limit_symbol).strip().lower().startswith("max(le_min")
+            ):
+                limit_symbol_text = "Le_min"
+            verification = f"{calculated_symbol} {comparison} {limit_symbol_text}; {calculated} {comparison} {limit}"
 
         lines.append(f"#### Chequeo {chapter_number}.2.{idx} - {description} (`{calculated_symbol}`)")
         lines.append("")
@@ -2866,7 +3461,20 @@ def _render_step_1_list_grouped_by_scope(
         total_checks = 0
         pass_checks = 0
         fail_numerals: list[str] = []
-        for item in grouped.get(scope, []):
+        items_for_scope = list(grouped.get(scope, []))
+        if chapter_number == 3 and scope.upper() in {"TABLE_6_1_DER", "TABLE_6_1_IZQ"}:
+            excluded_ids = {
+                "table_6_1.pitch_pb_ge_3db_der",
+                "table_6_1.pitch_pb_ge_3db_izq",
+                "table_6_1.tbf.range_der",
+                "table_6_1.tbf.range_izq",
+            }
+            items_for_scope = [
+                item
+                for item in items_for_scope
+                if str(item.get("id", "")).strip().lower() not in excluded_ids
+            ]
+        for item in items_for_scope:
             description = _translate_text_es(item.get("description"))
             calculated_symbol = str(item.get("calculated_symbol", "calc"))
             limit_symbol = str(item.get("limit_symbol", "lim"))
@@ -2939,7 +3547,14 @@ def _render_step_1_list_grouped_by_scope(
             else:
                 comparison = str(item.get("comparison_text", "vs"))
                 limit = _format_quantity(item.get("limit"))
-                verification = f"{calculated_symbol} {comparison} {limit_symbol}; {calculated} {comparison} {limit}"
+                limit_symbol_text = limit_symbol
+                if (
+                    calculated_symbol == "Le_blt_web_x1"
+                    and comparison == ">="
+                    and str(limit_symbol).strip().lower().startswith("max(le_min")
+                ):
+                    limit_symbol_text = "Le_min"
+                verification = f"{calculated_symbol} {comparison} {limit_symbol_text}; {calculated} {comparison} {limit}"
 
             lines.append(f"#### Chequeo {chapter_number}.{section_offset}.{local_idx} - {description} (`{calculated_symbol}`)")
             lines.append("")
@@ -2996,11 +3611,9 @@ def _ordered_scopes_from_rows(rows: list[dict]) -> list[str]:
     def _scope_sort_key(scope: str) -> tuple[int, int, int]:
         scope_upper = scope.upper()
         if scope_upper == "DOUBLER_PLATE_COL":
-            return (2, 98, 9)
-        if scope_upper == "WELD_7_COL":
-            return (2, 100, 8)
-        if scope_upper == "WELD_6_COL":
-            return (2, 100, 9)
+            if "CONTINUITY_PLATE_COL" in scope_order:
+                return (1, scope_order.index("CONTINUITY_PLATE_COL"), 1)
+            return (1, 999, 1)
         if scope_upper.startswith("WELD_"):
             parts = scope_upper.split("_")
             try:
@@ -3047,6 +3660,11 @@ def _render_step_1_notes_by_scope_template(
     step_4: dict | None = None,
     step_7_1_1_by_side: dict | None = None,
     step_6_1_by_side: dict | None = None,
+    step_6_2_by_side: dict | None = None,
+    step_8_1_1_by_side: dict | None = None,
+    step_9_1_1_by_side: dict | None = None,
+    step_11_w3_by_side: dict | None = None,
+    step_10_w4_by_side: dict | None = None,
     step_7_3_1_by_side: dict | None = None,
     step_21_5_1_panel_zone: dict | None = None,
 ) -> str:
@@ -3164,6 +3782,7 @@ def _render_step_1_notes_by_scope_template(
             hb_col = _format_quantity(panel_inputs.get("hb_col"))
             ht_col = _format_quantity(panel_inputs.get("ht_col"))
             bf_col_q = panel_inputs.get("bcf_col")
+            tf_col_q = panel_inputs.get("tcf_col")
             tpc_col_q = step1_inputs.get("t_pc_col") or step1_inputs.get("tpc_col") or step1_inputs.get("continuity_plate_thickness_tcp")
             b1_pc_col_q = step1_inputs.get("b1_pc_col")
             usar_pc_col = step1_inputs.get("usar_pc_col")
@@ -3217,6 +3836,8 @@ def _render_step_1_notes_by_scope_template(
             lines.append(f"- Tipo de acero del perfil de columna (tipo_acero_perfil_col) (inp): `{tipo_acero_perfil_col}`")
             lines.append(f"- Altura de columna (d_col) (inp): `{d_col}`")
             lines.append(f"- Espesor de alma de columna (tw_col) (inp): `{tw_col}`")
+            lines.append(f"- Espesor de ala de columna (tf_col) (inp): `{_format_quantity(tf_col_q)}`")
+            lines.append(f"- Ancho de ala de columna (bf_col) (inp): `{_format_quantity(bf_col_q)}`")
             lines.append(f"- Proyeccion de columna sobre vigas (St_col) (inp): `{st_col}`")
             lines.append(f"- Distancia al punto de inflexion superior (ht_col) (inp): `{ht_col}`")
             lines.append(f"- Distancia al punto de inflexion inferior (hb_col) (inp): `{hb_col}`")
@@ -3237,7 +3858,11 @@ def _render_step_1_notes_by_scope_template(
                 pfi_q = step731_inputs.get(f"pfi_pe_{tag}")
                 tf_q = step731_inputs.get(f"tf_{tag}")
                 dh_q = step731_inputs.get(f"dh_pe_{tag}")
-                g_b_q = (rows_by_scope_symbol.get((f"BEAM_{side.upper()}", f"g_b_{tag}")) or {}).get("calculated")
+                g_b_q = (
+                    (rows_by_scope_symbol.get((f"BEAM_{side.upper()}", f"g_b_{tag}")) or {}).get("calculated")
+                    or (rows_by_scope_symbol.get((f"END_PLATE_{side.upper()}", f"g_b_{tag}")) or {}).get("calculated")
+                    or (rows_by_scope_symbol.get((f"TABLE_6_1_{side.upper()}", f"g_b_{tag}")) or {}).get("calculated")
+                )
 
                 pso_q = _qsum(pfo_q, tf_q, tpc_col_q, factors=(1.0, 0.5, -0.5))
                 psi_q = _qsum(pfi_q, tf_q, tpc_col_q, factors=(1.0, 0.5, -0.5))
@@ -3431,6 +4056,25 @@ def _render_step_1_notes_by_scope_template(
                 f"`{_format_text(step1_inputs.get('n_dp_col'))}`"
             )
             lines.append(
+                f"- Condicion geometrica de platina de enchape (Extended_dp_col) (inp): "
+                f"`{_format_text(step1_inputs.get('extended_dp_col'))}`"
+            )
+            lines.append(
+                f"- Separacion de la platina de enchape respecto al alma (gap_dp_col) (inp): "
+                f"`{_format_quantity(step1_inputs.get('gap_dp_col'))}`"
+            )
+            estado_contacto_dp_col = step1_inputs.get("estado_contacto_dp_col")
+            if estado_contacto_dp_col == "en_contacto_con_alma":
+                estado_contacto_text = "En contacto con el alma (gap_dp_col <= 2.0 mm)"
+            elif estado_contacto_dp_col == "sin_contacto_con_alma":
+                estado_contacto_text = "Sin contacto con el alma (gap_dp_col > 2.0 mm)"
+            else:
+                estado_contacto_text = "n/a"
+            lines.append(
+                f"- Estado de contacto platina de enchape vs alma: "
+                f"`{estado_contacto_text}`"
+            )
+            lines.append(
                 f"- Altura neta de panel zone en columna para enchape (dz_dp_col): "
                 f"`{_format_quantity(step1_inputs.get('dz_dp_col'))}`"
             )
@@ -3438,6 +4082,35 @@ def _render_step_1_notes_by_scope_template(
                 f"- Ancho neto gobernante entre vigas para enchape (wz_dp_col): "
                 f"`{_format_quantity(step1_inputs.get('wz_dp_col'))}`"
             )
+            lines.append(
+                f"- Altura de platina de enchape (h_dp_col): "
+                f"`{_format_quantity(step1_inputs.get('h_dp_col'))}`"
+            )
+            h_dp_formula = str(step1_inputs.get("h_dp_col_formula") or "n/a").strip().lower()
+            if h_dp_formula == "300 + max(d)":
+                lines.append(
+                    "- Ecuacion de h_dp_col: `h_dp_col = 300 mm + max{d_vgder, d_vgizq}` "
+                    "(aplica cuando (`Extended_dp_col=false` y `usar_pc_col=false`) "
+                    "o (`Extended_dp_col=true` y `usar_pc_col=true`))"
+                )
+            elif h_dp_formula == "300 + max(d-tf) - t_pc_col":
+                lines.append(
+                    "- Ecuacion de h_dp_col: `h_dp_col = 300 mm + max{d_vgder - tf_vgder, d_vgizq - tf_vgizq} - t_pc_col` "
+                    "(aplica cuando `Extended_dp_col=false` y `usar_pc_col=true`)"
+                )
+            else:
+                lines.append("- Ecuacion de h_dp_col: `n/a`")
+            lines.append(
+                f"- Ancho de platina de enchape (b_dp_col): "
+                f"`{_format_quantity(step1_inputs.get('b_dp_col'))}`"
+            )
+            b_dp_formula = str(step1_inputs.get("b_dp_col_formula") or "n/a").strip().lower()
+            if b_dp_formula == "d_col - 2*kdet_col":
+                lines.append("- Ecuacion de b_dp_col: `b_dp_col = d_col - 2*kdet_col` (cuando `tipo_w8_col = CJP`)")
+            elif b_dp_formula == "d_col - 2*tft_col":
+                lines.append("- Ecuacion de b_dp_col: `b_dp_col = d_col - 2*tft_col` (cuando `tipo_w8_col = PJP` o `fillet`)")
+            else:
+                lines.append("- Ecuacion de b_dp_col: `n/a`")
             lines.append("")
             continue
         if chapter_number == 1 and scope == "WELD_7_COL":
@@ -3457,9 +4130,487 @@ def _render_step_1_notes_by_scope_template(
                 f"`{_format_quantity(step1_inputs.get('w_w7_col') or step1_inputs.get('t_w7_col'))}`"
             )
             lines.append(
-                f"- Numero de lineas de soldadura #7 (nl_w7_col) (inp): "
-                f"`{_format_text(step1_inputs.get('nl_w7_col'))}`"
+                f"- Numero de filas de soldadura #7 (nfilas_w7_col) (inp): "
+                f"`{_format_text(step1_inputs.get('nfilas_w7_col') if step1_inputs.get('nfilas_w7_col') is not None else step1_inputs.get('nl_w7_col'))}`"
             )
+            lines.append(
+                f"- Numero de columnas de soldadura #7 (ncolumna_w7_col) (inp): "
+                f"`{_format_text(step1_inputs.get('ncolumna_w7_col'))}`"
+            )
+            lines.append(
+                f"- Diametro de hueco para soldadura #7 (d_hole_w7_col) (inp): "
+                f"`{_format_quantity(step1_inputs.get('d_hole_w7_col'))}`"
+            )
+            lines.append(
+                f"- Separacion horizontal centro a centro (sh_w7_col): "
+                f"`{_format_quantity(step1_inputs.get('sh_w7_col'))}`"
+            )
+            lines.append(
+                f"- Separacion vertical centro a centro (sv_w7_col): "
+                f"`{_format_quantity(step1_inputs.get('sv_w7_col'))}`"
+            )
+            lines.append(
+                f"- Espesor de parte contenedora (t_part_w7_col = t_pc_col): "
+                f"`{_format_quantity(step1_inputs.get('t_part_w7_col'))}`"
+            )
+            lines.append("")
+            continue
+        if chapter_number == 1 and scope == "WELD_8_COL":
+            step1_inputs = step_1_inputs if isinstance(step_1_inputs, dict) else {}
+            tipo_w8_step1_raw = _format_text(step1_inputs.get("tipo_w8_col"))
+            tipo_w8_step1_norm = tipo_w8_step1_raw.strip().lower()
+            if tipo_w8_step1_norm in {"partial_joint_penetration"}:
+                tipo_w8_step1_norm = "pjp"
+            lines.append(f"#### {chapter_number}.{section_offset}.1 Resumen de geometria")
+            lines.append("")
+            lines.append(
+                f"- Tipo de soldadura #8 (tipo_w8_col) (inp): "
+                f"`{_format_text(step1_inputs.get('tipo_w8_col'))}`"
+            )
+            if tipo_w8_step1_norm == "pjp":
+                lines.append(
+                    "- Nota PJP soldadura #8: `Debe ser conforme a AWS D1.8/D1.8M clause 4.3`"
+                )
+            lines.append(
+                f"- Resistencia del electrodo de soldadura #8 (Fexx_w8_col) (inp): "
+                f"`{_format_quantity(step1_inputs.get('Fexx_w8_col') or step1_inputs.get('weld_fexx'))}`"
+            )
+            lines.append(
+                f"- Espesor/size de soldadura #8 (w_w8_col) (inp): "
+                f"`{_format_quantity(step1_inputs.get('w_w8_col') or step1_inputs.get('t_w8_col'))}`"
+            )
+            lines.append(
+                f"- Numero de lineas de soldadura #8 (nl_w8_col) (inp): "
+                f"`{_format_text(step1_inputs.get('nl_w8_col'))}`"
+            )
+            lines.append(
+                f"- Parametro Encr para soldadura #8 (Encr_w8_col): "
+                f"`{_format_quantity(step1_inputs.get('Encr_w8_col'))}`"
+            )
+            if step1_inputs.get("Encr_w8_col_fuente") is not None:
+                lines.append(
+                    f"- Fuente de Encr_w8_col: "
+                    f"`{_format_text(step1_inputs.get('Encr_w8_col_fuente'))}`"
+                )
+            lines.append(
+                f"- Factor de direccion/sistema de soldadura #8 (kds_w8_col) (inp): "
+                f"`{_format_text(step1_inputs.get('kds_w8_col'))}`"
+            )
+            lines.append("")
+            continue
+        if chapter_number == 1 and scope == "WELD_9_COL":
+            step1_inputs = step_1_inputs if isinstance(step_1_inputs, dict) else {}
+            lines.append(f"#### {chapter_number}.{section_offset}.1 Resumen de geometria")
+            lines.append("")
+            lines.append(
+                f"- Uso de soldadura #9 (use_weld_9_col) (inp): "
+                f"`{_format_text(step1_inputs.get('use_weld_9_col'))}`"
+            )
+            lines.append(
+                f"- Tipo de soldadura #9 (tipo_w9_col) (inp): "
+                f"`{_format_text(step1_inputs.get('tipo_w9_col'))}`"
+            )
+            lines.append(
+                f"- Resistencia del electrodo de soldadura #9 (Fexx_w9_col) (inp): "
+                f"`{_format_quantity(step1_inputs.get('Fexx_w9_col') or step1_inputs.get('weld_fexx'))}`"
+            )
+            lines.append(
+                f"- Espesor/size de soldadura #9 (w_w9_col) (inp): "
+                f"`{_format_quantity(step1_inputs.get('w_w9_col') or step1_inputs.get('t_w9_col'))}`"
+            )
+            lines.append(
+                f"- Numero de lineas de soldadura #9 (nl_w9_col) (inp): "
+                f"`{_format_text(step1_inputs.get('nl_w9_col'))}`"
+            )
+            lines.append(
+                f"- Separacion de extremos de soldadura #9 (L_gap_w9_col) (inp): "
+                f"`{_format_quantity(step1_inputs.get('L_gap_w9_col'))}`"
+            )
+            lines.append(
+                f"- Factor de direccion/sistema de soldadura #9 (kds_w9_col) (inp): "
+                f"`{_format_text(step1_inputs.get('kds_w9_col'))}`"
+            )
+            lines.append(
+                f"- Longitud efectiva de soldadura #9 (L_w9_col): "
+                f"`{_format_quantity(step1_inputs.get('L_w9_col'))}`"
+            )
+            lines.append("")
+            continue
+        if chapter_number == 1 and scope in {"END_PLATE_STIFFENER_DER", "END_PLATE_STIFFENER_IZQ"}:
+            side = "der" if scope.endswith("_DER") else "izq"
+            side_label = "derecha" if side == "der" else "izquierda"
+            side_tag = "vgder" if side == "der" else "vgizq"
+            step2_inputs = (step_2 or {}).get("inputs", {}) if isinstance(step_2, dict) else {}
+            note_h_key = f"h_pest_{side_tag}"
+            note_l_key = f"l_pest_{side_tag}"
+            note_ed_key = f"ed_pest_{side_tag}"
+            tipo_acero_pest = _format_text(
+                (step_1_inputs or {}).get(f"tipo_acero_pest_{side_tag}")
+                or (step_1_inputs or {}).get(f"stiffener_steel_type_{side_tag}")
+                or step2_inputs.get(f"tipo_acero_perfil_{side_tag}")
+                or step2_inputs.get(f"beam_steel_type_{side_tag}")
+                or step2_inputs.get("beam_steel_type")
+            )
+            t_pest = _format_quantity(
+                (step_1_inputs or {}).get(f"t_pest_{side_tag}")
+                or (step_1_inputs or {}).get(f"stiffener_thickness_{side_tag}")
+                or (rows_by_scope_symbol.get((scope, f"t_pest_{side_tag}")) or {}).get("calculated")
+            )
+            h_pest = "n/a"
+            l_pest = "n/a"
+            ed_pest = "n/a"
+            for note_item in grouped.get(scope, []):
+                maybe_h = note_item.get(note_h_key)
+                if isinstance(maybe_h, dict):
+                    h_pest = _format_quantity(maybe_h)
+                maybe_l = note_item.get(note_l_key)
+                if isinstance(maybe_l, dict):
+                    l_pest = _format_quantity(maybe_l)
+                maybe_ed = note_item.get(note_ed_key)
+                if isinstance(maybe_ed, dict):
+                    ed_pest = _format_quantity(maybe_ed)
+                if h_pest != "n/a" and l_pest != "n/a" and ed_pest != "n/a":
+                    break
+
+            lines.append(f"#### {chapter_number}.{section_offset}.1 Resumen de geometria")
+            lines.append("")
+            lines.append(
+                f"- Tipo de acero de rigidizador {side_label} "
+                f"(tipo_acero_pest_{side_tag}) (inp): `{tipo_acero_pest}`"
+            )
+            lines.append(
+                f"- Espesor de rigidizador {side_label} "
+                f"(t_pest_{side_tag}) (inp): `{t_pest}`"
+            )
+            lines.append(
+                f"- Altura del rigidizador de platina extremo {side_label} "
+                f"(h_pest_{side_tag}): `{h_pest}`"
+            )
+            lines.append(
+                f"- Longitud del rigidizador de platina extremo {side_label} "
+                f"(L_pest_{side_tag}): `{l_pest}`"
+            )
+            lines.append(
+                f"- Requisito de borde del rigidizador de platina extremo {side_label} "
+                f"(Ed_pest_{side_tag}): `{ed_pest}`"
+            )
+            lines.append("")
+            continue
+        if chapter_number == 1 and scope in {"BOLTS_DER", "BOLTS_IZQ"}:
+            side = "der" if scope.endswith("_DER") else "izq"
+            side_label = "derecha" if side == "der" else "izquierda"
+            side_tag = "vgder" if side == "der" else "vgizq"
+            step1_inputs = step_1_inputs if isinstance(step_1_inputs, dict) else {}
+            step61 = (
+                (step_6_1_by_side or {}).get(side)
+                if isinstance((step_6_1_by_side or {}).get(side), dict)
+                else {}
+            )
+            step62 = (
+                (step_6_2_by_side or {}).get(side)
+                if isinstance((step_6_2_by_side or {}).get(side), dict)
+                else {}
+            )
+            inputs61 = step61.get("inputs", {}) if isinstance(step61, dict) else {}
+            inter61 = step61.get("intermediates", {}) if isinstance(step61, dict) else {}
+            inputs62 = step62.get("inputs", {}) if isinstance(step62, dict) else {}
+            inter62 = step62.get("intermediates", {}) if isinstance(step62, dict) else {}
+
+            bolt_diameter = inputs61.get("bolt_diameter") or inputs62.get("bolt_diameter") or step1_inputs.get("bolt_diameter")
+            fnt_b = inputs61.get(f"fnt_b_{side_tag}")
+            fnv_b = inputs62.get(f"fnv_b_{side_tag}")
+            thread_b = inputs62.get(f"thread_b_{side_tag}")
+            n_b = inputs62.get(f"n_b_{side_tag}")
+            bolt_fabrication_standard = inputs61.get("bolt_fabrication_standard") or inputs62.get("bolt_fabrication_standard") or step1_inputs.get("bolt_fabrication_standard")
+            bolt_tightening_type = inputs61.get("bolt_tightening_type") or inputs62.get("bolt_tightening_type") or step1_inputs.get("bolt_tightening_type")
+            bolt_area = inter62.get(f"a_b_{side_tag}") or inter61.get(f"a_b_{side_tag}")
+
+            lines.append(f"#### {chapter_number}.{section_offset}.1 Resumen de geometria")
+            lines.append("")
+            lines.append(f"- Diametro nominal de perno lado {side_label} (db_b_{side_tag}) (inp): `{_format_quantity(bolt_diameter)}`")
+            lines.append(f"- Resistencia nominal a traccion de perno lado {side_label} (Fnt_b_{side_tag}) (inp): `{_format_quantity(fnt_b)}`")
+            lines.append(f"- Resistencia nominal a cortante de perno lado {side_label} (Fnv_b_{side_tag}) (inp): `{_format_quantity(fnv_b)}`")
+            lines.append(f"- Condicion de rosca de perno lado {side_label} (thread_b_{side_tag}) (inp): `{_format_text(thread_b)}`")
+            lines.append(f"- Numero de pernos lado {side_label} (n_b_{side_tag}) (inp): `{_format_text(n_b)}`")
+            lines.append(f"- Norma de fabricacion del perno lado {side_label} (std_v_{side_tag}) (inp): `{_format_text(bolt_fabrication_standard)}`")
+            lines.append(f"- Tipo de apriete del perno lado {side_label} (tipo_apriete_b_{side_tag}) (inp): `{_format_text(bolt_tightening_type)}`")
+            lines.append(f"- Area efectiva de perno lado {side_label} (A_b_{side_tag}): `{_format_quantity(bolt_area)}`")
+            lines.append("")
+            continue
+        if chapter_number == 1 and scope in {"TABLE_6_1_DER", "TABLE_6_1_IZQ"}:
+            side = "der" if scope.endswith("_DER") else "izq"
+            side_label = "derecha" if side == "der" else "izquierda"
+            side_tag = "vgder" if side == "der" else "vgizq"
+            step731 = (
+                (step_7_3_1_by_side or {}).get(side)
+                if isinstance((step_7_3_1_by_side or {}).get(side), dict)
+                else {}
+            )
+            inputs731 = step731.get("inputs", {}) if isinstance(step731, dict) else {}
+            d_side = _format_quantity((rows_by_scope_symbol.get((scope, f"d_{side_tag}")) or {}).get("calculated"))
+            bf_side = _format_quantity((rows_by_scope_symbol.get((scope, f"bf_{side_tag}")) or {}).get("calculated"))
+            g_b_side = _format_quantity((rows_by_scope_symbol.get((scope, f"g_b_{side_tag}")) or {}).get("calculated"))
+            tpe_side = _format_quantity(inputs731.get(f"tpe_{side_tag}") or (rows_by_scope_symbol.get((scope, f"tpe_{side_tag}")) or {}).get("calculated"))
+            tf_side = _format_quantity(inputs731.get(f"tf_{side_tag}") or (rows_by_scope_symbol.get((scope, f"tf_{side_tag}")) or {}).get("calculated"))
+            de_side = _format_quantity(inputs731.get(f"de_pe_{side_tag}") or (rows_by_scope_symbol.get((scope, f"de_pe_{side_tag}")) or {}).get("calculated"))
+            pb_side = _format_quantity(inputs731.get(f"pb_pe_{side_tag}") or (rows_by_scope_symbol.get((scope, f"pb_pe_{side_tag}")) or {}).get("calculated"))
+            pfo_side = _format_quantity(inputs731.get(f"pfo_pe_{side_tag}"))
+            pfi_side = _format_quantity(inputs731.get(f"pfi_pe_{side_tag}"))
+
+            lines.append(f"#### {chapter_number}.{section_offset}.1 Resumen de geometria")
+            lines.append("")
+            lines.append(f"- Altura de viga lado {side_label} (d_{side_tag}) (inp): `{d_side}`")
+            lines.append(f"- Ancho de ala de viga lado {side_label} (bf_{side_tag}) (inp): `{bf_side}`")
+            lines.append(f"- Espesor de ala de viga lado {side_label} (tf_{side_tag}) (inp): `{tf_side}`")
+            lines.append(f"- Gage horizontal de pernos lado {side_label} (g_b_{side_tag}) (inp): `{g_b_side}`")
+            lines.append(f"- Espesor de platina extremo lado {side_label} (tpe_{side_tag}) (inp): `{tpe_side}`")
+            lines.append(f"- Distancia de borde a fila 1 lado {side_label} (de_pe_{side_tag}) (inp): `{de_side}`")
+            lines.append(f"- Distancia entre filas de pernos lado {side_label} (pb_pe_{side_tag}) (inp): `{pb_side}`")
+            lines.append(f"- Distancia exterior a fila de pernos lado {side_label} (pfo_pe_{side_tag}) (inp): `{pfo_side}`")
+            lines.append(f"- Distancia interior a fila de pernos lado {side_label} (pfi_pe_{side_tag}) (inp): `{pfi_side}`")
+            lines.append("")
+            continue
+        if chapter_number == 1 and scope in {"WELD_1_VGDER", "WELD_1_VGIZQ"}:
+            side = "der" if scope.endswith("_VGDER") else "izq"
+            side_label = "derecha" if side == "der" else "izquierda"
+            side_tag = "vgder" if side == "der" else "vgizq"
+            step1_inputs = step_1_inputs if isinstance(step_1_inputs, dict) else {}
+            step811 = (
+                (step_8_1_1_by_side or {}).get(side)
+                if isinstance((step_8_1_1_by_side or {}).get(side), dict)
+                else {}
+            )
+            inputs811 = step811.get("inputs", {}) if isinstance(step811, dict) else {}
+            tipo_w1 = _format_text(
+                step1_inputs.get(f"tipo_w1_{side_tag}")
+                or step1_inputs.get("end_plate_stiffener_weld_type")
+                or inputs811.get("end_plate_stiffener_weld_type")
+                or inputs811.get(f"tipo_w1_{side_tag}")
+            )
+            fexx_w1 = _format_quantity(
+                step1_inputs.get(f"Fexx_w1_{side_tag}")
+                or step1_inputs.get("weld_fexx")
+            )
+            w_w1 = _format_quantity(
+                step1_inputs.get(f"w_w1_{side_tag}")
+                or step1_inputs.get(f"end_plate_stiffener_weld_size_wst_{side_tag}")
+                or step1_inputs.get("end_plate_stiffener_weld_size_wst")
+            )
+            nl_w1 = _format_text(
+                step1_inputs.get(f"nl_w1_{side_tag}")
+                or step1_inputs.get(f"end_plate_stiffener_weld_lines_nl_{side_tag}")
+                or step1_inputs.get("end_plate_stiffener_weld_lines_nl")
+            )
+            l_gap_w1 = _format_quantity(step1_inputs.get(f"L_gap_w1_{side_tag}"))
+            kds_w1 = _format_text(step1_inputs.get(f"kds_w1_{side_tag}"))
+            l_w1_raw = step1_inputs.get(f"L_w1_{side_tag}") or step1_inputs.get(f"l_w1_{side_tag}")
+            if l_w1_raw is None:
+                gap_q = _as_quantity(step1_inputs.get(f"L_gap_w1_{side_tag}"))
+                h_key = f"h_pest_{side_tag}"
+                h_q = None
+                for note_item in grouped.get(f"END_PLATE_STIFFENER_{'DER' if side == 'der' else 'IZQ'}", []):
+                    maybe_h = note_item.get(h_key)
+                    if isinstance(maybe_h, dict):
+                        h_q = _as_quantity(maybe_h)
+                        if h_q is not None:
+                            break
+                if h_q is not None and gap_q is not None:
+                    clip_val = 25.0 if h_q.unit == "mm" else (25.0 / 25.4 if h_q.unit == "in" else None)
+                    if clip_val is not None:
+                        if gap_q.unit == h_q.unit:
+                            gap_val = gap_q.value
+                        elif gap_q.unit == "mm" and h_q.unit == "in":
+                            gap_val = gap_q.value / 25.4
+                        elif gap_q.unit == "in" and h_q.unit == "mm":
+                            gap_val = gap_q.value * 25.4
+                        else:
+                            gap_val = None
+                        if gap_val is not None:
+                            l_w1_raw = {"value": h_q.value - 2.0 * gap_val - clip_val, "unit": h_q.unit}
+            l_w1 = _format_quantity(l_w1_raw)
+
+            lines.append(f"#### {chapter_number}.{section_offset}.1 Resumen de geometria")
+            lines.append("")
+            lines.append(f"- Tipo de soldadura #1 lado {side_label} (tipo_w1_{side_tag}) (inp): `{tipo_w1}`")
+            lines.append(f"- Resistencia del electrodo de soldadura #1 lado {side_label} (Fexx_w1_{side_tag}) (inp): `{fexx_w1}`")
+            lines.append(f"- Espesor/size de soldadura #1 lado {side_label} (w_w1_{side_tag}) (inp): `{w_w1}`")
+            lines.append(f"- Numero de lineas de soldadura #1 lado {side_label} (nl_w1_{side_tag}) (inp): `{nl_w1}`")
+            lines.append(f"- Separacion de extremos de soldadura #1 lado {side_label} (L_gap_w1_{side_tag}) (inp): `{l_gap_w1}`")
+            lines.append(f"- Factor de direccion/sistema de soldadura #1 lado {side_label} (kds_w1_{side_tag}) (inp): `{kds_w1}`")
+            lines.append(f"- Longitud efectiva de soldadura #1 lado {side_label} (L_w1_{side_tag}): `{l_w1}`")
+            lines.append("")
+            continue
+        if chapter_number == 1 and scope in {"WELD_2_VGDER", "WELD_2_VGIZQ"}:
+            side = "der" if scope.endswith("_VGDER") else "izq"
+            side_label = "derecha" if side == "der" else "izquierda"
+            side_tag = "vgder" if side == "der" else "vgizq"
+            step1_inputs = step_1_inputs if isinstance(step_1_inputs, dict) else {}
+            step911 = (
+                (step_9_1_1_by_side or {}).get(side)
+                if isinstance((step_9_1_1_by_side or {}).get(side), dict)
+                else {}
+            )
+            inputs911 = step911.get("inputs", {}) if isinstance(step911, dict) else {}
+            tipo_w2 = _format_text(
+                step1_inputs.get(f"tipo_w2_{side_tag}")
+                or step1_inputs.get("beam_stiffener_weld_type")
+                or step1_inputs.get("end_plate_beam_web_weld_type")
+                or inputs911.get("beam_stiffener_weld_type")
+                or inputs911.get(f"tipo_w2_{side_tag}")
+            )
+            fexx_w2 = _format_quantity(
+                step1_inputs.get(f"Fexx_w2_{side_tag}")
+                or step1_inputs.get("weld_fexx")
+            )
+            w_w2 = _format_quantity(
+                step1_inputs.get(f"w_w2_{side_tag}")
+                or step1_inputs.get(f"beam_stiffener_weld_size_wst2_{side_tag}")
+                or step1_inputs.get("beam_stiffener_weld_size_wst2")
+                or step1_inputs.get("end_plate_beam_web_weld_thickness_twe")
+            )
+            nl_w2 = _format_text(
+                step1_inputs.get(f"nl_w2_{side_tag}")
+                or step1_inputs.get(f"beam_stiffener_weld_lines_nl_w2_{side_tag}")
+                or step1_inputs.get("beam_stiffener_weld_lines_nl_w2")
+                or step1_inputs.get("end_plate_beam_web_weld_lines_nl")
+            )
+            l_gap_w2 = _format_quantity(step1_inputs.get(f"L_gap_w2_{side_tag}"))
+            kds_w2 = _format_text(inputs911.get(f"kds_w2_{side_tag}") or step1_inputs.get(f"kds_w2_{side_tag}"))
+            l_w2_raw = step1_inputs.get(f"L_w2_{side_tag}") or step1_inputs.get(f"l_w2_{side_tag}")
+            if l_w2_raw is None:
+                gap_q = _as_quantity(step1_inputs.get(f"L_gap_w2_{side_tag}"))
+                l_key = f"l_pest_{side_tag}"
+                l_pest_q = None
+                for note_item in grouped.get(f"END_PLATE_STIFFENER_{'DER' if side == 'der' else 'IZQ'}", []):
+                    maybe_l = note_item.get(l_key)
+                    if isinstance(maybe_l, dict):
+                        l_pest_q = _as_quantity(maybe_l)
+                        if l_pest_q is not None:
+                            break
+                if l_pest_q is not None and gap_q is not None:
+                    clip_val = 25.0 if l_pest_q.unit == "mm" else (25.0 / 25.4 if l_pest_q.unit == "in" else None)
+                    if clip_val is not None:
+                        if gap_q.unit == l_pest_q.unit:
+                            gap_val = gap_q.value
+                        elif gap_q.unit == "mm" and l_pest_q.unit == "in":
+                            gap_val = gap_q.value / 25.4
+                        elif gap_q.unit == "in" and l_pest_q.unit == "mm":
+                            gap_val = gap_q.value * 25.4
+                        else:
+                            gap_val = None
+                        if gap_val is not None:
+                            l_w2_raw = {"value": l_pest_q.value - 2.0 * gap_val - clip_val, "unit": l_pest_q.unit}
+            l_w2 = _format_quantity(l_w2_raw)
+
+            lines.append(f"#### {chapter_number}.{section_offset}.1 Resumen de geometria")
+            lines.append("")
+            lines.append(f"- Tipo de soldadura #2 lado {side_label} (tipo_w2_{side_tag}) (inp): `{tipo_w2}`")
+            lines.append(f"- Resistencia del electrodo de soldadura #2 lado {side_label} (Fexx_w2_{side_tag}) (inp): `{fexx_w2}`")
+            lines.append(f"- Espesor/size de soldadura #2 lado {side_label} (w_w2_{side_tag}) (inp): `{w_w2}`")
+            lines.append(f"- Numero de lineas de soldadura #2 lado {side_label} (nl_w2_{side_tag}) (inp): `{nl_w2}`")
+            lines.append(f"- Separacion de extremos de soldadura #2 lado {side_label} (L_gap_w2_{side_tag}) (inp): `{l_gap_w2}`")
+            lines.append(f"- Factor de direccion/sistema de soldadura #2 lado {side_label} (kds_w2_{side_tag}) (inp): `{kds_w2}`")
+            lines.append(f"- Longitud efectiva de soldadura #2 lado {side_label} (L_w2_{side_tag}): `{l_w2}`")
+            lines.append("")
+            continue
+        if chapter_number == 1 and scope in {"WELD_3_VGDER", "WELD_3_VGIZQ"}:
+            side = "der" if scope.endswith("_VGDER") else "izq"
+            side_label = "derecha" if side == "der" else "izquierda"
+            side_tag = "vgder" if side == "der" else "vgizq"
+            step1_inputs = step_1_inputs if isinstance(step_1_inputs, dict) else {}
+            step11 = (
+                (step_11_w3_by_side or {}).get(side)
+                if isinstance((step_11_w3_by_side or {}).get(side), dict)
+                else {}
+            )
+            inputs11 = step11.get("inputs", {}) if isinstance(step11, dict) else {}
+
+            tipo_w3 = _format_text(
+                step1_inputs.get(f"tipo_w3_{side_tag}")
+                or step1_inputs.get("end_plate_beam_web_weld_type")
+                or inputs11.get(f"tipo_w3_{side_tag}")
+            )
+            fexx_w3 = _format_quantity(
+                step1_inputs.get(f"Fexx_w3_{side_tag}")
+                or step1_inputs.get("weld_fexx")
+            )
+            w_w3 = _format_quantity(
+                step1_inputs.get(f"w_w3_{side_tag}")
+                or step1_inputs.get(f"t_w3_{side_tag}")
+                or step1_inputs.get("end_plate_beam_web_weld_thickness_twe")
+            )
+            nl_w3 = _format_text(
+                step1_inputs.get(f"nl_w3_{side_tag}")
+                or step1_inputs.get("end_plate_beam_web_weld_lines_nl")
+            )
+            kds_w3_raw = step1_inputs.get(f"kds_w3_{side_tag}") or inputs11.get(f"kds_w3_{side_tag}")
+            kds_w3 = _format_text(kds_w3_raw)
+            hwef_w3 = _format_quantity(inputs11.get(f"hwef_w3_{side_tag}"))
+
+            lines.append(f"#### {chapter_number}.{section_offset}.1 Resumen de geometria")
+            lines.append("")
+            lines.append(f"- Tipo de soldadura #3 lado {side_label} (tipo_w3_{side_tag}) (inp): `{tipo_w3}`")
+            lines.append(f"- Resistencia del electrodo de soldadura #3 lado {side_label} (Fexx_w3_{side_tag}) (inp): `{fexx_w3}`")
+            lines.append(f"- Espesor/size de soldadura #3 lado {side_label} (w_w3_{side_tag}) (inp): `{w_w3}`")
+            lines.append(f"- Numero de lineas de soldadura #3 lado {side_label} (nl_w3_{side_tag}) (inp): `{nl_w3}`")
+            if kds_w3_raw is not None:
+                lines.append(f"- Factor de direccion/sistema de soldadura #3 lado {side_label} (kds_w3_{side_tag}) (inp): `{kds_w3}`")
+            lines.append(f"- Longitud efectiva de soldadura #3 lado {side_label} (hwef_w3_{side_tag}): `{hwef_w3}`")
+            lines.append("")
+            continue
+        if chapter_number == 1 and scope in {"WELD_4_VGDER", "WELD_4_VGIZQ"}:
+            side = "der" if scope.endswith("_VGDER") else "izq"
+            side_label = "derecha" if side == "der" else "izquierda"
+            side_tag = "vgder" if side == "der" else "vgizq"
+            step1_inputs = step_1_inputs if isinstance(step_1_inputs, dict) else {}
+            step10 = (
+                (step_10_w4_by_side or {}).get(side)
+                if isinstance((step_10_w4_by_side or {}).get(side), dict)
+                else {}
+            )
+            inputs10 = step10.get("inputs", {}) if isinstance(step10, dict) else {}
+
+            tipo_w4 = _format_text(
+                step1_inputs.get(f"tipo_w4_{side_tag}")
+                or inputs10.get(f"tipo_w4_{side_tag}")
+            )
+            fexx_w4 = _format_quantity(
+                step1_inputs.get(f"Fexx_w4_{side_tag}")
+                or inputs10.get(f"Fexx_w4_{side_tag}")
+                or step1_inputs.get("weld_fexx")
+            )
+            w_w4 = _format_quantity(
+                step1_inputs.get(f"w_w4_{side_tag}")
+                or step1_inputs.get(f"t_w4_{side_tag}")
+                or inputs10.get(f"t_w4_{side_tag}")
+            )
+            t_w4_1 = _format_quantity(
+                step1_inputs.get(f"t_w4.1_{side_tag}")
+                or step1_inputs.get(f"t_w4_1_{side_tag}")
+                or inputs10.get(f"t_w4_1_{side_tag}")
+            )
+            nl_w4 = _format_text(
+                step1_inputs.get(f"nl_w4_{side_tag}")
+                or inputs10.get(f"nl_w4_{side_tag}")
+            )
+            kds_w4_raw = step1_inputs.get(f"kds_w4_{side_tag}") or inputs10.get(f"kds_w4_{side_tag}")
+            kds_w4 = _format_text(kds_w4_raw)
+            l_w4 = _format_quantity(
+                step1_inputs.get(f"L_w4_{side_tag}")
+                or step1_inputs.get(f"l_w4_{side_tag}")
+                or inputs10.get(f"l_w4_{side_tag}")
+            )
+
+            lines.append(f"#### {chapter_number}.{section_offset}.1 Resumen de geometria")
+            lines.append("")
+            lines.append(f"- Tipo de soldadura #4 lado {side_label} (tipo_w4_{side_tag}) (inp): `{tipo_w4}`")
+            lines.append(f"- Resistencia del electrodo de soldadura #4 lado {side_label} (Fexx_w4_{side_tag}) (inp): `{fexx_w4}`")
+            lines.append(f"- Espesor/size de soldadura #4 lado {side_label} (w_w4_{side_tag}) (inp): `{w_w4}`")
+            lines.append(f"- Espesor total de garganta requerida #4 lado {side_label} (t_w4.1_{side_tag}) (inp): `{t_w4_1}`")
+            lines.append(f"- Numero de lineas de soldadura #4 lado {side_label} (nl_w4_{side_tag}) (inp): `{nl_w4}`")
+            if kds_w4_raw is not None:
+                lines.append(f"- Factor de direccion/sistema de soldadura #4 lado {side_label} (kds_w4_{side_tag}) (inp): `{kds_w4}`")
+            lines.append(f"- Longitud efectiva de soldadura #4 lado {side_label} (L_w4_{side_tag}): `{l_w4}`")
             lines.append("")
             continue
         if chapter_number == 1 and scope == "END_PLATE_DER":
@@ -3480,6 +4631,7 @@ def _render_step_1_notes_by_scope_template(
             )
 
             bpe_vgder = _format_quantity((rows_by_scope_symbol.get(("END_PLATE_DER", "bp_pe_vgder")) or {}).get("calculated"))
+            bpe_vgder_q = _as_quantity((rows_by_scope_symbol.get(("END_PLATE_DER", "bp_pe_vgder")) or {}).get("calculated"))
             tpe_vgder = _format_quantity(step731_inputs_der.get("tpe_vgder"))
             de_pe_vgder = _format_quantity(
                 step731_inputs_der.get("de_pe_vgder")
@@ -3492,6 +4644,13 @@ def _render_step_1_notes_by_scope_template(
             g_pe_vgder = _format_quantity(
                 (rows_by_scope_symbol.get(("BEAM_DER", "g_b_vgder")) or {}).get("calculated")
             )
+            g_pe_vgder_q = _as_quantity((rows_by_scope_symbol.get(("BEAM_DER", "g_b_vgder")) or {}).get("calculated"))
+            deh_pe_vgder = "n/a"
+            if bpe_vgder_q is not None and g_pe_vgder_q is not None:
+                if bpe_vgder_q.unit == g_pe_vgder_q.unit:
+                    deh_pe_vgder = _format_quantity(
+                        {"value": (bpe_vgder_q.value - g_pe_vgder_q.value) / 2.0, "unit": bpe_vgder_q.unit}
+                    )
             s_pe_vgder = _format_quantity(step711_inter_der.get("s"))
             h1_pe_vgder = _format_quantity(step61_inputs_der.get("h1_pe_vgder"))
             h2_pe_vgder = _format_quantity(step61_inputs_der.get("h2_pe_vgder"))
@@ -3516,6 +4675,7 @@ def _render_step_1_notes_by_scope_template(
             lines.append(f"- Distancia interior a fila de pernos (pfi_pe_vgder) (inp): `{pfi_pe_vgder}`")
             lines.append(f"- Diametro de perforacion de perno (dh_pe_vgder): `{dh_pe_vgder}`")
             lines.append(f"- Distancia horizontal entre pernos en platina (g_pe_vgder) (inp): `{g_pe_vgder}`")
+            lines.append(f"- Distancia horizontal de borde en platina (deh_pe_vgder): `{deh_pe_vgder}`")
             lines.append(f"- Parametro s de platina extremo derecha (s_pe_vgder): `{s_pe_vgder}`")
             lines.append(f"- Distancia h1 de platina extremo derecha (h1_pe_vgder): `{h1_pe_vgder}`")
             lines.append(f"- Distancia h2 de platina extremo derecha (h2_pe_vgder): `{h2_pe_vgder}`")
@@ -3543,6 +4703,7 @@ def _render_step_1_notes_by_scope_template(
             )
 
             bpe_vgizq = _format_quantity((rows_by_scope_symbol.get(("END_PLATE_IZQ", "bp_pe_vgizq")) or {}).get("calculated"))
+            bpe_vgizq_q = _as_quantity((rows_by_scope_symbol.get(("END_PLATE_IZQ", "bp_pe_vgizq")) or {}).get("calculated"))
             tpe_vgizq = _format_quantity(step731_inputs_izq.get("tpe_vgizq"))
             de_pe_vgizq = _format_quantity(
                 step731_inputs_izq.get("de_pe_vgizq")
@@ -3555,6 +4716,13 @@ def _render_step_1_notes_by_scope_template(
             g_pe_vgizq = _format_quantity(
                 (rows_by_scope_symbol.get(("BEAM_IZQ", "g_b_vgizq")) or {}).get("calculated")
             )
+            g_pe_vgizq_q = _as_quantity((rows_by_scope_symbol.get(("BEAM_IZQ", "g_b_vgizq")) or {}).get("calculated"))
+            deh_pe_vgizq = "n/a"
+            if bpe_vgizq_q is not None and g_pe_vgizq_q is not None:
+                if bpe_vgizq_q.unit == g_pe_vgizq_q.unit:
+                    deh_pe_vgizq = _format_quantity(
+                        {"value": (bpe_vgizq_q.value - g_pe_vgizq_q.value) / 2.0, "unit": bpe_vgizq_q.unit}
+                    )
             s_pe_vgizq = _format_quantity(step711_inter_izq.get("s"))
             h1_pe_vgizq = _format_quantity(step61_inputs_izq.get("h1_pe_vgizq"))
             h2_pe_vgizq = _format_quantity(step61_inputs_izq.get("h2_pe_vgizq"))
@@ -3579,6 +4747,7 @@ def _render_step_1_notes_by_scope_template(
             lines.append(f"- Distancia interior a fila de pernos (pfi_pe_vgizq) (inp): `{pfi_pe_vgizq}`")
             lines.append(f"- Diametro de perforacion de perno (dh_pe_vgizq): `{dh_pe_vgizq}`")
             lines.append(f"- Distancia horizontal entre pernos en platina (g_pe_vgizq) (inp): `{g_pe_vgizq}`")
+            lines.append(f"- Distancia horizontal de borde en platina (deh_pe_vgizq): `{deh_pe_vgizq}`")
             lines.append(f"- Parametro s de platina extremo izquierda (s_pe_vgizq): `{s_pe_vgizq}`")
             lines.append(f"- Distancia h1 de platina extremo izquierda (h1_pe_vgizq): `{h1_pe_vgizq}`")
             lines.append(f"- Distancia h2 de platina extremo izquierda (h2_pe_vgizq): `{h2_pe_vgizq}`")
@@ -3695,6 +4864,12 @@ def _render_step_21_5_panel_zone_shear_wpzs(
         .replace("Rn_wpzs_col", "Rn_wpz_v2_col")
         .replace("DCR_wpzs_col", "DCR_wpz_v2_col")
     )
+    ru_equation_text = "Ru_wpz_v2_col = sum_Mf_col/(db-tf) - Vc2_col"
+    equation_text = (
+        f"{ru_equation_text}; {equation_text}"
+        if equation_text != "n/a"
+        else ru_equation_text
+    )
     lines.extend(
         [
             f"- Clausula: `{_render_clause_text(step_21_5_1.get('clause'), step_21_5_1.get('source_document'), step_21_5_1.get('rule_id'))}`",
@@ -3735,6 +4910,11 @@ def _render_step_21_5_panel_zone_shear_wpzs(
             f"- Fy_col: `{_format_quantity(inputs.get('fy_col'))}`",
             f"- d_col: `{_format_quantity(inputs.get('d_col'))}`",
             f"- tw_col: `{_format_quantity(inputs.get('tw_col'))}`",
+            f"- t_dp_col: `{_format_quantity(inputs.get('t_dp_col'))}`",
+            f"- usar_weld_7_col: `{_format_text(inputs.get('use_weld_7_col'))}`",
+            f"- tw_wpz_effective_col: `{_format_quantity(inputs.get('tw_wpz_effective_col'))}`",
+            f"- Rn1_wpz_v2_col: `{_format_quantity(inputs.get('rn1_wpz_v2_col'))}`",
+            f"- Rn2_wpz_v2_col: `{_format_quantity(inputs.get('rn2_wpz_v2_col'))}`",
             f"- bcf_col: `{_format_quantity(inputs.get('bcf_col'))}`",
             f"- tcf_col: `{_format_quantity(inputs.get('tcf_col'))}`",
             f"- Rn_wpz_v2_col: `{_format_quantity(step_21_5_1.get('capacity'))}`",
@@ -3771,7 +4951,7 @@ def render_memory_markdown(result: DetailedRunResult) -> str:
     if not use_pc_col:
         excluded_scopes.update({"CONTINUITY_PLATE_COL", "WELD_5_COL", "WELD_6_COL"})
     if not use_dp_col:
-        excluded_scopes.update({"DOUBLER_PLATE_COL", "WELD_7_COL"})
+        excluded_scopes.update({"DOUBLER_PLATE_COL", "WELD_7_COL", "WELD_8_COL", "WELD_9_COL"})
 
     if excluded_scopes:
         rows = [
@@ -3848,6 +5028,13 @@ def render_memory_markdown(result: DetailedRunResult) -> str:
             scope_template.append("DOUBLER_PLATE_COL")
         if use_dp_col and "WELD_7_COL" not in scope_template:
             scope_template.append("WELD_7_COL")
+        if use_dp_col and "WELD_8_COL" not in scope_template:
+            scope_template.append("WELD_8_COL")
+        if use_dp_col and "WELD_9_COL" not in scope_template:
+            scope_template.append("WELD_9_COL")
+        step1_step2_hidden_scopes = {"TABLE_6_1_DER", "TABLE_6_1_IZQ"}
+        scope_template_step1 = list(scope_template)
+        scope_template_step2 = [s for s in scope_template if s not in step1_step2_hidden_scopes]
         step2_note_ids = {
             "section_6_3.end_plate_connection_location",
             "section_4_2.installation_requirements_der",
@@ -3874,7 +5061,7 @@ def render_memory_markdown(result: DetailedRunResult) -> str:
                 _render_step_1_notes_by_scope_template(
                     notes_step1,
                     chapter_number=1,
-                    scopes=scope_template,
+                    scopes=scope_template_step1,
                     rows=rows,
                     step_1_inputs=step_1_inputs,
                     step_2=step_2,
@@ -3882,6 +5069,11 @@ def render_memory_markdown(result: DetailedRunResult) -> str:
                     step_4=step_4,
                     step_7_1_1_by_side=step_7_1_1_by_side,
                     step_6_1_by_side=step_6_1_by_side,
+                    step_6_2_by_side=step_6_2_by_side,
+                    step_8_1_1_by_side=step_8_1_1_by_side,
+                    step_9_1_1_by_side=step_9_1_1_by_side,
+                    step_11_w3_by_side=step_11_ctx_by_side,
+                    step_10_w4_by_side=step_10_w4_1_1_by_side,
                     step_7_3_1_by_side=step_7_3_1_by_side,
                     step_21_5_1_panel_zone=step_21_5_1_panel_zone,
                 )
@@ -3897,17 +5089,17 @@ def render_memory_markdown(result: DetailedRunResult) -> str:
                 "",
             ]
         )
-        if scope_template:
+        if scope_template_step2:
             if notes_step2:
                 content.append(
                     _render_step_1_notes_by_scope_template(
                         notes_step2,
                         chapter_number=2,
-                        scopes=scope_template,
+                        scopes=scope_template_step2,
                     )
                 )
             else:
-                content.append(_render_scope_subtitles_only(chapter_number=2, scopes=scope_template))
+                content.append(_render_scope_subtitles_only(chapter_number=2, scopes=scope_template_step2))
         else:
             content.append("No hay especificaciones tecnicas disponibles para este caso.")
         content.extend(
@@ -5240,10 +6432,561 @@ def render_memory_markdown(result: DetailedRunResult) -> str:
             block_26 = _align_nested_heading_numbers_with_step(block_26, step_number=assigned_step_number)
             content.append(block_26)
             next_step_number += 1
+
+            # Paso 27 - Soldadura #8 (platina de enchape con aleta de columna)
+            assigned_step_number = next_step_number
+            tipo_w8_raw = _format_text(step1.get("tipo_w8_col"))
+            tipo_w8_norm = tipo_w8_raw.strip().lower()
+            if tipo_w8_norm in {"complete_joint_penetration"}:
+                tipo_w8_norm = "cjp"
+            elif tipo_w8_norm in {"single_sided_fillet", "double_sided_fillet"}:
+                tipo_w8_norm = "fillet"
+            elif tipo_w8_norm in {"partial_joint_penetration"}:
+                tipo_w8_norm = "pjp"
+
+            n_dp_col_val = 1.0
+            try:
+                if step1.get("n_dp_col") is not None:
+                    n_dp_col_val = float(step1.get("n_dp_col"))
+            except (TypeError, ValueError):
+                n_dp_col_val = 1.0
+
+            h_dp_col_q = _as_quantity(step1.get("h_dp_col"))
+            b_dp_col_q = _as_quantity(step1.get("b_dp_col"))
+            t_dp_col_q_w8 = _as_quantity(step1.get("t_dp_col"))
+            tw_col_q_w8 = _as_quantity(step1.get("tw_col"))
+            fy_dp_col_q_w8 = fy_dp_col_q if isinstance(fy_dp_col_q, Quantity) else None
+            fexx_w8_q = _as_quantity(step1.get("Fexx_w8_col"))
+            w_w8_q = _as_quantity(step1.get("w_w8_col")) or _as_quantity(step1.get("t_w8_col"))
+            l_gap_w8_col_q = _as_quantity(step1.get("L_gap_w8_col"))
+            nl_w8_col = None
+            try:
+                if step1.get("nl_w8_col") is not None:
+                    nl_w8_col = int(step1.get("nl_w8_col"))
+            except (TypeError, ValueError):
+                nl_w8_col = None
+            kds_w8_col = None
+            try:
+                if step1.get("kds_w8_col") is not None:
+                    kds_w8_col = float(step1.get("kds_w8_col"))
+            except (TypeError, ValueError):
+                kds_w8_col = None
+
+            unit_system_w8 = unit_system_w6
+            if unit_system_w8 is None:
+                if isinstance(h_dp_col_q, Quantity):
+                    unit_system_w8 = _infer_unit_system_from_quantity(h_dp_col_q.model_dump())
+                elif isinstance(t_dp_col_q_w8, Quantity):
+                    unit_system_w8 = _infer_unit_system_from_quantity(t_dp_col_q_w8.model_dump())
+
+            ru1_w8_v2_col_q: Quantity | None = None
+            if (
+                isinstance(fy_dp_col_q_w8, Quantity)
+                and isinstance(h_dp_col_q, Quantity)
+                and isinstance(t_dp_col_q_w8, Quantity)
+                and unit_system_w8 is not None
+            ):
+                if (
+                    unit_system_w8 == UnitSystem.SI
+                    and fy_dp_col_q_w8.unit == "MPa"
+                    and h_dp_col_q.unit == "mm"
+                    and t_dp_col_q_w8.unit == "mm"
+                ):
+                    ru1_w8_v2_col_q = Quantity(
+                        value=(0.6 * fy_dp_col_q_w8.value * h_dp_col_q.value * t_dp_col_q_w8.value) / 1000.0,
+                        unit="kN",
+                    )
+                elif (
+                    unit_system_w8 == UnitSystem.US
+                    and fy_dp_col_q_w8.unit == "ksi"
+                    and h_dp_col_q.unit == "in"
+                    and t_dp_col_q_w8.unit == "in"
+                ):
+                    ru1_w8_v2_col_q = Quantity(
+                        value=0.6 * fy_dp_col_q_w8.value * h_dp_col_q.value * t_dp_col_q_w8.value,
+                        unit="kip",
+                    )
+
+            wpz_inputs = (
+                step_21_5_1_panel_zone.get("inputs", {})
+                if isinstance(step_21_5_1_panel_zone, dict)
+                else {}
+            )
+            mf_vgizq_max_q = _as_quantity(wpz_inputs.get("mf_vgizq_max"))
+            mf_vgizq_min_q = _as_quantity(wpz_inputs.get("mf_vgizq_min"))
+            mf_vgder_max_q = _as_quantity(wpz_inputs.get("mf_vgder_max"))
+            mf_vgder_min_q = _as_quantity(wpz_inputs.get("mf_vgder_min"))
+
+            ru2_w8_v2_col_q: Quantity | None = None
+            combo1_q: Quantity | None = None
+            combo2_q: Quantity | None = None
+            combo_max_q: Quantity | None = None
+            ratio_tdp_over_sum: float | None = None
+            if (
+                isinstance(mf_vgizq_max_q, Quantity)
+                and isinstance(mf_vgder_min_q, Quantity)
+                and isinstance(mf_vgder_max_q, Quantity)
+                and isinstance(mf_vgizq_min_q, Quantity)
+                and isinstance(t_dp_col_q_w8, Quantity)
+                and isinstance(tw_col_q_w8, Quantity)
+                and isinstance(b_dp_col_q, Quantity)
+            ):
+                target_m_unit = mf_vgizq_max_q.unit
+                mf_vgder_min_conv = _convert_moment_to_unit(mf_vgder_min_q, target_m_unit)
+                mf_vgder_max_conv = _convert_moment_to_unit(mf_vgder_max_q, target_m_unit)
+                mf_vgizq_min_conv = _convert_moment_to_unit(mf_vgizq_min_q, target_m_unit)
+
+                if (
+                    isinstance(mf_vgder_min_conv, Quantity)
+                    and isinstance(mf_vgder_max_conv, Quantity)
+                    and isinstance(mf_vgizq_min_conv, Quantity)
+                ):
+                    combo1_q = Quantity(
+                        value=mf_vgizq_max_q.value + mf_vgder_min_conv.value,
+                        unit=target_m_unit,
+                    )
+                    combo2_q = Quantity(
+                        value=mf_vgder_max_conv.value + mf_vgizq_min_conv.value,
+                        unit=target_m_unit,
+                    )
+                    combo_max_q = combo1_q if combo1_q.value >= combo2_q.value else combo2_q
+
+                    t_dp_for_ratio = t_dp_col_q_w8
+                    if tw_col_q_w8.unit != t_dp_col_q_w8.unit:
+                        if tw_col_q_w8.unit == "mm" and t_dp_col_q_w8.unit == "in":
+                            tw_for_ratio = Quantity(value=tw_col_q_w8.value / 25.4, unit="in")
+                        elif tw_col_q_w8.unit == "in" and t_dp_col_q_w8.unit == "mm":
+                            tw_for_ratio = Quantity(value=tw_col_q_w8.value * 25.4, unit="mm")
+                        else:
+                            tw_for_ratio = None
+                    else:
+                        tw_for_ratio = tw_col_q_w8
+
+                    if tw_for_ratio is not None:
+                        denom_t = t_dp_for_ratio.value * n_dp_col_val + tw_for_ratio.value
+                        if abs(denom_t) > 1e-12:
+                            ratio_tdp_over_sum = t_dp_for_ratio.value / denom_t
+
+                            b_for_div = b_dp_col_q
+                            if b_for_div.unit == "mm" and target_m_unit == "kN-m":
+                                b_for_div = Quantity(value=b_for_div.value / 1000.0, unit="m")
+                            elif b_for_div.unit == "in" and target_m_unit == "kip-ft":
+                                b_for_div = Quantity(value=b_for_div.value / 12.0, unit="ft")
+                            elif b_for_div.unit == "mm" and target_m_unit == "kN-mm":
+                                b_for_div = Quantity(value=b_for_div.value, unit="mm")
+                            elif b_for_div.unit == "in" and target_m_unit == "kip-in":
+                                b_for_div = Quantity(value=b_for_div.value, unit="in")
+                            elif b_for_div.unit != "m" and target_m_unit == "kN-m":
+                                b_for_div = None
+                            elif b_for_div.unit != "ft" and target_m_unit == "kip-ft":
+                                b_for_div = None
+
+                            if isinstance(b_for_div, Quantity) and abs(b_for_div.value) > 1e-12:
+                                if target_m_unit in {"kN-m", "kN-mm"}:
+                                    ru2_w8_v2_col_q = Quantity(
+                                        value=(combo_max_q.value * ratio_tdp_over_sum) / b_for_div.value,
+                                        unit="kN",
+                                    )
+                                elif target_m_unit in {"kip-ft", "kip-in"}:
+                                    ru2_w8_v2_col_q = Quantity(
+                                        value=(combo_max_q.value * ratio_tdp_over_sum) / b_for_div.value,
+                                        unit="kip",
+                                    )
+
+            ru_w8_v2_col_q: Quantity | None = None
+            if isinstance(ru1_w8_v2_col_q, Quantity) and isinstance(ru2_w8_v2_col_q, Quantity):
+                ru2_conv = ru2_w8_v2_col_q
+                if ru2_w8_v2_col_q.unit != ru1_w8_v2_col_q.unit:
+                    if ru2_w8_v2_col_q.unit == "kN" and ru1_w8_v2_col_q.unit == "kip":
+                        ru2_conv = Quantity(value=ru2_w8_v2_col_q.value / 4.4482216152605, unit="kip")
+                    elif ru2_w8_v2_col_q.unit == "kip" and ru1_w8_v2_col_q.unit == "kN":
+                        ru2_conv = Quantity(value=ru2_w8_v2_col_q.value * 4.4482216152605, unit="kN")
+                ru_w8_v2_col_q = ru1_w8_v2_col_q if ru1_w8_v2_col_q.value >= ru2_conv.value else ru2_conv
+            elif isinstance(ru1_w8_v2_col_q, Quantity):
+                ru_w8_v2_col_q = ru1_w8_v2_col_q
+            elif isinstance(ru2_w8_v2_col_q, Quantity):
+                ru_w8_v2_col_q = ru2_w8_v2_col_q
+
+            l_w8_col_q: Quantity | None = None
+            if isinstance(h_dp_col_q, Quantity) and isinstance(l_gap_w8_col_q, Quantity):
+                gap_for_calc = l_gap_w8_col_q
+                if l_gap_w8_col_q.unit != h_dp_col_q.unit:
+                    if l_gap_w8_col_q.unit == "mm" and h_dp_col_q.unit == "in":
+                        gap_for_calc = Quantity(value=l_gap_w8_col_q.value / 25.4, unit="in")
+                    elif l_gap_w8_col_q.unit == "in" and h_dp_col_q.unit == "mm":
+                        gap_for_calc = Quantity(value=l_gap_w8_col_q.value * 25.4, unit="mm")
+                    else:
+                        gap_for_calc = None
+                if isinstance(gap_for_calc, Quantity):
+                    l_w8_col_q = Quantity(
+                        value=h_dp_col_q.value - 2.0 * gap_for_calc.value,
+                        unit=h_dp_col_q.unit,
+                    )
+
+            phi_rn_w8_v2_col_q: Quantity | None = None
+            dcr_w8_v2_col: float | None = None
+            result_w8_v2_col = "n/a"
+            if tipo_w8_norm == "fillet":
+                if (
+                    isinstance(ru_w8_v2_col_q, Quantity)
+                    and isinstance(fexx_w8_q, Quantity)
+                    and isinstance(w_w8_q, Quantity)
+                    and isinstance(l_w8_col_q, Quantity)
+                    and nl_w8_col is not None
+                    and kds_w8_col is not None
+                    and unit_system_w8 is not None
+                ):
+                    try:
+                        weld_check_w8 = compute_fillet_weld_check_with_kds(
+                            demand=ru_w8_v2_col_q,
+                            fexx=fexx_w8_q,
+                            weld_size=w_w8_q,
+                            weld_length=l_w8_col_q,
+                            weld_lines=nl_w8_col,
+                            unit_system=unit_system_w8,
+                            kds=kds_w8_col,
+                            phi=phi_fragil,
+                        )
+                        base_cap_w8 = weld_check_w8.get("phi_rn")
+                        if isinstance(base_cap_w8, Quantity):
+                            phi_rn_w8_v2_col_q = base_cap_w8
+                    except Exception:
+                        phi_rn_w8_v2_col_q = None
+                if (
+                    isinstance(ru_w8_v2_col_q, Quantity)
+                    and isinstance(phi_rn_w8_v2_col_q, Quantity)
+                    and phi_rn_w8_v2_col_q.value > 0
+                ):
+                    phi_rn_conv_w8 = phi_rn_w8_v2_col_q
+                    if phi_rn_w8_v2_col_q.unit != ru_w8_v2_col_q.unit:
+                        if phi_rn_w8_v2_col_q.unit == "kN" and ru_w8_v2_col_q.unit == "kip":
+                            phi_rn_conv_w8 = Quantity(value=phi_rn_w8_v2_col_q.value / 4.4482216152605, unit="kip")
+                        elif phi_rn_w8_v2_col_q.unit == "kip" and ru_w8_v2_col_q.unit == "kN":
+                            phi_rn_conv_w8 = Quantity(value=phi_rn_w8_v2_col_q.value * 4.4482216152605, unit="kN")
+                    if phi_rn_conv_w8.value > 0:
+                        dcr_w8_v2_col = ru_w8_v2_col_q.value / phi_rn_conv_w8.value
+                        result_w8_v2_col = "Cumple" if dcr_w8_v2_col <= 1.0 else "No cumple"
+                elif isinstance(ru_w8_v2_col_q, Quantity):
+                    result_w8_v2_col = "No cumple"
+            elif tipo_w8_norm == "cjp":
+                result_w8_v2_col = "Cumple"
+            elif tipo_w8_norm == "pjp":
+                result_w8_v2_col = "Cumple"
+
+            block_27_lines = [
+                f"## Paso {assigned_step_number}- Revisión de resistencia de soldadura # 8 (Platina de enchape con aleta de columna)",
+                "",
+                f"### {assigned_step_number}.1. Revisión de capacidad a cortante",
+                "",
+                f"#### {assigned_step_number}.1.1. ELR #1: Rotura de soldadura",
+                "",
+                "- Clausula: `Documento: AISC 358-22 | Seccion: Capitulo 6 / Seccion 6.7 + AISC 360-22 J2.4`",
+                "- Ecuacion: `Ru_w8_v2_col = max{Ru1_w8_v2_col, Ru2_w8_v2_col}; Ru1_w8_v2_col = 0.6 * Fy_dp_col * h_dp_col * t_dp_col; Ru2_w8_v2_col = max{Mf_vgizq_max + Mf_vgder_min, Mf_vgder_max + Mf_vgizq_min} * (t_dp_col/(t_dp_col*n_dp_col + tw_col)) / b_dp_col; Fillet: L_w8_col = h_dp_col - 2*L_gap_w8_col; phi*Rn_w8_v2_col = phi_fragil * kds_w8_col * nl_w8_col * 0.6 * Fexx_w8_col * 0.707 * L_w8_col * w_w8_col; DCR_w8_v2_col = Ru_w8_v2_col / phi*Rn_w8_v2_col`",
+                f"- tipo_w8_col: `{tipo_w8_raw}`",
+            ]
+            if tipo_w8_norm == "cjp":
+                block_27_lines.extend(
+                    [
+                        "- CJP: `Cumple`",
+                        f"- Resultado: `{_render_result_plain_es(result_w8_v2_col)}`",
+                        "",
+                    ]
+                )
+            elif tipo_w8_norm == "pjp":
+                block_27_lines.extend(
+                    [
+                        "- PJP: `Cumple`",
+                        f"- DCR_w8_v2_col: `{_format_decimal(dcr_w8_v2_col) if dcr_w8_v2_col is not None else 'n/a'}`",
+                        f"- Resultado: `{_render_result_plain_es(result_w8_v2_col)}`",
+                        "",
+                    ]
+                )
+            else:
+                block_27_lines.extend(
+                    [
+                        f"- phi usado (phi_fragil): `{_format_decimal(phi_fragil)}`",
+                        f"- Fy_dp_col: `{_format_quantity(fy_dp_col_q_w8.model_dump() if isinstance(fy_dp_col_q_w8, Quantity) else None)}`",
+                        f"- h_dp_col: `{_format_quantity(h_dp_col_q.model_dump() if isinstance(h_dp_col_q, Quantity) else None)}`",
+                        f"- t_dp_col: `{_format_quantity(t_dp_col_q_w8.model_dump() if isinstance(t_dp_col_q_w8, Quantity) else None)}`",
+                        f"- n_dp_col: `{_format_text(n_dp_col_val)}`",
+                        f"- tw_col: `{_format_quantity(tw_col_q_w8.model_dump() if isinstance(tw_col_q_w8, Quantity) else None)}`",
+                        f"- b_dp_col: `{_format_quantity(b_dp_col_q.model_dump() if isinstance(b_dp_col_q, Quantity) else None)}`",
+                        f"- L_gap_w8_col: `{_format_quantity(l_gap_w8_col_q.model_dump() if isinstance(l_gap_w8_col_q, Quantity) else None)}`",
+                        f"- L_w8_col: `{_format_quantity(l_w8_col_q.model_dump() if isinstance(l_w8_col_q, Quantity) else None)}`",
+                        f"- Fexx_w8_col: `{_format_quantity(fexx_w8_q.model_dump() if isinstance(fexx_w8_q, Quantity) else None)}`",
+                        f"- w_w8_col: `{_format_quantity(w_w8_q.model_dump() if isinstance(w_w8_q, Quantity) else None)}`",
+                        f"- nl_w8_col: `{_format_text(nl_w8_col)}`",
+                        f"- kds_w8_col: `{_format_text(kds_w8_col)}`",
+                        f"- Mf_vgizq_max: `{_format_quantity(mf_vgizq_max_q.model_dump() if isinstance(mf_vgizq_max_q, Quantity) else None)}`",
+                        f"- Mf_vgizq_min: `{_format_quantity(mf_vgizq_min_q.model_dump() if isinstance(mf_vgizq_min_q, Quantity) else None)}`",
+                        f"- Mf_vgder_max: `{_format_quantity(mf_vgder_max_q.model_dump() if isinstance(mf_vgder_max_q, Quantity) else None)}`",
+                        f"- Mf_vgder_min: `{_format_quantity(mf_vgder_min_q.model_dump() if isinstance(mf_vgder_min_q, Quantity) else None)}`",
+                        f"- Combo1_Mf: `{_format_quantity(combo1_q.model_dump() if isinstance(combo1_q, Quantity) else None)}`",
+                        f"- Combo2_Mf: `{_format_quantity(combo2_q.model_dump() if isinstance(combo2_q, Quantity) else None)}`",
+                        f"- MaxCombo_Mf: `{_format_quantity(combo_max_q.model_dump() if isinstance(combo_max_q, Quantity) else None)}`",
+                        f"- Factor t_dp/(t_dp*n_dp+tw): `{_format_decimal(ratio_tdp_over_sum) if ratio_tdp_over_sum is not None else 'n/a'}`",
+                        f"- Ru1_w8_v2_col: `{_format_quantity(ru1_w8_v2_col_q.model_dump() if isinstance(ru1_w8_v2_col_q, Quantity) else None)}`",
+                        f"- Ru2_w8_v2_col: `{_format_quantity(ru2_w8_v2_col_q.model_dump() if isinstance(ru2_w8_v2_col_q, Quantity) else None)}`",
+                        f"- Ru_w8_v2_col: `{_format_quantity(ru_w8_v2_col_q.model_dump() if isinstance(ru_w8_v2_col_q, Quantity) else None)}`",
+                        f"- phi*Rn_w8_v2_col: `{_format_quantity(phi_rn_w8_v2_col_q.model_dump() if isinstance(phi_rn_w8_v2_col_q, Quantity) else None)}`",
+                        f"- DCR_w8_v2_col: `{_format_decimal(dcr_w8_v2_col) if dcr_w8_v2_col is not None else 'n/a'}`",
+                        f"- Resultado: `{_render_result_plain_es(result_w8_v2_col)}`",
+                        "",
+                    ]
+                )
+            block_27 = "\n".join(block_27_lines)
+            block_27 = _align_nested_heading_numbers_with_step(block_27, step_number=assigned_step_number)
+            content.append(block_27)
+            next_step_number += 1
+
+            # Paso 28 - Soldadura #7 (platina de enchape con alma de columna)
+            assigned_step_number = next_step_number
+            step1_w7 = step_1_inputs if isinstance(step_1_inputs, dict) else {}
+            wpz_step = step_21_5_1_panel_zone if isinstance(step_21_5_1_panel_zone, dict) else {}
+            wpz_inputs_28 = wpz_step.get("inputs", {}) if isinstance(wpz_step.get("inputs", {}), dict) else {}
+
+            ru_wpz_v2_col_q = _as_quantity(wpz_step.get("demand"))
+            fexx_w7_q = _as_quantity(step1_w7.get("Fexx_w7_col"))
+            # As requested by user for 28.1.1 equation
+            d_hole_for_w7_capacity_q = _as_quantity(step1_w7.get("d_hole_w7_col"))
+            t_dp_col_q_w7 = _as_quantity(step1_w7.get("t_dp_col"))
+            tw_col_q_w7 = _as_quantity(step1_w7.get("tw_col"))
+            b_dp_col_q_w7 = _as_quantity(step1_w7.get("b_dp_col"))
+            d_vgizq_q_w7 = _as_quantity(wpz_inputs_28.get("db_vgizq") or wpz_inputs_28.get("d_vgizq"))
+            d_vgder_q_w7 = _as_quantity(wpz_inputs_28.get("db_vgder") or wpz_inputs_28.get("d_vgder"))
+            tf_vgizq_q_w7 = _as_quantity(wpz_inputs_28.get("tf_vgizq"))
+            tf_vgder_q_w7 = _as_quantity(wpz_inputs_28.get("tf_vgder"))
+
+            nfilas_w7_col_val = None
+            try:
+                raw_nfil = step1_w7.get("nfilas_w7_col")
+                if raw_nfil is None:
+                    raw_nfil = step1_w7.get("nl_w7_col")
+                if raw_nfil is not None:
+                    nfilas_w7_col_val = int(raw_nfil)
+            except (TypeError, ValueError):
+                nfilas_w7_col_val = None
+
+            ncolumna_w7_col_val = None
+            try:
+                raw_ncol = step1_w7.get("ncolumna_w7_col")
+                if raw_ncol is not None:
+                    ncolumna_w7_col_val = int(raw_ncol)
+            except (TypeError, ValueError):
+                ncolumna_w7_col_val = None
+
+            n_dp_col_val_w7 = 1.0
+            try:
+                if step1_w7.get("n_dp_col") is not None:
+                    n_dp_col_val_w7 = float(step1_w7.get("n_dp_col"))
+            except (TypeError, ValueError):
+                n_dp_col_val_w7 = 1.0
+
+            phi_fragil_w7 = 0.75
+            try:
+                if step1_w7.get("phi_fragil") is not None:
+                    phi_fragil_w7 = float(step1_w7.get("phi_fragil"))
+            except (TypeError, ValueError):
+                phi_fragil_w7 = 0.75
+
+            max_d_minus_2tf_q: Quantity | None = None
+            d_minus_candidates: list[Quantity] = []
+            def _to_unit_len_w7(q: Quantity, target_unit: str) -> Quantity | None:
+                if q.unit == target_unit:
+                    return q
+                if q.unit == "mm" and target_unit == "in":
+                    return Quantity(value=q.value / 25.4, unit="in")
+                if q.unit == "in" and target_unit == "mm":
+                    return Quantity(value=q.value * 25.4, unit="mm")
+                return None
+            if isinstance(d_vgizq_q_w7, Quantity) and isinstance(tf_vgizq_q_w7, Quantity):
+                tf_izq_conv = _to_unit_len_w7(tf_vgizq_q_w7, d_vgizq_q_w7.unit)
+                if isinstance(tf_izq_conv, Quantity):
+                    d_minus_candidates.append(
+                        Quantity(value=d_vgizq_q_w7.value - 2.0 * tf_izq_conv.value, unit=d_vgizq_q_w7.unit)
+                    )
+            if isinstance(d_vgder_q_w7, Quantity) and isinstance(tf_vgder_q_w7, Quantity):
+                tf_der_conv = _to_unit_len_w7(tf_vgder_q_w7, d_vgder_q_w7.unit)
+                if isinstance(tf_der_conv, Quantity):
+                    d_minus_candidates.append(
+                        Quantity(value=d_vgder_q_w7.value - 2.0 * tf_der_conv.value, unit=d_vgder_q_w7.unit)
+                    )
+            if d_minus_candidates:
+                base_unit_d = d_minus_candidates[0].unit
+                converted_d: list[Quantity] = []
+                for qd in d_minus_candidates:
+                    qd_conv = _to_unit_len_w7(qd, base_unit_d)
+                    if isinstance(qd_conv, Quantity):
+                        converted_d.append(qd_conv)
+                if converted_d:
+                    max_d_minus_2tf_q = max(converted_d, key=lambda x: x.value)
+
+            ru_w7_v2_col_q: Quantity | None = None
+            if (
+                isinstance(ru_wpz_v2_col_q, Quantity)
+                and isinstance(t_dp_col_q_w7, Quantity)
+                and isinstance(tw_col_q_w7, Quantity)
+            ):
+                tw_conv = _to_unit_len_w7(tw_col_q_w7, t_dp_col_q_w7.unit)
+                if (
+                    isinstance(tw_conv, Quantity)
+                    and abs((t_dp_col_q_w7.value * n_dp_col_val_w7 + tw_conv.value)) > 1e-12
+                ):
+                    ratio_thickness = t_dp_col_q_w7.value / (t_dp_col_q_w7.value * n_dp_col_val_w7 + tw_conv.value)
+                    ru_w7_v2_col_q = Quantity(
+                        value=ru_wpz_v2_col_q.value * ratio_thickness,
+                        unit=ru_wpz_v2_col_q.unit,
+                    )
+
+            phi_rn_w7_v2_col_q: Quantity | None = None
+            if (
+                isinstance(fexx_w7_q, Quantity)
+                and isinstance(d_hole_for_w7_capacity_q, Quantity)
+                and nfilas_w7_col_val is not None
+                and ncolumna_w7_col_val is not None
+            ):
+                factor_cells = float(nfilas_w7_col_val) * float(ncolumna_w7_col_val)
+                if fexx_w7_q.unit == "MPa" and d_hole_for_w7_capacity_q.unit == "mm":
+                    rn_n = (
+                        factor_cells
+                        * 0.60
+                        * fexx_w7_q.value
+                        * (0.25 * 3.1416 * (d_hole_for_w7_capacity_q.value ** 2))
+                    )
+                    phi_rn_w7_v2_col_q = Quantity(value=phi_fragil_w7 * rn_n / 1000.0, unit="kN")
+                elif fexx_w7_q.unit == "ksi" and d_hole_for_w7_capacity_q.unit == "in":
+                    rn_kip = (
+                        factor_cells
+                        * 0.60
+                        * fexx_w7_q.value
+                        * (0.25 * 3.1416 * (d_hole_for_w7_capacity_q.value ** 2))
+                    )
+                    phi_rn_w7_v2_col_q = Quantity(value=phi_fragil_w7 * rn_kip, unit="kip")
+
+            dcr_w7_v2_col: float | None = None
+            result_w7_v2_col = "n/a"
+            if isinstance(ru_w7_v2_col_q, Quantity) and isinstance(phi_rn_w7_v2_col_q, Quantity):
+                if phi_rn_w7_v2_col_q.unit == ru_w7_v2_col_q.unit:
+                    phi_rn_conv_w7 = phi_rn_w7_v2_col_q
+                elif phi_rn_w7_v2_col_q.unit == "kN" and ru_w7_v2_col_q.unit == "kip":
+                    phi_rn_conv_w7 = Quantity(value=phi_rn_w7_v2_col_q.value / 4.4482216152605, unit="kip")
+                elif phi_rn_w7_v2_col_q.unit == "kip" and ru_w7_v2_col_q.unit == "kN":
+                    phi_rn_conv_w7 = Quantity(value=phi_rn_w7_v2_col_q.value * 4.4482216152605, unit="kN")
+                else:
+                    phi_rn_conv_w7 = None
+                if isinstance(phi_rn_conv_w7, Quantity) and phi_rn_conv_w7.value > 0:
+                    dcr_w7_v2_col = ru_w7_v2_col_q.value / phi_rn_conv_w7.value
+                    result_w7_v2_col = "Cumple" if dcr_w7_v2_col <= 1.0 else "No cumple"
+                else:
+                    result_w7_v2_col = "No cumple"
+
+            block_28_lines = [
+                f"## Paso {assigned_step_number}- Revisión de resistencia de soldadura # 7 (Platina de enchape con alma de columna)",
+                "",
+                f"### {assigned_step_number}.1. Revisión de capacidad a cortante",
+                "",
+                f"#### {assigned_step_number}.1.1. ELR #1: Rotura de soldadura",
+                "",
+                "- Clausula: `Documento: AISC 358-22 | Seccion: Capitulo 6 / Seccion 6.7 + Desarrollo interno`",
+                "- Ecuacion: `Ru_w7_v2_col = Ru_wpz_v2_col * (t_dp_col / (t_dp_col*n_dp_col + tw_col)); phi*Rn_w7_v2_col = phi_fragil * (nfilas_w7_col)*(ncolumna_w7_col) * 0.60 * Fexx_w7_col * 0.25 * 3.1416 * d_hole_w7_col^2; DCR_w7_v2_col = Ru_w7_v2_col / phi*Rn_w7_v2_col`",
+                f"- phi usado (phi_fragil): `{_format_decimal(phi_fragil_w7)}`",
+                f"- nfilas_w7_col: `{_format_text(nfilas_w7_col_val)}`",
+                f"- ncolumna_w7_col: `{_format_text(ncolumna_w7_col_val)}`",
+	                f"- Ru_wpz_v2_col: `{_format_quantity(ru_wpz_v2_col_q.model_dump() if isinstance(ru_wpz_v2_col_q, Quantity) else None)}`",
+	                f"- t_dp_col: `{_format_quantity(t_dp_col_q_w7.model_dump() if isinstance(t_dp_col_q_w7, Quantity) else None)}`",
+	                f"- n_dp_col: `{_format_text(n_dp_col_val_w7)}`",
+	                f"- tw_col: `{_format_quantity(tw_col_q_w7.model_dump() if isinstance(tw_col_q_w7, Quantity) else None)}`",
+	                f"- Fexx_w7_col: `{_format_quantity(fexx_w7_q.model_dump() if isinstance(fexx_w7_q, Quantity) else None)}`",
+	                f"- d_hole_w7_col (usado en formula): `{_format_quantity(d_hole_for_w7_capacity_q.model_dump() if isinstance(d_hole_for_w7_capacity_q, Quantity) else None)}`",
+	                f"- Ru_w7_v2_col: `{_format_quantity(ru_w7_v2_col_q.model_dump() if isinstance(ru_w7_v2_col_q, Quantity) else None)}`",
+	                f"- phi*Rn_w7_v2_col: `{_format_quantity(phi_rn_w7_v2_col_q.model_dump() if isinstance(phi_rn_w7_v2_col_q, Quantity) else None)}`",
+                f"- DCR_w7_v2_col: `{_format_decimal(dcr_w7_v2_col) if dcr_w7_v2_col is not None else 'n/a'}`",
+                f"- Resultado: `{_render_result_plain_es(result_w7_v2_col)}`",
+                "",
+            ]
+            block_28 = "\n".join(block_28_lines)
+            block_28 = _align_nested_heading_numbers_with_step(block_28, step_number=assigned_step_number)
+            content.append(block_28)
+            next_step_number += 1
+    if connection_family_normalized == "moment_prequalified":
+        def _extract_dcr_summary_entries_from_content(blocks: list[str]) -> list[dict[str, Any]]:
+            text = "\n".join(str(item) for item in blocks)
+            current_h2 = ""
+            current_h3 = ""
+            current_h4 = ""
+            entries: list[dict[str, Any]] = []
+            for raw_line in text.splitlines():
+                line = raw_line.strip()
+                if line.startswith("## "):
+                    current_h2 = line[3:].strip()
+                    current_h3 = ""
+                    current_h4 = ""
+                    continue
+                if line.startswith("### "):
+                    current_h3 = line[4:].strip()
+                    current_h4 = ""
+                    continue
+                if line.startswith("#### "):
+                    current_h4 = line[5:].strip()
+                    continue
+                match = re.match(r"^- (DCR[^:]+): `([^`]*)`", line)
+                if not match:
+                    continue
+                dcr_name = match.group(1).strip()
+                dcr_raw = match.group(2).strip()
+                if dcr_raw.lower() in {"n/a", "na", ""}:
+                    continue
+                try:
+                    dcr_value = float(dcr_raw.replace(",", ""))
+                except ValueError:
+                    continue
+                subchapter = current_h4 or current_h3 or current_h2
+                entries.append(
+                    {
+                        "name": dcr_name,
+                        "value": dcr_value,
+                        "subchapter": subchapter,
+                    }
+                )
+            entries.sort(key=lambda item: item["value"], reverse=True)
+            return entries
+
+        dcr_summary_entries = _extract_dcr_summary_entries_from_content(content)
+        if dcr_summary_entries:
+            assigned_step_number = next_step_number
+            worst_entry = dcr_summary_entries[0]
+            worst_state = "🔴" if worst_entry["value"] > 1.0 else "🟢"
+            summary_lines = [
+                f"## Paso {assigned_step_number} - Resumen general",
+                "",
+                "DCR ordenados de mayor a menor para identificar los estados limite criticos.",
+                (
+                    f"- DCR critico global: {worst_state} `{worst_entry['name']} = "
+                    f"{_format_decimal(worst_entry['value'])}` en `{worst_entry['subchapter']}`"
+                ),
+                "",
+            ]
+            for idx, entry in enumerate(dcr_summary_entries, start=1):
+                status_icon = "🟢" if entry["value"] <= 1.0 else "🔴"
+                summary_lines.extend(
+                    [
+                        (
+                            f"{idx}. {status_icon} `{entry['name']}` = "
+                            f"`{_format_decimal(entry['value'])}`"
+                        ),
+                        f"Subcapitulo aplicado: `{entry['subchapter']}`",
+                    ]
+                )
+            summary_lines.append("")
+            block_29 = "\n".join(summary_lines)
+            content.append(block_29)
+            next_step_number += 1
+
     content.append("")
     rendered = "\n".join(content)
     rendered = _normalize_markdown_spacing(rendered)
     rendered = _normalize_memory_spanish_labels(rendered)
+    rendered = _dedupe_markdown_headings(rendered)
     return rendered + "\n"
 
 

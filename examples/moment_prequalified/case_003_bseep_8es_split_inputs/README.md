@@ -44,6 +44,11 @@ Objetivo:
   - `weld_5` (soldadura #5 = platina de continuidad con aleta de columna)
   - `weld_6` (soldadura #6 = platina de continuidad con alma de columna)
   - `weld_7` (soldadura #7 = soldadura de plug entre alma de columna y platina de enchape)
+  - `weld_8` (soldadura #8 = derecha e izquierda entre platina de enchape y aleta de columna)
+  - `weld_9` (soldadura #9 = arriba y abajo entre platina de enchape y alma de columna)
+- En `platina_enchape_alma` se define la condición geométrica:
+  - `extended_dp_col: true` => **Extended doubler plates**.
+  - `extended_dp_col: false` => **Doubler plates placed between continuity plates**.
 - `beam_shape` (desde `viga.perfil`) debe coincidir en derecha e izquierda.
 - En columna/comunes, `materiales` mantiene:
   - `profile_steel_type`
@@ -55,7 +60,6 @@ Objetivo:
 - Ejemplos en `viga`:
   - `perfil_vgder` / `perfil_vgizq`
   - `tipo_acero_perfil_vgder` / `tipo_acero_perfil_vgizq`
-  - `demanda_ductilidad_vgder` / `demanda_ductilidad_vgizq`
   - `E_vgder` / `E_vgizq`
   - `Llb_vgder` / `Llb_vgizq`
   - `Lnc_vgder` / `Lnc_vgizq`
@@ -69,7 +73,7 @@ Objetivo:
   - `phi_no_ductil` (se mapea a `phi_n`)
   - `phi_fragil` (se mapea a `phi_f`)
   - `lados_conexion`
-  - `demanda_ductilidad_col`
+  - `demanda_ductilidad_col` (fuente unica para viga derecha, viga izquierda y columna)
   - `ratio_McMb_min`
   - `ratio_McMb`
 

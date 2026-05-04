@@ -48,6 +48,7 @@ def _bind(
 
 
 def _chapter6_common_steps(connection_type: str) -> list[RuleBinding]:
+    include_step7_2_end_plate_shear = connection_type == "bueep_4e"
     common: list[RuleBinding] = [
         _bind(
             rule_id=f"AISC358.06.3.{connection_type}.prequalification_limits",
@@ -158,22 +159,6 @@ def _chapter6_common_steps(connection_type: str) -> list[RuleBinding]:
                     evaluator=eval_7_1_1,
                 ),
                 _bind(
-                    rule_id=f"AISC358.06.7.{connection_type}.step7_2_1_end_plate_shear_yielding_{side_suffix}",
-                    name=f"{connection_type} Step 7.2.1 end-plate shear yielding ({side_label})",
-                    clause="Chapter 6 / Section 6.7.1 Step 7.2.1 + Eq. (6.7-10)",
-                    page="9.2-24",
-                    connection_type=connection_type,
-                    evaluator=eval_7_2_1,
-                ),
-                _bind(
-                    rule_id=f"AISC358.06.7.{connection_type}.step7_2_2_end_plate_shear_rupture_{side_suffix}",
-                    name=f"{connection_type} Step 7.2.2 end-plate shear rupture ({side_label})",
-                    clause="Chapter 6 / Section 6.7.1 Step 7.2.2 + Eq. (6.7-12)",
-                    page="9.2-24",
-                    connection_type=connection_type,
-                    evaluator=eval_7_2_2,
-                ),
-                _bind(
                     rule_id=f"AISC358.06.7.{connection_type}.step7_3_1_end_plate_hole_tearout_{side_suffix}",
                     name=f"{connection_type} Step 7.3.1 end-plate hole tearout ({side_label})",
                     clause="Chapter 6 / Section 7.3.1 + AISC 360-22 J3.11(a)",
@@ -237,6 +222,28 @@ def _chapter6_common_steps(connection_type: str) -> list[RuleBinding]:
                     source_document="AISC 360-22",
                 ),
             ]
+            + (
+                [
+                    _bind(
+                        rule_id=f"AISC358.06.7.{connection_type}.step7_2_1_end_plate_shear_yielding_{side_suffix}",
+                        name=f"{connection_type} Step 7.2.1 end-plate shear yielding ({side_label})",
+                        clause="Chapter 6 / Section 6.7.1 Step 7.2.1 + Eq. (6.7-10)",
+                        page="9.2-24",
+                        connection_type=connection_type,
+                        evaluator=eval_7_2_1,
+                    ),
+                    _bind(
+                        rule_id=f"AISC358.06.7.{connection_type}.step7_2_2_end_plate_shear_rupture_{side_suffix}",
+                        name=f"{connection_type} Step 7.2.2 end-plate shear rupture ({side_label})",
+                        clause="Chapter 6 / Section 6.7.1 Step 7.2.2 + Eq. (6.7-12)",
+                        page="9.2-24",
+                        connection_type=connection_type,
+                        evaluator=eval_7_2_2,
+                    ),
+                ]
+                if include_step7_2_end_plate_shear
+                else []
+            )
         )
     return common
 

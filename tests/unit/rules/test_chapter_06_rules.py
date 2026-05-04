@@ -162,10 +162,10 @@ def test_bueep_prequalification_limits_are_reported(bueep_4e_payload: dict) -> N
     assert end_plate_web_weld_type["result"] == "OK"
     pfo_compound = next(item for item in limits if item["id"] == "table_6_1.edge_pfo_ge_emin_der")
     assert pfo_compound["comparison"] == "compound"
-    assert "pso_pe_vgder = pfo_pe_vgder + 0.5*tf_vgder - 0.5*tpc_col" in pfo_compound["verification_text"]
+    assert "pso_pe_vgder = pfo_pe_vgder + 0.5*tf_vgder - 0.5*t_pc_col" in pfo_compound["verification_text"]
     pfi_compound = next(item for item in limits if item["id"] == "table_6_1.edge_pfi_ge_emin_der")
     assert pfi_compound["comparison"] == "compound"
-    assert "psi_pe_vgder = pfi_pe_vgder + 0.5*tf_vgder - 0.5*tpc_col" in pfi_compound["verification_text"]
+    assert "psi_pe_vgder = pfi_pe_vgder + 0.5*tf_vgder - 0.5*t_pc_col" in pfi_compound["verification_text"]
 
 
 def test_step2_mpr_uses_beam_catalog_zx_for_bueep(bueep_4e_payload: dict) -> None:
@@ -218,16 +218,6 @@ def test_step7_end_plate_capacity_checks_are_reported_for_bseep_8es(bseep_8es_pa
         for check in result.checks
         if check.rule_id == "AISC358.06.7.bseep_8es.step7_1_1_end_plate_flexural_yielding_vgizq"
     )
-    step7_2_1 = next(
-        check
-        for check in result.checks
-        if check.rule_id == "AISC358.06.7.bseep_8es.step7_2_1_end_plate_shear_yielding_vgizq"
-    )
-    step7_2_2 = next(
-        check
-        for check in result.checks
-        if check.rule_id == "AISC358.06.7.bseep_8es.step7_2_2_end_plate_shear_rupture_vgizq"
-    )
     step7_3_1 = next(
         check
         for check in result.checks
@@ -239,10 +229,18 @@ def test_step7_end_plate_capacity_checks_are_reported_for_bseep_8es(bseep_8es_pa
         if check.rule_id == "AISC358.06.7.bseep_8es.step7_3_2_end_plate_hole_bearing_vgizq"
     )
     assert all(
-        check.status in {CheckStatus.PASS, CheckStatus.FAIL}
-        for check in (step7_1, step7_2_1, step7_2_2, step7_3_1, step7_3_2)
+        check.rule_id != "AISC358.06.7.bseep_8es.step7_2_1_end_plate_shear_yielding_vgizq"
+        for check in result.checks
     )
-    assert all(check.dcr is not None for check in (step7_1, step7_2_1, step7_2_2, step7_3_1, step7_3_2))
+    assert all(
+        check.rule_id != "AISC358.06.7.bseep_8es.step7_2_2_end_plate_shear_rupture_vgizq"
+        for check in result.checks
+    )
+    assert all(
+        check.status in {CheckStatus.PASS, CheckStatus.FAIL}
+        for check in (step7_1, step7_3_1, step7_3_2)
+    )
+    assert all(check.dcr is not None for check in (step7_1, step7_3_1, step7_3_2))
 
 
 def test_step8_stiffener_weld_tension_rupture_is_reported_for_bseep_8es(bseep_8es_payload: dict) -> None:

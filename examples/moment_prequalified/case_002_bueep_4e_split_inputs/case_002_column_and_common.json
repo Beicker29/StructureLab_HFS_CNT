@@ -50,7 +50,12 @@
   },
   "platina_enchape_alma": {
     "usar_dp_col": false,
+    "extended_dp_col": false,
     "tipo_acero_dp_col": "ASTM A572 Gr 50",
+    "gap_dp_col": {
+      "value": 0.0,
+      "unit": "mm"
+    },
     "t_dp_col": {
       "value": 12.7,
       "unit": "mm"
@@ -89,6 +94,7 @@
   },
   "weld_7": {
     "description": "Soldadura de plug entre alma de columna y doubler plates",
+    "usar_weld_7_col": false,
     "Fexx_w7_col": {
       "value": 490.0,
       "unit": "MPa"
@@ -98,7 +104,19 @@
       "value": 8.0,
       "unit": "mm"
     },
-    "nl_w7_col": 1
+    "nfilas_w7_col": 1,
+    "ncolumna_w7_col": 1
+  },
+  "weld_8": {
+    "description": "Soldadura #8 asociada a platina de enchape del alma",
+    "Fexx_w8_col": {
+      "value": 490.0,
+      "unit": "MPa"
+    },
+    "tipo_w8_col": "CJP",
+    "w_w8_col": null,
+    "nl_w8_col": null,
+    "kds_w8_col": 1.0
   },
   "loads": {
     "Pu_col": {

@@ -302,9 +302,9 @@ def get_shape_profile_properties(*, shape: str, unit_system: UnitSystem) -> dict
 
 
 @lru_cache(maxsize=1)
-def _load_bolt_sections_index() -> dict[str, dict[str, float | str]]:
+def _load_bolt_sections_index() -> dict[str, list[dict[str, float | str]]]:
     rows = read_sheet_rows(xlsx_path=_repo_root() / "data" / "sections.xlsx", sheet_name="Perno")
-    index: dict[str, dict[str, float | str]] = {}
+    index: dict[str, list[dict[str, float | str]]] = {}
 
     for row in rows:
         normalized = {normalize_text(k): v for k, v in row.items()}
@@ -316,9 +316,15 @@ def _load_bolt_sections_index() -> dict[str, dict[str, float | str]]:
         if not shape:
             continue
 
+        # Backward compatible header resolution for bolt description.
+        # Priority requested:
+        # 1) classification
+        # 2) descripcion
+        # 3) legacy alternatives
         classification = str(
-            normalized.get("clasificacion")
+            normalized.get("classification")
             or normalized.get("descripcion")
+            or normalized.get("clasificacion")
             or normalized.get("descripcion de los pernos")
             or ""
         ).strip()
@@ -342,7 +348,7 @@ def _load_bolt_sections_index() -> dict[str, dict[str, float | str]]:
             except (TypeError, ValueError):
                 return None
 
-        index[shape] = {
+        record = {
             "shape": shape,
             "classification": classification,
             "fabrication_standard": standard,
@@ -352,6 +358,7 @@ def _load_bolt_sections_index() -> dict[str, dict[str, float | str]]:
             "head_diameter_in": _as_float(head_d_in_raw) or 0.0,
             "head_height_in": _as_float(head_h_in_raw) or 0.0,
         }
+        index.setdefault(shape, []).append(record)
 
     if not index:
         raise StructuredEngineException(
@@ -367,10 +374,16 @@ def _load_bolt_sections_index() -> dict[str, dict[str, float | str]]:
     return index
 
 
-def get_bolt_section_properties(*, bolt_shape: str, unit_system: UnitSystem) -> dict[str, Quantity | str]:
+def get_bolt_section_properties(
+    *,
+    bolt_shape: str,
+    unit_system: UnitSystem,
+    bolt_description: str | None = None,
+    bolt_fabrication_standard: str | None = None,
+) -> dict[str, Quantity | str]:
     key = bolt_shape.strip().upper()
-    bolt = _load_bolt_sections_index().get(key)
-    if bolt is None:
+    candidates = _load_bolt_sections_index().get(key)
+    if not candidates:
         raise StructuredEngineException(
             StructuredError(
                 error_code=ErrorCode.MISSING_REQUIRED_INPUT,
@@ -381,16 +394,50 @@ def get_bolt_section_properties(*, bolt_shape: str, unit_system: UnitSystem) -> 
                 source_document="data/sections.xlsx",
             )
         )
+    selected = candidates[0]
+    if bolt_description is not None or bolt_fabrication_standard is not None:
+        requested_desc = normalize_text(str(bolt_description or ""))
+        requested_std = normalize_text(str(bolt_fabrication_standard or ""))
+        filtered: list[dict[str, float | str]] = []
+        for item in candidates:
+            current_desc = normalize_text(str(item.get("classification") or ""))
+            current_std = normalize_text(str(item.get("fabrication_standard") or ""))
+            if requested_desc and current_desc != requested_desc:
+                continue
+            if requested_std and current_std != requested_std:
+                continue
+            filtered.append(item)
+        if not filtered:
+            available = ", ".join(
+                f"(descripcion='{item.get('classification','')}', norma='{item.get('fabrication_standard','')}')"
+                for item in candidates
+            )
+            raise StructuredEngineException(
+                StructuredError(
+                    error_code=ErrorCode.VALIDATION_ERROR,
+                    stage=Stage.VALIDATE,
+                    rule_id=None,
+                    missing_fields=["materials.bolt_shape", "materials.bolt_description", "materials.bolt_fabrication_standard"],
+                    message=(
+                        "No matching bolt record found in sections/Perno for "
+                        f"shape='{bolt_shape}', descripcion='{bolt_description}', "
+                        f"norma de fabricacion='{bolt_fabrication_standard}'. "
+                        f"Available rows for this shape: {available}"
+                    ),
+                    source_document="data/sections.xlsx",
+                )
+            )
+        selected = filtered[0]
 
     return {
-        "shape": str(bolt["shape"]),
-        "classification": str(bolt["classification"]),
-        "fabrication_standard": str(bolt["fabrication_standard"]),
-        "diameter_nominal": _in_to_length_unit(float(bolt["diameter_in"]), unit_system),
-        "length": _in_to_length_unit(float(bolt["length_in"]), unit_system),
-        "width_across_flats": _in_to_length_unit(float(bolt["width_across_flats_in"]), unit_system),
-        "head_diameter": _in_to_length_unit(float(bolt["head_diameter_in"]), unit_system),
-        "head_height": _in_to_length_unit(float(bolt["head_height_in"]), unit_system),
+        "shape": str(selected["shape"]),
+        "classification": str(selected["classification"]),
+        "fabrication_standard": str(selected["fabrication_standard"]),
+        "diameter_nominal": _in_to_length_unit(float(selected["diameter_in"]), unit_system),
+        "length": _in_to_length_unit(float(selected["length_in"]), unit_system),
+        "width_across_flats": _in_to_length_unit(float(selected["width_across_flats_in"]), unit_system),
+        "head_diameter": _in_to_length_unit(float(selected["head_diameter_in"]), unit_system),
+        "head_height": _in_to_length_unit(float(selected["head_height_in"]), unit_system),
     }
 
 

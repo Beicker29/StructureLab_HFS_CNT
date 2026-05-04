@@ -140,43 +140,32 @@ Propiedades organizadas por ambito.
 
 - Tipo de soldadura #5 de platina de continuidad (tipo_w5_col) (inp): `CJP`
 - Resistencia del electrodo de soldadura #5 (Fexx_w5_col) (inp): `490 MPa`
-- Espesor/size de soldadura #5 (t_w5_col) (inp): `n/a`
+- Espesor/size de soldadura #5 (w_w5_col) (inp): `n/a`
 - Numero de lineas de soldadura #5 (nl_w5_col) (inp): `n/a`
 - Separacion de extremos de soldadura #5 (L_gap_w5_col) (inp): `0 mm`
 - Factor de direccion/sistema de soldadura #5 (kds_w5_col) (inp): `1`
-- Longitud efectiva de soldadura #5 (L_w5_col): `328 mm`
+- Longitud efectiva de soldadura #5 (L_w5_col): `n/a`
 
-### 1.21 platina de enchape del alma
+### 1.21 Ámbito `WELD_6_COL`
 
 #### 1.21.1 Resumen de geometria
 
-- Uso de platina de enchape del alma (usar_dp_col) (inp): `False`
-- Tipo de acero de platina de enchape del alma (tipo_acero_dp_col) (inp): `ASTM A572 Gr 50`
-- Espesor de platina de enchape del alma (t_dp_col) (inp): `12.7 mm`
-- Numero de platinas de enchape del alma (n_dp_col) (inp): `0`
-
-### 1.22 Ámbito `WELD_6_COL`
-
-#### 1.22.1 Resumen de geometria
-
 - Tipo de soldadura #6 de platina de continuidad (tipo_w6_col) (inp): `CJP`
 - Resistencia del electrodo de soldadura #6 (Fexx_w6_col) (inp): `490 MPa`
-- Espesor/size de soldadura #6 (t_w6_col) (inp): `n/a`
+- Espesor/size de soldadura #6 (w_w6_col) (inp): `n/a`
 - Numero de lineas de soldadura #6 (nl_w6_col) (inp): `n/a`
 - Separacion de extremos de soldadura #6 (L_gap_w6_col) (inp): `0 mm`
 - Factor de direccion/sistema de soldadura #6 (kds_w6_col) (inp): `1`
 - Longitud efectiva de soldadura #6 (Lws_col): `328 mm`
 
-### 1.23 platinas de continuidad
+### 1.22 platinas de continuidad
 
-#### 1.23.1 Resumen de geometria
+#### 1.22.1 Resumen de geometria
 
 - Uso de platinas de continuidad (usar_pc_col) (inp): `True`
 - Tipo de acero de platina de continuidad (tipo_acero_pc_col) (inp): `ASTM A572 Gr 50`
 - Espesor de platina de continuidad (t_pc_col) (inp): `15.9 mm`
 - Ancho base de platina de continuidad (b1_pc_col) (inp): `n/a`
-- Espesor de platina de enchape del alma (t_dp_col) (inp): `12.7 mm`
-- Numero de platinas de enchape del alma (n_dp_col) (inp): `0`
 - Ancho b1.1 de platina de continuidad (b1.1_pc_col): `n/a`
 - Ancho b1.2 de platina de continuidad (b1.2_pc_col): `n/a`
 - Distancia de recorte 1 de platina de continuidad (Clip1_pc_col): `48.1 mm`
@@ -184,15 +173,6 @@ Propiedades organizadas por ambito.
 - Longitud util 2 de platina de continuidad (L2_pc_col): `328 mm`
 - Distancia de recorte 2 de platina de continuidad (Clip2_pc_col): `16.6 mm`
 - Ancho neto de platina de continuidad (b2_pc_col): `n/a`
-
-### 1.24 Ámbito `WELD_7_COL`
-
-#### 1.24.1 Resumen de geometria
-
-- Tipo de soldadura #7 (tipo_w7_col) (inp): `tapon`
-- Resistencia del electrodo de soldadura #7 (Fexx_w7_col) (inp): `490 MPa`
-- Espesor/size de soldadura #7 (t_w7_col) (inp): `8 mm`
-- Numero de lineas de soldadura #7 (nl_w7_col) (inp): `1`
 
 ## Paso 2 - Especificaciones técnicas
 
@@ -268,13 +248,9 @@ Especificaciones tecnicas organizadas por ambito.
 
 ### 2.20 Ámbito `WELD_5_COL`
 
-### 2.21 Ámbito `DOUBLER_PLATE_COL`
+### 2.21 Ámbito `WELD_6_COL`
 
-### 2.22 Ámbito `WELD_6_COL`
-
-### 2.23 Ámbito `CONTINUITY_PLATE_COL`
-
-### 2.24 Ámbito `WELD_7_COL`
+### 2.22 Ámbito `CONTINUITY_PLATE_COL`
 
 ## Paso 3 - Revisiónes de requerimientos de propiedades mecánicas y geométricas
 
@@ -450,7 +426,7 @@ Comparacion directa de valor calculado contra limite normativo (sin formato DCR)
 #### Chequeo 3.3.8 - Espesor individual minimo del alma de columna (`tw_col`)
 
 - Ámbito: `COLUMN`
-- Verificacion: `tw_col >= (d_z + w_z)/90 con d_z=d_izq-2tf_izq, w_z=bcf_col; 22.6 mm >= 9.58 mm`
+- Verificacion: `tw_col >= (dz_dp_col + wz_dp_col)/90; si use_weld_7_col=false: dz_dp_col=d_col-2*tf_col, wz_dp_col=max{d_<lado>-2*tf_<lado>}; si use_weld_7_col=true: dz_dp_col=h_dp_col/nfilas_w7_col, wz_dp_col=b_dp_col/ncolumna_w7_col; 22.6 mm >= 11.11 mm`
 - Clausula: `Documento: AISC 358-22 | Seccion: AISC 341-22w E3.6e.2`
 - Resultado: 🟢 Cumple
 
@@ -753,65 +729,47 @@ Comparacion directa de valor calculado contra limite normativo (sin formato DCR)
 #### Chequeo 3.18.1 - Requisitos de soldadura entre ala de viga y placa de extremo (viga derecha) (`tipo_w4_vgder`)
 
 - Ámbito: `WELD_4_VGDER`
-- Verificacion: `si demanda_ductilidad_vgder in {high, moderate}: tipo_w4_vgder == cjp; t_w4_1_vgder == 0 mm; demanda_ductilidad_vgder = high; tipo_w4_vgder = cjp; t_w4_1_vgder = 0.000 mm`
+- Verificacion: `si demanda_ductilidad_vgder in {high, moderate}: tipo_w4_vgder == cjp; t_w4_1_vgder == 8 mm; demanda_ductilidad_vgder = high; tipo_w4_vgder = cjp; t_w4_1_vgder = 0.000 mm`
 - Clausula: `Documento: AISC 358-22 | Seccion: Seccion 6.7`
-- Resultado: 🟢 Cumple
+- Resultado: 🔴 No cumple
 
 ### 3.19 Ámbito `WELD_4_VGIZQ`
 
 #### Chequeo 3.19.1 - Requisitos de soldadura entre ala de viga y placa de extremo (viga izquierda) (`tipo_w4_vgizq`)
 
 - Ámbito: `WELD_4_VGIZQ`
-- Verificacion: `si demanda_ductilidad_vgizq in {high, moderate}: tipo_w4_vgizq == cjp; t_w4_1_vgizq == 0 mm; demanda_ductilidad_vgizq = high; tipo_w4_vgizq = cjp; t_w4_1_vgizq = 0.000 mm`
+- Verificacion: `si demanda_ductilidad_vgizq in {high, moderate}: tipo_w4_vgizq == cjp; t_w4_1_vgizq == 8 mm; demanda_ductilidad_vgizq = high; tipo_w4_vgizq = cjp; t_w4_1_vgizq = 0.000 mm`
 - Clausula: `Documento: AISC 358-22 | Seccion: Seccion 6.7`
-- Resultado: 🟢 Cumple
+- Resultado: 🔴 No cumple
 
 ### 3.20 Ámbito `WELD_5_COL`
 
 #### Chequeo 3.20.1 - El tipo de soldadura de platina de continuidad debe declararse y ser permitido (`tipo_w5_col`)
 
 - Ámbito: `WELD_5_COL`
-- Verificacion: `tipo_w5_col in {double_sided_fillet, cjp, pjp}; 'cjp' in {double_sided_fillet, cjp, pjp}`
+- Verificacion: `tipo_w5_col in {fillet, cjp}; 'cjp' in {fillet, cjp}`
 - Clausula: `Documento: AISC 358-22 | Seccion: Seccion 6.3 (detalle de soldadura de platina de continuidad)`
 - Resultado: 🟢 Cumple
 
-#### Chequeo 3.20.2 - Tipo de soldadura de platina de continuidad cuando el espesor es menor o igual a 10 mm (`tipo_w5_col`)
+#### Chequeo 3.20.2 - Tamano minimo de soldadura #5 cuando tipo_w5_col es fillet (`tipo_w5_col`)
 
 - Ámbito: `WELD_5_COL`
-- Verificacion: `tipo_w5_col in {cjp, pjp} => cumple siempre; t_pc_col=15.9 mm; tipo_w5_col='cjp'`
+- Verificacion: `tipo_w5_col='cjp' => cumple; t_pc_col=15.9 mm; tipo_w5_col='cjp'`
 - Clausula: `Documento: AISC 358-22 | Seccion: Seccion 6.3 (detalle de soldadura de platina de continuidad)`
 - Resultado: 🟢 Cumple
 
-### 3.21 Ámbito `DOUBLER_PLATE_COL`
+### 3.21 Ámbito `WELD_6_COL`
 
-#### Chequeo 3.21.1 - Espesor individual minimo de platina de enchape del alma (`t_dp_col`)
-
-- Ámbito: `DOUBLER_PLATE_COL`
-- Verificacion: `No aplica: usar_dp_col = false`
-- Clausula: `Documento: AISC 358-22 | Seccion: AISC 341-22w E3.6e.2`
-- Resultado: 🟢 Cumple
-
-### 3.22 Ámbito `WELD_6_COL`
-
-#### Chequeo 3.22.1 - Longitud maxima de soldadura #6 en columna (`Lws_col`)
+#### Chequeo 3.21.1 - Tipo de soldadura #6 permitido (`tipo_w6_col`)
 
 - Ámbito: `WELD_6_COL`
-- Verificacion: `Lws_col <= d_col - 2*(kdet_col + 6*tw_col); 328 mm <= 135.8 mm`
-- Clausula: `Documento: AISC 358-22 | Seccion: AISC 358-22 Seccion 6.3`
-- Resultado: 🔴 No cumple
-
-#### Chequeo 3.22.2 - Longitud minima de soldadura #6 en columna (`Lws_col`)
-
-- Ámbito: `WELD_6_COL`
-- Verificacion: `Lws_col >= d_col - 2*(kdet_col + 4*tw_col); 328 mm >= 226.2 mm`
-- Clausula: `Documento: AISC 358-22 | Seccion: AISC 358-22 Seccion 6.3`
+- Verificacion: `tipo_w6_col in {cjp, pjp, fillet}; 'cjp' in {cjp, pjp, fillet}`
+- Clausula: `Documento: AISC 358-22 | Seccion: Seccion 6.7`
 - Resultado: 🟢 Cumple
 
-### 3.23 platina de continuidad
+### 3.22 platina de continuidad
 
-### 3.24 Ámbito `WELD_7_COL`
-
-### 3.25 Resumen de chequeos por ámbito
+### 3.23 Resumen de chequeos por ámbito
 
 - 🔴 `3.1` `BEAM_IZQ`: total=8, cumple=7, no_cumple=1, numerales_no_cumplen=3.1.2
 - 🔴 `3.2` `BEAM_DER`: total=8, cumple=7, no_cumple=1, numerales_no_cumplen=3.2.7
@@ -830,13 +788,11 @@ Comparacion directa de valor calculado contra limite normativo (sin formato DCR)
 - 🟢 `3.15` `WELD_2_VGIZQ`: total=1, cumple=1, no_cumple=0, numerales_no_cumplen=ninguno
 - 🟢 `3.16` `WELD_3_VGDER`: total=1, cumple=1, no_cumple=0, numerales_no_cumplen=ninguno
 - 🟢 `3.17` `WELD_3_VGIZQ`: total=1, cumple=1, no_cumple=0, numerales_no_cumplen=ninguno
-- 🟢 `3.18` `WELD_4_VGDER`: total=1, cumple=1, no_cumple=0, numerales_no_cumplen=ninguno
-- 🟢 `3.19` `WELD_4_VGIZQ`: total=1, cumple=1, no_cumple=0, numerales_no_cumplen=ninguno
+- 🔴 `3.18` `WELD_4_VGDER`: total=1, cumple=0, no_cumple=1, numerales_no_cumplen=3.18.1
+- 🔴 `3.19` `WELD_4_VGIZQ`: total=1, cumple=0, no_cumple=1, numerales_no_cumplen=3.19.1
 - 🟢 `3.20` `WELD_5_COL`: total=2, cumple=2, no_cumple=0, numerales_no_cumplen=ninguno
-- 🟢 `3.21` `DOUBLER_PLATE_COL`: total=1, cumple=1, no_cumple=0, numerales_no_cumplen=ninguno
-- 🔴 `3.22` `WELD_6_COL`: total=2, cumple=1, no_cumple=1, numerales_no_cumplen=3.22.1
-- 🟢 `3.23` `CONTINUITY_PLATE_COL`: total=0, cumple=0, no_cumple=0, numerales_no_cumplen=ninguno
-- 🟢 `3.24` `WELD_7_COL`: total=0, cumple=0, no_cumple=0, numerales_no_cumplen=ninguno
+- 🟢 `3.21` `WELD_6_COL`: total=1, cumple=1, no_cumple=0, numerales_no_cumplen=ninguno
+- 🟢 `3.22` `CONTINUITY_PLATE_COL`: total=0, cumple=0, no_cumple=0, numerales_no_cumplen=ninguno
 
 ## Paso 4 - Momento probable máximo en rótula plástica (Mpr)
 
@@ -1014,7 +970,7 @@ Calculo segun Eq. (2.4-4): `Mfmax = Mpr + Vhmax*Sh` y `Mfmin = Mpr + Vhmin*Sh`.
 
 - Clausula: `Documento: AISC 358-22 | Seccion: Capitulo 6 / Seccion 6.7.1 Paso 7.1.1 + Eq. (6.7-8)`
 - Ecuacion: `Ru_pe_m3_vgizq = Mf_vgizq_critico; phi*Rn_pe_m3_vgizq = phi * tpe_vgizq^2 * Fyp_pe_vgizq * Yp_pe_vgizq (AISC 358-22 Eq. 6.7-8)`
-- phi usado: `0.9`
+- phi usado: `1`
 - Mf_vgizq_critico: `1547.36 kN-m`
 - tpe_vgizq: `25.4 mm`
 - Fyp_pe_vgizq: `345 MPa`
@@ -1025,45 +981,8 @@ Calculo segun Eq. (2.4-4): `Mfmax = Mpr + Vhmax*Sh` y `Mfmin = Mpr + Vhmin*Sh`.
 - pfi_pe_vgizq_entrada: `50 mm`
 - pfi_pe_vgizq_efectivo: `50 mm`
 - Ru_pe_m3_vgizq: `1547.36 kN-m`
-- phi*Rn_pe_m3_vgizq: `1359.57 kN-m`
-- DCR_pe_m3_vgizq: `1.14`
-- Resultado: `🔴 No cumple`
-
-### 10.2. Revisión de capacidad a cortante perpendicular al plano de la platina (vg_izq)
-
-#### 10.2.1. ELR #1: Fluencia por cortante (vg_izq)
-
-- Clausula: `Documento: AISC 358-22 | Seccion: Capitulo 6 / Seccion 6.7.1 Paso 7.2.1 + Eq. (6.7-10)`
-- Ecuacion: `Ru_pe_v1_vgizq = Mf_vgizq_critico / (2*(d_vgizq - tf_vgizq)); phi*Rn_pe_v1_vgizq = phi * 0.6 * Fyp_pe_vgizq * bpe_vgizq * tpe_vgizq (AISC 358-22 Eq. 6.7-10)`
-- phi usado: `0.9`
-- d_vgizq: `607 mm`
-- tf_vgizq: `17.3 mm`
-- z_vgizq = d_vgizq - tf_vgizq: `589.7 mm`
-- bpe_vgizq: `270 mm`
-- tpe_vgizq: `25.4 mm`
-- Fyp_pe_vgizq: `345 MPa`
-- Mf_vgizq_critico: `1547.36 kN-m`
-- Ru_pe_v1_vgizq: `1311.99 kN`
-- phi*Rn_pe_v1_vgizq: `1277.65 kN`
-- DCR_pe_v1_vgizq: `1.03`
-- Resultado: `🔴 No cumple`
-
-#### 10.2.2. ELR #2: Rotura por cortante (vg_izq)
-
-- Clausula: `Documento: AISC 358-22 | Seccion: Capitulo 6 / Seccion 6.7.1 Paso 7.2.2 + Eq. (6.7-12)`
-- Ecuacion: `Rn_pe_v2_vgizq = Ru_pe_m3_vgizq / (2*(d_vgizq - tf_vgizq)); phi*Rn_pe_v2_vgizq = phi * 0.6 * Fup_pe_vgizq * tpe_vgizq * (bpe_vgizq - 2*(dh_pe_vgizq + 1.6 mm)) (AISC 358-22 Eq. 6.7-12)`
-- phi usado: `0.9`
-- Ru_pe_m3_vgizq: `1547.36 kN-m`
-- d_vgizq: `607 mm`
-- tf_vgizq: `17.3 mm`
-- z_vgizq = d_vgizq - tf_vgizq: `589.7 mm`
-- bpe_vgizq: `270 mm`
-- tpe_vgizq: `25.4 mm`
-- Fup_pe_vgizq: `450 MPa`
-- dh_pe_vgizq: `28.57 mm`
-- Rn_pe_v2_vgizq: `1311.99 kN`
-- phi*Rn_pe_v2_vgizq: `1294 kN`
-- DCR_pe_v2_vgizq: `1.01`
+- phi*Rn_pe_m3_vgizq: `1510.63 kN-m`
+- DCR_pe_m3_vgizq: `1.02`
 - Resultado: `🔴 No cumple`
 
 ### 10.3. Revisión de capacidad a cortante paralelo al plano de la platina (vg_izq)
@@ -1110,7 +1029,7 @@ Calculo segun Eq. (2.4-4): `Mfmax = Mpr + Vhmax*Sh` y `Mfmin = Mpr + Vhmin*Sh`.
 
 - Clausula: `Documento: AISC 358-22 | Seccion: Capitulo 6 / Seccion 6.7.1 Paso 7.1.1 + Eq. (6.7-8)`
 - Ecuacion: `Ru_pe_m3_vgder = Mf_vgder_critico; phi*Rn_pe_m3_vgder = phi * tpe_vgder^2 * Fyp_pe_vgder * Yp_pe_vgder (AISC 358-22 Eq. 6.7-8)`
-- phi usado: `0.9`
+- phi usado: `1`
 - Mf_vgder_critico: `1261.45 kN-m`
 - tpe_vgder: `25.4 mm`
 - Fyp_pe_vgder: `345 MPa`
@@ -1121,45 +1040,8 @@ Calculo segun Eq. (2.4-4): `Mfmax = Mpr + Vhmax*Sh` y `Mfmin = Mpr + Vhmin*Sh`.
 - pfi_pe_vgder_entrada: `55 mm`
 - pfi_pe_vgder_efectivo: `55 mm`
 - Ru_pe_m3_vgder: `1261.45 kN-m`
-- phi*Rn_pe_m3_vgder: `981.48 kN-m`
-- DCR_pe_m3_vgder: `1.29`
-- Resultado: `🔴 No cumple`
-
-### 11.2. Revisión de capacidad a cortante perpendicular al plano de la platina (vg_der)
-
-#### 11.2.1. ELR #1: Fluencia por cortante (vg_der)
-
-- Clausula: `Documento: AISC 358-22 | Seccion: Capitulo 6 / Seccion 6.7.1 Paso 7.2.1 + Eq. (6.7-10)`
-- Ecuacion: `Ru_pe_v1_vgder = Mf_vgder_critico / (2*(d_vgder - tf_vgder)); phi*Rn_pe_v1_vgder = phi * 0.6 * Fyp_pe_vgder * bpe_vgder * tpe_vgder (AISC 358-22 Eq. 6.7-10)`
-- phi usado: `0.9`
-- d_vgder: `462 mm`
-- tf_vgder: `17.3 mm`
-- z_vgder = d_vgder - tf_vgder: `444.7 mm`
-- bpe_vgder: `260 mm`
-- tpe_vgder: `25.4 mm`
-- Fyp_pe_vgder: `345 MPa`
-- Mf_vgder_critico: `1261.45 kN-m`
-- Ru_pe_v1_vgder: `1418.32 kN`
-- phi*Rn_pe_v1_vgder: `1230.33 kN`
-- DCR_pe_v1_vgder: `1.15`
-- Resultado: `🔴 No cumple`
-
-#### 11.2.2. ELR #2: Rotura por cortante (vg_der)
-
-- Clausula: `Documento: AISC 358-22 | Seccion: Capitulo 6 / Seccion 6.7.1 Paso 7.2.2 + Eq. (6.7-12)`
-- Ecuacion: `Rn_pe_v2_vgder = Ru_pe_m3_vgder / (2*(d_vgder - tf_vgder)); phi*Rn_pe_v2_vgder = phi * 0.6 * Fup_pe_vgder * tpe_vgder * (bpe_vgder - 2*(dh_pe_vgder + 1.6 mm)) (AISC 358-22 Eq. 6.7-12)`
-- phi usado: `0.9`
-- Ru_pe_m3_vgder: `1261.45 kN-m`
-- d_vgder: `462 mm`
-- tf_vgder: `17.3 mm`
-- z_vgder = d_vgder - tf_vgder: `444.7 mm`
-- bpe_vgder: `260 mm`
-- tpe_vgder: `25.4 mm`
-- Fup_pe_vgder: `450 MPa`
-- dh_pe_vgder: `28.57 mm`
-- Rn_pe_v2_vgder: `1418.32 kN`
-- phi*Rn_pe_v2_vgder: `1232.28 kN`
-- DCR_pe_v2_vgder: `1.15`
+- phi*Rn_pe_m3_vgder: `1090.54 kN-m`
+- DCR_pe_m3_vgder: `1.16`
 - Resultado: `🔴 No cumple`
 
 ### 11.3. Revisión de capacidad a cortante paralelo al plano de la platina (vg_der)
@@ -1591,7 +1473,7 @@ Donde:
 #### 23.5.1. ELR #1: Cortante en la zona del panel del alma (WPZS)
 
 - Clausula: `Documento: AISC 360-22w | Seccion: AISC 360-22w Seccion J10.6 + Eq. (J10-9) to Eq. (J10-12)`
-- Ecuacion: `Rn_wpz_v2_col = 0.60*Fy_col*d_col*tw_col (J10-9)`
+- Ecuacion: `Rn1_wpz_v2_col = 0.60*Fy_col*d_col*tw_col; Rn2_wpz_v2_col = 0.60*Fy_col*d_col*t_dp_col; Rn_wpz_v2_col = min{Rn1_wpz_v2_col, Rn2_wpz_v2_col} (J10-9)`
 - Considera deformacion inelastica del panel zone: `No`
 - phi_ductil (usado en WPZS): `1`
 - hb_col: `240 mm`
@@ -1617,8 +1499,158 @@ Donde:
 - Fy_col: `345 MPa`
 - d_col: `508 mm`
 - tw_col: `22.6 mm`
+- t_dp_col: `12.7 mm`
+- usar_weld_7_col: `False`
+- tw_wpz_effective_col: `12.7 mm`
+- Rn1_wpz_v2_col: `2376.53 kN`
+- Rn2_wpz_v2_col: `1335.48 kN`
 - bcf_col: `290 mm`
 - tcf_col: `40.4 mm`
-- Rn_wpz_v2_col: `2376.53 kN`
-- DCR_wpz_v2_col: `-0.35`
+- Rn_wpz_v2_col: `1335.48 kN`
+- DCR_wpz_v2_col: `-0.62`
 - Resultado: `🟢 Cumple`
+
+## Paso 24 - Revisión de resistencia del alma de platinas de continuidad
+
+### 24.1. Revisión de capacidad a tracción
+
+#### 24.1.1. ELR #1: Fluencia por tracción area bruta
+
+- Clausula: `Documento: AISC 358-22 | Seccion: Desarrollo interno de demanda para alma de platinas de continuidad`
+- Ecuacion: `Ru_pc_p+_col_vgizq = Mf_vgizq_critico/(d_vgizq - tf_vgizq) - min{phi*Rn_(23.1.1), phi*Rn_(23.2.1), phi*Rn_(22.1.1)}; Ru_pc_p+_col_vgder = Mf_vgder_critico/(d_vgder - tf_vgder) - min{phi*Rn_(23.3.1), phi*Rn_(23.4.1), phi*Rn_(22.2.1)}; Ru_pc_p+_col = max{Ru_pc_p+_col_vgder, Ru_pc_p+_col_vgizq}; phi*Rn_pc_p+_col = phi * Fy_pc_col * b1_pc_col * t_pc_col * n_pc_col`
+- Mf_vgizq_critico: `1547.36 kN-m`
+- d_vgizq: `607 mm`
+- tf_vgizq: `17.3 mm`
+- phi*Rn_cw_v2_col_vgizq (22.1.1): `6557 kN`
+- phi*Rn_cw_v2_col_vgizq (23.1.1): `1712.22 kN`
+- phi*Rn_cw_v2_col_vgizq (23.2.1): `1987.85 kN`
+- min_capacidad_vgizq: `1712.22 kN`
+- Ru_pc_p+_col_vgizq: `911.75 kN`
+- Mf_vgder_critico: `1261.45 kN-m`
+- d_vgder: `462 mm`
+- tf_vgder: `17.3 mm`
+- phi*Rn_cw_v2_col_vgder (22.2.1): `6452.49 kN`
+- phi*Rn_cw_v2_col_vgder (23.3.1): `1712.22 kN`
+- phi*Rn_cw_v2_col_vgder (23.4.1): `1987.85 kN`
+- min_capacidad_vgder: `1712.22 kN`
+- Ru_pc_p+_col_vgder: `1124.41 kN`
+- Ru_pc_p+_col: `1124.41 kN`
+- phi usado: `0.9`
+- Fy_pc_col: `n/a`
+- b1_pc_col: `n/a`
+- t_pc_col: `15.9 mm`
+- n_pc_col: `1`
+- phi*Rn_pc_p+_col: `n/a`
+- DCR_pc_p+_col: `n/a`
+- Resultado: `n/a`
+
+### 24.2. Revisión de capacidad a compresión
+
+#### 24.2.1. ELR #1: Pandeo por flexión
+
+- Clausula: `Documento: AISC 358-22 | Seccion: Formula de Fcr segun imagen de usuario (K=0.65)`
+- Ecuacion: `n/a; phi*Rn_pc_p-_col = phi * Fcr_pc_col * b1_pc_col * t_pc_col * n_pc_col`
+- Mf_vgizq_critico: `1547.36 kN-m`
+- d_vgizq: `607 mm`
+- tf_vgizq: `17.3 mm`
+- phi*Rn_cw_v2_col_vgizq (22.1.1): `6557 kN`
+- phi*Rn_cw_v2_col_vgizq (23.1.1): `1712.22 kN`
+- phi*Rn_cw_v2_col_vgizq (23.2.1): `1987.85 kN`
+- min_capacidad_vgizq: `1712.22 kN`
+- Ru_pc_p-_col_vgizq: `911.75 kN`
+- Mf_vgder_critico: `1261.45 kN-m`
+- d_vgder: `462 mm`
+- tf_vgder: `17.3 mm`
+- phi*Rn_cw_v2_col_vgder (22.2.1): `6452.49 kN`
+- phi*Rn_cw_v2_col_vgder (23.3.1): `1712.22 kN`
+- phi*Rn_cw_v2_col_vgder (23.4.1): `1987.85 kN`
+- min_capacidad_vgder: `1712.22 kN`
+- Ru_pc_p-_col_vgder: `1124.41 kN`
+- Ru_pc_p-_col: `1124.41 kN`
+- phi usado: `0.9`
+- K: `0.65`
+- Lp_pc_col: `n/a`
+- r_pc_col: `n/a`
+- KLr_pc_col: `n/a`
+- E_pc_col: `n/a`
+- Fy_pc_col: `n/a`
+- Fe_pc_col: `n/a`
+- Fcr_pc_col: `n/a`
+- b1_pc_col: `n/a`
+- t_pc_col: `15.9 mm`
+- n_pc_col: `1`
+- phi*Rn_pc_p-_col: `n/a`
+- DCR_pc_p-_col: `n/a`
+- Resultado: `n/a`
+
+### 24.3. Revisión de capacidad a cortante
+
+#### 24.3.1. ELR #1: Fluencia por cortante del area bruta
+
+- Clausula: `Documento: AISC 360-22 | Seccion: G2.1 (adaptado a demanda de alma de platina de continuidad)`
+- Ecuacion: `Ru_pc_v2_col = Ru_pc_p+_col_vgder + Ru_pc_p+_col_vgizq; phi*Rn_pc_v2_col = phi * 0.6 * Fy_pc_col * t_pc_col * n_pc_col * L2_pc_col; DCR_pc_v2_col = Ru_pc_v2_col / phi*Rn_pc_v2_col`
+- Mf_vgizq_critico: `1547.36 kN-m`
+- d_vgizq: `607 mm`
+- tf_vgizq: `17.3 mm`
+- phi*Rn_cw_v2_col_vgizq (22.1.1): `6557 kN`
+- phi*Rn_cw_v2_col_vgizq (23.1.1): `1712.22 kN`
+- phi*Rn_cw_v2_col_vgizq (23.2.1): `1987.85 kN`
+- min_capacidad_vgizq: `1712.22 kN`
+- Ru_pc_p+_col_vgizq: `911.75 kN`
+- Mf_vgder_critico: `1261.45 kN-m`
+- d_vgder: `462 mm`
+- tf_vgder: `17.3 mm`
+- phi*Rn_cw_v2_col_vgder (22.2.1): `6452.49 kN`
+- phi*Rn_cw_v2_col_vgder (23.3.1): `1712.22 kN`
+- phi*Rn_cw_v2_col_vgder (23.4.1): `1987.85 kN`
+- min_capacidad_vgder: `1712.22 kN`
+- Ru_pc_p+_col_vgder: `1124.41 kN`
+- Ru_pc_v2_col: `2036.17 kN`
+- phi usado: `1`
+- Fy_pc_col: `n/a`
+- t_pc_col: `15.9 mm`
+- n_pc_col: `1`
+- L2_pc_col: `n/a`
+- phi*Rn_pc_v2_col: `n/a`
+- DCR_pc_v2_col: `n/a`
+- Resultado: `n/a`
+
+## Paso 25- Revisión de resistencia de soldadura # 5 ( Platina de continuidad con aleta de columna)
+
+### 25.1. Revisión de capacidad a tracción
+
+#### 25.1.1. ELR #1: Rotura de soldadura
+
+- Clausula: `Documento: AISC 358-22 | Seccion: Capitulo 6 / Seccion 6.7 + AISC 360-22 J2.4`
+- Ecuacion: `Ru_w5_p+_col = Fy_pc_col * b2_pc_col * t_pc_col * n_pc_col; Fillet: phi*Rn_w5_p+_col = phi_fragil * kds_w5_col * nl_w5_col * 0.6 * Fexx_w5_col * 0.707 * L_w5_col * w_w5_col * n_pc_col; DCR_w5_p+_col = Ru_w5_p+_col / phi*Rn_w5_p+_col`
+- tipo_w5_col: `CJP`
+- CJP: `Cumple`
+- Resultado: `🟢 Cumple`
+
+## Paso 26- Revisión de resistencia de soldadura # 6 ( Platina de continuidad con alma de columna)
+
+### 26.1. Revisión de capacidad a cortante
+
+#### 26.1.1. ELR #1: Rotura de soldadura
+
+- Clausula: `Documento: AISC 358-22 | Seccion: Capitulo 6 / Seccion 6.7 + AISC 360-22 J2.4`
+- Ecuacion: `Ru1_w5_v2_col = 0.6 * Fy_pc_col * L2_pc_col * t_pc_col; Ru2_w5_v2_col = 0.6 * fu_dp_col * t_dp_col * L_w6_col; Ru3_w5_v2_col = 0.6 * fy_dp_col * t_dp_col * L_w6_col; Ru4_w5_v2_col = 0.6 * fu_col * tw_col * L_w6_col; Ru5_w5_v2_col = 0.6 * fy_col * tw_col * L_w6_col; Ru6_w5_v2_col = 0.6 * fu_col * tw_col * d_col; Ru7_w5_v2_col = 0.6 * fy_col * tw_col * d_col * Cv1; Ru8_w5_v2_col = 0.6 * fu_dp_col * t_dp_col * wz_dp_col; Ru9_w5_v2_col = 0.6 * fy_dp_col * t_dp_col * wz_dp_col; Ru_w5_v2_col = MIN{Ru1..Ru9}; Fillet: phi*Rn_w6_v2_col = phi_fragil * kds_w6_col * nl_w6_col * 0.6 * Fexx_w6_col * 0.707 * L_w6_col * w_w6_col; DCR_w6_v2_col = Ru_w5_v2_col / phi*Rn_w6_v2_col`
+- tipo_w6_col: `CJP`
+- CJP: `Cumple`
+- Resultado: `🟢 Cumple`
+
+### 26.6. Revisión de capacidad del material base
+
+#### 26.6.2. ELR #1: Rotura del material base
+
+- Clausula: `AISC 360-22 J4 (material base)`
+- Ecuacion: `Ru_w5_v2_col = MIN{Ru1..Ru9}; phi*Rn1_w6-dp_v2_col = phi_fragil * 0.6 * fu_dp_col * t_dp_col * L_w6_col; phi*Rn2_w6-dp_v2_col = phi_no_ductil * 0.6 * fy_dp_col * t_dp_col * L_w6_col; phi*Rn1_w6-cw_v2_col = phi_fragil * 0.6 * fu_col * tw_col * L_w6_col; phi*Rn2_w6-cw_v2_col = phi_no_ductil * 0.6 * fy_col * tw_col * L_w6_col; phi*Rn_w6_v2_col = min(phi*Rn1_w6-dp_v2_col, phi*Rn2_w6-dp_v2_col, phi*Rn1_w6-cw_v2_col, phi*Rn2_w6-cw_v2_col); DCR_w6_v2_col = Ru_w5_v2_col / phi*Rn_w6_v2_col`
+- tipo_w6_col: `CJP`
+- CJP: `Cumple`
+- Resultado: `🟢 Cumple`
+
+## Paso 27- Revisión de resistencia de soldadura # 8 (Platina de enchape con aleta de columna)
+
+### 27.1. Revisión de capacidad a cortante
+
+#### 27.1.1. ELR #1: Rotura de soldadura

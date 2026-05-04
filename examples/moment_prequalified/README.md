@@ -72,6 +72,9 @@ Nota:
 - `geometry.end_plate.pfi`: `pfi`, distancia libre base para la zona de la linea de pernos 3.
 - `hp` (altura de platina) se calcula como `hp = d + 2*pfo + 2*de`, donde `d` proviene del catalogo de la viga.
 - `geometry.continuity_plate.continuity_plate_thickness`: `tcp`, espesor de la placa de continuidad.
+- `geometry.doubler_plate.extended_dp_col` (en split: `platina_enchape_alma.extended_dp_col`):
+  - `true`: **Extended doubler plates**.
+  - `false`: **Doubler plates placed between continuity plates**.
 - `geometry.welds.weld_4`: soldadura #4 (ala de viga con platina extremo).
 - `geometry.welds.weld_4.weld_type`: tipo de soldadura de ala de viga con platina extremo (`CJP` o filete segun el caso).
 - `geometry.welds.weld_4.backing_thickness`: en inputs split se expresa como `t_w4.1_<lado>` o `t_w4_1_<lado>`.
@@ -131,8 +134,7 @@ Nota:
 - `design_factors.phi_d`: factor de resistencia para chequeos tipo `phi_d`.
 - `design_factors.phi_n`: factor de resistencia para chequeos tipo `phi_n`.
 - `design_factors.phi_f`: factor de resistencia para chequeos tipo `phi_f` (fragil).
-- `design_factors.member_ductility_demand_beam`: demanda de ductilidad para compacidad de viga (`high` o `moderate`).
-- `design_factors.member_ductility_demand_column`: demanda de ductilidad para compacidad de columna (`high` o `moderate`).
+- `design_factors.member_ductility_demand_column`: demanda de ductilidad (`high`, `moderate` o `low`) y fuente unica para chequeos/cálculos de viga izquierda, viga derecha y columna.
 - `design_factors.column_beam_moment_ratio_minimum`: relación mínima columna-viga.
 - `design_factors.column_beam_moment_ratio`: relación columna-viga del caso.
 

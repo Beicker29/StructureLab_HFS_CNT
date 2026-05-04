@@ -39,6 +39,10 @@ from steel_connections.codes.engineering.common import (
     compute_dcr_ratio,
     compute_bolt_shear_rupture_capacity_per_bolt,
     compute_bolt_tension_rupture_capacity_per_bolt,
+    compute_standard_hole_diameter_j33,
+    compute_maximum_bolt_spacing_j36,
+    compute_max_spacing_and_edge_distance_limits_j36,
+    compute_limites_precalificacion_conexion_tipo_ep,
 )
 from steel_connections.codes.engineering.flexure import compute_yield_line_flexural_strength
 from steel_connections.codes.engineering.customized import (
@@ -163,6 +167,53 @@ def _column_profile(case: AISC358MomentCase) -> dict[str, Quantity]:
     )
 
 
+def _convert_length_quantity(q: Quantity, target_unit: str) -> Quantity | None:
+    if q.unit == target_unit:
+        return q
+    if q.unit == "mm" and target_unit == "in":
+        return Quantity(value=q.value / 25.4, unit="in")
+    if q.unit == "in" and target_unit == "mm":
+        return Quantity(value=q.value * 25.4, unit="mm")
+    return None
+
+
+def _compute_encr_w8_from_aisc_16_figure_10_3(
+    *,
+    kdet_col: Quantity,
+    tf_col: Quantity,
+) -> tuple[Quantity | None, str]:
+    kdet_mm = _convert_length_quantity(kdet_col, "mm")
+    tf_mm = _convert_length_quantity(tf_col, "mm")
+    if kdet_mm is None or tf_mm is None:
+        return None, "unidades_no_convertibles_a_mm"
+    delta_mm = kdet_mm.value - tf_mm.value
+    tol = 1e-9
+    encr_mm_value: float | None = None
+    matched_range = ""
+    if delta_mm <= 7.9 + tol:
+        encr_mm_value = 3.2
+        matched_range = "<= 7.9 mm"
+    elif 9.5 - tol <= delta_mm <= 12.7 + tol:
+        encr_mm_value = 4.8
+        matched_range = "9.5 - 12.7 mm"
+    elif 14.3 - tol <= delta_mm <= 20.6 + tol:
+        encr_mm_value = 6.4
+        matched_range = "14.3 - 20.6 mm"
+    elif 22.2 - tol <= delta_mm <= 31.8 + tol:
+        encr_mm_value = 7.9
+        matched_range = "22.2 - 31.8 mm"
+    elif 33.3 - tol <= delta_mm <= 34.9 + tol:
+        encr_mm_value = 9.5
+        matched_range = "33.3 - 34.9 mm"
+    if encr_mm_value is None:
+        return None, f"fuera_de_tabla (kdet_col-tf_col={delta_mm:.3f} mm)"
+    encr_mm = Quantity(value=encr_mm_value, unit="mm")
+    encr_target = _convert_length_quantity(encr_mm, kdet_col.unit)
+    if encr_target is None:
+        return None, "no_se_pudo_convertir_encr_a_unidad_objetivo"
+    return encr_target, f"AISC 16th Fig 10-3, rango {matched_range}"
+
+
 def _require_procedure(case: AISC358MomentCase, field_name: str, rule_binding: object) -> Any:
     if case.procedure is None:
         raise missing_required_input_error(
@@ -254,16 +305,12 @@ def _compute_mpr(case: AISC358MomentCase, rule_binding: object) -> tuple[Quantit
 def _compute_mpr_by_side(case: AISC358MomentCase, rule_binding: object) -> dict[str, Any]:
     fy = _require(case, "materials.beam_fy", rule_binding)
     ry = _require(case, "design_factors.ry", rule_binding)
-    ductility_default = _require(case, "design_factors.member_ductility_demand_beam", rule_binding)
+    ductility_default = _require(case, "design_factors.member_ductility_demand_column", rule_binding)
     side_data: dict[str, Any] = {}
     for side in _active_beam_sides(case):
         side_profile = _beam_profile_by_side(case, side)
         ze_side = side_profile["zx"]
-        side_ductility = (
-            case.design_factors.member_ductility_demand_beam_vgizq
-            if side == "izq"
-            else case.design_factors.member_ductility_demand_beam_vgder
-        ) or ductility_default
+        side_ductility = ductility_default
         cpr_side = 1.0 if str(side_ductility).strip().lower() == "low" else 1.15
         mpr_base = cpr_side * ry * fy.value * ze_side.value
         mpr_side = (
@@ -584,17 +631,19 @@ def _adapt_case_for_side_as_left(case: AISC358MomentCase, *, side: str) -> AISC3
             secondary_value or getattr(case.materials, f"{root}_vgder", None),
         )
 
-    primary_ductility = getattr(case.design_factors, f"member_ductility_demand_beam_{primary_tag}", None)
-    secondary_ductility = getattr(case.design_factors, f"member_ductility_demand_beam_{secondary_tag}", None)
+    column_ductility = case.design_factors.member_ductility_demand_column
     adapted.design_factors.member_ductility_demand_beam_vgizq = (
-        primary_ductility
+        column_ductility
         or case.design_factors.member_ductility_demand_beam_vgizq
         or case.design_factors.member_ductility_demand_beam
     )
     adapted.design_factors.member_ductility_demand_beam_vgder = (
-        secondary_ductility
+        column_ductility
         or case.design_factors.member_ductility_demand_beam_vgder
         or case.design_factors.member_ductility_demand_beam
+    )
+    adapted.design_factors.member_ductility_demand_beam = (
+        column_ductility or case.design_factors.member_ductility_demand_beam
     )
 
     return adapted
@@ -1017,20 +1066,11 @@ def _derive_yp_from_tables_6_2_6_3_6_4(case: AISC358MomentCase, rule_binding: ob
     )
 
 
-def _compute_standard_hole_diameter(*, bolt_diameter: Quantity, unit_system: UnitSystem) -> tuple[Quantity, dict[str, float]]:
-    validate_unit = "in" if unit_system == UnitSystem.US else "mm"
-    if bolt_diameter.unit != validate_unit:
-        raise ValueError(f"Invalid bolt diameter unit. Expected '{validate_unit}'.")
-    db_in = bolt_diameter.value if unit_system == UnitSystem.US else bolt_diameter.value / 25.4
-    if db_in <= 0.0:
-        raise ValueError("Bolt diameter must be positive to derive standard hole diameter.")
-
-    # AISC 360 Table J3.3: up to 7/8 in => d + 1/16; 1 in and larger => d + 1/8.
-    hole_add_in = 1.0 / 16.0 if db_in <= (7.0 / 8.0 + 1e-9) else 1.0 / 8.0
-    dh_in = db_in + hole_add_in
-    if unit_system == UnitSystem.US:
-        return Quantity(value=dh_in, unit="in"), {"db_in": db_in, "hole_add_in": hole_add_in}
-    return Quantity(value=dh_in * 25.4, unit="mm"), {"db_in": db_in, "hole_add_in": hole_add_in}
+def _compute_standard_hole_diameter(*, bolt_diameter: Quantity, unit_system: UnitSystem) -> tuple[Quantity, dict[str, float | str]]:
+    return compute_standard_hole_diameter_j33(
+        bolt_diameter=bolt_diameter,
+        unit_system=unit_system,
+    )
 
 
 def _normalize_end_plate_stiffener_weld_type(raw: str | None) -> str:
@@ -1118,8 +1158,8 @@ def run_step1a_member_compactness(case: AISC358MomentCase, rule_binding: object)
     column_profile = _column_profile(case)
 
     ry = _require(case, "design_factors.ry", rule_binding)
-    beam_ductility = _require(case, "design_factors.member_ductility_demand_beam", rule_binding)
     column_ductility = _require(case, "design_factors.member_ductility_demand_column", rule_binding)
+    beam_ductility = column_ductility
     elastic_modulus = _require(case, "materials.elastic_modulus", rule_binding)
     beam_fy = _require(case, "materials.beam_fy", rule_binding)
     column_fy = _require(case, "materials.column_fy", rule_binding)
@@ -1506,7 +1546,6 @@ def run_step6_2_bolt_shear_rupture(case: AISC358MomentCase, rule_binding: object
     vh_crit = vh_vgizq_max if vh_vgizq_max.value >= vh_vgizq_min.value else vh_vgizq_min
     vh_source = "max(Vh_vgizq_max, Vh_vgizq_min)"
     fnv = _require(case, "materials.bolt_fnv", rule_binding)
-    fnt = _require(case, "materials.bolt_fnt", rule_binding)
     db = _require(case, "geometry.bolt_diameter", rule_binding)
     demand_result = compute_moment_prequalified_step6_2_bolt_shear_demand(
         vhmax=vh_crit,
@@ -1544,7 +1583,8 @@ def run_step6_2_bolt_shear_rupture(case: AISC358MomentCase, rule_binding: object
             "n_b_vgizq": n_b_vgizq,
             "bolt_diameter": db.model_dump(),
             "bolt_fnv": fnv.model_dump(),
-            "fnt_b_vgizq": fnt.model_dump(),
+            "fnv_b_vgizq": fnv.model_dump(),
+            "thread_b_vgizq": getattr(case.materials, "bolt_thread_condition", None),
             "connection_type": case.connection_type,
         },
         intermediates={
@@ -2707,8 +2747,33 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
     pb = pb_der
     bolt_tightening_type = _get_geometry_by_side("bolt_tightening_type", "der")
     bolt_fabrication_standard = _get_material_by_side("bolt_fabrication_standard", "der")
-    continuity_plate_enabled = bool(case.geometry.continuity_plate_enabled)
-    doubler_plate_enabled = bool(case.geometry.doubler_plate_enabled)
+    continuity_plate_enabled_raw = case.geometry.continuity_plate_enabled
+    if continuity_plate_enabled_raw is None:
+        continuity_plate_enabled = any(
+            x is not None
+            for x in (
+                case.geometry.continuity_plate_thickness,
+                case.geometry.continuity_plate_width_b1,
+                case.geometry.continuity_plate_weld_type_col,
+                case.geometry.continuity_plate_weld_type,
+                case.geometry.continuity_plate_web_weld_type_col,
+            )
+        )
+    else:
+        continuity_plate_enabled = bool(continuity_plate_enabled_raw)
+
+    doubler_plate_enabled_raw = case.geometry.doubler_plate_enabled
+    if doubler_plate_enabled_raw is None:
+        doubler_plate_enabled = any(
+            x is not None
+            for x in (
+                case.geometry.doubler_plate_thickness,
+                case.geometry.doubler_plate_web_plug_weld_type,
+                case.geometry.tipo_w8_col,
+            )
+        )
+    else:
+        doubler_plate_enabled = bool(doubler_plate_enabled_raw)
     tcp = (
         _require(case, "geometry.continuity_plate_thickness", rule_binding)
         if continuity_plate_enabled
@@ -2727,6 +2792,23 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
     nl_w6_col = case.geometry.nl_w6_col
     l_gap_w6_col = case.geometry.L_gap_w6_col
     kds_w6_col = case.geometry.kds_w6_col
+    weld_7_type_raw = case.geometry.doubler_plate_web_plug_weld_type
+    weld7_type_norm = _normalize_end_plate_stiffener_weld_type(weld_7_type_raw)
+    w_w7_col = case.geometry.w_w7_col or case.geometry.doubler_plate_web_plug_weld_size
+    d_hole_w7_col = case.geometry.d_hole_w7_col
+    weld_8_type_raw = case.geometry.tipo_w8_col
+    w_w8_col = case.geometry.w_w8_col or case.geometry.t_w8_col
+    nl_w8_col = case.geometry.nl_w8_col
+    l_gap_w8_col = case.geometry.L_gap_w8_col
+    kds_w8_col = case.geometry.kds_w8_col
+    weld_9_type_raw = case.geometry.tipo_w9_col
+    w_w9_col = case.geometry.w_w9_col or case.geometry.t_w9_col
+    nl_w9_col = case.geometry.nl_w9_col
+    l_gap_w9_col = case.geometry.L_gap_w9_col
+    kds_w9_col = case.geometry.kds_w9_col
+    gap_dp_col = case.geometry.gap_dp_col
+    use_weld_7_col = case.geometry.use_weld_7_col
+    use_weld_9_col = case.geometry.use_weld_9_col
     end_plate_beam_web_weld_type_raw = case.geometry.end_plate_beam_web_weld_type
     weld_fexx = _require(case, "materials.weld_fexx", rule_binding)
     beam_clear_span_length = _require(case, "geometry.beam_clear_span_length", rule_binding)
@@ -2767,8 +2849,8 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
     bf = beam_profile["bf"]
     bcf = column_profile["bf"]
     beam_depth = beam_profile["d"]
-    beam_ductility = _require(case, "design_factors.member_ductility_demand_beam", rule_binding)
     column_ductility = _require(case, "design_factors.member_ductility_demand_column", rule_binding)
+    beam_ductility = column_ductility
     ry = _require(case, "design_factors.ry", rule_binding)
     elastic_modulus = _require(case, "materials.elastic_modulus", rule_binding)
     beam_fy = _require(case, "materials.beam_fy", rule_binding)
@@ -2930,42 +3012,6 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
             return Quantity(value=us_in, unit="in")
         # Use exact in->mm conversion to avoid rounding mismatches between paired unit columns.
         return Quantity(value=us_in * 25.4, unit="mm")
-
-    table_61_limits: dict[str, dict[str, tuple[Quantity, Quantity] | None]] = {
-        "bueep_4e": {
-            "tbf": (_table61_length(us_in=3.0 / 8.0, si_mm=10.0), _table61_length(us_in=3.0 / 4.0, si_mm=19.0)),
-            "bbf": (_table61_length(us_in=6.0, si_mm=150.0), _table61_length(us_in=9.25, si_mm=230.0)),
-            "d": (_table61_length(us_in=13.75, si_mm=350.0), _table61_length(us_in=24.0, si_mm=600.0)),
-            "tp": (_table61_length(us_in=0.5, si_mm=13.0), _table61_length(us_in=2.25, si_mm=57.0)),
-            "bp": (_table61_length(us_in=7.0, si_mm=180.0), _table61_length(us_in=10.75, si_mm=270.0)),
-            "g": (_table61_length(us_in=4.0, si_mm=100.0), _table61_length(us_in=6.0, si_mm=150.0)),
-            "pfi": (_table61_length(us_in=1.5, si_mm=38.0), _table61_length(us_in=4.5, si_mm=110.0)),
-            "pfo": (_table61_length(us_in=1.5, si_mm=38.0), _table61_length(us_in=4.5, si_mm=110.0)),
-            "pb": None,
-        },
-        "bseep_4es": {
-            "tbf": (_table61_length(us_in=3.0 / 8.0, si_mm=10.0), _table61_length(us_in=3.0 / 4.0, si_mm=19.0)),
-            "bbf": (_table61_length(us_in=6.0, si_mm=150.0), _table61_length(us_in=9.0, si_mm=230.0)),
-            "d": (_table61_length(us_in=13.75, si_mm=350.0), _table61_length(us_in=24.0, si_mm=600.0)),
-            "tp": (_table61_length(us_in=0.5, si_mm=13.0), _table61_length(us_in=1.5, si_mm=38.0)),
-            "bp": (_table61_length(us_in=7.0, si_mm=180.0), _table61_length(us_in=10.75, si_mm=270.0)),
-            "g": (_table61_length(us_in=3.25, si_mm=83.0), _table61_length(us_in=6.0, si_mm=150.0)),
-            "pfi": (_table61_length(us_in=1.75, si_mm=44.0), _table61_length(us_in=5.5, si_mm=140.0)),
-            "pfo": (_table61_length(us_in=1.75, si_mm=44.0), _table61_length(us_in=5.5, si_mm=140.0)),
-            "pb": None,
-        },
-        "bseep_8es": {
-            "tbf": (_table61_length(us_in=9.0 / 16.0, si_mm=14.0), _table61_length(us_in=1.0, si_mm=25.0)),
-            "bbf": (_table61_length(us_in=7.5, si_mm=190.0), _table61_length(us_in=12.25, si_mm=310.0)),
-            "d": (_table61_length(us_in=18.0, si_mm=460.0), _table61_length(us_in=36.0, si_mm=910.0)),
-            "tp": (_table61_length(us_in=0.75, si_mm=19.0), _table61_length(us_in=2.5, si_mm=64.0)),
-            "bp": (_table61_length(us_in=9.0, si_mm=230.0), _table61_length(us_in=15.0, si_mm=380.0)),
-            "g": (_table61_length(us_in=5.0, si_mm=130.0), _table61_length(us_in=6.0, si_mm=150.0)),
-            "pfi": (_table61_length(us_in=1.625, si_mm=41.0), _table61_length(us_in=2.0, si_mm=51.0)),
-            "pfo": (_table61_length(us_in=1.625, si_mm=41.0), _table61_length(us_in=2.0, si_mm=51.0)),
-            "pb": None,
-        },
-    }
 
     def _step1_limit(
         *,
@@ -3652,7 +3698,10 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
         unit_system=case.units_system,
     )
 
-    active_table_61 = table_61_limits[case.connection_type]
+    active_table_61 = compute_limites_precalificacion_conexion_tipo_ep(
+        connection_type=case.connection_type,
+        unit_system=case.units_system,
+    )
     stc_margin = Quantity(
         value=(12.5 / 25.4) if case.units_system == UnitSystem.US else 12.5,
         unit="in" if case.units_system == UnitSystem.US else "mm",
@@ -3781,7 +3830,7 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
                 ),
                 _step1_limit(
                     check_id="beam_izq.bolt_gage_g_ge_3db",
-                    scope="beam_izq",
+                    scope="end_plate_izq",
                     clause="Section 6.3 / Table 6.1",
                     description="Bolt gage minimum spacing (left beam)",
                     calculated_symbol="g_b_vgizq",
@@ -3868,7 +3917,7 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
             ),
             _step1_limit(
                 check_id="beam_der.bolt_gage_g_ge_3db",
-                scope="beam_der",
+                scope="end_plate_der",
                 clause="Section 6.3 / Table 6.1",
                 description="Bolt gage minimum spacing (right beam)",
                 calculated_symbol="g_b_vgder",
@@ -4027,10 +4076,6 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
     doubler_plate_limits: list[dict[str, Any]] = []
     d_col_for_dz = column_profile["d"]
     tf_col_for_dz = column_profile["tf"]
-    dz_dp_col = Quantity(
-        value=d_col_for_dz.value - 2.0 * tf_col_for_dz.value,
-        unit=d_col_for_dz.unit,
-    )
     wz_candidates: list[Quantity] = []
     if beam_connection_sides in {"both_sides", "left_only"} and beam_profile_izq is not None:
         wz_candidates.append(
@@ -4056,19 +4101,152 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
             return Quantity(value=q.value * 25.4, unit="mm")
         return None
 
+    h_dp_col: Quantity | None = None
+    b_dp_col: Quantity | None = None
+    h_dp_formula_tag = "n/a"
+    b_dp_formula_tag = "n/a"
+
+    d_candidates: list[Quantity] = []
+    d_minus_tf_candidates: list[Quantity] = []
+    if beam_connection_sides in {"both_sides", "right_only"}:
+        d_der = beam_profile_der["d"]
+        tf_der = beam_profile_der["tf"]
+        d_candidates.append(d_der)
+        d_minus_tf_candidates.append(Quantity(value=d_der.value - tf_der.value, unit=d_der.unit))
+    if beam_connection_sides in {"both_sides", "left_only"} and beam_profile_izq is not None:
+        d_izq = beam_profile_izq["d"]
+        tf_izq = beam_profile_izq["tf"]
+        d_candidates.append(d_izq)
+        d_minus_tf_candidates.append(Quantity(value=d_izq.value - tf_izq.value, unit=d_izq.unit))
+
+    if d_candidates:
+        base_unit = d_candidates[0].unit
+        d_converted: list[Quantity] = []
+        for d_q in d_candidates:
+            d_q_conv = _to_unit_length_local(d_q, base_unit)
+            if d_q_conv is not None:
+                d_converted.append(d_q_conv)
+        plus_300_q = _to_unit_length_local(Quantity(value=300.0, unit="mm"), base_unit)
+        extended_dp_col = case.geometry.extended_dp_col is True
+        if (
+            (not extended_dp_col and not continuity_plate_enabled)
+            or (extended_dp_col and continuity_plate_enabled)
+        ):
+            if d_converted and plus_300_q is not None:
+                d_max_q = max(d_converted, key=lambda x: x.value)
+                h_dp_col = Quantity(value=d_max_q.value + plus_300_q.value, unit=base_unit)
+                h_dp_formula_tag = "300 + max(d)"
+        elif (not extended_dp_col) and continuity_plate_enabled:
+            d_minus_tf_converted: list[Quantity] = []
+            for dtf_q in d_minus_tf_candidates:
+                dtf_q_conv = _to_unit_length_local(dtf_q, base_unit)
+                if dtf_q_conv is not None:
+                    d_minus_tf_converted.append(dtf_q_conv)
+            t_pc_col_q = case.geometry.continuity_plate_thickness
+            t_pc_col_conv = _to_unit_length_local(t_pc_col_q, base_unit) if t_pc_col_q is not None else None
+            if d_minus_tf_converted and plus_300_q is not None and t_pc_col_conv is not None:
+                d_minus_tf_max_q = max(d_minus_tf_converted, key=lambda x: x.value)
+                h_dp_col = Quantity(
+                    value=d_minus_tf_max_q.value + plus_300_q.value - t_pc_col_conv.value,
+                    unit=base_unit,
+                )
+                h_dp_formula_tag = "300 + max(d-tf) - t_pc_col"
+
+    # b_dp_col depends on weld #8 type
+    d_col_q = column_profile.get("d")
+    kdet_col_q = column_profile.get("kdet") or column_profile.get("kdes")
+    tft_col_q = column_profile.get("tfdet") or column_profile.get("tf")
+    if d_col_q is not None:
+        weld8_type_norm_local = _normalize_end_plate_stiffener_weld_type(case.geometry.tipo_w8_col)
+        if weld8_type_norm_local == "cjp" and kdet_col_q is not None:
+            kdet_conv = _to_unit_length_local(kdet_col_q, d_col_q.unit)
+            if kdet_conv is not None:
+                b_dp_col = Quantity(value=d_col_q.value - 2.0 * kdet_conv.value, unit=d_col_q.unit)
+                b_dp_formula_tag = "d_col - 2*kdet_col"
+        elif weld8_type_norm_local in {"pjp", "fillet"} and tft_col_q is not None:
+            tft_conv = _to_unit_length_local(tft_col_q, d_col_q.unit)
+            if tft_conv is not None:
+                b_dp_col = Quantity(value=d_col_q.value - 2.0 * tft_conv.value, unit=d_col_q.unit)
+                b_dp_formula_tag = "d_col - 2*tft_col"
+
+    use_w7 = bool(use_weld_7_col)
+    nfilas_w7_col_for_check = case.geometry.nfilas_w7_col or case.geometry.doubler_plate_web_plug_weld_lines_nl
+    ncolumna_w7_col_for_check = case.geometry.ncolumna_w7_col
+    dz_dp_col: Quantity | None = None
     wz_dp_col: Quantity | None = None
-    if wz_candidates:
-        converted: list[Quantity] = []
-        for q in wz_candidates:
-            q_conv = _to_unit_length_local(q, dz_dp_col.unit)
-            if q_conv is not None:
-                converted.append(q_conv)
-        if converted:
-            wz_dp_col = min(converted, key=lambda x: x.value)
+    if not use_w7:
+        dz_dp_col = Quantity(
+            value=d_col_for_dz.value - 2.0 * tf_col_for_dz.value,
+            unit=d_col_for_dz.unit,
+        )
+        if wz_candidates:
+            converted: list[Quantity] = []
+            for q in wz_candidates:
+                q_conv = _to_unit_length_local(q, d_col_for_dz.unit)
+                if q_conv is not None:
+                    converted.append(q_conv)
+            if converted:
+                wz_dp_col = max(converted, key=lambda x: x.value)
+    else:
+        nfilas_w7_col = case.geometry.nfilas_w7_col or case.geometry.doubler_plate_web_plug_weld_lines_nl
+        ncolumna_w7_col = case.geometry.ncolumna_w7_col
+        if h_dp_col is not None and b_dp_col is not None and nfilas_w7_col and ncolumna_w7_col:
+            dz_dp_col = Quantity(value=h_dp_col.value / float(nfilas_w7_col + 1), unit=h_dp_col.unit)
+            b_dp_for_wz = _to_unit_length_local(b_dp_col, h_dp_col.unit)
+            if b_dp_for_wz is not None:
+                wz_dp_col = Quantity(value=b_dp_for_wz.value / float(ncolumna_w7_col + 1), unit=h_dp_col.unit)
+        elif doubler_plate_enabled:
+            raise missing_required_input_error(
+                rule_id=rule_binding.rule_id,
+                source_document=rule_binding.source_document,
+                missing_fields=[
+                    "geometry.nfilas_w7_col",
+                    "geometry.ncolumna_w7_col",
+                ],
+                message=(
+                    "Unable to compute dz_dp_col/wz_dp_col when use_weld_7_col=true. "
+                    "Require nfilas_w7_col and ncolumna_w7_col."
+                ),
+            )
+
+    if use_w7 and doubler_plate_enabled:
+        if nfilas_w7_col_for_check is not None and ncolumna_w7_col_for_check is not None:
+            grid_product_q = Quantity(
+                value=float(nfilas_w7_col_for_check) * float(ncolumna_w7_col_for_check),
+                unit="adim",
+            )
+            doubler_plate_limits.append(
+                _step1_limit(
+                    check_id="section_e3_6e_2.weld_7_grid_minimum_col",
+                    scope="weld_7_col",
+                    clause="AISC 341-22w E3.6e.2",
+                    description="Malla minima de soldadura #7",
+                    calculated_symbol="(nfilas_w7_col)*(ncolumna_w7_col)",
+                    limit_symbol="4",
+                    calculated=grid_product_q,
+                    limit=Quantity(value=4.0, unit="adim"),
+                    comparison="ge",
+                )
+            )
+        else:
+            doubler_plate_limits.append(
+                _step1_verification_only_limit(
+                    check_id="section_e3_6e_2.weld_7_grid_minimum_col",
+                    scope="weld_7_col",
+                    clause="AISC 341-22w E3.6e.2",
+                    description="Malla minima de soldadura #7",
+                    calculated_symbol="(nfilas_w7_col)*(ncolumna_w7_col)",
+                    verification_text=(
+                        "Chequeo no evaluable por falta de datos: "
+                        "nfilas_w7_col y/o ncolumna_w7_col"
+                    ),
+                    passes=False,
+                )
+            )
 
     t_req_e3_6 = (
         Quantity(value=(dz_dp_col.value + wz_dp_col.value) / 90.0, unit=dz_dp_col.unit)
-        if wz_dp_col is not None
+        if dz_dp_col is not None and wz_dp_col is not None
         else None
     )
     column_ductility_normalized = str(column_ductility or "").strip().lower()
@@ -4083,7 +4261,7 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
                 clause="AISC 341-22w E3.6e.2",
                 description="Espesor individual minimo del alma de columna",
                 calculated_symbol="tw_col",
-                limit_symbol="(dz_dp_col + wz_dp_col)/90 con dz_dp_col=d_col-2*tf_col, wz_dp_col=min{d_<lado>-2*tf_<lado>}",
+                limit_symbol="(dz_dp_col + wz_dp_col)/90; si use_weld_7_col=false: dz_dp_col=d_col-2*tf_col, wz_dp_col=max{d_lado-2*tf_lado}; si use_weld_7_col=true: dz_dp_col=h_dp_col/(nfilas_w7_col + 1), wz_dp_col=b_dp_col/(ncolumna_w7_col + 1)",
                 calculated=column_profile["tw"],
                 limit=t_req_e3_6,
                 comparison="ge",
@@ -4101,6 +4279,63 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
                         "'geometry.doubler_plate_enabled' is true."
                     ),
                 )
+            # Additional minimum thickness requirement for moderate/high ductility.
+            t_dp_min_6mm = (
+                Quantity(value=6.0, unit="mm")
+                if t_dp_col.unit == "mm"
+                else (
+                    Quantity(value=6.0 / 25.4, unit="in")
+                    if t_dp_col.unit == "in"
+                    else None
+                )
+            )
+            if t_dp_min_6mm is not None:
+                doubler_plate_limits.append(
+                    _step1_limit(
+                        check_id="section_custom.doubler_plate_thickness_min_6mm_mod_high",
+                        scope="doubler_plate_col",
+                        clause="AISC 341-22w E3.6e.2",
+                        description="Espesor minimo absoluto de platina de enchape para ductilidad moderada/alta",
+                        calculated_symbol="t_dp_col",
+                        limit_symbol="6.0 mm",
+                        calculated=t_dp_col,
+                        limit=t_dp_min_6mm,
+                        comparison="ge",
+                    )
+                )
+            # If gap_dp_col > 2.0 mm, require at least 2 doubler plates.
+            gap_dp_col = case.geometry.gap_dp_col
+            n_dp_col = case.geometry.doubler_plate_count
+            gap_dp_col_mm: float | None = None
+            if gap_dp_col is not None:
+                if gap_dp_col.unit == "mm":
+                    gap_dp_col_mm = gap_dp_col.value
+                elif gap_dp_col.unit == "in":
+                    gap_dp_col_mm = gap_dp_col.value * 25.4
+            if gap_dp_col_mm is not None and gap_dp_col_mm > 2.0:
+                if n_dp_col is None:
+                    raise missing_required_input_error(
+                        rule_id=rule_binding.rule_id,
+                        source_document=rule_binding.source_document,
+                        missing_fields=["geometry.doubler_plate_count (n_dp_col)"],
+                        message=(
+                            "Required input 'geometry.doubler_plate_count' is missing for "
+                            "the check gap_dp_col > 2.0 mm => n_dp_col >= 2."
+                        ),
+                    )
+                doubler_plate_limits.append(
+                    _step1_limit(
+                        check_id="section_e3_6e_3.doubler_plate_count_min_when_gap_gt_2mm",
+                        scope="doubler_plate_col",
+                        clause="AISC 341-22w E3.6e.3",
+                        description="Numero minimo de platinas de enchape cuando gap_dp_col > 2.0 mm",
+                        calculated_symbol="n_dp_col",
+                        limit_symbol="2",
+                        calculated=Quantity(value=float(n_dp_col), unit="adim"),
+                        limit=Quantity(value=2.0, unit="adim"),
+                        comparison="ge",
+                    )
+                )
             doubler_plate_limits.append(
                 _step1_limit(
                     check_id="section_e3_6_2.doubler_plate_thickness_minimum",
@@ -4108,7 +4343,7 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
                     clause="AISC 341-22w E3.6e.2",
                     description="Espesor individual minimo de platina de enchape del alma",
                     calculated_symbol="t_dp_col",
-                    limit_symbol="(dz_dp_col + wz_dp_col)/90 con dz_dp_col=d_col-2*tf_col, wz_dp_col=min{d_<lado>-2*tf_<lado>}",
+                    limit_symbol="(dz_dp_col + wz_dp_col)/90; si use_weld_7_col=false: dz_dp_col=d_col-2*tf_col, wz_dp_col=max{d_lado-2*tf_lado}; si use_weld_7_col=true: dz_dp_col=h_dp_col/(nfilas_w7_col + 1), wz_dp_col=b_dp_col/(ncolumna_w7_col + 1)",
                     calculated=t_dp_col,
                     limit=t_req_e3_6,
                     comparison="ge",
@@ -4124,8 +4359,7 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
                 calculated_symbol="tw_col",
                 verification_text=(
                     "No aplica para demanda_ductilidad_col='low'. "
-                    "Formula de referencia: t >= (dz_dp_col + wz_dp_col)/90 con dz_dp_col=d_col-2*tf_col, "
-                    "wz_dp_col=min{d_<lado>-2*tf_<lado>}"
+                    "Formula de referencia: t >= (dz_dp_col + wz_dp_col)/90"
                 ),
                 passes=True,
             )
@@ -4140,12 +4374,80 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
                     calculated_symbol="t_dp_col",
                     verification_text=(
                         "No aplica para demanda_ductilidad_col='low'. "
-                        "Formula de referencia: t >= (dz_dp_col + wz_dp_col)/90 con dz_dp_col=d_col-2*tf_col, "
-                        "wz_dp_col=min{d_<lado>-2*tf_<lado>}"
+                        "Formula de referencia: t >= (dz_dp_col + wz_dp_col)/90"
                     ),
                     passes=True,
                 )
             )
+
+    # Additional check requested (only when use_weld_7_col=true):
+    # t_dp_col + tw_col >= (d_col - 2*tf_col + max{d_lado-2*tf_lado})/90
+    if use_w7 and doubler_plate_enabled and case.geometry.doubler_plate_thickness is not None:
+        d_beam_net_candidates: list[Quantity] = []
+        if beam_connection_sides in {"both_sides", "left_only"} and beam_profile_izq is not None:
+            d_beam_net_candidates.append(
+                Quantity(
+                    value=beam_profile_izq["d"].value - 2.0 * beam_profile_izq["tf"].value,
+                    unit=beam_profile_izq["d"].unit,
+                )
+            )
+        if beam_connection_sides in {"both_sides", "right_only"}:
+            d_beam_net_candidates.append(
+                Quantity(
+                    value=beam_profile_der["d"].value - 2.0 * beam_profile_der["tf"].value,
+                    unit=beam_profile_der["d"].unit,
+                )
+            )
+        if d_beam_net_candidates:
+            base_unit = column_profile["tw"].unit
+            converted_nets: list[Quantity] = []
+            for q in d_beam_net_candidates:
+                q_conv = _to_unit_length_local(q, base_unit)
+                if q_conv is not None:
+                    converted_nets.append(q_conv)
+            d_col_conv = _to_unit_length_local(column_profile["d"], base_unit)
+            tf_col_conv = _to_unit_length_local(column_profile["tf"], base_unit)
+            t_dp_col_conv = _to_unit_length_local(case.geometry.doubler_plate_thickness, base_unit)
+            if converted_nets and d_col_conv is not None and tf_col_conv is not None and t_dp_col_conv is not None:
+                rhs_q = Quantity(
+                    value=(
+                        d_col_conv.value
+                        - 2.0 * tf_col_conv.value
+                        + max(converted_nets, key=lambda x: x.value).value
+                    )
+                    / 90.0,
+                    unit=base_unit,
+                )
+                lhs_q = Quantity(
+                    value=t_dp_col_conv.value + column_profile["tw"].value,
+                    unit=base_unit,
+                )
+                column_limits.append(
+                    _step1_limit(
+                        check_id="section_e3_6_2.column_web_plus_doubler_with_w7",
+                        scope="column",
+                        clause="AISC 341-22w E3.6e.2",
+                        description="Chequeo adicional con soldadura #7 habilitada",
+                        calculated_symbol="t_dp_col + tw_col",
+                        limit_symbol="(d_col - 2*tf_col + max{d_lado-2*tf_lado})/90",
+                        calculated=lhs_q,
+                        limit=rhs_q,
+                        comparison="ge",
+                    )
+                )
+                doubler_plate_limits.append(
+                    _step1_limit(
+                        check_id="section_e3_6_2.doubler_plate_plus_web_with_w7",
+                        scope="doubler_plate_col",
+                        clause="AISC 341-22w E3.6e.2",
+                        description="Chequeo adicional con soldadura #7 habilitada",
+                        calculated_symbol="t_dp_col + tw_col",
+                        limit_symbol="(d_col - 2*tf_col + max{d_lado-2*tf_lado})/90",
+                        calculated=lhs_q,
+                        limit=rhs_q,
+                        comparison="ge",
+                    )
+                )
 
     bp_bounds = active_table_61.get("bp")
     end_plate_limits: list[dict[str, Any]] = []
@@ -4182,6 +4484,23 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
                 maximum=bp_governing_max_der,
             )
         )
+        deh_pe_vgder = Quantity(
+            value=(bp_der.value - g_der.value) / 2.0,
+            unit=bp_der.unit,
+        )
+        end_plate_limits.append(
+            _step1_limit(
+                check_id="section_6_3.end_plate_horizontal_edge_distance_ge_emin_der",
+                scope="end_plate_der",
+                clause="Section 6.3 / Table 6.1 + AISC 360 Table J3.4",
+                description="Horizontal edge distance from plate edge to bolt line (right beam)",
+                calculated_symbol="deh_pe_vgder",
+                limit_symbol="emin",
+                calculated=deh_pe_vgder,
+                limit=min_edge_der,
+                comparison="ge",
+            )
+        )
 
         if beam_connection_sides == "both_sides" and beam_profile_izq is not None and bp_izq is not None:
             bp_plus_beam_margin_izq = Quantity(
@@ -4212,6 +4531,27 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
                     calculated=bp_izq,
                     minimum=bp_min,
                     maximum=bp_governing_max_izq,
+                )
+            )
+            if g_izq is None:
+                raise ValueError("geometry.bolt_gage_vgizq is required for deh_pe_vgizq check.")
+            if min_edge_izq is None:
+                raise ValueError("minimum edge distance for vgizq could not be resolved for deh_pe_vgizq check.")
+            deh_pe_vgizq = Quantity(
+                value=(bp_izq.value - g_izq.value) / 2.0,
+                unit=bp_izq.unit,
+            )
+            end_plate_limits.append(
+                _step1_limit(
+                    check_id="section_6_3.end_plate_horizontal_edge_distance_ge_emin_izq",
+                    scope="end_plate_izq",
+                    clause="Section 6.3 / Table 6.1 + AISC 360 Table J3.4",
+                    description="Horizontal edge distance from plate edge to bolt line (left beam)",
+                    calculated_symbol="deh_pe_vgizq",
+                    limit_symbol="emin",
+                    calculated=deh_pe_vgizq,
+                    limit=min_edge_izq,
+                    comparison="ge",
                 )
             )
 
@@ -4391,6 +4731,8 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
     continuity_plate_limits: list[dict[str, object]] = []
     l_w5_col_computed: Quantity | None = None
     l_w6_col_computed: Quantity | None = None
+    l_w8_col_computed: Quantity | None = None
+    l_w9_col_computed: Quantity | None = None
     weld6_type_norm = _normalize_end_plate_stiffener_weld_type(continuity_plate_web_weld_type_raw)
     continuity_plate_weld_thickness_limit = Quantity(
         value=3.0 / 8.0 if case.units_system == UnitSystem.US else 10.0,
@@ -4501,6 +4843,40 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
             value=l2_pc_col_q.value - 2.0 * l_gap_for_lw6,
             unit=l2_pc_col_q.unit,
         )
+    if h_dp_col is not None and l_gap_w8_col is not None:
+        if l_gap_w8_col.unit == h_dp_col.unit:
+            l_gap_for_lw8 = l_gap_w8_col.value
+        elif l_gap_w8_col.unit == "mm" and h_dp_col.unit == "in":
+            l_gap_for_lw8 = l_gap_w8_col.value / 25.4
+        elif l_gap_w8_col.unit == "in" and h_dp_col.unit == "mm":
+            l_gap_for_lw8 = l_gap_w8_col.value * 25.4
+        else:
+            raise ValueError(
+                f"Unsupported mixed units for L_w8_col derivation: {h_dp_col.unit} vs {l_gap_w8_col.unit}"
+            )
+        l_w8_col_computed = Quantity(
+            value=h_dp_col.value - 2.0 * l_gap_for_lw8,
+            unit=h_dp_col.unit,
+        )
+    if bool(use_weld_9_col):
+        if b_dp_col is not None and l_gap_w9_col is not None:
+            if l_gap_w9_col.unit == b_dp_col.unit:
+                l_gap_for_lw9 = l_gap_w9_col.value
+            elif l_gap_w9_col.unit == "mm" and b_dp_col.unit == "in":
+                l_gap_for_lw9 = l_gap_w9_col.value / 25.4
+            elif l_gap_w9_col.unit == "in" and b_dp_col.unit == "mm":
+                l_gap_for_lw9 = l_gap_w9_col.value * 25.4
+            else:
+                raise ValueError(
+                    f"Unsupported mixed units for L_w9_col derivation: {b_dp_col.unit} vs {l_gap_w9_col.unit}"
+                )
+            l_w9_col_computed = Quantity(
+                value=b_dp_col.value - 2.0 * l_gap_for_lw9,
+                unit=b_dp_col.unit,
+            )
+    else:
+        zero_unit_w9 = b_dp_col.unit if b_dp_col is not None else (l_gap_w9_col.unit if l_gap_w9_col is not None else "mm")
+        l_w9_col_computed = Quantity(value=0.0, unit=zero_unit_w9)
     if continuity_plate_enabled and l_w6_col_computed is not None and weld6_type_norm == "fillet":
         tw_col = column_profile.get("tw")
         d_col = column_profile.get("d")
@@ -4512,11 +4888,11 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
                 f"Lws_col={l_w6_col_computed.unit}, d_col={d_col.unit}, tw_col={tw_col.unit}, kdet_col={kdet_for_pc.unit}"
             )
         lws_max = Quantity(
-            value=d_col.value - 2.0 * (kdet_for_pc.value + 6.0 * tw_col.value),
+            value=d_col.value - 2.0 * (kdet_for_pc.value + 4.0 * tw_col.value),
             unit=d_col.unit,
         )
         lws_min = Quantity(
-            value=d_col.value - 2.0 * (kdet_for_pc.value + 4.0 * tw_col.value),
+            value=d_col.value - 2.0 * (kdet_for_pc.value + 6.0 * tw_col.value),
             unit=d_col.unit,
         )
         continuity_plate_limits.extend(
@@ -4527,7 +4903,7 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
                     clause="AISC 358-22 Section 6.3",
                     description="Longitud maxima de soldadura #6 en columna",
                     calculated_symbol="Lws_col",
-                    limit_symbol="d_col - 2*(kdet_col + 6*tw_col)",
+                    limit_symbol="d_col - 2*(kdet_col + 4*tw_col)",
                     calculated=l_w6_col_computed,
                     limit=lws_max,
                     comparison="le",
@@ -4538,7 +4914,7 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
                     clause="AISC 358-22 Section 6.3",
                     description="Longitud minima de soldadura #6 en columna",
                     calculated_symbol="Lws_col",
-                    limit_symbol="d_col - 2*(kdet_col + 4*tw_col)",
+                    limit_symbol="d_col - 2*(kdet_col + 6*tw_col)",
                     calculated=l_w6_col_computed,
                     limit=lws_min,
                     comparison="ge",
@@ -4804,11 +5180,7 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
     weld_limits: list[dict[str, object]] = []
     for side_suffix in _active_beam_sides(case):
         side_tag = f"vg{side_suffix}"
-        ductility_side = (
-            case.design_factors.member_ductility_demand_beam_vgizq
-            if side_suffix == "izq"
-            else case.design_factors.member_ductility_demand_beam_vgder
-        ) or beam_ductility
+        ductility_side = column_ductility
         if str(ductility_side).strip().lower() not in {"high", "moderate"}:
             continue
         weld_type_side_raw = getattr(case.geometry, f"tipo_w4_{side_tag}", None)
@@ -5039,6 +5411,256 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
                 passes=passes_effective,
             )
         )
+
+    def _append_plug_missing_limit(
+        *,
+        check_id: str,
+        scope: str,
+        description: str,
+        calculated_symbol: str,
+        missing_fields: tuple[str, ...],
+    ) -> None:
+        weld_limits.append(
+            _step1_verification_only_limit(
+                check_id=check_id,
+                scope=scope,
+                clause="AISC 360-22 Section J2.3b",
+                description=description,
+                calculated_symbol=calculated_symbol,
+                verification_text=(
+                    "Chequeo no evaluable por falta de datos requeridos para soldadura plug: "
+                    + ", ".join(missing_fields)
+                ),
+                passes=False,
+            )
+        )
+
+    def _append_plug_limit_suite(
+        *,
+        weld_index: str,
+        scope: str,
+        weld_size_symbol: str,
+        hole_diameter_symbol: str,
+        spacing_h_symbol: str,
+        spacing_v_symbol: str,
+        weld_size: Quantity | None,
+        hole_diameter: Quantity | None,
+        spacing_h: Quantity | None,
+        spacing_v: Quantity | None,
+        containing_part_thickness: Quantity | None,
+        description_suffix: str,
+        check_id_suffix: str,
+    ) -> None:
+        def _to_mm(q: Quantity | None) -> float | None:
+            if q is None:
+                return None
+            if q.unit == "mm":
+                return q.value
+            if q.unit == "in":
+                return q.value * 25.4
+            return None
+
+        # Clause (a) - hole diameter minimum and maximum limits.
+        if weld_size is None or hole_diameter is None or containing_part_thickness is None:
+            missing_a: list[str] = []
+            if hole_diameter is None:
+                missing_a.append(hole_diameter_symbol)
+            if containing_part_thickness is None:
+                missing_a.append(f"t_part_w{weld_index}_{check_id_suffix}")
+            if weld_size is None:
+                missing_a.append(weld_size_symbol)
+            _append_plug_missing_limit(
+                check_id=f"section_j2_3b_a.weld_{weld_index}_hole_diameter_minimum_{check_id_suffix}",
+                scope=scope,
+                description=f"Diametro minimo de hueco para soldadura plug {description_suffix}",
+                calculated_symbol=hole_diameter_symbol,
+                missing_fields=tuple(missing_a),
+            )
+            _append_plug_missing_limit(
+                check_id=f"section_j2_3b_a.weld_{weld_index}_hole_diameter_maximum_{check_id_suffix}",
+                scope=scope,
+                description=f"Diametro maximo de hueco para soldadura plug {description_suffix}",
+                calculated_symbol=hole_diameter_symbol,
+                missing_fields=tuple(missing_a),
+            )
+        else:
+            t_part_mm = _to_mm(containing_part_thickness)
+            w_mm = _to_mm(weld_size)
+            d_hole_mm = _to_mm(hole_diameter)
+            if t_part_mm is None or w_mm is None or d_hole_mm is None:
+                _append_plug_missing_limit(
+                    check_id=f"section_j2_3b_a.weld_{weld_index}_hole_diameter_minimum_{check_id_suffix}",
+                    scope=scope,
+                    description=f"Diametro minimo de hueco para soldadura plug {description_suffix}",
+                    calculated_symbol=hole_diameter_symbol,
+                    missing_fields=("conversion_mm",),
+                )
+                _append_plug_missing_limit(
+                    check_id=f"section_j2_3b_a.weld_{weld_index}_hole_diameter_maximum_{check_id_suffix}",
+                    scope=scope,
+                    description=f"Diametro maximo de hueco para soldadura plug {description_suffix}",
+                    calculated_symbol=hole_diameter_symbol,
+                    missing_fields=("conversion_mm",),
+                )
+            else:
+                d_min_mm_unrounded = t_part_mm + 8.0
+                d_min_mm = math.ceil(d_min_mm_unrounded / 2.0) * 2.0
+                d_max_1_mm = d_min_mm + 3.0
+                d_max_2_mm = 2.25 * w_mm
+                # "A or B" interpreted as the more permissive governing upper limit in SI workflow.
+                d_max_governing_mm = max(d_max_1_mm, d_max_2_mm)
+                if hole_diameter.unit == "mm":
+                    d_min_q = Quantity(value=d_min_mm, unit="mm")
+                    d_max_q = Quantity(value=d_max_governing_mm, unit="mm")
+                elif hole_diameter.unit == "in":
+                    d_min_q = Quantity(value=d_min_mm / 25.4, unit="in")
+                    d_max_q = Quantity(value=d_max_governing_mm / 25.4, unit="in")
+                else:
+                    d_min_q = None
+                    d_max_q = None
+
+                if d_min_q is None or d_max_q is None:
+                    _append_plug_missing_limit(
+                        check_id=f"section_j2_3b_a.weld_{weld_index}_hole_diameter_minimum_{check_id_suffix}",
+                        scope=scope,
+                        description=f"Diametro minimo de hueco para soldadura plug {description_suffix}",
+                        calculated_symbol=hole_diameter_symbol,
+                        missing_fields=("conversion_unidad",),
+                    )
+                    _append_plug_missing_limit(
+                        check_id=f"section_j2_3b_a.weld_{weld_index}_hole_diameter_maximum_{check_id_suffix}",
+                        scope=scope,
+                        description=f"Diametro maximo de hueco para soldadura plug {description_suffix}",
+                        calculated_symbol=hole_diameter_symbol,
+                        missing_fields=("conversion_unidad",),
+                    )
+                else:
+                    weld_limits.append(
+                        _step1_limit(
+                            check_id=f"section_j2_3b_a.weld_{weld_index}_hole_diameter_minimum_{check_id_suffix}",
+                            scope=scope,
+                            clause="AISC 360-22 Section J2.3b(a)",
+                            description=f"Diametro minimo de hueco para soldadura plug {description_suffix}",
+                            calculated_symbol=hole_diameter_symbol,
+                            limit_symbol=f"redondeo_par(t_part_w{weld_index}_{check_id_suffix} + 8 mm)",
+                            calculated=hole_diameter,
+                            limit=d_min_q,
+                            comparison="ge",
+                        )
+                    )
+                    weld_limits.append(
+                        _step1_limit(
+                            check_id=f"section_j2_3b_a.weld_{weld_index}_hole_diameter_maximum_{check_id_suffix}",
+                            scope=scope,
+                            clause="AISC 360-22 Section J2.3b(a)",
+                            description=f"Diametro maximo de hueco para soldadura plug {description_suffix}",
+                            calculated_symbol=hole_diameter_symbol,
+                            limit_symbol=f"max{{d_min+3 mm, 2.25*{weld_size_symbol}}}",
+                            calculated=hole_diameter,
+                            limit=d_max_q,
+                            comparison="le",
+                        )
+                    )
+
+        # Clause (b) - minimum center-to-center spacing.
+        if hole_diameter is None or spacing_h is None or spacing_v is None:
+            missing_b: list[str] = []
+            if hole_diameter is None:
+                missing_b.append(hole_diameter_symbol)
+            if spacing_h is None:
+                missing_b.append(spacing_h_symbol)
+            if spacing_v is None:
+                missing_b.append(spacing_v_symbol)
+            _append_plug_missing_limit(
+                check_id=f"section_j2_3b_b.weld_{weld_index}_minimum_center_spacing_{check_id_suffix}",
+                scope=scope,
+                description=f"Separacion minima centro a centro para soldadura plug {description_suffix}",
+                calculated_symbol=f"min({spacing_h_symbol}, {spacing_v_symbol})",
+                missing_fields=tuple(missing_b),
+            )
+        else:
+            d_hole_mm = _to_mm(hole_diameter)
+            sh_mm = _to_mm(spacing_h)
+            sv_mm = _to_mm(spacing_v)
+            if d_hole_mm is None or sh_mm is None or sv_mm is None:
+                _append_plug_missing_limit(
+                    check_id=f"section_j2_3b_b.weld_{weld_index}_minimum_center_spacing_{check_id_suffix}",
+                    scope=scope,
+                    description=f"Separacion minima centro a centro para soldadura plug {description_suffix}",
+                    calculated_symbol=f"min({spacing_h_symbol}, {spacing_v_symbol})",
+                    missing_fields=("conversion_mm",),
+                )
+            else:
+                scc_min_mm = 4.0 * d_hole_mm
+                passes_b = (sh_mm >= scc_min_mm - 1e-9) and (sv_mm >= scc_min_mm - 1e-9)
+                weld_limits.append(
+                    _step1_verification_only_limit(
+                        check_id=f"section_j2_3b_b.weld_{weld_index}_minimum_center_spacing_{check_id_suffix}",
+                        scope=scope,
+                        clause="AISC 360-22 Section J2.3b(b)",
+                        description=f"Separacion minima centro a centro para soldadura plug {description_suffix}",
+                        calculated_symbol=f"min({spacing_h_symbol}, {spacing_v_symbol})",
+                        verification_text=(
+                            f"{spacing_h_symbol} >= 4*{hole_diameter_symbol} y {spacing_v_symbol} >= 4*{hole_diameter_symbol}; "
+                            f"{spacing_h_symbol}={sh_mm:.3f} mm, {spacing_v_symbol}={sv_mm:.3f} mm, "
+                            f"s_min={scc_min_mm:.3f} mm"
+                        ),
+                        passes=passes_b,
+                    )
+                )
+
+        # Clause (h) - plug weld thickness vs containing-part thickness.
+        if weld_size is None or containing_part_thickness is None:
+            missing_h: list[str] = []
+            if weld_size is None:
+                missing_h.append(weld_size_symbol)
+            if containing_part_thickness is None:
+                missing_h.append(f"t_part_w{weld_index}_{check_id_suffix}")
+            _append_plug_missing_limit(
+                check_id=f"section_j2_3b_h.weld_{weld_index}_thickness_limits_{check_id_suffix}",
+                scope=scope,
+                description=f"Espesor de soldadura plug vs espesor de material {description_suffix}",
+                calculated_symbol=weld_size_symbol,
+                missing_fields=tuple(missing_h),
+            )
+        else:
+            t_part_mm = _to_mm(containing_part_thickness)
+            w_mm = _to_mm(weld_size)
+            if t_part_mm is None or w_mm is None:
+                _append_plug_missing_limit(
+                    check_id=f"section_j2_3b_h.weld_{weld_index}_thickness_limits_{check_id_suffix}",
+                    scope=scope,
+                    description=f"Espesor de soldadura plug vs espesor de material {description_suffix}",
+                    calculated_symbol=weld_size_symbol,
+                    missing_fields=("conversion_mm",),
+                )
+            else:
+                if t_part_mm <= 16.0 + 1e-9:
+                    required_mm = t_part_mm
+                    passes_h = abs(w_mm - required_mm) <= 1e-9
+                    criteria_text = f"{weld_size_symbol} == t_part_w{weld_index}_{check_id_suffix}"
+                else:
+                    required_mm = max(0.5 * t_part_mm, 16.0)
+                    passes_h = w_mm >= required_mm - 1e-9
+                    criteria_text = (
+                        f"{weld_size_symbol} >= max(0.5*t_part_w{weld_index}_{check_id_suffix}, 16 mm)"
+                    )
+                weld_limits.append(
+                    _step1_verification_only_limit(
+                        check_id=f"section_j2_3b_h.weld_{weld_index}_thickness_limits_{check_id_suffix}",
+                        scope=scope,
+                        clause="AISC 360-22 Section J2.3b(h)",
+                        description=f"Espesor de soldadura plug vs espesor de material {description_suffix}",
+                        calculated_symbol=weld_size_symbol,
+                        verification_text=(
+                            f"{criteria_text}; "
+                            f"{weld_size_symbol}={w_mm:.3f} mm, "
+                            f"t_part_w{weld_index}_{check_id_suffix}={t_part_mm:.3f} mm, "
+                            f"requerido={required_mm:.3f} mm"
+                        ),
+                        passes=passes_h,
+                    )
+                )
 
     for side_suffix in _active_beam_sides(case):
         side_tag = f"vg{side_suffix}"
@@ -5472,8 +6094,651 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
                         calculated=l_w6_col_computed,
                         limit=l_w6_max,
                         comparison="le",
+                        )
+                    )
+
+    sh_w7_col: Quantity | None = None
+    sv_w7_col: Quantity | None = None
+    nfilas_w7_col_local = case.geometry.nfilas_w7_col or case.geometry.doubler_plate_web_plug_weld_lines_nl
+    ncolumna_w7_col_local = case.geometry.ncolumna_w7_col
+    if (
+        doubler_plate_enabled
+        and bool(use_weld_7_col)
+        and nfilas_w7_col_local
+        and ncolumna_w7_col_local
+    ):
+        if b_dp_col is not None:
+            b_dp_for_sh = b_dp_col
+            sh_w7_col = Quantity(
+                value=b_dp_for_sh.value / float(ncolumna_w7_col_local + 1),
+                unit=b_dp_for_sh.unit,
+            )
+
+        sv_candidates: list[Quantity] = []
+        if beam_connection_sides in {"both_sides", "right_only"} and beam_profile_der is not None:
+            d_der_q = beam_profile_der["d"]
+            tf_der_q = beam_profile_der["tf"]
+            tpc_for_der = _to_unit_length_local(tcp, d_der_q.unit) if tcp is not None else None
+            sv_der_value = d_der_q.value - 2.0 * tf_der_q.value - (tpc_for_der.value if tpc_for_der is not None else 0.0)
+            sv_candidates.append(Quantity(value=sv_der_value, unit=d_der_q.unit))
+        if beam_connection_sides in {"both_sides", "left_only"} and beam_profile_izq is not None:
+            d_izq_q = beam_profile_izq["d"]
+            tf_izq_q = beam_profile_izq["tf"]
+            tpc_for_izq = _to_unit_length_local(tcp, d_izq_q.unit) if tcp is not None else None
+            sv_izq_value = d_izq_q.value - 2.0 * tf_izq_q.value - (tpc_for_izq.value if tpc_for_izq is not None else 0.0)
+            sv_candidates.append(Quantity(value=sv_izq_value, unit=d_izq_q.unit))
+        if sv_candidates:
+            base_unit = sv_candidates[0].unit
+            sv_converted: list[Quantity] = []
+            for sv_q in sv_candidates:
+                sv_q_conv = _to_unit_length_local(sv_q, base_unit)
+                if sv_q_conv is not None:
+                    sv_converted.append(sv_q_conv)
+            if sv_converted:
+                sv_max = max(sv_converted, key=lambda x: x.value)
+                sv_w7_col = Quantity(
+                    value=sv_max.value / float(nfilas_w7_col_local + 1),
+                    unit=base_unit,
+                )
+
+    if (
+        doubler_plate_enabled
+        and bool(use_weld_7_col)
+        and weld7_type_norm == "plug"
+    ):
+        _append_plug_limit_suite(
+            weld_index="7",
+            scope="weld_7_col",
+            weld_size_symbol="w_w7_col",
+            hole_diameter_symbol="d_hole_w7_col",
+            spacing_h_symbol="sh_w7_col",
+            spacing_v_symbol="sv_w7_col",
+            weld_size=w_w7_col,
+            hole_diameter=d_hole_w7_col,
+            spacing_h=sh_w7_col,
+            spacing_v=sv_w7_col,
+            containing_part_thickness=tcp,
+            description_suffix="(#7, columna)",
+            check_id_suffix="col",
+        )
+
+    weld8_type_norm = _normalize_end_plate_stiffener_weld_type(weld_8_type_raw)
+    encr_w8_col: Quantity | None = None
+    encr_w8_source: str | None = None
+    gap_dp_col_mm: float | None = None
+    weld8_contact_state_col: str | None = None
+    weld8_in_contact_with_web: bool | None = None
+    if gap_dp_col is not None:
+        if gap_dp_col.unit == "mm":
+            gap_dp_col_mm = gap_dp_col.value
+        elif gap_dp_col.unit == "in":
+            gap_dp_col_mm = gap_dp_col.value * 25.4
+        if gap_dp_col_mm is not None:
+            weld8_in_contact_with_web = gap_dp_col_mm <= 2.0 + 1e-9
+            weld8_contact_state_col = (
+                "en_contacto_con_alma"
+                if weld8_in_contact_with_web
+                else "sin_contacto_con_alma"
+            )
+    if doubler_plate_enabled:
+        weld_limits.append(
+            _step1_verification_only_limit(
+                check_id="section_6_7.weld_8_gap_contact_classification_col",
+                scope="weld_8_col",
+                clause="design-guide-13--wide-flange-column-stiffening-at-moment-connections",
+                description="Clasificacion de contacto entre platina de enchape y alma de columna segun gap_dp_col",
+                calculated_symbol="gap_dp_col",
+                verification_text=(
+                    "si gap_dp_col <= 2.0 mm => en_contacto_con_alma; "
+                    "si gap_dp_col > 2.0 mm => sin_contacto_con_alma; "
+                    f"gap_dp_col = {gap_dp_col.value:.3f} {gap_dp_col.unit}, "
+                    f"estado = {weld8_contact_state_col}"
+                )
+                if gap_dp_col is not None and weld8_contact_state_col is not None
+                else "gap_dp_col no definido; no se puede clasificar contacto con el alma",
+                passes=gap_dp_col is not None and weld8_contact_state_col is not None,
+            )
+        )
+    if (
+        doubler_plate_enabled
+        and weld_8_type_raw is not None
+        and str(weld_8_type_raw).strip()
+    ):
+        weld8_type_description = "Tipo de soldadura #8 permitido"
+        if weld8_in_contact_with_web is True:
+            weld8_allowed_types = ("fillet", "pjp")
+            weld8_limit_symbol = "{fillet, pjp}"
+        else:
+            weld8_allowed_types = ("cjp", "pjp", "fillet")
+            weld8_limit_symbol = "{cjp, pjp, fillet}"
+        weld_limits.append(
+            _step1_text_in_set_limit(
+                check_id="section_6_7.weld_8_type_allowed_col",
+                scope="weld_8_col",
+                clause="AISC 341-22w E3.6e.3",
+                description=weld8_type_description,
+                calculated_symbol="tipo_w8_col",
+                limit_symbol=weld8_limit_symbol,
+                calculated_text=weld8_type_norm,
+                allowed_values=weld8_allowed_types,
+            )
+        )
+
+    if (
+        doubler_plate_enabled
+        and weld_8_type_raw is not None
+        and str(weld_8_type_raw).strip()
+    ):
+        kdet_col_for_encr = column_profile.get("kdet") or column_profile.get("kdes")
+        tf_col_for_encr = column_profile.get("tf")
+        if (
+            kdet_col_for_encr is not None
+            and tf_col_for_encr is not None
+            and kdet_col_for_encr.unit == tf_col_for_encr.unit
+        ):
+            encr_w8_col, encr_w8_source = _compute_encr_w8_from_aisc_16_figure_10_3(
+                kdet_col=kdet_col_for_encr,
+                tf_col=tf_col_for_encr,
+            )
+        else:
+            encr_w8_col = None
+            encr_w8_source = "no_se_pudo_evaluar_kdet_col_y_tf_col"
+
+        weld_limits.append(
+            _step1_verification_only_limit(
+                check_id="section_6_7.weld_8_encr_from_figure_10_3_col",
+                scope="weld_8_col",
+                clause="Steel Construction Manual AISC 16th Edition 2023 Figure 10-3",
+                description="Determinacion automatica de Encr para soldadura #8",
+                calculated_symbol="Encr_w8_col",
+                verification_text=(
+                    f"Encr_w8_col calculado correctamente: {encr_w8_col.value:.3f} {encr_w8_col.unit}; "
+                    f"fuente={encr_w8_source}"
+                )
+                if encr_w8_col is not None
+                else (
+                    "No se pudo determinar Encr_w8_col desde Figura 10-3; "
+                    f"detalle={encr_w8_source}"
+                ),
+                passes=encr_w8_col is not None,
+            )
+        )
+
+    if (
+        doubler_plate_enabled
+        and weld8_type_norm == "fillet"
+        and case.geometry.doubler_plate_thickness is not None
+        and encr_w8_col is not None
+    ):
+        # For this DG13 fillet-thickness check, prioritize kdes as requested by user.
+        kdet_col = column_profile.get("kdes") or column_profile.get("kdet")
+        tf_col = column_profile.get("tf")
+        t_dp_col = case.geometry.doubler_plate_thickness
+        if kdet_col is not None and tf_col is not None:
+            encr_for_limit = _convert_length_quantity(encr_w8_col, kdet_col.unit)
+            if (
+                encr_for_limit is not None
+                and tf_col.unit == kdet_col.unit
+                and t_dp_col.unit == kdet_col.unit
+            ):
+                tdp_min = Quantity(
+                    value=kdet_col.value - tf_col.value - encr_for_limit.value,
+                    unit=kdet_col.unit,
+                )
+                weld_limits.append(
+                    _step1_limit(
+                        check_id="section_6_7.weld_8_doubler_plate_thickness_min_col",
+                        scope="doubler_plate_col",
+                        clause="design-guide-13--wide-flange-column-stiffening-at-moment-connections",
+                        description="Espesor minimo de platina de enchape cuando soldadura #8 es fillet",
+                        calculated_symbol="t_dp_col",
+                        limit_symbol="kdet_col - tf_col - Encr_w8_col",
+                        calculated=t_dp_col,
+                        limit=tdp_min,
+                        comparison="ge",
                     )
                 )
+
+    if doubler_plate_enabled and weld8_type_norm == "fillet":
+        _append_fillet_limit_suite(
+            weld_index="8",
+            scope="weld_8_col",
+            size_symbol="w_w8_col",
+            length_symbol="L_w8_col",
+            weld_size=w_w8_col,
+            weld_length=l_w8_col_computed,
+            thinner_part=_minimum_thickness(case.geometry.doubler_plate_thickness, tft_col_q),
+            description_suffix="(#8, columna)",
+            check_id_suffix="col",
+        )
+
+    weld9_type_norm = _normalize_end_plate_stiffener_weld_type(weld_9_type_raw)
+    if bool(use_weld_9_col):
+        weld_limits.append(
+            _step1_text_in_set_limit(
+                check_id="section_6_7.weld_9_type_allowed_when_used_col",
+                scope="doubler_plate_col",
+                clause="AISC 341-22w E3.6e.3",
+                description="Tipo de soldadura #9 permitido (usar_weld_9_col=true)",
+                calculated_symbol="tipo_w9_col",
+                limit_symbol="{fillet}",
+                calculated_text=weld9_type_norm,
+                allowed_values=("fillet",),
+            )
+        )
+        if weld9_type_norm == "fillet":
+            _append_fillet_limit_suite(
+                weld_index="9",
+                scope="doubler_plate_col",
+                size_symbol="w_w9_col",
+                length_symbol="L_w9_col",
+                weld_size=w_w9_col,
+                weld_length=l_w9_col_computed,
+                thinner_part=_minimum_thickness(case.geometry.doubler_plate_thickness, column_profile.get("tw")),
+                description_suffix="(#9, columna)",
+                check_id_suffix="col",
+            )
+            kdet_col = column_profile.get("kdet") or column_profile.get("kdes")
+            d_col = column_profile.get("d")
+            if (
+                l_w9_col_computed is not None
+                and w_w9_col is not None
+                and d_col is not None
+                and kdet_col is not None
+            ):
+                kdet_for_limit = _convert_length_quantity(kdet_col, d_col.unit)
+                if kdet_for_limit is not None:
+                    l_w9_max = Quantity(
+                        value=d_col.value - 2.0 * kdet_for_limit.value - 2.0 * _mm_to_unit_value(38.0, d_col.unit),
+                        unit=d_col.unit,
+                    )
+                    weld_limits.append(
+                        _step1_limit(
+                            check_id="section_6_7.weld_9_length_max_col",
+                            scope="doubler_plate_col",
+                            clause="Section 6.7",
+                            description="Longitud maxima de soldadura #9 cuando tipo_w9_col es fillet",
+                            calculated_symbol="L_w9_col",
+                            limit_symbol="d_col - 2*kdet_col - 2*38 mm",
+                            calculated=l_w9_col_computed,
+                            limit=l_w9_max,
+                            comparison="le",
+                        )
+                    )
+                else:
+                    _append_fillet_missing_limit(
+                        check_id="section_6_7.weld_9_length_max_col",
+                        scope="doubler_plate_col",
+                        description="Longitud maxima de soldadura #9 cuando tipo_w9_col es fillet",
+                        calculated_symbol="L_w9_col",
+                        missing_fields=("kdet_col",),
+                    )
+            else:
+                _append_fillet_missing_limit(
+                    check_id="section_6_7.weld_9_length_max_col",
+                    scope="doubler_plate_col",
+                    description="Longitud maxima de soldadura #9 cuando tipo_w9_col es fillet",
+                    calculated_symbol="L_w9_col",
+                    missing_fields=("L_w9_col", "w_w9_col", "d_col", "kdet_col"),
+                )
+
+    # Checks requested for scope 3.26 (WELD_9_COL):
+    # Apply only when extended_dp_col=true and usar_pc_col=false.
+    # 1) if gap_dp_col<=2.0mm and t_dp_col>=((d_col-2*tf_col)+max{d_lado-2*tf_lado})/90 => use_weld_9_col must be true
+    #    otherwise use_weld_9_col must be false.
+    # 2) same logic replacing t_dp_col with tw_col.
+    if (
+        doubler_plate_enabled
+        and bool(case.geometry.extended_dp_col)
+        and (not continuity_plate_enabled)
+        and bool(use_weld_9_col)
+    ):
+        d_beam_net_candidates_w9: list[Quantity] = []
+        if beam_connection_sides in {"both_sides", "left_only"} and beam_profile_izq is not None:
+            d_beam_net_candidates_w9.append(
+                Quantity(
+                    value=beam_profile_izq["d"].value - 2.0 * beam_profile_izq["tf"].value,
+                    unit=beam_profile_izq["d"].unit,
+                )
+            )
+        if beam_connection_sides in {"both_sides", "right_only"}:
+            d_beam_net_candidates_w9.append(
+                Quantity(
+                    value=beam_profile_der["d"].value - 2.0 * beam_profile_der["tf"].value,
+                    unit=beam_profile_der["d"].unit,
+                )
+            )
+
+        base_unit_w9 = column_profile["tw"].unit
+        d_col_conv_w9 = _to_unit_length_local(column_profile["d"], base_unit_w9)
+        tf_col_conv_w9 = _to_unit_length_local(column_profile["tf"], base_unit_w9)
+        tw_col_conv_w9 = _to_unit_length_local(column_profile["tw"], base_unit_w9)
+        t_dp_col_conv_w9 = (
+            _to_unit_length_local(case.geometry.doubler_plate_thickness, base_unit_w9)
+            if case.geometry.doubler_plate_thickness is not None
+            else None
+        )
+        gap_dp_mm_w9: float | None = None
+        if gap_dp_col is not None:
+            gap_dp_conv_mm = _to_unit_length_local(gap_dp_col, "mm")
+            if gap_dp_conv_mm is not None:
+                gap_dp_mm_w9 = gap_dp_conv_mm.value
+
+        d_beam_nets_conv_w9: list[Quantity] = []
+        for q in d_beam_net_candidates_w9:
+            q_conv = _to_unit_length_local(q, base_unit_w9)
+            if q_conv is not None:
+                d_beam_nets_conv_w9.append(q_conv)
+
+        rhs_w9_q: Quantity | None = None
+        if d_col_conv_w9 is not None and tf_col_conv_w9 is not None and d_beam_nets_conv_w9:
+            rhs_w9_q = Quantity(
+                value=(
+                    d_col_conv_w9.value
+                    - 2.0 * tf_col_conv_w9.value
+                    + max(d_beam_nets_conv_w9, key=lambda x: x.value).value
+                )
+                / 90.0,
+                unit=base_unit_w9,
+            )
+
+        use_w9_input_bool = bool(use_weld_9_col)
+
+        # Check 1: threshold with t_dp_col
+        if rhs_w9_q is not None and t_dp_col_conv_w9 is not None and gap_dp_mm_w9 is not None:
+            cond1 = (gap_dp_mm_w9 <= 2.0 + 1e-9) and (t_dp_col_conv_w9.value >= rhs_w9_q.value)
+            expected_use_w9_1 = cond1
+            passes_use_w9_1 = use_w9_input_bool == expected_use_w9_1
+            weld_limits.append(
+                _step1_verification_only_limit(
+                    check_id="section_dg13.weld_9_required_by_gap_and_t_dp_col",
+                    scope="weld_9_col",
+                    clause="AISC 341-22w E3.6e.3 + design-guide-13--wide-flange-column-stiffening-at-moment-connections",
+                    description="Uso de soldadura #9 segun gap_dp_col y umbral con t_dp_col",
+                    calculated_symbol="use_weld_9_col",
+                    verification_text=(
+                        f"si gap_dp_col<=2.0mm y t_dp_col>=(d_col-2*tf_col+max{{d_lado-2*tf_lado}})/90 "
+                        f"=> use_weld_9_col=true; en caso contrario false. "
+                        f"gap_dp_col={gap_dp_mm_w9:.3f} mm, "
+                        f"t_dp_col={t_dp_col_conv_w9.value:.3f} {t_dp_col_conv_w9.unit}, "
+                        f"umbral={rhs_w9_q.value:.3f} {rhs_w9_q.unit}, "
+                        f"condicion={str(cond1).lower()}, "
+                        f"use_weld_9_col(input)={str(use_w9_input_bool).lower()}, "
+                        f"use_weld_9_col(esperado)={str(expected_use_w9_1).lower()}"
+                    ),
+                    passes=passes_use_w9_1,
+                )
+            )
+        else:
+            weld_limits.append(
+                _step1_verification_only_limit(
+                    check_id="section_dg13.weld_9_required_by_gap_and_t_dp_col",
+                    scope="weld_9_col",
+                    clause="AISC 341-22w E3.6e.3 + design-guide-13--wide-flange-column-stiffening-at-moment-connections",
+                    description="Uso de soldadura #9 segun gap_dp_col y umbral con t_dp_col",
+                    calculated_symbol="use_weld_9_col",
+                    verification_text=(
+                        "No se pudo evaluar el chequeo por datos faltantes/invalidos: "
+                        f"gap_dp_col={gap_dp_col is not None}, "
+                        f"t_dp_col={case.geometry.doubler_plate_thickness is not None}, "
+                        f"rhs={(rhs_w9_q is not None)}"
+                    ),
+                    passes=False,
+                )
+            )
+        # Check 2: threshold with tw_col
+        if rhs_w9_q is not None and tw_col_conv_w9 is not None and gap_dp_mm_w9 is not None:
+            cond2 = (gap_dp_mm_w9 <= 2.0 + 1e-9) and (tw_col_conv_w9.value >= rhs_w9_q.value)
+            expected_use_w9_2 = cond2
+            passes_use_w9_2 = use_w9_input_bool == expected_use_w9_2
+            weld_limits.append(
+                _step1_verification_only_limit(
+                    check_id="section_dg13.weld_9_required_by_gap_and_tw_col",
+                    scope="weld_9_col",
+                    clause="AISC 341-22w E3.6e.3 + design-guide-13--wide-flange-column-stiffening-at-moment-connections",
+                    description="Uso de soldadura #9 segun gap_dp_col y umbral con tw_col",
+                    calculated_symbol="use_weld_9_col",
+                    verification_text=(
+                        f"si gap_dp_col<=2.0mm y tw_col>=(d_col-2*tf_col+max{{d_lado-2*tf_lado}})/90 "
+                        f"=> use_weld_9_col=true; en caso contrario false. "
+                        f"gap_dp_col={gap_dp_mm_w9:.3f} mm, "
+                        f"tw_col={tw_col_conv_w9.value:.3f} {tw_col_conv_w9.unit}, "
+                        f"umbral={rhs_w9_q.value:.3f} {rhs_w9_q.unit}, "
+                        f"condicion={str(cond2).lower()}, "
+                        f"use_weld_9_col(input)={str(use_w9_input_bool).lower()}, "
+                        f"use_weld_9_col(esperado)={str(expected_use_w9_2).lower()}"
+                    ),
+                    passes=passes_use_w9_2,
+                )
+            )
+        else:
+            weld_limits.append(
+                _step1_verification_only_limit(
+                    check_id="section_dg13.weld_9_required_by_gap_and_tw_col",
+                    scope="weld_9_col",
+                    clause="AISC 341-22w E3.6e.3 + design-guide-13--wide-flange-column-stiffening-at-moment-connections",
+                    description="Uso de soldadura #9 segun gap_dp_col y umbral con tw_col",
+                    calculated_symbol="use_weld_9_col",
+                    verification_text=(
+                        "No se pudo evaluar el chequeo por datos faltantes/invalidos: "
+                        f"gap_dp_col={gap_dp_col is not None}, "
+                        f"tw_col={(column_profile.get('tw') is not None)}, "
+                        f"rhs={(rhs_w9_q is not None)}"
+                    ),
+                    passes=False,
+                )
+            )
+    elif doubler_plate_enabled and bool(use_weld_9_col):
+        weld_limits.append(
+            _step1_verification_only_limit(
+                check_id="section_dg13.weld_9_activation_not_applicable_note",
+                scope="weld_9_col",
+                clause="AISC 341-22w E3.6e.3 + design-guide-13--wide-flange-column-stiffening-at-moment-connections",
+                description="Chequeos de activacion de soldadura #9",
+                calculated_symbol="use_weld_9_col",
+                verification_text=(
+                    "No aplica: estos chequeos solo aplican cuando "
+                    "extended_dp_col=true y usar_pc_col=false; "
+                    f"extended_dp_col={str(bool(case.geometry.extended_dp_col)).lower()}, "
+                    f"usar_pc_col={str(bool(continuity_plate_enabled)).lower()}"
+                ),
+                passes=True,
+            )
+        )
+
+    # Design Guide 13 check for low ductility:
+    # if usar_weld_7_col=false -> t_dp_col >= (d_col - 2*kdet_col)*sqrt(fy_dp_col)/1136.78
+    # if usar_weld_7_col=true  -> t_dp_col + tw_col >= (d_col - 2*kdet_col)*sqrt(fy_dp_col)/1136.78
+    if (
+        doubler_plate_enabled
+        and str(column_ductility).strip().lower() == "low"
+        and case.geometry.doubler_plate_thickness is not None
+    ):
+        d_col = column_profile.get("d")
+        kdet_col = column_profile.get("kdet") or column_profile.get("kdes")
+        tw_col = column_profile.get("tw")
+        t_dp_col = case.geometry.doubler_plate_thickness
+        tipo_acero_dp_col = case.materials.doubler_plate_steel_type
+        if d_col is not None and kdet_col is not None and tw_col is not None and tipo_acero_dp_col is not None:
+            plate_props_dp = get_plate_steel_properties(
+                steel_type=str(tipo_acero_dp_col),
+                unit_system=case.units_system,
+            )
+            fy_dp_col = plate_props_dp["fy"]
+
+            def _to_mm(q: Quantity) -> float | None:
+                if q.unit == "mm":
+                    return q.value
+                if q.unit == "in":
+                    return q.value * 25.4
+                return None
+
+            def _to_mpa(q: Quantity) -> float | None:
+                if q.unit == "MPa":
+                    return q.value
+                if q.unit == "ksi":
+                    return q.value * 6.894757293168361
+                return None
+
+            d_col_mm = _to_mm(d_col)
+            kdet_col_mm = _to_mm(kdet_col)
+            tw_col_mm = _to_mm(tw_col)
+            t_dp_col_mm = _to_mm(t_dp_col)
+            fy_dp_col_mpa = _to_mpa(fy_dp_col) if isinstance(fy_dp_col, Quantity) else None
+
+            if (
+                d_col_mm is not None
+                and kdet_col_mm is not None
+                and tw_col_mm is not None
+                and t_dp_col_mm is not None
+                and fy_dp_col_mpa is not None
+                and fy_dp_col_mpa >= 0.0
+            ):
+                rhs_mm_value = (d_col_mm - 2.0 * kdet_col_mm) * math.sqrt(fy_dp_col_mpa) / 1136.78
+                rhs_q = Quantity(
+                    value=rhs_mm_value if t_dp_col.unit == "mm" else rhs_mm_value / 25.4,
+                    unit=t_dp_col.unit,
+                )
+                use_w7 = bool(use_weld_7_col)
+                if use_w7:
+                    tw_for_calc = tw_col if tw_col.unit == t_dp_col.unit else (
+                        Quantity(value=tw_col.value * 25.4, unit="mm")
+                        if tw_col.unit == "in" and t_dp_col.unit == "mm"
+                        else (
+                            Quantity(value=tw_col.value / 25.4, unit="in")
+                            if tw_col.unit == "mm" and t_dp_col.unit == "in"
+                            else None
+                        )
+                    )
+                    if tw_for_calc is not None:
+                        lhs_q = Quantity(
+                            value=t_dp_col.value + tw_for_calc.value,
+                            unit=t_dp_col.unit,
+                        )
+                        weld_limits.append(
+                            _step1_limit(
+                                check_id="section_dg13.weld_8_doubler_plate_thickness_low_ductility_with_w7",
+                                scope="doubler_plate_col",
+                                clause="design-guide-13--wide-flange-column-stiffening-at-moment-connections",
+                                description="Espesor minimo con soldadura #7 habilitada (ductilidad baja)",
+                                calculated_symbol="t_dp_col + tw_col",
+                                limit_symbol="(d_col - 2*kdet_col)*sqrt(fy_dp_col)/1136.78",
+                                calculated=lhs_q,
+                                limit=rhs_q,
+                                comparison="ge",
+                            )
+                        )
+                else:
+                    weld_limits.append(
+                        _step1_limit(
+                            check_id="section_dg13.weld_8_doubler_plate_thickness_low_ductility_without_w7",
+                            scope="doubler_plate_col",
+                            clause="design-guide-13--wide-flange-column-stiffening-at-moment-connections",
+                            description="Espesor minimo sin soldadura #7 habilitada (ductilidad baja)",
+                            calculated_symbol="t_dp_col",
+                            limit_symbol="(d_col - 2*kdet_col)*sqrt(fy_dp_col)/1136.78",
+                            calculated=t_dp_col,
+                            limit=rhs_q,
+                            comparison="ge",
+                        )
+                    )
+
+    # Design Guide 13 check for moderate/high ductility (requested formulation):
+    # if usar_weld_7_col=true  -> t_dp_col >= (d_col - 2*kdet_col)*sqrt(fy_dp_col)/1136.78
+    # if usar_weld_7_col=false -> t_dp_col + tw_col >= (d_col - 2*kdet_col)*sqrt(fy_dp_col)/1136.78
+    if (
+        doubler_plate_enabled
+        and str(column_ductility).strip().lower() in {"moderate", "high"}
+        and case.geometry.doubler_plate_thickness is not None
+    ):
+        d_col = column_profile.get("d")
+        kdet_col = column_profile.get("kdet") or column_profile.get("kdes")
+        tw_col = column_profile.get("tw")
+        t_dp_col = case.geometry.doubler_plate_thickness
+        tipo_acero_dp_col = case.materials.doubler_plate_steel_type
+        if d_col is not None and kdet_col is not None and tw_col is not None and tipo_acero_dp_col is not None:
+            plate_props_dp = get_plate_steel_properties(
+                steel_type=str(tipo_acero_dp_col),
+                unit_system=case.units_system,
+            )
+            fy_dp_col = plate_props_dp["fy"]
+
+            def _to_mm_mod_high(q: Quantity) -> float | None:
+                if q.unit == "mm":
+                    return q.value
+                if q.unit == "in":
+                    return q.value * 25.4
+                return None
+
+            def _to_mpa_mod_high(q: Quantity) -> float | None:
+                if q.unit == "MPa":
+                    return q.value
+                if q.unit == "ksi":
+                    return q.value * 6.894757293168361
+                return None
+
+            d_col_mm = _to_mm_mod_high(d_col)
+            kdet_col_mm = _to_mm_mod_high(kdet_col)
+            tw_col_mm = _to_mm_mod_high(tw_col)
+            t_dp_col_mm = _to_mm_mod_high(t_dp_col)
+            fy_dp_col_mpa = _to_mpa_mod_high(fy_dp_col) if isinstance(fy_dp_col, Quantity) else None
+
+            if (
+                d_col_mm is not None
+                and kdet_col_mm is not None
+                and tw_col_mm is not None
+                and t_dp_col_mm is not None
+                and fy_dp_col_mpa is not None
+                and fy_dp_col_mpa >= 0.0
+            ):
+                rhs_mm_value = (d_col_mm - 2.0 * kdet_col_mm) * math.sqrt(fy_dp_col_mpa) / 1136.78
+                rhs_q = Quantity(
+                    value=rhs_mm_value if t_dp_col.unit == "mm" else rhs_mm_value / 25.4,
+                    unit=t_dp_col.unit,
+                )
+                use_w7 = bool(use_weld_7_col)
+                if use_w7:
+                    weld_limits.append(
+                        _step1_limit(
+                            check_id="section_dg13.weld_8_doubler_plate_thickness_mod_high_with_w7",
+                            scope="doubler_plate_col",
+                            clause="design-guide-13--wide-flange-column-stiffening-at-moment-connections",
+                            description="Espesor minimo con soldadura #7 habilitada (ductilidad moderada/alta)",
+                            calculated_symbol="t_dp_col",
+                            limit_symbol="(d_col - 2*kdet_col)*sqrt(fy_dp_col)/1136.78",
+                            calculated=t_dp_col,
+                            limit=rhs_q,
+                            comparison="ge",
+                        )
+                    )
+                else:
+                    tw_for_calc = tw_col if tw_col.unit == t_dp_col.unit else (
+                        Quantity(value=tw_col.value * 25.4, unit="mm")
+                        if tw_col.unit == "in" and t_dp_col.unit == "mm"
+                        else (
+                            Quantity(value=tw_col.value / 25.4, unit="in")
+                            if tw_col.unit == "mm" and t_dp_col.unit == "in"
+                            else None
+                        )
+                    )
+                    if tw_for_calc is not None:
+                        lhs_q = Quantity(
+                            value=t_dp_col.value + tw_for_calc.value,
+                            unit=t_dp_col.unit,
+                        )
+                        weld_limits.append(
+                            _step1_limit(
+                                check_id="section_dg13.weld_8_doubler_plate_thickness_mod_high_without_w7",
+                                scope="doubler_plate_col",
+                                clause="design-guide-13--wide-flange-column-stiffening-at-moment-connections",
+                                description="Espesor minimo sin soldadura #7 habilitada (ductilidad moderada/alta)",
+                                calculated_symbol="t_dp_col + tw_col",
+                                limit_symbol="(d_col - 2*kdet_col)*sqrt(fy_dp_col)/1136.78",
+                                calculated=lhs_q,
+                                limit=rhs_q,
+                                comparison="ge",
+                            )
+                        )
 
     required_bolt_standards = (
         "ASTM F3125/F3125M",
@@ -5609,7 +6874,7 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
         table_61_checks.append(
             _step1_limit(
                 check_id=f"table_6_1.edge_de_ge_emin_{side_tag}",
-                scope=side_scope,
+                scope=f"end_plate_{side_tag}",
                 clause="Table 6.1 + AISC 360 Table J3.4",
                 description=f"Edge distance at de ({side_label})",
                 calculated_symbol=f"de_pe_{side_suffix}",
@@ -5619,68 +6884,164 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
                 comparison="ge",
             )
         )
+        surface_cond_side = (
+            case.geometry.cond_pe_vgder
+            if side_tag == "der"
+            else case.geometry.cond_pe_vgizq
+        ) or case.geometry.cond_col
+        atmospheric_cond_side = (
+            case.geometry.cond_amb_pe_vgder
+            if side_tag == "der"
+            else case.geometry.cond_amb_pe_vgizq
+        ) or case.geometry.cond_amb_col
+        is_unpainted_weathering_exposed = (
+            surface_cond_side == "unpainted" and atmospheric_cond_side == "corrosive"
+        )
+        tf_col_for_j36 = column_profile["tf"]
+        t_for_j36 = _minimum_thickness(tp_side, tf_col_for_j36)
+        if t_for_j36 is None:
+            raise missing_required_input_error(
+                rule_id=rule_binding.rule_id,
+                source_document=rule_binding.source_document,
+                missing_fields=[
+                    f"geometry.end_plate_thickness_{side_suffix}",
+                    "sections.column_shape.tf",
+                ],
+                message=(
+                    "Unable to evaluate AISC 360-22 J3.6 maximum edge distance "
+                    f"for side '{side_tag}' because min{{tpe_{side_suffix}, tf_col}} "
+                    "could not be resolved."
+                ),
+            )
+        # AISC 360-22 J3.6: max edge distance from hole center to nearest edge.
+        j36_limits_side = compute_max_spacing_and_edge_distance_limits_j36(
+            thinner_part_thickness=t_for_j36,
+            unit_system=case.units_system,
+            is_unpainted_weathering_exposed=is_unpainted_weathering_exposed,
+        )
+        j36_limits_tf_col = compute_max_spacing_and_edge_distance_limits_j36(
+            thinner_part_thickness=tf_col_for_j36,
+            unit_system=case.units_system,
+            is_unpainted_weathering_exposed=is_unpainted_weathering_exposed,
+        )
+        j36_limits_tpe_side = compute_max_spacing_and_edge_distance_limits_j36(
+            thinner_part_thickness=tp_side,
+            unit_system=case.units_system,
+            is_unpainted_weathering_exposed=is_unpainted_weathering_exposed,
+        )
+        table_61_checks.append(
+            _step1_limit(
+                check_id=f"table_6_1.edge_de_le_emax_{side_tag}",
+                scope=f"end_plate_{side_tag}",
+                clause="Table 6.1 + AISC 360-22 J3.6",
+                description=f"Maximum edge distance at de ({side_label})",
+                calculated_symbol=f"de_pe_{side_suffix}",
+                limit_symbol="emax_j36",
+                calculated=de_side,
+                limit=j36_limits_side["max_edge_distance_active"],
+                comparison="le",
+            )
+        )
         if pfo_bounds is not None:
             pfo_min, pfo_max = pfo_bounds
-            pfo_min_label = (
-                f"{pfo_min.value:.0f} {pfo_min.unit}" if pfo_min.unit == "mm" else f"{pfo_min.value:.3f} {pfo_min.unit}"
+            pfo_min_governing = (
+                pfo_min
+                if pfo_min.value >= min_edge_side.value
+                else min_edge_side
             )
-            pfo_max_label = (
-                f"{pfo_max.value:.0f} {pfo_max.unit}" if pfo_max.unit == "mm" else f"{pfo_max.value:.3f} {pfo_max.unit}"
-            )
-            pfo_pass = (
-                (pso.value >= min_edge_side.value)
-                and (pfo_side.value >= pfo_min.value)
-                and (pfo_side.value <= pfo_max.value)
+            pfo_max_governing = (
+                pfo_max
+                if pfo_max.value <= j36_limits_tpe_side["max_edge_distance_active"].value
+                else j36_limits_tpe_side["max_edge_distance_active"]
             )
             table_61_checks.append(
-                _step1_compound_limit(
-                    check_id=f"table_6_1.edge_pfo_ge_emin_{side_tag}",
-                    scope=side_scope,
+                _step1_limit(
+                    check_id=f"table_6_1.edge_pfo_ge_pfo_min_{side_tag}",
+                    scope=f"end_plate_{side_tag}",
                     clause="Table 6.1 + AISC 360 Table J3.4",
-                    description=f"Outside bolt-row distance limits ({side_label})",
-                    calculated_symbol=f"pfo_pe_{side_suffix} - pso_pe_{side_suffix}",
-                    verification_text=(
-                        f"pso_pe_{side_suffix} = pfo_pe_{side_suffix} + 0.5*tf_{side_suffix} - 0.5*t_pc_col; "
-                        f"pso_pe_{side_suffix} >= emin; "
-                        f"pfo_pe_{side_suffix} <= {pfo_max_label}; pfo_pe_{side_suffix} >= {pfo_min_label}"
-                    ),
-                    passes=pfo_pass,
+                    description=f"Outside bolt-row distance minimum ({side_label})",
+                    calculated_symbol=f"pfo_pe_{side_suffix}",
+                    limit_symbol=f"max(pfo_pe_{side_suffix}_min, emin)",
                     calculated=pfo_side,
-                    minimum=pfo_min,
-                    maximum=pfo_max,
+                    limit=pfo_min_governing,
+                    comparison="ge",
+                )
+            )
+            table_61_checks.append(
+                _step1_limit(
+                    check_id=f"table_6_1.edge_pfo_le_emax_{side_tag}",
+                    scope=f"end_plate_{side_tag}",
+                    clause="Table 6.1 + AISC 360-22 J3.6",
+                    description=f"Outside bolt-row distance maximum ({side_label})",
+                    calculated_symbol=f"pfo_pe_{side_suffix}",
+                    limit_symbol=f"min(pfo_pe_{side_suffix}_max, emax_j36)",
+                    calculated=pfo_side,
+                    limit=pfo_max_governing,
+                    comparison="le",
+                )
+            )
+            table_61_checks.append(
+                _step1_limit(
+                    check_id=f"table_6_1.edge_pso_ge_emin_{side_tag}",
+                    scope="column",
+                    clause="Table 6.1 + AISC 360 Table J3.4",
+                    description=f"Outside adjusted edge distance minimum ({side_label})",
+                    calculated_symbol=f"pso_pe_{side_suffix}",
+                    limit_symbol="emin",
+                    calculated=pso,
+                    limit=min_edge_side,
+                    comparison="ge",
+                )
+            )
+            table_61_checks.append(
+                _step1_limit(
+                    check_id=f"table_6_1.edge_pso_le_emax_{side_tag}",
+                    scope="column",
+                    clause="AISC 360-22 J3.6",
+                    description=f"Outside adjusted edge distance maximum ({side_label})",
+                    calculated_symbol=f"pso_pe_{side_suffix}",
+                    limit_symbol="emax_j36",
+                    calculated=pso,
+                    limit=j36_limits_tf_col["max_edge_distance_active"],
+                    comparison="le",
                 )
             )
         if pfi_bounds is not None:
             pfi_min, pfi_max = pfi_bounds
-            pfi_min_label = (
-                f"{pfi_min.value:.0f} {pfi_min.unit}" if pfi_min.unit == "mm" else f"{pfi_min.value:.3f} {pfi_min.unit}"
-            )
-            pfi_max_label = (
-                f"{pfi_max.value:.0f} {pfi_max.unit}" if pfi_max.unit == "mm" else f"{pfi_max.value:.3f} {pfi_max.unit}"
-            )
-            psi_pass = psi.value > 0.0
-            pfi_pass = (
-                (pfi_side.value >= min_edge_side.value)
-                and (pfi_side.value >= pfi_min.value)
-                and (pfi_side.value <= pfi_max.value)
-                and psi_pass
+            pfi_min_governing = (
+                pfi_min
+                if pfi_min.value >= min_edge_side.value
+                else min_edge_side
             )
             table_61_checks.append(
-                _step1_compound_limit(
-                    check_id=f"table_6_1.edge_pfi_ge_emin_{side_tag}",
-                    scope=side_scope,
+                _step1_limit(
+                    check_id=f"table_6_1.edge_pfi_ge_pfi_min_{side_tag}",
+                    scope=f"end_plate_{side_tag}",
                     clause="Table 6.1 + AISC 360 Table J3.4",
-                    description=f"Inside bolt-row distance limits ({side_label})",
-                    calculated_symbol=f"pfi_pe_{side_suffix} - psi_pe_{side_suffix}",
-                    verification_text=(
-                        f"pfi_pe_{side_suffix} >= emin; pfi_pe_{side_suffix} <= {pfi_max_label}; "
-                        f"pfi_pe_{side_suffix} >= {pfi_min_label}; "
-                        f"psi_pe_{side_suffix} = pfi_pe_{side_suffix} + 0.5*tf_{side_suffix} - 0.5*t_pc_col; psi_pe_{side_suffix} > 0"
-                    ),
-                    passes=pfi_pass,
+                    description=f"Inside bolt-row distance minimum ({side_label})",
+                    calculated_symbol=f"pfi_pe_{side_suffix}",
+                    limit_symbol=f"max(pfi_pe_{side_suffix}_min, emin)",
                     calculated=pfi_side,
-                    minimum=pfi_min,
-                    maximum=pfi_max,
+                    limit=pfi_min_governing,
+                    comparison="ge",
+                )
+            )
+            pfi_max_governing = (
+                pfi_max
+                if pfi_max.value <= j36_limits_tpe_side["max_edge_distance_active"].value
+                else j36_limits_tpe_side["max_edge_distance_active"]
+            )
+            table_61_checks.append(
+                _step1_limit(
+                    check_id=f"table_6_1.edge_pfi_le_emax_{side_tag}",
+                    scope=f"end_plate_{side_tag}",
+                    clause="Table 6.1 + AISC 360-22 J3.6",
+                    description=f"Inside bolt-row distance maximum ({side_label})",
+                    calculated_symbol=f"pfi_pe_{side_suffix}",
+                    limit_symbol=f"min(pfi_pe_{side_suffix}_max, emax_j36)",
+                    calculated=pfi_side,
+                    limit=pfi_max_governing,
+                    comparison="le",
                 )
             )
         if case.connection_type == "bseep_8es":
@@ -5694,33 +7055,8 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
                 and (pb_side.value <= (pb_8es_max.value + pb_tol))
                 and (pb_side.value >= (pb_8es_min.value - pb_tol))
             )
-            table_61_checks.append(
-                _step1_compound_limit(
-                    check_id=f"table_6_1.pitch_pb_ge_3db_{side_tag}",
-                    scope=side_scope,
-                    clause="Table 6.1 (BSEEP-8ES)",
-                    description=f"Vertical pitch minimum spacing ({side_label})",
-                    calculated_symbol=f"pb_pe_{side_suffix}",
-                    verification_text=(
-                        f"pb_pe_{side_suffix} >= 3db; pb_pe_{side_suffix} <= {pb_8es_max.value:.3f} {pb_8es_max.unit}; "
-                        f"pb_pe_{side_suffix} >= "
-                        f"{pb_8es_min.value:.0f} {pb_8es_min.unit}"
-                        if pb_8es_min.unit == "mm"
-                        else (
-                            f"pb_pe_{side_suffix} >= 3db; pb_pe_{side_suffix} <= {pb_8es_max.value:.3f} {pb_8es_max.unit}; "
-                            f"pb_pe_{side_suffix} >= {pb_8es_min.value:.3f} {pb_8es_min.unit}"
-                        )
-                    ),
-                    passes=pb_passes,
-                    calculated=pb_side,
-                    limit_3db=min_spacing_side,
-                    minimum=pb_8es_min,
-                    maximum=pb_8es_max,
-                )
-            )
 
         table_61_values: list[tuple[str, str, str, Quantity]] = [
-            ("tbf", "Beam flange thickness", f"tf_{side_suffix}", side_profile["tf"]),
             ("bbf", "Beam flange width", f"bf_{side_suffix}", side_profile["bf"]),
             ("d", "Connecting beam depth", f"d_{side_suffix}", side_profile["d"]),
             ("tp", "End-plate thickness", f"tpe_{side_suffix}", tp_side),
@@ -5737,18 +7073,67 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
             minimum, maximum = bounds
             if symbol == "bp":
                 continue
-            table_61_checks.append(
-                _step1_range_limit(
-                    check_id=f"table_6_1.{symbol}.range_{side_tag}",
-                    scope=side_scope,
-                    clause="Table 6.1",
-                    description=f"{description} limits ({side_label})",
-                    symbol=symbol_display,
-                    calculated=value,
-                    minimum=minimum,
-                    maximum=maximum,
+            target_scope = side_scope
+            if symbol in {"bbf", "d"}:
+                target_scope = f"beam_{side_tag}"
+            elif symbol == "tp":
+                target_scope = f"end_plate_{side_tag}"
+
+            if symbol == "g":
+                g_min_governing = (
+                    minimum
+                    if minimum.value >= min_spacing_side.value
+                    else min_spacing_side
                 )
-            )
+                g_max_j36, _g_max_j36_meta = compute_maximum_bolt_spacing_j36(
+                    thinner_part_thickness=t_for_j36,
+                    unit_system=case.units_system,
+                    is_unpainted_weathering_exposed=is_unpainted_weathering_exposed,
+                )
+                g_max_governing = (
+                    maximum
+                    if maximum.value <= g_max_j36.value
+                    else g_max_j36
+                )
+                table_61_checks.append(
+                    _step1_limit(
+                        check_id=f"table_6_1.{symbol}.ge_min_{side_tag}",
+                        scope=f"end_plate_{side_tag}",
+                        clause="Table 6.1 + AISC 360 Table J3.3 (compute_minimum_bolt_spacing_j33)",
+                        description=f"{description} minimum ({side_label})",
+                        calculated_symbol=symbol_display,
+                        limit_symbol=f"max({symbol_display}_min, 3db_j33)",
+                        calculated=value,
+                        limit=g_min_governing,
+                        comparison="ge",
+                    )
+                )
+                table_61_checks.append(
+                    _step1_limit(
+                        check_id=f"table_6_1.{symbol}.le_max_{side_tag}",
+                        scope=f"end_plate_{side_tag}",
+                        clause="Table 6.1 + AISC 360-22 J3.6 (compute_maximum_bolt_spacing_j36)",
+                        description=f"{description} maximum ({side_label})",
+                        calculated_symbol=symbol_display,
+                        limit_symbol=f"min({symbol_display}_max, smax_j36)",
+                        calculated=value,
+                        limit=g_max_governing,
+                        comparison="le",
+                    )
+                )
+            else:
+                table_61_checks.append(
+                    _step1_range_limit(
+                        check_id=f"table_6_1.{symbol}.range_{side_tag}",
+                        scope=target_scope,
+                        clause="Table 6.1",
+                        description=f"{description} limits ({side_label})",
+                        symbol=symbol_display,
+                        calculated=value,
+                        minimum=minimum,
+                        maximum=maximum,
+                    )
+                )
 
     step_1_limits = (
         beam_limits
@@ -5860,6 +7245,34 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
                 "nl_w6_col": nl_w6_col,
                 "L_gap_w6_col": l_gap_w6_col.model_dump() if l_gap_w6_col is not None else None,
                 "kds_w6_col": kds_w6_col,
+                "Fexx_w8_col": weld_fexx.model_dump(),
+                "tipo_w8_col": weld_8_type_raw,
+                "w_w8_col": w_w8_col.model_dump() if w_w8_col is not None else None,
+                "t_w8_col": w_w8_col.model_dump() if w_w8_col is not None else None,
+                "nl_w8_col": nl_w8_col,
+                "L_gap_w8_col": (
+                    case.geometry.L_gap_w8_col.model_dump()
+                    if case.geometry.L_gap_w8_col is not None
+                    else None
+                ),
+                "L_w8_col": l_w8_col_computed.model_dump() if l_w8_col_computed is not None else None,
+                "Encr_w8_col": encr_w8_col.model_dump() if encr_w8_col is not None else None,
+                "Encr_w8_col_fuente": encr_w8_source,
+                "kds_w8_col": kds_w8_col,
+                "use_weld_9_col": case.geometry.use_weld_9_col,
+                "tipo_w9_col": weld_9_type_raw,
+                "w_w9_col": w_w9_col.model_dump() if w_w9_col is not None else None,
+                "t_w9_col": (
+                    w_w9_col.model_dump()
+                    if w_w9_col is not None
+                    else None
+                ),
+                "nl_w9_col": nl_w9_col,
+                "L_gap_w9_col": l_gap_w9_col.model_dump() if l_gap_w9_col is not None else None,
+                "kds_w9_col": kds_w9_col,
+                "L_w9_col": l_w9_col_computed.model_dump() if l_w9_col_computed is not None else None,
+                "gap_dp_col": gap_dp_col.model_dump() if gap_dp_col is not None else None,
+                "estado_contacto_dp_col": weld8_contact_state_col,
                 "tipo_acero_dp_col": case.materials.doubler_plate_steel_type,
                 "tipo_w7_col": case.geometry.doubler_plate_web_plug_weld_type,
                 "Fexx_w7_col": weld_fexx.model_dump(),
@@ -5874,6 +7287,20 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
                     else None
                 ),
                 "nl_w7_col": case.geometry.doubler_plate_web_plug_weld_lines_nl,
+                "nfilas_w7_col": (
+                    case.geometry.nfilas_w7_col
+                    if case.geometry.nfilas_w7_col is not None
+                    else case.geometry.doubler_plate_web_plug_weld_lines_nl
+                ),
+                "ncolumna_w7_col": case.geometry.ncolumna_w7_col,
+                "d_hole_w7_col": (
+                    case.geometry.d_hole_w7_col.model_dump()
+                    if case.geometry.d_hole_w7_col is not None
+                    else None
+                ),
+                "sh_w7_col": sh_w7_col.model_dump() if sh_w7_col is not None else None,
+                "sv_w7_col": sv_w7_col.model_dump() if sv_w7_col is not None else None,
+                "t_part_w7_col": tcp.model_dump() if tcp is not None else None,
                 # Legacy aliases (compatibility while migrating naming).
                 "tipo_wdp_plug": case.geometry.doubler_plate_web_plug_weld_type,
                 "t_wdp_plug": (
@@ -5910,6 +7337,90 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
                     if case.geometry.L_gap_w2_vgizq is not None
                     else None
                 ),
+                "tipo_w1_vgder": case.geometry.end_plate_stiffener_weld_type_vgder
+                or case.geometry.end_plate_stiffener_weld_type,
+                "tipo_w1_vgizq": case.geometry.end_plate_stiffener_weld_type_vgizq
+                or case.geometry.end_plate_stiffener_weld_type,
+                "w_w1_vgder": (
+                    case.geometry.end_plate_stiffener_weld_size_wst_vgder.model_dump()
+                    if case.geometry.end_plate_stiffener_weld_size_wst_vgder is not None
+                    else (
+                        case.geometry.end_plate_stiffener_weld_size_wst.model_dump()
+                        if case.geometry.end_plate_stiffener_weld_size_wst is not None
+                        else None
+                    )
+                ),
+                "w_w1_vgizq": (
+                    case.geometry.end_plate_stiffener_weld_size_wst_vgizq.model_dump()
+                    if case.geometry.end_plate_stiffener_weld_size_wst_vgizq is not None
+                    else (
+                        case.geometry.end_plate_stiffener_weld_size_wst.model_dump()
+                        if case.geometry.end_plate_stiffener_weld_size_wst is not None
+                        else None
+                    )
+                ),
+                "nl_w1_vgder": case.geometry.end_plate_stiffener_weld_lines_nl_vgder
+                if case.geometry.end_plate_stiffener_weld_lines_nl_vgder is not None
+                else case.geometry.end_plate_stiffener_weld_lines_nl,
+                "nl_w1_vgizq": case.geometry.end_plate_stiffener_weld_lines_nl_vgizq
+                if case.geometry.end_plate_stiffener_weld_lines_nl_vgizq is not None
+                else case.geometry.end_plate_stiffener_weld_lines_nl,
+                "kds_w1_vgder": case.geometry.kds_w1_vgder,
+                "kds_w1_vgizq": case.geometry.kds_w1_vgizq,
+                "tipo_w2_vgder": case.geometry.beam_stiffener_weld_type_vgder
+                or case.geometry.beam_stiffener_weld_type,
+                "tipo_w2_vgizq": case.geometry.beam_stiffener_weld_type_vgizq
+                or case.geometry.beam_stiffener_weld_type,
+                "w_w2_vgder": (
+                    case.geometry.beam_stiffener_weld_size_wst2_vgder.model_dump()
+                    if case.geometry.beam_stiffener_weld_size_wst2_vgder is not None
+                    else (
+                        case.geometry.beam_stiffener_weld_size_wst2.model_dump()
+                        if case.geometry.beam_stiffener_weld_size_wst2 is not None
+                        else (
+                            case.geometry.end_plate_beam_web_weld_thickness_twe_vgder.model_dump()
+                            if case.geometry.end_plate_beam_web_weld_thickness_twe_vgder is not None
+                            else (
+                                case.geometry.end_plate_beam_web_weld_thickness_twe.model_dump()
+                                if case.geometry.end_plate_beam_web_weld_thickness_twe is not None
+                                else None
+                            )
+                        )
+                    )
+                ),
+                "w_w2_vgizq": (
+                    case.geometry.beam_stiffener_weld_size_wst2_vgizq.model_dump()
+                    if case.geometry.beam_stiffener_weld_size_wst2_vgizq is not None
+                    else (
+                        case.geometry.beam_stiffener_weld_size_wst2.model_dump()
+                        if case.geometry.beam_stiffener_weld_size_wst2 is not None
+                        else (
+                            case.geometry.end_plate_beam_web_weld_thickness_twe_vgizq.model_dump()
+                            if case.geometry.end_plate_beam_web_weld_thickness_twe_vgizq is not None
+                            else (
+                                case.geometry.end_plate_beam_web_weld_thickness_twe.model_dump()
+                                if case.geometry.end_plate_beam_web_weld_thickness_twe is not None
+                                else None
+                            )
+                        )
+                    )
+                ),
+                "nl_w2_vgder": case.geometry.beam_stiffener_weld_lines_nl_w2_vgder
+                if case.geometry.beam_stiffener_weld_lines_nl_w2_vgder is not None
+                else (
+                    case.geometry.beam_stiffener_weld_lines_nl_w2
+                    if case.geometry.beam_stiffener_weld_lines_nl_w2 is not None
+                    else case.geometry.end_plate_beam_web_weld_lines_nl
+                ),
+                "nl_w2_vgizq": case.geometry.beam_stiffener_weld_lines_nl_w2_vgizq
+                if case.geometry.beam_stiffener_weld_lines_nl_w2_vgizq is not None
+                else (
+                    case.geometry.beam_stiffener_weld_lines_nl_w2
+                    if case.geometry.beam_stiffener_weld_lines_nl_w2 is not None
+                    else case.geometry.end_plate_beam_web_weld_lines_nl
+                ),
+                "kds_w2_vgder": case.geometry.kds_w2_vgder,
+                "kds_w2_vgizq": case.geometry.kds_w2_vgizq,
                 "bolt_tightening_type": bolt_tightening_type,
                 "bolt_fabrication_standard": bolt_fabrication_standard,
                 "end_plate_width_bp": bp.model_dump(),
@@ -5928,6 +7439,7 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
                     else None
                 ),
                 "n_dp_col": case.geometry.doubler_plate_count,
+                "extended_dp_col": case.geometry.extended_dp_col,
                 "doubler_plate_enabled": case.geometry.doubler_plate_enabled,
                 "beam_clear_span_length_der": beam_clear_span_length_der.model_dump(),
                 "beam_shear_connector_free_length_from_column_face_der": shear_connector_free_length_der.model_dump(),
@@ -5967,6 +7479,10 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
                 "compactness_ca_column_calculated": ca_column,
                 "dz_dp_col": dz_dp_col.model_dump(),
                 "wz_dp_col": wz_dp_col.model_dump() if wz_dp_col is not None else None,
+                "h_dp_col": h_dp_col.model_dump() if h_dp_col is not None else None,
+                "h_dp_col_formula": h_dp_formula_tag,
+                "b_dp_col": b_dp_col.model_dump() if b_dp_col is not None else None,
+                "b_dp_col_formula": b_dp_formula_tag,
             },
             intermediates={
                 "minimum_spacing_3db": min_spacing_der.model_dump(),
@@ -5998,6 +7514,13 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
                 "L_w5_col_formula": "L_w5_col = b2_pc_col - 2*(L_gap_w5_col)",
                 "L_w6_col": l_w6_col_computed.model_dump() if l_w6_col_computed is not None else None,
                 "L_w6_col_formula": "L_w6_col = L2_pc_col - 2*(L_gap_w6_col)",
+                "L_w8_col": l_w8_col_computed.model_dump() if l_w8_col_computed is not None else None,
+                "L_w8_col_formula": "L_w8_col = h_dp_col - 2*(L_gap_w8_col)",
+                "L_w9_col": l_w9_col_computed.model_dump() if l_w9_col_computed is not None else None,
+                "L_w9_col_formula": (
+                    "L_w9_col = b_dp_col - 2*(L_gap_w9_col) si usar_weld_9_col=true; "
+                    "L_w9_col = 0 si usar_weld_9_col=false"
+                ),
                 "j34_lookup": edge_intermediate_der,
                 "j34_lookup_vgizq": edge_intermediate_izq,
                 "step_1_notes": step_1_notes,
@@ -6739,19 +8262,15 @@ def run_column_step3_web_local_yielding(case: AISC358MomentCase, rule_binding: o
     phi_d = _require(case, "design_factors.phi_d", rule_binding)
     column_top_distance = _require(case, "geometry.column_end_distance_to_beam_flange", rule_binding)
     backing_thickness = _require(case, "geometry.t_w4_1_vgizq", rule_binding)
-    ductility_vgizq = (
-        case.design_factors.member_ductility_demand_beam_vgizq
-        or case.design_factors.member_ductility_demand_beam
-    )
+    ductility_vgizq = case.design_factors.member_ductility_demand_column
     if ductility_vgizq is None:
         raise missing_required_input_error(
             rule_id=rule_binding.rule_id,
             source_document=rule_binding.source_document,
             missing_fields=[
-                "design_factors.member_ductility_demand_beam_vgizq",
-                "design_factors.member_ductility_demand_beam",
+                "design_factors.member_ductility_demand_column",
             ],
-            message="Required beam ductility demand for left beam is missing.",
+            message="Required column ductility demand is missing.",
         )
     nl_w4_vgizq: int | None = None
     if str(ductility_vgizq).strip().lower() == "low":
@@ -6852,19 +8371,15 @@ def run_column_step4_web_local_crippling(case: AISC358MomentCase, rule_binding: 
     elastic_modulus = _require(case, "materials.elastic_modulus", rule_binding)
     distance_to_end = _require(case, "geometry.column_end_distance_to_beam_flange", rule_binding)
     backing_thickness = _require(case, "geometry.t_w4_1_vgizq", rule_binding)
-    ductility_vgizq = (
-        case.design_factors.member_ductility_demand_beam_vgizq
-        or case.design_factors.member_ductility_demand_beam
-    )
+    ductility_vgizq = case.design_factors.member_ductility_demand_column
     if ductility_vgizq is None:
         raise missing_required_input_error(
             rule_id=rule_binding.rule_id,
             source_document=rule_binding.source_document,
             missing_fields=[
-                "design_factors.member_ductility_demand_beam_vgizq",
-                "design_factors.member_ductility_demand_beam",
+                "design_factors.member_ductility_demand_column",
             ],
-            message="Required beam ductility demand for left beam is missing.",
+            message="Required column ductility demand is missing.",
         )
     nl_w4_vgizq: int | None = None
     if str(ductility_vgizq).strip().lower() == "low":
@@ -7070,16 +8585,15 @@ def run_column_step4_2_web_local_buckling(case: AISC358MomentCase, rule_binding:
     phi_wcb = _require(case, "design_factors.phi_f", rule_binding)
 
     backing_thickness = _require(case, "geometry.t_w4_1_vgizq", rule_binding)
-    ductility_vgizq = case.design_factors.member_ductility_demand_beam_vgizq or case.design_factors.member_ductility_demand_beam
+    ductility_vgizq = case.design_factors.member_ductility_demand_column
     if ductility_vgizq is None:
         raise missing_required_input_error(
             rule_id=rule_binding.rule_id,
             source_document=rule_binding.source_document,
             missing_fields=[
-                "design_factors.member_ductility_demand_beam_vgizq",
-                "design_factors.member_ductility_demand_beam",
+                "design_factors.member_ductility_demand_column",
             ],
-            message="Required beam ductility demand for left beam is missing.",
+            message="Required column ductility demand is missing.",
         )
     nl_w4_vgizq: int | None = None
     if str(ductility_vgizq).strip().lower() == "low":
@@ -7320,6 +8834,60 @@ def run_column_step5_panel_zone_shear_wpzs(case: AISC358MomentCase, rule_binding
     demand = Quantity(value=sum_mf_over_z - vc2_col.value, unit=force_unit)
     db_side_for_rn, db_col = _select_max_quantity_by_side(beam_depth_candidates)
 
+    use_w7 = bool(case.geometry.use_weld_7_col)
+    n_dp_col_raw = case.geometry.doubler_plate_count
+    n_dp_col = int(n_dp_col_raw) if n_dp_col_raw is not None else 1
+    if n_dp_col <= 0:
+        raise ValueError("geometry.doubler_plate_count (n_dp_col) must be >= 1 for WPZS Rn formulation.")
+    t_dp_col = case.geometry.doubler_plate_thickness
+    tw_col = column_profile["tw"]
+    if t_dp_col is None:
+        raise missing_required_input_error(
+            rule_id=rule_binding.rule_id,
+            source_document=rule_binding.source_document,
+            missing_fields=["geometry.doubler_plate_thickness"],
+            message="Required input 'geometry.doubler_plate_thickness' is required for WPZS Rn formulation.",
+        )
+    if t_dp_col.unit != tw_col.unit:
+        if t_dp_col.unit == "mm" and tw_col.unit == "in":
+            t_dp_col_eff = Quantity(value=t_dp_col.value / 25.4, unit="in")
+        elif t_dp_col.unit == "in" and tw_col.unit == "mm":
+            t_dp_col_eff = Quantity(value=t_dp_col.value * 25.4, unit="mm")
+        else:
+            raise ValueError(
+                f"Incompatible units between t_dp_col ('{t_dp_col.unit}') and tw_col ('{tw_col.unit}') for WPZS."
+            )
+    else:
+        t_dp_col_eff = t_dp_col
+    t_dp_total_eff = Quantity(value=t_dp_col_eff.value * float(n_dp_col), unit=t_dp_col_eff.unit)
+
+    rn1_wpz_nominal = Quantity(
+        value=0.60 * fy_col.value * column_profile["d"].value * tw_col.value,
+        unit="kN" if case.units_system == UnitSystem.SI else "kip",
+    )
+    rn2_wpz_nominal = Quantity(
+        value=0.60 * fy_col.value * column_profile["d"].value * t_dp_total_eff.value,
+        unit="kN" if case.units_system == UnitSystem.SI else "kip",
+    )
+    if case.units_system == UnitSystem.SI:
+        rn1_wpz_nominal = Quantity(value=rn1_wpz_nominal.value / 1000.0, unit=rn1_wpz_nominal.unit)
+        rn2_wpz_nominal = Quantity(value=rn2_wpz_nominal.value / 1000.0, unit=rn2_wpz_nominal.unit)
+
+    if use_w7:
+        tw_wpz_effective = Quantity(value=tw_col.value + t_dp_total_eff.value, unit=tw_col.unit)
+        rn_base_formula_text = "Rn_wpz_v2_col = 0.60*Fy_col*d_col*(tw_col + n_dp_col*t_dp_col)"
+        rn1_for_report = None
+        rn2_for_report = None
+    else:
+        tw_wpz_effective = Quantity(value=min(tw_col.value, t_dp_total_eff.value), unit=tw_col.unit)
+        rn_base_formula_text = (
+            "Rn1_wpz_v2_col = 0.60*Fy_col*d_col*tw_col; "
+            "Rn2_wpz_v2_col = 0.60*Fy_col*d_col*(n_dp_col*t_dp_col); "
+            "Rn_wpz_v2_col = min{Rn1_wpz_v2_col, Rn2_wpz_v2_col}"
+        )
+        rn1_for_report = rn1_wpz_nominal
+        rn2_for_report = rn2_wpz_nominal
+
     phi_wpzs = float(_require(case, "design_factors.phi_d", rule_binding))
     capacity, intermediates = compute_column_panel_zone_shear_strength_j10_6(
         package=str(package),
@@ -7327,7 +8895,7 @@ def run_column_step5_panel_zone_shear_wpzs(case: AISC358MomentCase, rule_binding
         py=py_col,
         column_fy=fy_col,
         column_depth=column_profile["d"],
-        column_web_thickness=column_profile["tw"],
+        column_web_thickness=tw_wpz_effective,
         column_flange_width=column_profile["bf"],
         beam_depth=db_col,
         column_flange_thickness=column_profile["tf"],
@@ -7338,17 +8906,17 @@ def run_column_step5_panel_zone_shear_wpzs(case: AISC358MomentCase, rule_binding
     db_symbol = "d_vgizq" if db_side_for_rn == "izq" else "d_vgder"
     eq_case = str(intermediates.get("eq_case"))
     if eq_case == "J10-9":
-        equation = "Rn_wpzs_col = 0.60*Fy_col*d_col*tw_col (J10-9)"
+        equation = f"{rn_base_formula_text} (J10-9)"
     elif eq_case == "J10-10":
-        equation = "Rn_wpzs_col = 0.60*Fy_col*d_col*tw_col*(1.4 - Pr_col/Py_col) (J10-10)"
+        equation = f"{rn_base_formula_text}*(1.4 - Pr_col/Py_col) (J10-10)"
     elif eq_case == "J10-11":
         equation = (
-            f"Rn_wpzs_col = 0.60*Fy_col*d_col*tw_col*(1 + 3*bcf_col*tcf_col^2/({db_symbol}*d_col*tw_col)) "
+            f"{rn_base_formula_text}*(1 + 3*bcf_col*tcf_col^2/({db_symbol}*d_col*tw_col)) "
             "(J10-11)"
         )
     elif eq_case == "J10-12":
         equation = (
-            f"Rn_wpzs_col = 0.60*Fy_col*d_col*tw_col*(1 + 3*bcf_col*tcf_col^2/({db_symbol}*d_col*tw_col))"
+            f"{rn_base_formula_text}*(1 + 3*bcf_col*tcf_col^2/({db_symbol}*d_col*tw_col))"
             "*(1.9 - 1.2*Pr_col/Py_col) (J10-12)"
         )
     else:
@@ -7378,6 +8946,13 @@ def run_column_step5_panel_zone_shear_wpzs(case: AISC358MomentCase, rule_binding
             "fy_col": fy_col.model_dump(),
             "d_col": column_profile["d"].model_dump(),
             "tw_col": column_profile["tw"].model_dump(),
+            "t_dp_col": t_dp_col.model_dump(),
+            "n_dp_col": n_dp_col,
+            "t_dp_total_col": t_dp_total_eff.model_dump(),
+            "use_weld_7_col": use_w7,
+            "tw_wpz_effective_col": tw_wpz_effective.model_dump(),
+            "rn1_wpz_v2_col": rn1_for_report.model_dump() if rn1_for_report is not None else None,
+            "rn2_wpz_v2_col": rn2_for_report.model_dump() if rn2_for_report is not None else None,
             "bcf_col": column_profile["bf"].model_dump(),
             "tcf_col": column_profile["tf"].model_dump(),
             "db_col": db_col.model_dump(),

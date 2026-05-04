@@ -46,6 +46,7 @@
             "unit": "mm"
           },
           "b1_pc_col": null,
+          "n_pc_col": null,
           "usar_pc_col": true,
           "tipo_acero_pc_col": "ASTM A572 Gr 50",
           "kdet_col": {
@@ -56,6 +57,17 @@
             "value": 31.8,
             "unit": "mm"
           },
+          "tw_col": {
+            "value": 22.6,
+            "unit": "mm"
+          },
+          "b2_pc_col": null,
+          "L2_pc_col": {
+            "value": 328.0,
+            "unit": "mm"
+          },
+          "L_w5_col": null,
+          "phi_fragil": 0.75,
           "tfdet_col": {
             "value": 40.4,
             "unit": "mm"
@@ -67,6 +79,7 @@
             "value": 490.0,
             "unit": "MPa"
           },
+          "w_w5_col": null,
           "t_w5_col": null,
           "nl_w5_col": null,
           "L_gap_w5_col": {
@@ -79,6 +92,7 @@
             "unit": "MPa"
           },
           "tipo_w6_col": "CJP",
+          "w_w6_col": null,
           "t_w6_col": null,
           "nl_w6_col": null,
           "L_gap_w6_col": {
@@ -86,23 +100,52 @@
             "unit": "mm"
           },
           "kds_w6_col": 1.0,
+          "Fexx_w8_col": {
+            "value": 490.0,
+            "unit": "MPa"
+          },
+          "tipo_w8_col": "CJP",
+          "w_w8_col": null,
+          "t_w8_col": null,
+          "nl_w8_col": null,
+          "Encr_w8_col": null,
+          "Encr_w8_col_fuente": null,
+          "kds_w8_col": 1.0,
+          "use_weld_9_col": null,
+          "tipo_w9_col": null,
+          "w_w9_col": null,
+          "t_w9_col": null,
+          "nl_w9_col": null,
+          "L_gap_w9_col": null,
+          "kds_w9_col": null,
+          "gap_dp_col": {
+            "value": 0.0,
+            "unit": "mm"
+          },
+          "estado_contacto_dp_col": "en_contacto_con_alma",
           "tipo_acero_dp_col": "ASTM A572 Gr 50",
-          "tipo_w7_col": "tapon",
+          "tipo_w7_col": "plug",
           "Fexx_w7_col": {
             "value": 490.0,
             "unit": "MPa"
+          },
+          "w_w7_col": {
+            "value": 8.0,
+            "unit": "mm"
           },
           "t_w7_col": {
             "value": 8.0,
             "unit": "mm"
           },
           "nl_w7_col": 1,
-          "tipo_wdp_tapon": "tapon",
-          "t_wdp_tapon": {
+          "nfilas_w7_col": 1,
+          "ncolumna_w7_col": 1,
+          "tipo_wdp_plug": "plug",
+          "t_wdp_plug": {
             "value": 8.0,
             "unit": "mm"
           },
-          "nl_wdp_tapon": 1,
+          "nl_wdp_plug": 1,
           "end_plate_beam_web_weld_type": "CJP",
           "weld_fexx": {
             "value": 490.0,
@@ -113,6 +156,10 @@
             "unit": "mm"
           },
           "end_plate_beam_web_weld_lines_nl": 2,
+          "L_gap_w1_vgder": null,
+          "L_gap_w1_vgizq": null,
+          "L_gap_w2_vgder": null,
+          "L_gap_w2_vgizq": null,
           "bolt_tightening_type": "pretensioned",
           "bolt_fabrication_standard": "ASTM A490",
           "end_plate_width_bp": {
@@ -157,6 +204,7 @@
             "unit": "mm"
           },
           "n_dp_col": 0,
+          "extended_dp_col": false,
           "doubler_plate_enabled": false,
           "beam_clear_span_length_der": {
             "value": 6096.0,
@@ -191,6 +239,22 @@
           "column_st_col_min": {
             "value": 122.5,
             "unit": "mm"
+          },
+          "d_col": {
+            "value": 508.0,
+            "unit": "mm"
+          },
+          "tf_col": {
+            "value": 40.4,
+            "unit": "mm"
+          },
+          "kdes_col": {
+            "value": 50.5,
+            "unit": "mm"
+          },
+          "elastic_modulus": {
+            "value": 199947.965,
+            "unit": "MPa"
           },
           "beam_sc_vgder": {
             "value": 185.0,
@@ -227,7 +291,25 @@
             "unit": "mm2"
           },
           "compactness_ca_beam_calculated": 0.0,
-          "compactness_ca_column_calculated": 0.0
+          "compactness_ca_column_calculated": 0.0,
+          "dz_dp_col": {
+            "value": 427.2,
+            "unit": "mm"
+          },
+          "wz_dp_col": {
+            "value": 572.4,
+            "unit": "mm"
+          },
+          "h_dp_col": {
+            "value": 873.8000000000001,
+            "unit": "mm"
+          },
+          "h_dp_col_formula": "300 + max(d-tf) - t_pc_col",
+          "b_dp_col": {
+            "value": 407.0,
+            "unit": "mm"
+          },
+          "b_dp_col_formula": "d_col - 2*kdet_col"
         },
         "intermediates": {
           "minimum_spacing_3db": {
@@ -314,11 +396,8 @@
             "value": 10.0,
             "unit": "mm"
           },
-          "L_w5_col": {
-            "value": 328.0,
-            "unit": "mm"
-          },
-          "L_w5_col_formula": "L_w5_col = L2_pc_col - 2*(L_gap_w5_col)",
+          "L_w5_col": null,
+          "L_w5_col_formula": "L_w5_col = b2_pc_col - 2*(L_gap_w5_col)",
           "L_w6_col": {
             "value": 328.0,
             "unit": "mm"
@@ -1064,35 +1143,21 @@
               "clause": "AISC 341-22w E3.6e.2",
               "description": "Espesor individual minimo del alma de columna",
               "calculated_symbol": "tw_col",
-              "limit_symbol": "(d_z + w_z)/90 con d_z=d_izq-2tf_izq, w_z=bcf_col",
+              "limit_symbol": "(dz_dp_col + wz_dp_col)/90; si use_weld_7_col=false: dz_dp_col=d_col-2*tf_col, wz_dp_col=max{d_<lado>-2*tf_<lado>}; si use_weld_7_col=true: dz_dp_col=h_dp_col/nfilas_w7_col, wz_dp_col=b_dp_col/ncolumna_w7_col",
               "calculated": {
                 "value": 22.6,
                 "unit": "mm"
               },
               "limit": {
-                "value": 9.582222222222223,
+                "value": 11.106666666666666,
                 "unit": "mm"
               },
               "comparison": "ge",
               "comparison_text": ">=",
               "margin": {
-                "value": 13.017777777777779,
+                "value": 11.493333333333336,
                 "unit": "mm"
               },
-              "status": "PASS",
-              "result": "OK"
-            },
-            {
-              "step": "1",
-              "id": "section_e3_6_2.doubler_plate_thickness_minimum",
-              "scope": "doubler_plate_col",
-              "clause": "AISC 341-22w E3.6e.2",
-              "description": "Espesor individual minimo de platina de enchape del alma",
-              "calculated_symbol": "t_dp_col",
-              "limit_symbol": "verification_only",
-              "comparison": "compound",
-              "comparison_text": "compound",
-              "verification_text": "No aplica: usar_dp_col = false",
               "status": "PASS",
               "result": "OK"
             },
@@ -1344,9 +1409,9 @@
               "limit_symbol": "verification_only",
               "comparison": "compound",
               "comparison_text": "compound",
-              "verification_text": "si demanda_ductilidad_vgder in {high, moderate}: tipo_w4_vgder == cjp; t_w4_1_vgder == 0 mm; demanda_ductilidad_vgder = high; tipo_w4_vgder = cjp; t_w4_1_vgder = 0.000 mm",
-              "status": "PASS",
-              "result": "OK"
+              "verification_text": "si demanda_ductilidad_vgder in {high, moderate}: tipo_w4_vgder == cjp; t_w4_1_vgder == 8 mm; demanda_ductilidad_vgder = high; tipo_w4_vgder = cjp; t_w4_1_vgder = 0.000 mm",
+              "status": "FAIL",
+              "result": "NO_OK"
             },
             {
               "step": "1",
@@ -1358,9 +1423,9 @@
               "limit_symbol": "verification_only",
               "comparison": "compound",
               "comparison_text": "compound",
-              "verification_text": "si demanda_ductilidad_vgizq in {high, moderate}: tipo_w4_vgizq == cjp; t_w4_1_vgizq == 0 mm; demanda_ductilidad_vgizq = high; tipo_w4_vgizq = cjp; t_w4_1_vgizq = 0.000 mm",
-              "status": "PASS",
-              "result": "OK"
+              "verification_text": "si demanda_ductilidad_vgizq in {high, moderate}: tipo_w4_vgizq == cjp; t_w4_1_vgizq == 8 mm; demanda_ductilidad_vgizq = high; tipo_w4_vgizq = cjp; t_w4_1_vgizq = 0.000 mm",
+              "status": "FAIL",
+              "result": "NO_OK"
             },
             {
               "step": "1",
@@ -1458,19 +1523,37 @@
             },
             {
               "step": "1",
+              "id": "section_6_7.weld_6_type_allowed_col",
+              "scope": "weld_6_col",
+              "clause": "Section 6.7",
+              "description": "Tipo de soldadura #6 permitido",
+              "calculated_symbol": "tipo_w6_col",
+              "limit_symbol": "{cjp, pjp, fillet}",
+              "comparison": "in_set",
+              "comparison_text": "in",
+              "calculated_text": "cjp",
+              "allowed_values": [
+                "cjp",
+                "pjp",
+                "fillet"
+              ],
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
               "id": "section_6_3.continuity_plate_weld_type_declared",
               "scope": "weld_5_col",
               "clause": "Section 6.3 (continuity plate weld detail)",
               "description": "Continuity-plate weld type shall be explicitly declared with an allowed weld category",
               "calculated_symbol": "tipo_w5_col",
-              "limit_symbol": "{double_sided_fillet, cjp, pjp}",
+              "limit_symbol": "{fillet, cjp}",
               "comparison": "in_set",
               "comparison_text": "in",
               "calculated_text": "cjp",
               "allowed_values": [
-                "double_sided_fillet",
-                "cjp",
-                "pjp"
+                "fillet",
+                "cjp"
               ],
               "status": "PASS",
               "result": "OK"
@@ -1480,77 +1563,27 @@
               "id": "section_6_3.continuity_plate_weld_type_for_thin_plate",
               "scope": "weld_5_col",
               "clause": "Section 6.3 (continuity plate weld detail)",
-              "description": "Continuity-plate weld type when plate thickness is less than or equal to 3/8 in (10 mm)",
+              "description": "Tamano minimo de soldadura #5 cuando tipo_w5_col es fillet",
               "calculated_symbol": "tipo_w5_col",
-              "limit_symbol": "{double_sided_fillet, cjp, pjp} if t_pc_col<=10 mm",
+              "limit_symbol": "{fillet, cjp}; si fillet => w_w5_col >= 0.75*t_pc_col",
               "comparison": "conditional_allowed_set",
               "comparison_text": "in_if",
               "thickness": {
                 "value": 15.9,
                 "unit": "mm"
               },
-              "thickness_limit": {
-                "value": 10.0,
+              "weld_size": null,
+              "required_weld_size": {
+                "value": 11.925,
                 "unit": "mm"
               },
               "condition_applies": false,
-              "governing_condition": "cjp_or_pjp_always_permitted",
+              "governing_condition": "cjp_always_permitted",
               "calculated_text": "cjp",
               "allowed_values": [
-                "double_sided_fillet",
-                "cjp",
-                "pjp"
+                "fillet",
+                "cjp"
               ],
-              "status": "PASS",
-              "result": "OK"
-            },
-            {
-              "step": "1",
-              "id": "section_6_3.weld_6_length_max",
-              "scope": "weld_6_col",
-              "clause": "AISC 358-22 Section 6.3",
-              "description": "Longitud maxima de soldadura #6 en columna",
-              "calculated_symbol": "Lws_col",
-              "limit_symbol": "d_col - 2*(kdet_col + 6*tw_col)",
-              "calculated": {
-                "value": 328.0,
-                "unit": "mm"
-              },
-              "limit": {
-                "value": 135.79999999999995,
-                "unit": "mm"
-              },
-              "comparison": "le",
-              "comparison_text": "<=",
-              "margin": {
-                "value": -192.20000000000005,
-                "unit": "mm"
-              },
-              "status": "FAIL",
-              "result": "NO_OK"
-            },
-            {
-              "step": "1",
-              "id": "section_6_3.weld_6_length_min",
-              "scope": "weld_6_col",
-              "clause": "AISC 358-22 Section 6.3",
-              "description": "Longitud minima de soldadura #6 en columna",
-              "calculated_symbol": "Lws_col",
-              "limit_symbol": "d_col - 2*(kdet_col + 4*tw_col)",
-              "calculated": {
-                "value": 328.0,
-                "unit": "mm"
-              },
-              "limit": {
-                "value": 226.2,
-                "unit": "mm"
-              },
-              "comparison": "ge",
-              "comparison_text": ">=",
-              "margin": {
-                "value": 101.80000000000001,
-                "unit": "mm"
-              },
               "status": "PASS",
               "result": "OK"
             },
@@ -2732,35 +2765,21 @@
               "clause": "AISC 341-22w E3.6e.2",
               "description": "Espesor individual minimo del alma de columna",
               "calculated_symbol": "tw_col",
-              "limit_symbol": "(d_z + w_z)/90 con d_z=d_izq-2tf_izq, w_z=bcf_col",
+              "limit_symbol": "(dz_dp_col + wz_dp_col)/90; si use_weld_7_col=false: dz_dp_col=d_col-2*tf_col, wz_dp_col=max{d_<lado>-2*tf_<lado>}; si use_weld_7_col=true: dz_dp_col=h_dp_col/nfilas_w7_col, wz_dp_col=b_dp_col/ncolumna_w7_col",
               "calculated": {
                 "value": 22.6,
                 "unit": "mm"
               },
               "limit": {
-                "value": 9.582222222222223,
+                "value": 11.106666666666666,
                 "unit": "mm"
               },
               "comparison": "ge",
               "comparison_text": ">=",
               "margin": {
-                "value": 13.017777777777779,
+                "value": 11.493333333333336,
                 "unit": "mm"
               },
-              "status": "PASS",
-              "result": "OK"
-            },
-            {
-              "step": "1",
-              "id": "section_e3_6_2.doubler_plate_thickness_minimum",
-              "scope": "doubler_plate_col",
-              "clause": "AISC 341-22w E3.6e.2",
-              "description": "Espesor individual minimo de platina de enchape del alma",
-              "calculated_symbol": "t_dp_col",
-              "limit_symbol": "verification_only",
-              "comparison": "compound",
-              "comparison_text": "compound",
-              "verification_text": "No aplica: usar_dp_col = false",
               "status": "PASS",
               "result": "OK"
             },
@@ -3012,9 +3031,9 @@
               "limit_symbol": "verification_only",
               "comparison": "compound",
               "comparison_text": "compound",
-              "verification_text": "si demanda_ductilidad_vgder in {high, moderate}: tipo_w4_vgder == cjp; t_w4_1_vgder == 0 mm; demanda_ductilidad_vgder = high; tipo_w4_vgder = cjp; t_w4_1_vgder = 0.000 mm",
-              "status": "PASS",
-              "result": "OK"
+              "verification_text": "si demanda_ductilidad_vgder in {high, moderate}: tipo_w4_vgder == cjp; t_w4_1_vgder == 8 mm; demanda_ductilidad_vgder = high; tipo_w4_vgder = cjp; t_w4_1_vgder = 0.000 mm",
+              "status": "FAIL",
+              "result": "NO_OK"
             },
             {
               "step": "1",
@@ -3026,9 +3045,9 @@
               "limit_symbol": "verification_only",
               "comparison": "compound",
               "comparison_text": "compound",
-              "verification_text": "si demanda_ductilidad_vgizq in {high, moderate}: tipo_w4_vgizq == cjp; t_w4_1_vgizq == 0 mm; demanda_ductilidad_vgizq = high; tipo_w4_vgizq = cjp; t_w4_1_vgizq = 0.000 mm",
-              "status": "PASS",
-              "result": "OK"
+              "verification_text": "si demanda_ductilidad_vgizq in {high, moderate}: tipo_w4_vgizq == cjp; t_w4_1_vgizq == 8 mm; demanda_ductilidad_vgizq = high; tipo_w4_vgizq = cjp; t_w4_1_vgizq = 0.000 mm",
+              "status": "FAIL",
+              "result": "NO_OK"
             },
             {
               "step": "1",
@@ -3126,19 +3145,37 @@
             },
             {
               "step": "1",
+              "id": "section_6_7.weld_6_type_allowed_col",
+              "scope": "weld_6_col",
+              "clause": "Section 6.7",
+              "description": "Tipo de soldadura #6 permitido",
+              "calculated_symbol": "tipo_w6_col",
+              "limit_symbol": "{cjp, pjp, fillet}",
+              "comparison": "in_set",
+              "comparison_text": "in",
+              "calculated_text": "cjp",
+              "allowed_values": [
+                "cjp",
+                "pjp",
+                "fillet"
+              ],
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
               "id": "section_6_3.continuity_plate_weld_type_declared",
               "scope": "weld_5_col",
               "clause": "Section 6.3 (continuity plate weld detail)",
               "description": "Continuity-plate weld type shall be explicitly declared with an allowed weld category",
               "calculated_symbol": "tipo_w5_col",
-              "limit_symbol": "{double_sided_fillet, cjp, pjp}",
+              "limit_symbol": "{fillet, cjp}",
               "comparison": "in_set",
               "comparison_text": "in",
               "calculated_text": "cjp",
               "allowed_values": [
-                "double_sided_fillet",
-                "cjp",
-                "pjp"
+                "fillet",
+                "cjp"
               ],
               "status": "PASS",
               "result": "OK"
@@ -3148,77 +3185,27 @@
               "id": "section_6_3.continuity_plate_weld_type_for_thin_plate",
               "scope": "weld_5_col",
               "clause": "Section 6.3 (continuity plate weld detail)",
-              "description": "Continuity-plate weld type when plate thickness is less than or equal to 3/8 in (10 mm)",
+              "description": "Tamano minimo de soldadura #5 cuando tipo_w5_col es fillet",
               "calculated_symbol": "tipo_w5_col",
-              "limit_symbol": "{double_sided_fillet, cjp, pjp} if t_pc_col<=10 mm",
+              "limit_symbol": "{fillet, cjp}; si fillet => w_w5_col >= 0.75*t_pc_col",
               "comparison": "conditional_allowed_set",
               "comparison_text": "in_if",
               "thickness": {
                 "value": 15.9,
                 "unit": "mm"
               },
-              "thickness_limit": {
-                "value": 10.0,
+              "weld_size": null,
+              "required_weld_size": {
+                "value": 11.925,
                 "unit": "mm"
               },
               "condition_applies": false,
-              "governing_condition": "cjp_or_pjp_always_permitted",
+              "governing_condition": "cjp_always_permitted",
               "calculated_text": "cjp",
               "allowed_values": [
-                "double_sided_fillet",
-                "cjp",
-                "pjp"
+                "fillet",
+                "cjp"
               ],
-              "status": "PASS",
-              "result": "OK"
-            },
-            {
-              "step": "1",
-              "id": "section_6_3.weld_6_length_max",
-              "scope": "weld_6_col",
-              "clause": "AISC 358-22 Section 6.3",
-              "description": "Longitud maxima de soldadura #6 en columna",
-              "calculated_symbol": "Lws_col",
-              "limit_symbol": "d_col - 2*(kdet_col + 6*tw_col)",
-              "calculated": {
-                "value": 328.0,
-                "unit": "mm"
-              },
-              "limit": {
-                "value": 135.79999999999995,
-                "unit": "mm"
-              },
-              "comparison": "le",
-              "comparison_text": "<=",
-              "margin": {
-                "value": -192.20000000000005,
-                "unit": "mm"
-              },
-              "status": "FAIL",
-              "result": "NO_OK"
-            },
-            {
-              "step": "1",
-              "id": "section_6_3.weld_6_length_min",
-              "scope": "weld_6_col",
-              "clause": "AISC 358-22 Section 6.3",
-              "description": "Longitud minima de soldadura #6 en columna",
-              "calculated_symbol": "Lws_col",
-              "limit_symbol": "d_col - 2*(kdet_col + 4*tw_col)",
-              "calculated": {
-                "value": 328.0,
-                "unit": "mm"
-              },
-              "limit": {
-                "value": 226.2,
-                "unit": "mm"
-              },
-              "comparison": "ge",
-              "comparison_text": ">=",
-              "margin": {
-                "value": 101.80000000000001,
-                "unit": "mm"
-              },
               "status": "PASS",
               "result": "OK"
             },
@@ -4137,10 +4124,10 @@
         "unit": "kN"
       },
       "capacity": {
-        "value": 2376.5256,
+        "value": 1335.4812,
         "unit": "kN"
       },
-      "dcr": -0.3509855678185544,
+      "dcr": -0.6245884907637267,
       "status": "PASS",
       "calculation_memory": {
         "inputs": {
@@ -4204,6 +4191,23 @@
           "tw_col": {
             "value": 22.6,
             "unit": "mm"
+          },
+          "t_dp_col": {
+            "value": 12.7,
+            "unit": "mm"
+          },
+          "use_weld_7_col": false,
+          "tw_wpz_effective_col": {
+            "value": 12.7,
+            "unit": "mm"
+          },
+          "rn1_wpz_v2_col": {
+            "value": 2376.5256,
+            "unit": "kN"
+          },
+          "rn2_wpz_v2_col": {
+            "value": 1335.4812,
+            "unit": "kN"
           },
           "bcf_col": {
             "value": 290.0,
@@ -4302,7 +4306,7 @@
         "intermediates": {
           "alpha_pr_over_py": 0.0,
           "panel_factor": 1.0,
-          "rn_nominal_wpzs_col": 2376.5256,
+          "rn_nominal_wpzs_col": 1335.4812,
           "package_wpzs": "a",
           "eq_case_wpzs": "J10-9",
           "sum_mbe_over_hb_plus_ht_formula": "Vc2_col = sum_Mbe_col/(hb_col + ht_col)",
@@ -4324,13 +4328,13 @@
           "phi_wpzs": 1.0,
           "alpha": 1.0
         },
-        "equation": "Rn_wpzs_col = 0.60*Fy_col*d_col*tw_col (J10-9)",
+        "equation": "Rn1_wpz_v2_col = 0.60*Fy_col*d_col*tw_col; Rn2_wpz_v2_col = 0.60*Fy_col*d_col*t_dp_col; Rn_wpz_v2_col = min{Rn1_wpz_v2_col, Rn2_wpz_v2_col} (J10-9)",
         "units_trace": {
           "demand": "kN",
           "capacity": "kN"
         },
         "final_capacity": {
-          "value": 2376.5256,
+          "value": 1335.4812,
           "unit": "kN"
         }
       },
@@ -4490,10 +4494,10 @@
         "unit": "kN-mm"
       },
       "capacity": {
-        "value": 1359566.8407856787,
+        "value": 1510629.8230951985,
         "unit": "kN-mm"
       },
-      "dcr": 1.1381256783692069,
+      "dcr": 1.0243131105322862,
       "status": "FAIL",
       "calculation_memory": {
         "inputs": {
@@ -4525,7 +4529,7 @@
         },
         "intermediates": {
           "nominal_moment": 1510629.8230951985,
-          "design_moment": 1359566.8407856787,
+          "design_moment": 1510629.8230951985,
           "table_reference": "AISC 358-22 Table 6.3",
           "case_reference": "Case 1 (de <= s)",
           "formula": "Yp = bp/2*[h2*(1/pfi + 1/s) + h1*(1/pfo + 1/(2de))] + (2/g)*[h2*(pfi + s) + h1*(de + pfo)]",
@@ -4549,7 +4553,7 @@
           "is_hardcoded": false
         },
         "design_factors": {
-          "phi": 0.9
+          "phi": 1.0
         },
         "equation": "Ru_pe_m3_vgizq = Mf_vgizq_critico; phi*Rn_pe_m3_vgizq = phi * tpe_vgizq^2 * Fyp_pe_vgizq * Yp_pe_vgizq (AISC 358-22 Eq. 6.7-8)",
         "units_trace": {
@@ -4557,7 +4561,7 @@
           "phi_rn_pe_m3_vgizq": "kN-mm"
         },
         "final_capacity": {
-          "value": 1359566.8407856787,
+          "value": 1510629.8230951985,
           "unit": "kN-mm"
         }
       },
@@ -4573,11 +4577,11 @@
         "unit": "kN"
       },
       "capacity": {
-        "value": 1277.6454,
+        "value": 1419.606,
         "unit": "kN"
       },
-      "dcr": 1.0268791281225584,
-      "status": "FAIL",
+      "dcr": 0.9241912153103027,
+      "status": "PASS",
       "calculation_memory": {
         "inputs": {
           "mf_vgizq_critico": {
@@ -4613,10 +4617,10 @@
         "intermediates": {
           "z_vgizq": 589.7,
           "ru_pe_v1_vgizq": 1419.606,
-          "phi_rn_pe_v1_vgizq": 1277.6454
+          "phi_rn_pe_v1_vgizq": 1419.606
         },
         "design_factors": {
-          "phi": 0.9
+          "phi": 1.0
         },
         "equation": "Ru_pe_v1_vgizq = Mf_vgizq_critico / (2*(d_vgizq - tf_vgizq)); phi*Rn_pe_v1_vgizq = phi * 0.6 * Fyp_pe_vgizq * bpe_vgizq * tpe_vgizq (AISC 358-22 Eq. 6.7-10)",
         "units_trace": {
@@ -4624,7 +4628,7 @@
           "phi_rn_pe_v1_vgizq": "kN"
         },
         "final_capacity": {
-          "value": 1277.6454,
+          "value": 1419.606,
           "unit": "kN"
         }
       },
@@ -5409,10 +5413,10 @@
         "unit": "kN-mm"
       },
       "capacity": {
-        "value": 981484.1234035328,
+        "value": 1090537.9148928141,
         "unit": "kN-mm"
       },
-      "dcr": 1.2852492510104827,
+      "dcr": 1.1567243259094344,
       "status": "FAIL",
       "calculation_memory": {
         "inputs": {
@@ -5444,7 +5448,7 @@
         },
         "intermediates": {
           "nominal_moment": 1090537.9148928141,
-          "design_moment": 981484.1234035328,
+          "design_moment": 1090537.9148928141,
           "table_reference": "AISC 358-22 Table 6.3",
           "case_reference": "Case 1 (de <= s)",
           "formula": "Yp = bp/2*[h2*(1/pfi + 1/s) + h1*(1/pfo + 1/(2de))] + (2/g)*[h2*(pfi + s) + h1*(de + pfo)]",
@@ -5468,7 +5472,7 @@
           "is_hardcoded": false
         },
         "design_factors": {
-          "phi": 0.9
+          "phi": 1.0
         },
         "equation": "Ru_pe_m3_vgder = Mf_vgder_critico; phi*Rn_pe_m3_vgder = phi * tpe_vgder^2 * Fyp_pe_vgder * Yp_pe_vgder (AISC 358-22 Eq. 6.7-8)",
         "units_trace": {
@@ -5476,7 +5480,7 @@
           "phi_rn_pe_m3_vgizq": "kN-mm"
         },
         "final_capacity": {
-          "value": 981484.1234035328,
+          "value": 1090537.9148928141,
           "unit": "kN-mm"
         }
       },
@@ -5492,10 +5496,10 @@
         "unit": "kN"
       },
       "capacity": {
-        "value": 1230.3252,
+        "value": 1367.028,
         "unit": "kN"
       },
-      "dcr": 1.1527990068268048,
+      "dcr": 1.0375191061441242,
       "status": "FAIL",
       "calculation_memory": {
         "inputs": {
@@ -5532,10 +5536,10 @@
         "intermediates": {
           "z_vgder": 444.7,
           "ru_pe_v1_vgder": 1367.028,
-          "phi_rn_pe_v1_vgder": 1230.3252
+          "phi_rn_pe_v1_vgder": 1367.028
         },
         "design_factors": {
-          "phi": 0.9
+          "phi": 1.0
         },
         "equation": "Ru_pe_v1_vgder = Mf_vgder_critico / (2*(d_vgder - tf_vgder)); phi*Rn_pe_v1_vgder = phi * 0.6 * Fyp_pe_vgder * bpe_vgder * tpe_vgder (AISC 358-22 Eq. 6.7-10)",
         "units_trace": {
@@ -5543,7 +5547,7 @@
           "phi_rn_pe_v1_vgizq": "kN"
         },
         "final_capacity": {
-          "value": 1230.3252,
+          "value": 1367.028,
           "unit": "kN"
         }
       },
@@ -6583,8 +6587,8 @@
   ],
   "errors": [],
   "summary": {
-    "pass_count": 27,
-    "fail_count": 9,
+    "pass_count": 28,
+    "fail_count": 8,
     "error_count": 0,
     "not_implemented_count": 2,
     "worst_dcr": 1.9936507972639428

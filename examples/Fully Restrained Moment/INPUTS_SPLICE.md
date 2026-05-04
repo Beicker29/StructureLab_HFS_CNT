@@ -17,6 +17,8 @@ Fuente oficial de nomenclatura: [`/VARIABLES_SPLICE_NAMING.txt`](/D:/Users/byoma
 
 ### `materials`
 - `steel_vg`
+- `steel_plt_web` (opcional)
+- `steel_plt_flange` (opcional)
 - `Fy_vg` (opcional)
 - `Fu_vg` (opcional)
 - `E_vg` (opcional)
@@ -38,8 +40,7 @@ Fuente oficial de nomenclatura: [`/VARIABLES_SPLICE_NAMING.txt`](/D:/Users/byoma
 - `type_hole_plt_web`
 - `cond_sup_plt_web`
 - `cond_amb_plt_web`
-- `t_plt_ftop`
-- `t_plt_fbot`
+- `t_plt_flange`
 - `type_hole_plt_flange`
 - `cond_sup_plt_flange`
 - `cond_amb_plt_flange`
@@ -51,10 +52,9 @@ Fuente oficial de nomenclatura: [`/VARIABLES_SPLICE_NAMING.txt`](/D:/Users/byoma
 - `Le_blt_web_x2`
 - `Le_blt_web_y1`
 - `Le_blt_web_y2`
-- `Le_blt_web_y3` (opcional)
 - `type_tight_blt_web` (`snug_tight`, `pretensioned`, `slip_critical`)
 - `n_blt_flange_x`
-- `n_blt_flange_z` (par y `>= 2`)
+- `n_blt_flange_z` (`>= 1`)
 - `p_blt_flange`
 - `g_blt_flange`
 - `Le_blt_flange_x1`
@@ -63,6 +63,9 @@ Fuente oficial de nomenclatura: [`/VARIABLES_SPLICE_NAMING.txt`](/D:/Users/byoma
 - `Le_blt_flange_z2`
 - `Le_blt_flange_z3`
 - `type_tight_blt_flange` (`snug_tight`, `pretensioned`, `slip_critical`)
+
+Variables derivadas (no input):
+- `Le_blt_web_y3 = 0.5*(d_vg - (n_blt_web_y-1)*p_blt_web)`
 
 ### `loads`
 - `Pu_sp`

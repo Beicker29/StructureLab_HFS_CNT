@@ -60,8 +60,8 @@ def test_dispatcher_resolves_bseep_rules(bseep_8es_payload: dict) -> None:
     assert any(".step6_1_bolt_tension_rupture" in rule.rule_id for rule in rules)
     assert any(".step6_2_bolt_shear_rupture" in rule.rule_id for rule in rules)
     assert any(".step7_1_1_end_plate_flexural_yielding" in rule.rule_id for rule in rules)
-    assert any(".step7_2_1_end_plate_shear_yielding" in rule.rule_id for rule in rules)
-    assert any(".step7_2_2_end_plate_shear_rupture" in rule.rule_id for rule in rules)
+    assert all(".step7_2_1_end_plate_shear_yielding" not in rule.rule_id for rule in rules)
+    assert all(".step7_2_2_end_plate_shear_rupture" not in rule.rule_id for rule in rules)
     _assert_side_suffixes(rules, case.design_factors.beam_connection_sides)
 
 
@@ -77,8 +77,8 @@ def test_dispatcher_resolves_bseep_4es_rules(bseep_4es_payload: dict) -> None:
     assert any(".step6_1_bolt_tension_rupture" in rule.rule_id for rule in rules)
     assert any(".step6_2_bolt_shear_rupture" in rule.rule_id for rule in rules)
     assert any(".step7_1_1_end_plate_flexural_yielding" in rule.rule_id for rule in rules)
-    assert any(".step7_2_1_end_plate_shear_yielding" in rule.rule_id for rule in rules)
-    assert any(".step7_2_2_end_plate_shear_rupture" in rule.rule_id for rule in rules)
+    assert all(".step7_2_1_end_plate_shear_yielding" not in rule.rule_id for rule in rules)
+    assert all(".step7_2_2_end_plate_shear_rupture" not in rule.rule_id for rule in rules)
     _assert_side_suffixes(rules, case.design_factors.beam_connection_sides)
 
 

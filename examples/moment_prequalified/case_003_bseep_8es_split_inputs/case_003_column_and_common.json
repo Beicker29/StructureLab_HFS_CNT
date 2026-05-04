@@ -21,6 +21,8 @@
   "columna": {
     "perfil_col": "HEB 500",
     "tipo_acero_perfil_col": "ASTM A572 Gr 50",
+    "cond_col": "painted",
+    "cond_amb_col": "non_corrosive",
     "E_col": {
       "value": 200000,
       "unit": "MPa"
@@ -55,12 +57,17 @@
   },
   "platina_enchape_alma": {
     "usar_dp_col": true,
+    "extended_dp_col": true,
     "tipo_acero_dp_col": "ASTM A572 Gr 50",
-    "t_dp_col": {
-      "value": 12.7,
+    "gap_dp_col": {
+      "value": 0.0,
       "unit": "mm"
     },
-    "n_dp_col": 1
+    "t_dp_col": {
+      "value": 11.1,
+      "unit": "mm"
+    },
+    "n_dp_col": 2
   },
   "weld_5": {
     "description": "Platina de continuidad con aleta de columna",
@@ -68,7 +75,7 @@
       "value": 490.0,
       "unit": "MPa"
     },
-    "tipo_w5_col": "fillet",
+    "tipo_w5_col": "CJP",
     "w_w5_col": {
       "value": 12.7,
       "unit": "mm"
@@ -88,28 +95,71 @@
     },
     "tipo_w6_col": "fillet",
     "w_w6_col": {
-      "value": 12.7,
+      "value": 11.1,
       "unit": "mm"
     },
     "nl_w6_col": 2,
     "L_gap_w6_col": {
-      "value": 13,
+      "value": 25,
       "unit": "mm"
     },
     "kds_w6_col": 1.0
   },
   "weld_7": {
     "description": "Soldadura de plug entre alma de columna y doubler plates",
+    "usar_weld_7_col": true,
     "Fexx_w7_col": {
       "value": 490.0,
       "unit": "MPa"
     },
     "tipo_w7_col": "plug",
     "w_w7_col": {
+      "value": 15.9,
+      "unit": "mm"
+    },
+    "d_hole_w7_col": {
+      "value": 27.5,
+      "unit": "mm"
+    },
+    "nfilas_w7_col": 3,
+    "ncolumna_w7_col": 3
+  },
+  "weld_8": {
+    "description": "Derecha e izquierda entre platina de enchape y aleta de columna",
+    "Fexx_w8_col": {
+      "value": 490.0,
+      "unit": "MPa"
+    },
+    "tipo_w8_col": "PJP",
+    "w_w8_col": {
       "value": 8.0,
       "unit": "mm"
     },
-    "nl_w7_col": 1
+    "nl_w8_col": 1,
+    "L_gap_w8_col": {
+      "value": 0.0,
+      "unit": "mm"
+    },
+    "kds_w8_col": 1.0
+  },
+  "weld_9": {
+    "description": "Arriba y abajo entre platina de enchape y alma de columna",
+    "usar_weld_9_col": false,
+    "Fexx_w9_col": {
+      "value": 490.0,
+      "unit": "MPa"
+    },
+    "tipo_w9_col": "fillet",
+    "w_w9_col": {
+      "value": 8.0,
+      "unit": "mm"
+    },
+    "nl_w9_col": 2,
+    "L_gap_w9_col": {
+      "value": 50.0,
+      "unit": "mm"
+    },
+    "kds_w9_col": 1.0
   },
   "loads": {
     "Pu_col": {

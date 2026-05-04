@@ -3,6 +3,10 @@ from __future__ import annotations
 import math
 from typing import Any
 
+from steel_connections.codes.engineering.common.bolts import (
+    compute_minimum_bolt_spacing_j33,
+    compute_minimum_edge_distance_standard_hole_j34,
+)
 from steel_connections.models.units import Quantity, UnitSystem, validate_quantity_unit
 
 
@@ -512,8 +516,10 @@ def compute_minimum_bolt_spacing(
     bolt_diameter: Quantity,
     unit_system: UnitSystem,
 ) -> Quantity:
-    validate_quantity_unit(bolt_diameter, "length", unit_system, "geometry.bolt_diameter")
-    return Quantity(value=3.0 * bolt_diameter.value, unit=bolt_diameter.unit)
+    return compute_minimum_bolt_spacing_j33(
+        bolt_diameter=bolt_diameter,
+        unit_system=unit_system,
+    )
 
 
 def compute_minimum_edge_distance_standard_hole(
@@ -521,37 +527,10 @@ def compute_minimum_edge_distance_standard_hole(
     bolt_diameter: Quantity,
     unit_system: UnitSystem,
 ) -> tuple[Quantity, dict[str, float | str]]:
-    validate_quantity_unit(bolt_diameter, "length", unit_system, "geometry.bolt_diameter")
-
-    db_in = bolt_diameter.value if unit_system == UnitSystem.US else bolt_diameter.value / 25.4
-    table_j34_us: list[tuple[float, float]] = [
-        (0.5, 0.75),
-        (0.625, 0.875),
-        (0.75, 1.0),
-        (0.875, 1.125),
-        (1.0, 1.25),
-        (1.125, 1.5),
-        (1.25, 1.625),
-    ]
-    tolerance = 1e-3
-    edge_in: float | None = None
-    matched_row: str | None = None
-    for nominal_db, min_edge in table_j34_us:
-        if abs(db_in - nominal_db) <= tolerance:
-            edge_in = min_edge
-            matched_row = f"db={nominal_db} in"
-            break
-    if edge_in is None and db_in > 1.25 + tolerance:
-        edge_in = 1.75
-        matched_row = "db>1.25 in"
-    if edge_in is None:
-        raise ValueError(
-            "Bolt nominal diameter is not a supported Table J3.4 value and is not greater than 1-1/4 in."
-        )
-
-    if unit_system == UnitSystem.US:
-        return Quantity(value=edge_in, unit="in"), {"db_in": db_in, "table_row": matched_row}
-    return Quantity(value=edge_in * 25.4, unit="mm"), {"db_in": db_in, "table_row": matched_row, "in_to_mm": 25.4}
+    return compute_minimum_edge_distance_standard_hole_j34(
+        bolt_diameter=bolt_diameter,
+        unit_system=unit_system,
+    )
 
 
 def compute_required_end_plate_thickness(

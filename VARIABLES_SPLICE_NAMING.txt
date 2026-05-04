@@ -60,16 +60,18 @@ lambda_w_vg : Relación alma h / tw
 
 t_plt_web               : Espesor de platina de alma
 L_plt_web               : Longitud de platina de alma (L_plt_web = (Le_blt_web_x1 + (n_blt_web_x-1)*g_blt_web + Le_blt_web_x2)*2 + gap_sp, no input)
-B_plt_web               : Ancho de platina de alma (B_plt_web = Le_blt_web_y1 + (n_blt_web_y -1)*p_blt_web, no input)
-type_hole_plt_web	: tipo de perforación por los pernos grupo 1 alma (Puede tomar 4 valores : Standard / Oversize / Short-Slot / Long-Slot)
-dh_plt_web		: Diámetro de perforación por los pernos grupo 1 alma (valor calculado AISC 360-22w table J3.3, no input)
+H_plt_web               : Ancho de platina de alma (H_plt_web = Le_blt_web_y1 + (n_blt_web_y -1)*p_blt_web, no input)
+type_hole_plt_web	      : tipo de perforación por los pernos grupo 1 alma (Puede tomar 4 valores : Standard / Oversize / Short-Slot / Long-Slot)
+dh_plt_web		         : Diámetro de perforación por los pernos grupo 1 alma (valor calculado AISC 360-22w table J3.3, no input)
 cond_sup_plt_web        : Condición superficial platina alma
 cond_amb_plt_web        : Condición ambiental platina alma
 
 # Ala
 
-t_plt_ftop              : Espesor platina ala superior
-t_plt_fbot              : Espesor platina ala inferior
+steel_plt_flange        : Tipo de acero unificado de platina de ala (recomendado)
+t_plt_flange            : Espesor unificado de platina de ala (recomendado)
+t_plt_ftop              : Espesor platina ala superior (compatibilidad)
+t_plt_fbot              : Espesor platina ala inferior (compatibilidad)
 L_plt_flange            : Longitud de platina de ala (L_plt_flange = (Le_blt_flange_x1 + (n_blt_flange_x - 1)*p_blt_flange + Le_blt_flange_x2)*2 + gap_sp, no input)
 B_plt_flange            : Ancho de platina de ala (B_plt_flange = bf_vg - 2*Le_blt_flange_z3 + Le_blt_flange_z1 + Le_blt_flange_z2 , no input)
 dh_plt_flange		: Diámetro de perforación por los pernos grupo 2 ala (valor calculado AISC 360-22w table J3.3, no input)
@@ -90,6 +92,7 @@ Le_blt_web_x2           : Distancia al borde de la platina de alma en x
 Le_blt_web_y1           : Distancia al borde inferior de platina de alma
 Le_blt_web_y2           : Distancia al borde superior de platina de alma
 Le_blt_web_y3           : Distancia al borde exterior de ala inferior y superior de viga (Le_blt_web_y3 = 0.5*(d_vg - (n_blt_web_y-1)*p_blt_web), no input)
+Le_blt_web_y3.1         : Distancia desde la perforacion mas cercana al borde interior del toe en el alma de la viga 
 
 shape_blt_web        	: perno tomado del catalogo
 std_blt_web         	: Norma o grado del perno (ej. ASTM A325)
@@ -108,12 +111,14 @@ n_blt_flange_x          : Número de columnas de pernos en ala en dirección X p
 n_blt_flange_z          : Número de filas de pernos en una mitad de ala en dirección Z para cada viga
 p_blt_flange            : Pitch distancia entre columnas de pernos en ala por viga
 g_blt_flange            : Gage distancia entre filas de pernos en ala por viga
+g1_blt_flange            : Distancia entre las filas centrale de pernos, la distancia que pasa por el alma de al viga
 
 Le_blt_flange_x1        : Distancia al borde de la viga en x
 Le_blt_flange_x2        : Distancia al borde de la platina de ala en x
 Le_blt_flange_z1        : Distancia borde inferior de platina en direCCion Z
 Le_blt_flange_z2        : Distancia borde superior de platina en direCCion Z
-Le_blt_flange_z3        : Distancia borde exterior del ala de viga en direCCion Z 
+Le_blt_flange_z3        : Distancia borde exterior del ala de viga en direCCion Z
+Le_blt_flange_z4        : Distancia desde al perforacion mas cercana al interior del toe de la aleta de la viga 
 
 shape_blt_flange        : perno tomado del catalogo
 std_blt_flange          : Norma o grado del perno (ej. ASTM A325)
