@@ -3,6 +3,7 @@ from __future__ import annotations
 import math
 
 from steel_connections.codes.engineering.common.bolts import (
+    compute_bolt_hole_tearout_strength_j36,
     compute_bolt_hole_dimensions_j33,
     compute_bolt_shear_rupture_capacity_per_bolt,
     compute_bolt_tension_rupture_capacity_per_bolt,
@@ -239,6 +240,36 @@ def test_compute_maximum_bolt_spacing_j36_specialized_wrapper() -> None:
     assert math.isclose(smax_corrosive.value, 112.0, rel_tol=1e-9)
     assert meta_regular["active_formula"] == "Smax = min(24*t, 300 mm)"
     assert meta_corrosive["active_formula"] == "Smax = min(14*t, 180 mm)"
+
+
+def test_compute_bolt_hole_tearout_strength_j36_with_service_deformation_design() -> None:
+    phi_rn, meta = compute_bolt_hole_tearout_strength_j36(
+        material_fu=Quantity(value=450.0, unit="MPa"),
+        clear_distance_lc=Quantity(value=58.74, unit="mm"),
+        connected_thickness_t=Quantity(value=7.62, unit="mm"),
+        n_critical_bolts=6,
+        phi_n=0.75,
+        unit_system=UnitSystem.SI,
+        deformation_at_service_is_design_consideration=True,
+    )
+    assert phi_rn.unit == "kN"
+    assert math.isclose(float(meta["coefficient"]), 1.2, rel_tol=1e-9)
+    assert meta["reference"] == "AISC 360-22 J3-6c"
+
+
+def test_compute_bolt_hole_tearout_strength_j36_without_service_deformation_design() -> None:
+    phi_rn, meta = compute_bolt_hole_tearout_strength_j36(
+        material_fu=Quantity(value=450.0, unit="MPa"),
+        clear_distance_lc=Quantity(value=58.74, unit="mm"),
+        connected_thickness_t=Quantity(value=7.62, unit="mm"),
+        n_critical_bolts=6,
+        phi_n=0.75,
+        unit_system=UnitSystem.SI,
+        deformation_at_service_is_design_consideration=False,
+    )
+    assert phi_rn.unit == "kN"
+    assert math.isclose(float(meta["coefficient"]), 1.5, rel_tol=1e-9)
+    assert meta["reference"] == "AISC 360-22 J3-6d"
 
 
 def test_compute_limites_precalificacion_conexion_tipo_ep_si() -> None:

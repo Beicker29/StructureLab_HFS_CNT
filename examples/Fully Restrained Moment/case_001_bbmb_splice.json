@@ -49,6 +49,7 @@
     "desc_blt_web": "Grupo 120",
     "thread_blt_web": "N",
     "type_tight_blt_web": "pretensioned",
+    "deformation_at_bolt_hole_service_load_is_design": true,
     "n_blt_web_x": 1,
     "n_blt_web_y": 6,
     "g_blt_web": {
@@ -155,7 +156,7 @@
   "procedure": {
     "icr": {
       "method": "ICR",
-      "tolerance_1": 0.01,
+      "tolerance_1": 0.001,
       "max_iterations_1": 1000,
       "rult_1_kip": {
         "value": 74.0,

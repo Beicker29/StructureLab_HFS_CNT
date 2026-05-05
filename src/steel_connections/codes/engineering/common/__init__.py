@@ -14,6 +14,9 @@ from .bolt_group_types import BoltCoordinate
 from .bolt_group_types import BoltGroupMethod
 from .bolts import compute_bolt_tension_rupture_capacity_per_bolt
 from .bolts import compute_bolt_shear_rupture_capacity_per_bolt
+from .bolts import compute_bolt_hole_tearout_strength_j36
+from .bolts import compute_bolt_hole_bearing_strength_j36
+from .shear import compute_element_shear_rupture_strength_j43
 from .bolts import compute_bolt_hole_dimensions_j33
 from .bolts import compute_minimum_bolt_spacing_j33
 from .bolts import compute_minimum_edge_distance_standard_hole_j34
@@ -35,6 +38,9 @@ __all__ = [
     "build_rectangular_bolt_pattern",
     "compute_bolt_tension_rupture_capacity_per_bolt",
     "compute_bolt_shear_rupture_capacity_per_bolt",
+    "compute_bolt_hole_tearout_strength_j36",
+    "compute_bolt_hole_bearing_strength_j36",
+    "compute_element_shear_rupture_strength_j43",
     "compute_bolt_hole_dimensions_j33",
     "compute_minimum_bolt_spacing_j33",
     "compute_minimum_edge_distance_standard_hole_j34",

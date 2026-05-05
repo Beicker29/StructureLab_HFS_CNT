@@ -99,6 +99,7 @@ std_blt_web         	: Norma o grado del perno (ej. ASTM A325)
 desc_blt_web		: Grupo asignado (Grupo 120, Grupo 150, Grupo 144, Grupo 200)
 thread_blt_web       	: Condición de la rosca respecto al plano de corte (N = rosca excluida, X = rosca incluida)
 type_tight_blt_web	: Tipo de apriete del perno (snug-tightened, pretensioned)
+svc_hole_deformation_design_web : Indica si la deformacion en agujero a carga de servicio es condicion de diseno (J3-6c/J3-6d)
 
 ey_blt_web               : 0
 ex_blt_web               : Excentricidad en eje x (ex_sp = (n_blt_web_y -1)*p_blt_web + gap_sp , no input)

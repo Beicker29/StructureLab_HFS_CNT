@@ -2651,33 +2651,72 @@ def _render_splice_step_2_method_block(step2: dict | None, *, chapter_number: in
     py = _format_quantity(report.get("py"))
     ex = _format_quantity(report.get("ex"))
     ey = _format_quantity(report.get("ey"))
-    e_source = _format_text(report.get("eccentricity_source"))
     mz = _format_quantity(report.get("mz"))
     demand = _format_quantity(report.get("demand"))
-    capacity = _format_quantity(report.get("capacity"))
     dcr = _format_text(report.get("dcr"))
     cu = _format_text(report.get("cu"))
-    result = _render_result_label(step2.get("status"))
     icr_compare = _format_quantity(report.get("icr_compare_capacity"))
     final_residual = _format_text(report.get("final_residual"))
     n_iterations = _format_text(report.get("n_iterations"))
+    ru_crit = "n/a"
+    ru_crit_tag = "n/a"
+    ru_x_max = "n/a"
+    ru_x_max_tag = "n/a"
+    ru_y_max = "n/a"
+    ru_y_max_tag = "n/a"
+    ru_crit_var = "n/a"
+    ru_x_var = "n/a"
+    ru_y_var = "n/a"
+
+    def _tag_to_row(tag: str) -> str:
+        compact = "".join(ch for ch in str(tag) if ch.isdigit())
+        return compact if compact else "?"
+    methods_summary = report.get("methods_summary")
+    if isinstance(methods_summary, list):
+        selected_method = _format_text(report.get("method_selected")).strip().lower()
+        active_summary = next(
+            (
+                item
+                for item in methods_summary
+                if isinstance(item, dict) and _format_text(item.get("method")).strip().lower() == selected_method
+            ),
+            None,
+        )
+        if isinstance(active_summary, dict):
+            bolt_forces = active_summary.get("bolt_forces")
+            if isinstance(bolt_forces, list):
+                force_rows = [item for item in bolt_forces if isinstance(item, dict)]
+                if force_rows:
+                    crit = max(force_rows, key=lambda item: abs(float(item.get("resultant_kip", 0.0))))
+                    ru_crit = _format_quantity({"value": float(crit.get("resultant_kip", 0.0)), "unit": "kip"})
+                    ru_crit_tag = _format_text(crit.get("tag"))
+                    crit_row = _tag_to_row(ru_crit_tag)
+                    ru_crit_var = f"Ru_{crit_row}_blt_web"
+                    crit_x = max(force_rows, key=lambda item: abs(float(item.get("fx_kip", 0.0))))
+                    crit_y = max(force_rows, key=lambda item: abs(float(item.get("fy_kip", 0.0))))
+                    ru_x_max = _format_quantity({"value": float(crit_x.get("fx_kip", 0.0)), "unit": "kip"})
+                    ru_x_max_tag = _format_text(crit_x.get("tag"))
+                    crit_x_row = _tag_to_row(ru_x_max_tag)
+                    ru_x_var = f"Ru_{crit_x_row}_blt_web_v2"
+                    ru_y_max = _format_quantity({"value": float(crit_y.get("fy_kip", 0.0)), "unit": "kip"})
+                    ru_y_max_tag = _format_text(crit_y.get("tag"))
+                    crit_y_row = _tag_to_row(ru_y_max_tag)
+                    ru_y_var = f"Ru_{crit_y_row}_blt_web_v3"
     lines = [
         heading,
         "",
         f"- Metodo seleccionado: `{method}`",
+        "- Clausula: `Documento: Steel Construction Manual AISC 16th edition 2023 | Seccion: Part 7 DESIGN CONSIDERATIONS FOR BOLTS - Instantaneous Center of Rotation Method`",
+        "- Ecuaciones: `ex_blt_web = gap_sp + 2*Le_blt_web_x1 + (n_blt_web_x - 1)*g_blt_web; Muz_blt_web = Vu2_sp*ex_blt_web - Pu_sp*ey_blt_web`",
         f"- Pu_sp: `{px}`",
         f"- Vu2_sp: `{py}`",
-        "- Formula ex_blt_web: `ex_blt_web = gap_sp + 2*Le_blt_web_x1 + (n_blt_web_x - 1)*g_blt_web`",
         f"- ex_blt_web: `{ex}`",
         f"- ey_blt_web: `{ey}`",
-        f"- Fuente excentricidad: `{e_source}`",
-        "- Formula Muz_blt_web: `Muz_blt_web = Vu2_sp*ex_blt_web - Pu_sp*ey_blt_web`",
         f"- Muz_blt_web: `{mz}`",
         f"- Demanda (metodo activo): `{demand}`",
-        f"- Capacidad (metodo activo): `{capacity}`",
-        f"- DCR (metodo activo): `{dcr}`",
-        f"- Residual final ICR: `{final_residual}`",
-        f"- Iteraciones ICR: `{n_iterations}`",
+        f"- Ru_web_vg: `{ru_crit_var} = {ru_crit}`",
+        f"- Ru_web_v2_max_vg: `{ru_x_var} = {ru_x_max}`",
+        f"- Ru_web_v3_max_vg: `{ru_y_var} = {ru_y_max}`",
     ]
     if method == "icr" and cu != "n/a":
         lines.append(f"- Coeficiente Cu (ICR): `{cu}`")
@@ -2686,13 +2725,7 @@ def _render_splice_step_2_method_block(step2: dict | None, *, chapter_number: in
     notes = _format_text(step2.get("notes"))
     if notes != "n/a":
         lines.append(f"- Nota: `{notes}`")
-    lines.extend(
-        [
-            f"- Clausula: `{_render_clause_text(step2.get('clause'), step2.get('source_document'), step2.get('rule_id'))}`",
-            f"- Resultado: {result}",
-            "",
-        ]
-    )
+    lines.append("")
     return "\n".join(lines)
 
 
@@ -3295,6 +3328,233 @@ def _render_fully_restrained_splice_outline(rows_viga: list[dict], notes_viga: l
         ]
     )
     lines.append(_render_splice_step_2_method_block(step2_pernos1, chapter_number=3))
+    tearout_note = notes_by_id_scope.get(("bbmb_splice.step4.web_tearout_note", "VIGA"), {})
+    bearing_note = notes_by_id_scope.get(("bbmb_splice.step4.web_bearing_note", "VIGA"), {})
+    bolt_shear_note = notes_by_id_scope.get(("bbmb_splice.step4.web_bolt_shear_rupture_note", "VIGA"), {})
+    web_shear_rupture_note = notes_by_id_scope.get(("bbmb_splice.step4.web_shear_rupture_note", "VIGA"), {})
+    tearout_result = _render_result_label(tearout_note.get("result_web_tearout_v2_vg"))
+    ru_web_v2_max_vg_q: Quantity | None = None
+    ru_web_vg_q: Quantity | None = None
+    if isinstance(step2_pernos1, dict):
+        report = step2_pernos1.get("report")
+        if isinstance(report, dict):
+            method_selected = _format_text(report.get("method_selected")).strip().lower()
+            methods_summary = report.get("methods_summary")
+            if isinstance(methods_summary, list):
+                active_summary = next(
+                    (
+                        item
+                        for item in methods_summary
+                        if isinstance(item, dict) and _format_text(item.get("method")).strip().lower() == method_selected
+                    ),
+                    None,
+                )
+                if isinstance(active_summary, dict):
+                    bolt_forces = active_summary.get("bolt_forces")
+                    if isinstance(bolt_forces, list):
+                        rows = [item for item in bolt_forces if isinstance(item, dict)]
+                        if rows:
+                            crit_v2 = max(rows, key=lambda item: abs(float(item.get("fx_kip", 0.0))))
+                            ru_web_v2_max_vg_q = Quantity(
+                                value=float(crit_v2.get("fx_kip", 0.0)),
+                                unit="kip",
+                            )
+                            crit_r = max(rows, key=lambda item: abs(float(item.get("resultant_kip", 0.0))))
+                            ru_web_vg_q = Quantity(
+                                value=float(crit_r.get("resultant_kip", 0.0)),
+                                unit="kip",
+                            )
+    def _convert_ru_to_capacity_unit(ru_q: Quantity | None, cap_q: Quantity | None) -> Quantity | None:
+        if not isinstance(ru_q, Quantity):
+            return None
+        if not isinstance(cap_q, Quantity):
+            return ru_q
+        if ru_q.unit == cap_q.unit:
+            return ru_q
+        if ru_q.unit == "kip" and cap_q.unit == "kN":
+            return Quantity(value=ru_q.value * 4.4482216152605, unit="kN")
+        if ru_q.unit == "kN" and cap_q.unit == "kip":
+            return Quantity(value=ru_q.value / 4.4482216152605, unit="kip")
+        return ru_q
+
+    ru_web_v2_vg_disp: Quantity | None = ru_web_v2_max_vg_q
+    phi_rn_web_q = _as_quantity(
+        tearout_note.get("phi_rn1_web_v2_vg")
+        if tearout_note.get("phi_rn1_web_v2_vg") is not None
+        else tearout_note.get("phi_rn_web_v2_vg")
+    )
+    ru_web_v2_vg_disp = _convert_ru_to_capacity_unit(ru_web_v2_vg_disp, phi_rn_web_q)
+    dcr1_web_v2_vg_disp: str = _format_text(
+        tearout_note.get("dcr1_web_v2_vg")
+        if tearout_note.get("dcr1_web_v2_vg") is not None
+        else tearout_note.get("dcr_web_tearout_v2_vg")
+    )
+    if (
+        isinstance(ru_web_v2_vg_disp, Quantity)
+        and isinstance(phi_rn_web_q, Quantity)
+        and ru_web_v2_vg_disp.unit == phi_rn_web_q.unit
+        and abs(phi_rn_web_q.value) > 1e-12
+    ):
+        dcr1_web_v2_vg_disp = _format_decimal(abs(ru_web_v2_vg_disp.value) / phi_rn_web_q.value)
+    ru_web_v2_vg_abs_disp: Quantity | None = None
+    if isinstance(ru_web_v2_vg_disp, Quantity):
+        ru_web_v2_vg_abs_disp = Quantity(value=abs(ru_web_v2_vg_disp.value), unit=ru_web_v2_vg_disp.unit)
+    try:
+        dcr1_num = float(dcr1_web_v2_vg_disp)
+        tearout_result = _render_result_label("PASS" if dcr1_num <= 1.0 else "FAIL")
+    except (TypeError, ValueError):
+        pass
+    # 4.1.2 bearing (aplatamiento) metrics
+    phi_rn2_web_q = _as_quantity(bearing_note.get("phi_rn2_web_v2_vg"))
+    ru2_web_v2_vg_disp = _convert_ru_to_capacity_unit(ru_web_v2_max_vg_q, phi_rn2_web_q)
+    ru2_web_v2_vg_abs_disp: Quantity | None = None
+    if isinstance(ru2_web_v2_vg_disp, Quantity):
+        ru2_web_v2_vg_abs_disp = Quantity(value=abs(ru2_web_v2_vg_disp.value), unit=ru2_web_v2_vg_disp.unit)
+    dcr2_web_v2_vg_disp = "n/a"
+    if (
+        isinstance(ru2_web_v2_vg_disp, Quantity)
+        and isinstance(phi_rn2_web_q, Quantity)
+        and ru2_web_v2_vg_disp.unit == phi_rn2_web_q.unit
+        and abs(phi_rn2_web_q.value) > 1e-12
+    ):
+        dcr2_web_v2_vg_disp = _format_decimal(abs(ru2_web_v2_vg_disp.value) / phi_rn2_web_q.value)
+    bearing_result = _render_result_label("UNKNOWN")
+    try:
+        dcr2_num = float(dcr2_web_v2_vg_disp)
+        bearing_result = _render_result_label("PASS" if dcr2_num <= 1.0 else "FAIL")
+    except (TypeError, ValueError):
+        pass
+    # 4.1.3 bolt shear rupture metrics
+    phi_rn3_web_q = _as_quantity(bolt_shear_note.get("phi_rn3_web_v2_vg"))
+    ru3_web_v2_vg_disp = _convert_ru_to_capacity_unit(ru_web_vg_q, phi_rn3_web_q)
+    ru3_web_v2_vg_abs_disp: Quantity | None = None
+    if isinstance(ru3_web_v2_vg_disp, Quantity):
+        ru3_web_v2_vg_abs_disp = Quantity(value=abs(ru3_web_v2_vg_disp.value), unit=ru3_web_v2_vg_disp.unit)
+    dcr3_web_v2_vg_disp = "n/a"
+    if (
+        isinstance(ru3_web_v2_vg_disp, Quantity)
+        and isinstance(phi_rn3_web_q, Quantity)
+        and ru3_web_v2_vg_disp.unit == phi_rn3_web_q.unit
+        and abs(phi_rn3_web_q.value) > 1e-12
+    ):
+        dcr3_web_v2_vg_disp = _format_decimal(abs(ru3_web_v2_vg_disp.value) / phi_rn3_web_q.value)
+    bolt_shear_result = _render_result_label("UNKNOWN")
+    try:
+        dcr3_num = float(dcr3_web_v2_vg_disp)
+        bolt_shear_result = _render_result_label("PASS" if dcr3_num <= 1.0 else "FAIL")
+    except (TypeError, ValueError):
+        pass
+    # 4.1.4 web shear rupture metrics (J4.3)
+    ru4_web_v2_vg_q = _as_quantity(web_shear_rupture_note.get("ru4_web_v2_vg"))
+    phi_rn4_web_q = _as_quantity(web_shear_rupture_note.get("phi_rn4_web_v2_vg"))
+    ru4_web_v2_vg_disp = _convert_ru_to_capacity_unit(ru4_web_v2_vg_q, phi_rn4_web_q)
+    ru4_web_v2_vg_abs_disp: Quantity | None = None
+    if isinstance(ru4_web_v2_vg_disp, Quantity):
+        ru4_web_v2_vg_abs_disp = Quantity(value=abs(ru4_web_v2_vg_disp.value), unit=ru4_web_v2_vg_disp.unit)
+    dcr4_web_v2_vg_disp = _format_text(web_shear_rupture_note.get("dcr4_web_v2_vg"))
+    if (
+        isinstance(ru4_web_v2_vg_disp, Quantity)
+        and isinstance(phi_rn4_web_q, Quantity)
+        and ru4_web_v2_vg_disp.unit == phi_rn4_web_q.unit
+        and abs(phi_rn4_web_q.value) > 1e-12
+    ):
+        dcr4_web_v2_vg_disp = _format_decimal(abs(ru4_web_v2_vg_disp.value) / phi_rn4_web_q.value)
+    web_shear_rupture_result = _render_result_label(web_shear_rupture_note.get("result4_web_v2_vg"))
+    try:
+        dcr4_num = float(dcr4_web_v2_vg_disp)
+        web_shear_rupture_result = _render_result_label("PASS" if dcr4_num <= 1.0 else "FAIL")
+    except (TypeError, ValueError):
+        pass
+    lines.extend(
+        [
+            "",
+            "## Paso 4 - Revisión de resistencia de la viga",
+            "",
+            "### 4.1 Revisión de capacidad a cortante en el alma en direccion 2",
+            "",
+            "#### 4.1.1. ELR #1: Desgarramiento en la perforacion del perno",
+            "",
+            "- Clausula: `Documento: AISC 360-22 | Seccion: J3.11a.(b)`",
+            (
+                "- Ecuaciones: `lc_blt_web_y = p_blt_web - dh.1; "
+                "Rn1_web_v2_vg = C*lc_blt_web_y*tw_vg*Fu_vg; "
+                "phi*Rn1_web_v2_vg = phi_fragil*Rn1_web_v2_vg; "
+                "DCR1_web_v2_vg = Ru1_web_v2_vg/phi*Rn1_web_v2_vg`"
+            ),
+            f"- Fu_vg: `{_format_quantity(tearout_note.get('fu_vg'))}`",
+            f"- tw_vg: `{_format_quantity(tearout_note.get('tw_vg'))}`",
+            f"- p_blt_web: `{_format_quantity(tearout_note.get('p_blt_web'))}`",
+            f"- dh.1: `{_format_quantity(tearout_note.get('dh_1'))}`",
+            f"- lc_blt_web_y: `{_format_quantity(tearout_note.get('lc_blt_web_y'))}`",
+            f"- C: `{_format_text(tearout_note.get('coefficient'))}`",
+            f"- phi_fragil: `{_format_text(tearout_note.get('phi_fragil'))}`",
+            f"- Rn1_web_v2_vg: `{_format_quantity(tearout_note.get('rn1_web_v2_vg') or tearout_note.get('rn_web_ind_v2_vg') or tearout_note.get('rn1_web_ind_v2_vg'))}`",
+            f"- phi*Rn1_web_v2_vg: `{_format_quantity(tearout_note.get('phi_rn1_web_v2_vg') or tearout_note.get('phi_rn_web_v2_vg') or tearout_note.get('phi_rn1_web_v2_vg'))}`",
+            f"- Ru1_web_v2_vg: `{_format_quantity(ru_web_v2_vg_abs_disp.model_dump() if isinstance(ru_web_v2_vg_abs_disp, Quantity) else None)}`",
+            f"- DCR1_web_v2_vg: `{dcr1_web_v2_vg_disp}`",
+            f"- Resultado: {tearout_result}",
+            "",
+            "#### 4.1.2. ELR #2: Aplatamiento en la perforacion del perno",
+            "",
+            "- Clausula: `Documento: AISC 360-22 | Seccion: J3.11a.(a)`",
+            (
+                "- Ecuaciones: `Rn2_web_v2_vg = C*db_blt_web*tw_vg*Fu_vg; "
+                "phi*Rn2_web_v2_vg = phi_fragil*Rn2_web_v2_vg; "
+                "DCR2_web_v2_vg = Ru2_web_v2_vg/phi*Rn2_web_v2_vg`"
+            ),
+            f"- Fu_vg: `{_format_quantity(bearing_note.get('fu_vg'))}`",
+            f"- tw_vg: `{_format_quantity(bearing_note.get('tw_vg'))}`",
+            f"- db_blt_web: `{_format_quantity(bearing_note.get('db_blt_web'))}`",
+            f"- C: `{_format_text(bearing_note.get('coefficient'))}`",
+            f"- phi_fragil: `{_format_text(bearing_note.get('phi_fragil'))}`",
+            f"- Rn2_web_v2_vg: `{_format_quantity(bearing_note.get('rn2_web_v2_vg'))}`",
+            f"- phi*Rn2_web_v2_vg: `{_format_quantity(bearing_note.get('phi_rn2_web_v2_vg'))}`",
+            f"- Ru2_web_v2_vg = Ru_web_v2_max_vg: `{_format_quantity(ru2_web_v2_vg_abs_disp.model_dump() if isinstance(ru2_web_v2_vg_abs_disp, Quantity) else None)}`",
+            f"- DCR2_web_v2_vg: `{dcr2_web_v2_vg_disp}`",
+            f"- Resultado: {bearing_result}",
+            "",
+            "#### 4.1.3. ELR #3: Rotura por cortante en el perno",
+            "",
+            "- Clausula: `Documento: AISC 360-22 | Seccion: J3.7`",
+            (
+                "- Ecuaciones: `Rn3_web_v2-v3_vg = Ab_blt_web*Fnv_blt_web; "
+                "phi*Rn3_web_v2-v3_vg = phi_fragil*Rn3_web_v2-v3_vg; "
+                "DCR3_web_v2-v3_vg = Ru3_web_v2-v3_vg/phi*Rn3_web_v2-v3_vg`"
+            ),
+            f"- db_blt_web: `{_format_quantity(bolt_shear_note.get('db_blt_web'))}`",
+            f"- Fnv_blt_web: `{_format_quantity(bolt_shear_note.get('fnv_blt_web'))}`",
+            f"- phi_fragil: `{_format_text(bolt_shear_note.get('phi_fragil'))}`",
+            f"- Rn3_web_v2-v3_vg: `{_format_quantity(bolt_shear_note.get('rn3_web_v2_vg'))}`",
+            f"- phi*Rn3_web_v2-v3_vg: `{_format_quantity(bolt_shear_note.get('phi_rn3_web_v2_vg'))}`",
+            f"- Ru3_web_v2-v3_vg = Ru_web_vg: `{_format_quantity(ru3_web_v2_vg_abs_disp.model_dump() if isinstance(ru3_web_v2_vg_abs_disp, Quantity) else None)}`",
+            f"- DCR3_web_v2-v3_vg: `{dcr3_web_v2_vg_disp}`",
+            f"- Resultado: {bolt_shear_result}",
+            "",
+            "#### 4.1.4. ELR #4: Rotura por cortante de la viga",
+            "",
+            "- Clausula: `Documento: AISC 360-22 | Seccion: J4.3 (DRY: compute_element_shear_rupture_strength_j43)`",
+            (
+                "- Ecuaciones: `A_vg = d_vg*tw_vg; "
+                "Anv_web_v2_vg = A_vg - n_blt_web_y*(dh.1+1.8mm)*tw_vg; "
+                "Rn4_web_v2_vg = 0.60*Fu_vg*Anv_web_v2_vg; "
+                "phi*Rn4_web_v2_vg = phi_fragil*Rn4_web_v2_vg; "
+                "DCR4_web_v2_vg = Ru4_web_v2_vg/phi*Rn4_web_v2_vg`"
+            ),
+            f"- Fu_vg: `{_format_quantity(web_shear_rupture_note.get('fu_vg'))}`",
+            f"- tw_vg: `{_format_quantity(web_shear_rupture_note.get('tw_vg'))}`",
+            f"- A_vg: `{_format_quantity(web_shear_rupture_note.get('a_vg'))}`",
+            f"- n_blt_web_y: `{_format_text(web_shear_rupture_note.get('n_blt_web_y'))}`",
+            f"- dh.1: `{_format_quantity(web_shear_rupture_note.get('dh_1'))}`",
+            f"- Anv_web_v2_vg: `{_format_quantity(web_shear_rupture_note.get('anv_web_v2_vg'))}`",
+            f"- phi_fragil: `{_format_text(web_shear_rupture_note.get('phi_fragil'))}`",
+            f"- Rn4_web_v2_vg: `{_format_quantity(web_shear_rupture_note.get('rn4_web_v2_vg'))}`",
+            f"- phi*Rn4_web_v2_vg: `{_format_quantity(web_shear_rupture_note.get('phi_rn4_web_v2_vg'))}`",
+            f"- Ru4_web_v2_vg = Vu2_sp: `{_format_quantity(ru4_web_v2_vg_abs_disp.model_dump() if isinstance(ru4_web_v2_vg_abs_disp, Quantity) else None)}`",
+            f"- DCR4_web_v2_vg: `{dcr4_web_v2_vg_disp}`",
+            f"- Resultado: {web_shear_rupture_result}",
+            "",
+        ]
+    )
     return "\n".join(lines)
 
 def _render_step_1_list(

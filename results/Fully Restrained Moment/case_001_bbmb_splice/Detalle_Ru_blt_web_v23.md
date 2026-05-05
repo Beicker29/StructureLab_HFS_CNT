@@ -171,6 +171,13 @@
 - Iter `17`: estimacion=`(-7.59, 10.07) in` -> resultado=`(-7.59, 10.07) in`
 - Iter `18`: estimacion=`(-7.59, 10.07) in` -> resultado=`(-7.59, 10.07) in`
 - Iter `19`: estimacion=`(-7.59, 10.07) in` -> resultado=`(-7.58, 10.07) in`
+- Iter `20`: estimacion=`(-7.58, 10.07) in` -> resultado=`(-7.58, 10.07) in`
+- Iter `21`: estimacion=`(-7.58, 10.07) in` -> resultado=`(-7.58, 10.07) in`
+- Iter `22`: estimacion=`(-7.58, 10.07) in` -> resultado=`(-7.58, 10.07) in`
+- Iter `23`: estimacion=`(-7.58, 10.07) in` -> resultado=`(-7.58, 10.07) in`
+- Iter `24`: estimacion=`(-7.58, 10.07) in` -> resultado=`(-7.58, 10.07) in`
+- Iter `25`: estimacion=`(-7.58, 10.07) in` -> resultado=`(-7.58, 10.07) in`
+- Iter `26`: estimacion=`(-7.58, 10.07) in` -> resultado=`(-7.58, 10.07) in`
 - Iteraciones del ICR:
 
 ### 7.2 Iteraciones globales (residuales)
@@ -194,6 +201,13 @@
 - Iter `17`: x_icr_blt_web=`-7.59`, y_icr_blt_web=`10.07`, res_Ru_blt_web_v2=`-0`, res_Ru_blt_web_v3=`-0.01`, res_norm_blt_web=`0.02`
 - Iter `18`: x_icr_blt_web=`-7.59`, y_icr_blt_web=`10.07`, res_Ru_blt_web_v2=`-0`, res_Ru_blt_web_v3=`-0.01`, res_norm_blt_web=`0.01`
 - Iter `19`: x_icr_blt_web=`-7.58`, y_icr_blt_web=`10.07`, res_Ru_blt_web_v2=`-0`, res_Ru_blt_web_v3=`-0.01`, res_norm_blt_web=`0.01`
+- Iter `20`: x_icr_blt_web=`-7.58`, y_icr_blt_web=`10.07`, res_Ru_blt_web_v2=`-0`, res_Ru_blt_web_v3=`-0.01`, res_norm_blt_web=`0.01`
+- Iter `21`: x_icr_blt_web=`-7.58`, y_icr_blt_web=`10.07`, res_Ru_blt_web_v2=`-0`, res_Ru_blt_web_v3=`-0`, res_norm_blt_web=`0`
+- Iter `22`: x_icr_blt_web=`-7.58`, y_icr_blt_web=`10.07`, res_Ru_blt_web_v2=`-0`, res_Ru_blt_web_v3=`-0`, res_norm_blt_web=`0`
+- Iter `23`: x_icr_blt_web=`-7.58`, y_icr_blt_web=`10.07`, res_Ru_blt_web_v2=`-0`, res_Ru_blt_web_v3=`-0`, res_norm_blt_web=`0`
+- Iter `24`: x_icr_blt_web=`-7.58`, y_icr_blt_web=`10.07`, res_Ru_blt_web_v2=`-0`, res_Ru_blt_web_v3=`-0`, res_norm_blt_web=`0`
+- Iter `25`: x_icr_blt_web=`-7.58`, y_icr_blt_web=`10.07`, res_Ru_blt_web_v2=`-0`, res_Ru_blt_web_v3=`-0`, res_norm_blt_web=`0`
+- Iter `26`: x_icr_blt_web=`-7.58`, y_icr_blt_web=`10.07`, res_Ru_blt_web_v2=`-0`, res_Ru_blt_web_v3=`-0`, res_norm_blt_web=`0`
 
 ### 7.3 Parametros auxiliares por iteracion
 
@@ -216,6 +230,13 @@
 - Iter `17`: dmax_icr_blt_web=`12.61`, sum(phi_i_blt_web*r_icr_i_blt_web)=`53.55`, Rult_blt_web=`-11.84`, Cu_blt_web=`4.91`, M_icr_blt_web=`-633.88`
 - Iter `18`: dmax_icr_blt_web=`12.61`, sum(phi_i_blt_web*r_icr_i_blt_web)=`53.54`, Rult_blt_web=`-11.84`, Cu_blt_web=`4.91`, M_icr_blt_web=`-633.74`
 - Iter `19`: dmax_icr_blt_web=`12.61`, sum(phi_i_blt_web*r_icr_i_blt_web)=`53.53`, Rult_blt_web=`-11.84`, Cu_blt_web=`4.91`, M_icr_blt_web=`-633.64`
+- Iter `20`: dmax_icr_blt_web=`12.61`, sum(phi_i_blt_web*r_icr_i_blt_web)=`53.52`, Rult_blt_web=`-11.84`, Cu_blt_web=`4.91`, M_icr_blt_web=`-633.57`
+- Iter `21`: dmax_icr_blt_web=`12.61`, sum(phi_i_blt_web*r_icr_i_blt_web)=`53.52`, Rult_blt_web=`-11.84`, Cu_blt_web=`4.91`, M_icr_blt_web=`-633.51`
+- Iter `22`: dmax_icr_blt_web=`12.61`, sum(phi_i_blt_web*r_icr_i_blt_web)=`53.51`, Rult_blt_web=`-11.84`, Cu_blt_web=`4.91`, M_icr_blt_web=`-633.48`
+- Iter `23`: dmax_icr_blt_web=`12.61`, sum(phi_i_blt_web*r_icr_i_blt_web)=`53.51`, Rult_blt_web=`-11.84`, Cu_blt_web=`4.91`, M_icr_blt_web=`-633.45`
+- Iter `24`: dmax_icr_blt_web=`12.61`, sum(phi_i_blt_web*r_icr_i_blt_web)=`53.51`, Rult_blt_web=`-11.84`, Cu_blt_web=`4.91`, M_icr_blt_web=`-633.43`
+- Iter `25`: dmax_icr_blt_web=`12.61`, sum(phi_i_blt_web*r_icr_i_blt_web)=`53.51`, Rult_blt_web=`-11.84`, Cu_blt_web=`4.91`, M_icr_blt_web=`-633.41`
+- Iter `26`: dmax_icr_blt_web=`12.61`, sum(phi_i_blt_web*r_icr_i_blt_web)=`53.51`, Rult_blt_web=`-11.84`, Cu_blt_web=`4.91`, M_icr_blt_web=`-633.4`
 
 ### 7.4 Bolt Detail ICR por iteracion
 
@@ -541,3 +562,122 @@
 - `w4`: phi_4_blt_web=`0.93`, Ru_4_blt_web=`-10.99`, Ru_4_blt_web_v2=`-1.54`, Ru_4_blt_web_v3=`-10.88`
 - `w5`: phi_5_blt_web=`0.93`, Ru_5_blt_web=`-11.03`, Ru_5_blt_web_v2=`2.72`, Ru_5_blt_web_v3=`-10.69`
 - `w6`: phi_6_blt_web=`0.95`, Ru_6_blt_web=`-11.26`, Ru_6_blt_web_v2=`6.13`, Ru_6_blt_web_v3=`-9.44`
+
+#### 7.4.20 Iteracion 20
+
+- Cinematica por perno:
+- `w1`: dx_icr_1_blt_web=`7.58`, dy_icr_1_blt_web=`-10.07`, r_icr_1_blt_web=`12.61`, delta_1_blt_web=`0.34`
+- `w2`: dx_icr_2_blt_web=`7.58`, dy_icr_2_blt_web=`-7.07`, r_icr_2_blt_web=`10.37`, delta_2_blt_web=`0.28`
+- `w3`: dx_icr_3_blt_web=`7.58`, dy_icr_3_blt_web=`-4.07`, r_icr_3_blt_web=`8.61`, delta_3_blt_web=`0.23`
+- `w4`: dx_icr_4_blt_web=`7.58`, dy_icr_4_blt_web=`-1.07`, r_icr_4_blt_web=`7.66`, delta_4_blt_web=`0.21`
+- `w5`: dx_icr_5_blt_web=`7.58`, dy_icr_5_blt_web=`1.93`, r_icr_5_blt_web=`7.82`, delta_5_blt_web=`0.21`
+- `w6`: dx_icr_6_blt_web=`7.58`, dy_icr_6_blt_web=`4.93`, r_icr_6_blt_web=`9.04`, delta_6_blt_web=`0.24`
+- Fuerzas por perno:
+- `w1`: phi_1_blt_web=`0.98`, Ru_1_blt_web=`-11.62`, Ru_1_blt_web_v2=`-9.28`, Ru_1_blt_web_v3=`-6.99`
+- `w2`: phi_2_blt_web=`0.97`, Ru_2_blt_web=`-11.43`, Ru_2_blt_web_v2=`-7.8`, Ru_2_blt_web_v3=`-8.36`
+- `w3`: phi_3_blt_web=`0.94`, Ru_3_blt_web=`-11.18`, Ru_3_blt_web_v2=`-5.29`, Ru_3_blt_web_v3=`-9.85`
+- `w4`: phi_4_blt_web=`0.93`, Ru_4_blt_web=`-10.99`, Ru_4_blt_web_v2=`-1.54`, Ru_4_blt_web_v3=`-10.88`
+- `w5`: phi_5_blt_web=`0.93`, Ru_5_blt_web=`-11.03`, Ru_5_blt_web_v2=`2.72`, Ru_5_blt_web_v3=`-10.69`
+- `w6`: phi_6_blt_web=`0.95`, Ru_6_blt_web=`-11.26`, Ru_6_blt_web_v2=`6.13`, Ru_6_blt_web_v3=`-9.44`
+
+#### 7.4.21 Iteracion 21
+
+- Cinematica por perno:
+- `w1`: dx_icr_1_blt_web=`7.58`, dy_icr_1_blt_web=`-10.07`, r_icr_1_blt_web=`12.61`, delta_1_blt_web=`0.34`
+- `w2`: dx_icr_2_blt_web=`7.58`, dy_icr_2_blt_web=`-7.07`, r_icr_2_blt_web=`10.37`, delta_2_blt_web=`0.28`
+- `w3`: dx_icr_3_blt_web=`7.58`, dy_icr_3_blt_web=`-4.07`, r_icr_3_blt_web=`8.61`, delta_3_blt_web=`0.23`
+- `w4`: dx_icr_4_blt_web=`7.58`, dy_icr_4_blt_web=`-1.07`, r_icr_4_blt_web=`7.66`, delta_4_blt_web=`0.21`
+- `w5`: dx_icr_5_blt_web=`7.58`, dy_icr_5_blt_web=`1.93`, r_icr_5_blt_web=`7.82`, delta_5_blt_web=`0.21`
+- `w6`: dx_icr_6_blt_web=`7.58`, dy_icr_6_blt_web=`4.93`, r_icr_6_blt_web=`9.04`, delta_6_blt_web=`0.24`
+- Fuerzas por perno:
+- `w1`: phi_1_blt_web=`0.98`, Ru_1_blt_web=`-11.62`, Ru_1_blt_web_v2=`-9.28`, Ru_1_blt_web_v3=`-6.99`
+- `w2`: phi_2_blt_web=`0.97`, Ru_2_blt_web=`-11.43`, Ru_2_blt_web_v2=`-7.8`, Ru_2_blt_web_v3=`-8.36`
+- `w3`: phi_3_blt_web=`0.94`, Ru_3_blt_web=`-11.18`, Ru_3_blt_web_v2=`-5.29`, Ru_3_blt_web_v3=`-9.85`
+- `w4`: phi_4_blt_web=`0.93`, Ru_4_blt_web=`-10.99`, Ru_4_blt_web_v2=`-1.54`, Ru_4_blt_web_v3=`-10.88`
+- `w5`: phi_5_blt_web=`0.93`, Ru_5_blt_web=`-11.03`, Ru_5_blt_web_v2=`2.72`, Ru_5_blt_web_v3=`-10.69`
+- `w6`: phi_6_blt_web=`0.95`, Ru_6_blt_web=`-11.26`, Ru_6_blt_web_v2=`6.13`, Ru_6_blt_web_v3=`-9.44`
+
+#### 7.4.22 Iteracion 22
+
+- Cinematica por perno:
+- `w1`: dx_icr_1_blt_web=`7.58`, dy_icr_1_blt_web=`-10.07`, r_icr_1_blt_web=`12.61`, delta_1_blt_web=`0.34`
+- `w2`: dx_icr_2_blt_web=`7.58`, dy_icr_2_blt_web=`-7.07`, r_icr_2_blt_web=`10.37`, delta_2_blt_web=`0.28`
+- `w3`: dx_icr_3_blt_web=`7.58`, dy_icr_3_blt_web=`-4.07`, r_icr_3_blt_web=`8.61`, delta_3_blt_web=`0.23`
+- `w4`: dx_icr_4_blt_web=`7.58`, dy_icr_4_blt_web=`-1.07`, r_icr_4_blt_web=`7.66`, delta_4_blt_web=`0.21`
+- `w5`: dx_icr_5_blt_web=`7.58`, dy_icr_5_blt_web=`1.93`, r_icr_5_blt_web=`7.82`, delta_5_blt_web=`0.21`
+- `w6`: dx_icr_6_blt_web=`7.58`, dy_icr_6_blt_web=`4.93`, r_icr_6_blt_web=`9.04`, delta_6_blt_web=`0.24`
+- Fuerzas por perno:
+- `w1`: phi_1_blt_web=`0.98`, Ru_1_blt_web=`-11.62`, Ru_1_blt_web_v2=`-9.28`, Ru_1_blt_web_v3=`-6.99`
+- `w2`: phi_2_blt_web=`0.97`, Ru_2_blt_web=`-11.43`, Ru_2_blt_web_v2=`-7.8`, Ru_2_blt_web_v3=`-8.36`
+- `w3`: phi_3_blt_web=`0.94`, Ru_3_blt_web=`-11.18`, Ru_3_blt_web_v2=`-5.29`, Ru_3_blt_web_v3=`-9.85`
+- `w4`: phi_4_blt_web=`0.93`, Ru_4_blt_web=`-10.99`, Ru_4_blt_web_v2=`-1.54`, Ru_4_blt_web_v3=`-10.88`
+- `w5`: phi_5_blt_web=`0.93`, Ru_5_blt_web=`-11.03`, Ru_5_blt_web_v2=`2.72`, Ru_5_blt_web_v3=`-10.69`
+- `w6`: phi_6_blt_web=`0.95`, Ru_6_blt_web=`-11.26`, Ru_6_blt_web_v2=`6.13`, Ru_6_blt_web_v3=`-9.44`
+
+#### 7.4.23 Iteracion 23
+
+- Cinematica por perno:
+- `w1`: dx_icr_1_blt_web=`7.58`, dy_icr_1_blt_web=`-10.07`, r_icr_1_blt_web=`12.61`, delta_1_blt_web=`0.34`
+- `w2`: dx_icr_2_blt_web=`7.58`, dy_icr_2_blt_web=`-7.07`, r_icr_2_blt_web=`10.37`, delta_2_blt_web=`0.28`
+- `w3`: dx_icr_3_blt_web=`7.58`, dy_icr_3_blt_web=`-4.07`, r_icr_3_blt_web=`8.61`, delta_3_blt_web=`0.23`
+- `w4`: dx_icr_4_blt_web=`7.58`, dy_icr_4_blt_web=`-1.07`, r_icr_4_blt_web=`7.66`, delta_4_blt_web=`0.21`
+- `w5`: dx_icr_5_blt_web=`7.58`, dy_icr_5_blt_web=`1.93`, r_icr_5_blt_web=`7.82`, delta_5_blt_web=`0.21`
+- `w6`: dx_icr_6_blt_web=`7.58`, dy_icr_6_blt_web=`4.93`, r_icr_6_blt_web=`9.04`, delta_6_blt_web=`0.24`
+- Fuerzas por perno:
+- `w1`: phi_1_blt_web=`0.98`, Ru_1_blt_web=`-11.62`, Ru_1_blt_web_v2=`-9.28`, Ru_1_blt_web_v3=`-6.99`
+- `w2`: phi_2_blt_web=`0.97`, Ru_2_blt_web=`-11.43`, Ru_2_blt_web_v2=`-7.8`, Ru_2_blt_web_v3=`-8.36`
+- `w3`: phi_3_blt_web=`0.94`, Ru_3_blt_web=`-11.18`, Ru_3_blt_web_v2=`-5.29`, Ru_3_blt_web_v3=`-9.85`
+- `w4`: phi_4_blt_web=`0.93`, Ru_4_blt_web=`-10.99`, Ru_4_blt_web_v2=`-1.54`, Ru_4_blt_web_v3=`-10.88`
+- `w5`: phi_5_blt_web=`0.93`, Ru_5_blt_web=`-11.03`, Ru_5_blt_web_v2=`2.72`, Ru_5_blt_web_v3=`-10.69`
+- `w6`: phi_6_blt_web=`0.95`, Ru_6_blt_web=`-11.26`, Ru_6_blt_web_v2=`6.14`, Ru_6_blt_web_v3=`-9.44`
+
+#### 7.4.24 Iteracion 24
+
+- Cinematica por perno:
+- `w1`: dx_icr_1_blt_web=`7.58`, dy_icr_1_blt_web=`-10.07`, r_icr_1_blt_web=`12.61`, delta_1_blt_web=`0.34`
+- `w2`: dx_icr_2_blt_web=`7.58`, dy_icr_2_blt_web=`-7.07`, r_icr_2_blt_web=`10.37`, delta_2_blt_web=`0.28`
+- `w3`: dx_icr_3_blt_web=`7.58`, dy_icr_3_blt_web=`-4.07`, r_icr_3_blt_web=`8.61`, delta_3_blt_web=`0.23`
+- `w4`: dx_icr_4_blt_web=`7.58`, dy_icr_4_blt_web=`-1.07`, r_icr_4_blt_web=`7.66`, delta_4_blt_web=`0.21`
+- `w5`: dx_icr_5_blt_web=`7.58`, dy_icr_5_blt_web=`1.93`, r_icr_5_blt_web=`7.82`, delta_5_blt_web=`0.21`
+- `w6`: dx_icr_6_blt_web=`7.58`, dy_icr_6_blt_web=`4.93`, r_icr_6_blt_web=`9.04`, delta_6_blt_web=`0.24`
+- Fuerzas por perno:
+- `w1`: phi_1_blt_web=`0.98`, Ru_1_blt_web=`-11.62`, Ru_1_blt_web_v2=`-9.28`, Ru_1_blt_web_v3=`-6.99`
+- `w2`: phi_2_blt_web=`0.97`, Ru_2_blt_web=`-11.43`, Ru_2_blt_web_v2=`-7.8`, Ru_2_blt_web_v3=`-8.36`
+- `w3`: phi_3_blt_web=`0.94`, Ru_3_blt_web=`-11.18`, Ru_3_blt_web_v2=`-5.29`, Ru_3_blt_web_v3=`-9.85`
+- `w4`: phi_4_blt_web=`0.93`, Ru_4_blt_web=`-10.99`, Ru_4_blt_web_v2=`-1.54`, Ru_4_blt_web_v3=`-10.88`
+- `w5`: phi_5_blt_web=`0.93`, Ru_5_blt_web=`-11.03`, Ru_5_blt_web_v2=`2.72`, Ru_5_blt_web_v3=`-10.69`
+- `w6`: phi_6_blt_web=`0.95`, Ru_6_blt_web=`-11.26`, Ru_6_blt_web_v2=`6.14`, Ru_6_blt_web_v3=`-9.44`
+
+#### 7.4.25 Iteracion 25
+
+- Cinematica por perno:
+- `w1`: dx_icr_1_blt_web=`7.58`, dy_icr_1_blt_web=`-10.07`, r_icr_1_blt_web=`12.61`, delta_1_blt_web=`0.34`
+- `w2`: dx_icr_2_blt_web=`7.58`, dy_icr_2_blt_web=`-7.07`, r_icr_2_blt_web=`10.37`, delta_2_blt_web=`0.28`
+- `w3`: dx_icr_3_blt_web=`7.58`, dy_icr_3_blt_web=`-4.07`, r_icr_3_blt_web=`8.61`, delta_3_blt_web=`0.23`
+- `w4`: dx_icr_4_blt_web=`7.58`, dy_icr_4_blt_web=`-1.07`, r_icr_4_blt_web=`7.66`, delta_4_blt_web=`0.21`
+- `w5`: dx_icr_5_blt_web=`7.58`, dy_icr_5_blt_web=`1.93`, r_icr_5_blt_web=`7.82`, delta_5_blt_web=`0.21`
+- `w6`: dx_icr_6_blt_web=`7.58`, dy_icr_6_blt_web=`4.93`, r_icr_6_blt_web=`9.04`, delta_6_blt_web=`0.24`
+- Fuerzas por perno:
+- `w1`: phi_1_blt_web=`0.98`, Ru_1_blt_web=`-11.62`, Ru_1_blt_web_v2=`-9.28`, Ru_1_blt_web_v3=`-6.99`
+- `w2`: phi_2_blt_web=`0.97`, Ru_2_blt_web=`-11.43`, Ru_2_blt_web_v2=`-7.8`, Ru_2_blt_web_v3=`-8.36`
+- `w3`: phi_3_blt_web=`0.94`, Ru_3_blt_web=`-11.18`, Ru_3_blt_web_v2=`-5.29`, Ru_3_blt_web_v3=`-9.85`
+- `w4`: phi_4_blt_web=`0.93`, Ru_4_blt_web=`-10.99`, Ru_4_blt_web_v2=`-1.54`, Ru_4_blt_web_v3=`-10.88`
+- `w5`: phi_5_blt_web=`0.93`, Ru_5_blt_web=`-11.03`, Ru_5_blt_web_v2=`2.72`, Ru_5_blt_web_v3=`-10.69`
+- `w6`: phi_6_blt_web=`0.95`, Ru_6_blt_web=`-11.26`, Ru_6_blt_web_v2=`6.14`, Ru_6_blt_web_v3=`-9.44`
+
+#### 7.4.26 Iteracion 26
+
+- Cinematica por perno:
+- `w1`: dx_icr_1_blt_web=`7.58`, dy_icr_1_blt_web=`-10.07`, r_icr_1_blt_web=`12.61`, delta_1_blt_web=`0.34`
+- `w2`: dx_icr_2_blt_web=`7.58`, dy_icr_2_blt_web=`-7.07`, r_icr_2_blt_web=`10.37`, delta_2_blt_web=`0.28`
+- `w3`: dx_icr_3_blt_web=`7.58`, dy_icr_3_blt_web=`-4.07`, r_icr_3_blt_web=`8.61`, delta_3_blt_web=`0.23`
+- `w4`: dx_icr_4_blt_web=`7.58`, dy_icr_4_blt_web=`-1.07`, r_icr_4_blt_web=`7.66`, delta_4_blt_web=`0.21`
+- `w5`: dx_icr_5_blt_web=`7.58`, dy_icr_5_blt_web=`1.93`, r_icr_5_blt_web=`7.82`, delta_5_blt_web=`0.21`
+- `w6`: dx_icr_6_blt_web=`7.58`, dy_icr_6_blt_web=`4.93`, r_icr_6_blt_web=`9.04`, delta_6_blt_web=`0.24`
+- Fuerzas por perno:
+- `w1`: phi_1_blt_web=`0.98`, Ru_1_blt_web=`-11.62`, Ru_1_blt_web_v2=`-9.28`, Ru_1_blt_web_v3=`-6.99`
+- `w2`: phi_2_blt_web=`0.97`, Ru_2_blt_web=`-11.43`, Ru_2_blt_web_v2=`-7.8`, Ru_2_blt_web_v3=`-8.36`
+- `w3`: phi_3_blt_web=`0.94`, Ru_3_blt_web=`-11.18`, Ru_3_blt_web_v2=`-5.29`, Ru_3_blt_web_v3=`-9.85`
+- `w4`: phi_4_blt_web=`0.93`, Ru_4_blt_web=`-10.99`, Ru_4_blt_web_v2=`-1.54`, Ru_4_blt_web_v3=`-10.88`
+- `w5`: phi_5_blt_web=`0.93`, Ru_5_blt_web=`-11.03`, Ru_5_blt_web_v2=`2.72`, Ru_5_blt_web_v3=`-10.69`
+- `w6`: phi_6_blt_web=`0.95`, Ru_6_blt_web=`-11.26`, Ru_6_blt_web_v2=`6.14`, Ru_6_blt_web_v3=`-9.44`

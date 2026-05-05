@@ -50,6 +50,26 @@ Fuente canonica: `src/steel_connections/codes/engineering/common`.
 
 - Calcula capacidad a cortante por perno (`Rn`, `phi*Rn`).
 
+`compute_bolt_hole_tearout_strength_j36(material_fu, clear_distance_lc, connected_thickness_t, n_critical_bolts, phi_n, unit_system, deformation_at_service_is_design_consideration)`
+
+- Calcula resistencia por desgarramiento (tearout) en agujero de perno, AISC 360-22 J3:
+  - Con deformacion de servicio como criterio: `Rn1_ind = 1.2*lc*t*Fu` (J3-6c)
+  - Sin deformacion de servicio como criterio: `Rn1_ind = 1.5*lc*t*Fu` (J3-6d)
+  - Resistencia de diseno de grupo: `phi*Rn1 = phi_n*n_critical_bolts*Rn1_ind`
+
+`compute_bolt_hole_bearing_strength_j36(material_fu, bolt_diameter_d, connected_thickness_t, phi_n, unit_system, deformation_at_service_is_design_consideration)`
+
+- Calcula resistencia por aplatamiento (bearing) en agujero de perno, AISC 360-22 J3:
+  - Con deformacion de servicio como criterio: `Rn2 = 2.4*d*t*Fu` (J3-6a)
+  - Sin deformacion de servicio como criterio: `Rn2 = 3.0*d*t*Fu` (J3-6b)
+  - Resistencia de diseno por perno: `phi*Rn2 = phi_n*Rn2`
+
+`compute_element_shear_rupture_strength_j43(material_fu, net_shear_area_anv, phi_n, unit_system)`
+
+- Calcula resistencia a rotura por cortante del elemento (no del perno), AISC 360-22 J4.3(b):
+  - `Rn = 0.60*Fu*Anv`
+  - `phi*Rn = phi_n*Rn`
+
 ## 3) Limites de precalificacion EP (Tabla 6.1)
 
 `compute_limites_precalificacion_conexion_tipo_ep(connection_type, unit_system)`

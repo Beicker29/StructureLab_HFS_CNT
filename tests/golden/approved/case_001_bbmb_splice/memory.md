@@ -526,19 +526,64 @@ Propiedades organizadas por ambito.
 ### 3.1 Metodo ICR/Elastic
 
 - Metodo seleccionado: `icr`
+- Clausula: `Documento: Steel Construction Manual AISC 16th edition 2023 | Seccion: Part 7 DESIGN CONSIDERATIONS FOR BOLTS - Instantaneous Center of Rotation Method`
+- Ecuaciones: `ex_blt_web = gap_sp + 2*Le_blt_web_x1 + (n_blt_web_x - 1)*g_blt_web; Muz_blt_web = Vu2_sp*ex_blt_web - Pu_sp*ey_blt_web`
 - Pu_sp: `66.99 kN`
 - Vu2_sp: `250 kN`
-- Formula ex_blt_web: `ex_blt_web = gap_sp + 2*Le_blt_web_x1 + (n_blt_web_x - 1)*g_blt_web`
 - ex_blt_web: `76.2 mm`
 - ey_blt_web: `0 mm`
-- Fuente excentricidad: `splice_formula_ex_plus_input_ey`
-- Formula Muz_blt_web: `Muz_blt_web = Vu2_sp*ex_blt_web - Pu_sp*ey_blt_web`
 - Muz_blt_web: `19.05 kN-m`
 - Demanda (metodo activo): `258.82 kN`
-- Capacidad (metodo activo): `1617.97 kN`
-- DCR (metodo activo): `0.16`
-- Residual final ICR: `0.01`
-- Iteraciones ICR: `19`
+- Ru_web_vg: `Ru_1_blt_web = 11.62 kip`
+- Ru_web_v2_max_vg: `Ru_1_blt_web_v2 = -9.28 kip`
+- Ru_web_v3_max_vg: `Ru_4_blt_web_v3 = -10.88 kip`
 - Coeficiente Cu (ICR): `4.92`
-- Clausula: `Documento: AISC 360-22 (motor interno ICR/Elastic) | Seccion: Metodo configurable de pernos grupo 1 (ICR / Elastic)`
+
+## Paso 4 - Revisión de resistencia de la viga
+
+### 4.1 Revisión de capacidad a cortante en el alma
+
+#### 4.1.1. ELR #1: Desgarramiento en la perforacion del perno
+
+- Clausula: `Documento: AISC 360-22 | Seccion: J3.11a.(b)`
+- Ecuaciones: `lc_blt_web_y = p_blt_web - dh.1; Rn1_web_v2_vg = C*lc_blt_web_y*tw_vg*Fu_vg; phi*Rn1_web_v2_vg = phi_fragil*Rn1_web_v2_vg; DCR1_web_v2_vg = Ru1_web_v2_vg/phi*Rn1_web_v2_vg`
+- Fu_vg: `450 MPa`
+- tw_vg: `7.62 mm`
+- p_blt_web: `76.2 mm`
+- dh.1: `17.46 mm`
+- lc_blt_web_y: `58.74 mm`
+- C: `1.2`
+- phi_fragil: `0.75`
+- Rn1_web_v2_vg: `241.69 kN`
+- phi*Rn1_web_v2_vg: `181.27 kN`
+- Ru1_web_v2_vg: `41.29 kN`
+- DCR1_web_v2_vg: `0.23`
+- Resultado: 🟢 Cumple
+
+#### 4.1.2. ELR #2: Aplatamiento en la perforacion del perno
+
+- Clausula: `Documento: AISC 360-22 | Seccion: J3.11a.(a)`
+- Ecuaciones: `Rn2_web_v2_vg = C*db_blt_web*tw_vg*Fu_vg; phi*Rn2_web_v2_vg = phi_fragil*Rn2_web_v2_vg; DCR2_web_v2_vg = Ru2_web_v2_vg/phi*Rn2_web_v2_vg`
+- Fu_vg: `450 MPa`
+- tw_vg: `7.62 mm`
+- db_blt_web: `15.88 mm`
+- C: `2.4`
+- phi_fragil: `0.75`
+- Rn2_web_v2_vg: `130.64 kN`
+- phi*Rn2_web_v2_vg: `97.98 kN`
+- Ru2_web_v2_vg = Ru_web_v2_max_vg: `41.29 kN`
+- DCR2_web_v2_vg: `0.42`
+- Resultado: 🟢 Cumple
+
+#### 4.1.3. ELR #3: Rotura por cortante en el perno
+
+- Clausula: `Documento: AISC 360-22 | Seccion: J3.7`
+- Ecuaciones: `Rn3_web_v2_vg = Ab_blt_web*Fnv_blt_web; phi*Rn3_web_v2_vg = phi_fragil*Rn3_web_v2_vg; DCR3_web_v2_vg = Ru3_web_v2_vg/phi*Rn3_web_v2_vg`
+- db_blt_web: `15.88 mm`
+- Fnv_blt_web: `370 MPa`
+- phi_fragil: `0.75`
+- Rn3_web_v2_vg: `73.24 kN`
+- phi*Rn3_web_v2_vg: `54.93 kN`
+- Ru3_web_v2_vg = Ru_web_v2_max_vg: `41.29 kN`
+- DCR3_web_v2_vg: `0.75`
 - Resultado: 🟢 Cumple

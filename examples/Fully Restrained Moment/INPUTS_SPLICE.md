@@ -53,6 +53,7 @@ Fuente oficial de nomenclatura: [`/VARIABLES_SPLICE_NAMING.txt`](/D:/Users/byoma
 - `Le_blt_web_y1`
 - `Le_blt_web_y2`
 - `type_tight_blt_web` (`snug_tight`, `pretensioned`, `slip_critical`)
+- `svc_hole_deformation_design_web` (bool; alias de entrada: `deformation_at_bolt_hole_service_load_is_design`)
 - `n_blt_flange_x`
 - `n_blt_flange_z` (`>= 1`)
 - `p_blt_flange`

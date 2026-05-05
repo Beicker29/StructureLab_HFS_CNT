@@ -1264,6 +1264,134 @@
               }
             },
             {
+              "id": "bbmb_splice.step4.web_tearout_note",
+              "scope": "viga",
+              "description": "Revision de resistencia por desgarramiento de perno critico en alma",
+              "clause": "AISC 360-22 J3-6c/J3-6d",
+              "fu_vg_var": "Fu_vg",
+              "fu_vg": {
+                "value": 450.0,
+                "unit": "MPa"
+              },
+              "tw_vg_var": "tw_vg",
+              "tw_vg": {
+                "value": 7.62,
+                "unit": "mm"
+              },
+              "p_blt_web_var": "p_blt_web",
+              "p_blt_web": {
+                "value": 76.2,
+                "unit": "mm"
+              },
+              "dh_1_var": "dh.1",
+              "dh_1": {
+                "value": 17.4625,
+                "unit": "mm"
+              },
+              "lc_blt_web_y_var": "lc_blt_web_y",
+              "lc_blt_web_y_formula": "lc_blt_web_y = p_blt_web - dh.1",
+              "lc_blt_web_y": {
+                "value": 58.737500000000004,
+                "unit": "mm"
+              },
+              "svc_hole_deformation_design_web_var": "svc_hole_deformation_design_web",
+              "svc_hole_deformation_design_web": true,
+              "rn1_web_v2_vg_var": "Rn1_web_v2_vg",
+              "rn1_web_v2_vg_formula": "Rn1_web_v2_vg = 1.2*lc_blt_web_y*tw_vg*Fu_vg",
+              "rn1_web_v2_vg": {
+                "value": 241.69306499999996,
+                "unit": "kN"
+              },
+              "phi_fragil_var": "phi_fragil",
+              "phi_fragil": 0.75,
+              "phi_rn1_web_v2_vg_var": "phi*Rn1_web_v2_vg",
+              "phi_rn1_web_v2_vg_formula": "phi*Rn1_web_v2_vg = phi_fragil*Rn1_web_v2_vg",
+              "phi_rn1_web_v2_vg": {
+                "value": 181.26979874999998,
+                "unit": "kN"
+              },
+              "ru1_web_v2_vg_var": "Ru1_web_v2_vg",
+              "ru1_web_v2_vg": {
+                "value": 250.0,
+                "unit": "kN"
+              },
+              "dcr1_web_v2_vg_var": "DCR1_web_v2_vg",
+              "dcr1_web_v2_vg": 1.3791596930318766,
+              "result_web_tearout_v2_vg": "FAIL",
+              "coefficient": 1.2,
+              "reference": "AISC 360-22 J3-6c"
+            },
+            {
+              "id": "bbmb_splice.step4.web_bearing_note",
+              "scope": "viga",
+              "description": "Revision de resistencia por aplatamiento en perforacion de perno critico en alma",
+              "clause": "AISC 360-22 J3.11a.(b)",
+              "fu_vg_var": "Fu_vg",
+              "fu_vg": {
+                "value": 450.0,
+                "unit": "MPa"
+              },
+              "tw_vg_var": "tw_vg",
+              "tw_vg": {
+                "value": 7.62,
+                "unit": "mm"
+              },
+              "db_blt_web_var": "db_blt_web",
+              "db_blt_web": {
+                "value": 15.875,
+                "unit": "mm"
+              },
+              "svc_hole_deformation_design_web_var": "svc_hole_deformation_design_web",
+              "svc_hole_deformation_design_web": true,
+              "rn2_web_v2_vg_var": "Rn2_web_v2_vg",
+              "rn2_web_v2_vg_formula": "Rn2_web_v2_vg = 2.4*db_blt_web*tw_vg*Fu_vg",
+              "rn2_web_v2_vg": {
+                "value": 130.6449,
+                "unit": "kN"
+              },
+              "phi_fragil_var": "phi_fragil",
+              "phi_fragil": 0.75,
+              "phi_rn2_web_v2_vg_var": "phi*Rn2_web_v2_vg",
+              "phi_rn2_web_v2_vg_formula": "phi*Rn2_web_v2_vg = phi_fragil*Rn2_web_v2_vg",
+              "phi_rn2_web_v2_vg": {
+                "value": 97.98367499999999,
+                "unit": "kN"
+              },
+              "coefficient": 2.4,
+              "reference": "AISC 360-22 J3-6a"
+            },
+            {
+              "id": "bbmb_splice.step4.web_bolt_shear_rupture_note",
+              "scope": "viga",
+              "description": "Revision de resistencia por rotura a cortante en el perno",
+              "clause": "AISC 360-22 J3.7",
+              "db_blt_web_var": "db_blt_web",
+              "db_blt_web": {
+                "value": 15.875,
+                "unit": "mm"
+              },
+              "fnv_blt_web_var": "Fnv_blt_web",
+              "fnv_blt_web": {
+                "value": 370.0,
+                "unit": "MPa"
+              },
+              "phi_fragil_var": "phi_fragil",
+              "phi_fragil": 0.75,
+              "rn3_web_v2_vg_var": "Rn3_web_v2_vg",
+              "rn3_web_v2_vg_formula": "Rn3_web_v2_vg = Ab_blt_web*Fnv_blt_web",
+              "rn3_web_v2_vg": {
+                "value": 73.23506533831022,
+                "unit": "kN"
+              },
+              "phi_rn3_web_v2_vg_var": "phi*Rn3_web_v2_vg",
+              "phi_rn3_web_v2_vg_formula": "phi*Rn3_web_v2_vg = phi_fragil*Rn3_web_v2_vg",
+              "phi_rn3_web_v2_vg": {
+                "value": 54.926299003732666,
+                "unit": "kN"
+              },
+              "reference": "AISC 360-22 Section J3.7"
+            },
+            {
               "id": "bbmb_splice.step1.geometry_formulas_plt1_note",
               "scope": "platina_1",
               "description": "Formulas geometricas de platina 1",
@@ -1599,10 +1727,10 @@
         "unit": "kN"
       },
       "capacity": {
-        "value": 1617.9737158562302,
+        "value": 1617.943820870446,
         "unit": "kN"
       },
-      "dcr": 0.15996492559686498,
+      "dcr": 0.15996788129230696,
       "status": "PASS",
       "calculation_memory": {
         "inputs": {
@@ -1662,7 +1790,7 @@
               "y": 15.000000000000002
             }
           ],
-          "tolerance_1": 0.01,
+          "tolerance_1": 0.001,
           "max_iterations_1": 1000,
           "rult_1_kip": {
             "value": 74.0,
@@ -1754,27 +1882,27 @@
           "active_mode_data": {
             "method": "icr",
             "converged": true,
-            "icr_x_in": -7.584898074408721,
-            "icr_y_in": 10.072794958032583,
-            "cu": 4.915337311145276,
+            "icr_x_in": -7.580930979548083,
+            "icr_y_in": 10.071891848994406,
+            "cu": 4.915246491413409,
             "demand_kip": 58.18483597730279,
-            "capacity_kip": 363.7349610247504,
-            "dcr": 0.15996492559686498,
-            "final_residual": 0.008007108986649194,
-            "n_iterations": 19,
+            "capacity_kip": 363.7282403645923,
+            "dcr": 0.15996788129230696,
+            "final_residual": 0.0008524966437579737,
+            "n_iterations": 26,
             "solver_note": null
           },
           "icr_active_or_compare": {
             "converged": true,
             "note": null,
-            "icr_x": -7.584898074408721,
-            "icr_y": 10.072794958032583,
-            "cu": 4.915337311145276,
+            "icr_x": -7.580930979548083,
+            "icr_y": 10.071891848994406,
+            "cu": 4.915246491413409,
             "demand": 58.18483597730279,
-            "capacity": 363.7349610247504,
-            "dcr": 0.15996492559686498,
-            "final_residual": 0.008007108986649194,
-            "n_iterations": 19,
+            "capacity": 363.7282403645923,
+            "dcr": 0.15996788129230696,
+            "final_residual": 0.0008524966437579737,
+            "n_iterations": 26,
             "iterations": [
               {
                 "iteration": 1,
@@ -1963,6 +2091,76 @@
                 "residual_fx": -0.0017773742166991013,
                 "residual_fy": -0.007807351357399739,
                 "residual_norm": 0.008007108986649194,
+                "step_dx": -0.0012155090173071631,
+                "step_dy": -0.0002767154043194677
+              },
+              {
+                "iteration": 20,
+                "icr_x": -7.583682565391413,
+                "icr_y": 10.072518242628263,
+                "residual_fx": -0.0012909938782197372,
+                "residual_fy": -0.005670936594739828,
+                "residual_norm": 0.005816028460655966,
+                "step_dx": -0.0008828953958822722,
+                "step_dy": -0.0002009919405993107
+              },
+              {
+                "iteration": 21,
+                "icr_x": -7.582799669995531,
+                "icr_y": 10.072317250687664,
+                "residual_fx": -0.0009375826859567837,
+                "residual_fy": -0.004118550230558071,
+                "residual_norm": 0.004223922027527956,
+                "step_dx": -0.0006412078455686589,
+                "step_dy": -0.00014597014494184378
+              },
+              {
+                "iteration": 22,
+                "icr_x": -7.582158462149962,
+                "icr_y": 10.072171280542722,
+                "residual_fx": -0.000680849995355004,
+                "residual_fy": -0.0029908130049420834,
+                "residual_norm": 0.0030673309483499824,
+                "step_dx": -0.0004656329669524957,
+                "step_dy": -0.00010600000831308496
+              },
+              {
+                "iteration": 23,
+                "icr_x": -7.581692829183009,
+                "icr_y": 10.072065280534408,
+                "residual_fx": -0.0004943808852608811,
+                "residual_fy": -0.002171709314083614,
+                "residual_norm": 0.002227270483032731,
+                "step_dx": -0.0003381085509539252,
+                "step_dy": -0.00007696905089961758
+              },
+              {
+                "iteration": 24,
+                "icr_x": -7.581354720632055,
+                "icr_y": 10.071988311483508,
+                "residual_fx": -0.0003589623749800097,
+                "residual_fy": -0.0015768506121176529,
+                "residual_norm": 0.0016171925796228184,
+                "step_dx": -0.00024549633419004743,
+                "step_dy": -0.00005588604684079638
+              },
+              {
+                "iteration": 25,
+                "icr_x": -7.581109224297864,
+                "icr_y": 10.071932425436668,
+                "residual_fx": -0.0002606270599905258,
+                "residual_fy": -0.0011448861088965145,
+                "residual_norm": 0.0011741765909536379,
+                "step_dx": -0.0001782447497811738,
+                "step_dy": -0.000040576442262007845
+              },
+              {
+                "iteration": 26,
+                "icr_x": -7.580930979548083,
+                "icr_y": 10.071891848994406,
+                "residual_fx": -0.00018922476064275884,
+                "residual_fy": -0.0008312307246356454,
+                "residual_norm": 0.0008524966437579737,
                 "step_dx": 0.0,
                 "step_dy": 0.0
               }
@@ -1999,15 +2197,15 @@
               "unit": "kN"
             },
             "capacity": {
-              "value": 1617.9737158562302,
+              "value": 1617.943820870446,
               "unit": "kN"
             },
-            "dcr": 0.15996492559686498,
+            "dcr": 0.15996788129230696,
             "status": "PASS",
-            "cu": 4.915337311145276,
+            "cu": 4.915246491413409,
             "icr_compare_capacity": null,
-            "final_residual": 0.008007108986649194,
-            "n_iterations": 19,
+            "final_residual": 0.0008524966437579737,
+            "n_iterations": 26,
             "methods_summary": [
               {
                 "method": "elastic_superposition",
@@ -2140,58 +2338,58 @@
                 "converged": true,
                 "acceptance_ok": true,
                 "demand_kip": 58.18483597730279,
-                "capacity_kip": 363.7349610247504,
-                "dcr": 0.15996492559686498,
-                "icr_x_in": -7.584898074408721,
-                "icr_y_in": 10.072794958032583,
-                "cu": 4.915337311145276,
-                "final_residual": 0.008007108986649194,
-                "n_iterations": 19,
+                "capacity_kip": 363.7282403645923,
+                "dcr": 0.15996788129230696,
+                "icr_x_in": -7.580930979548083,
+                "icr_y_in": 10.071891848994406,
+                "cu": 4.915246491413409,
+                "final_residual": 0.0008524966437579737,
+                "n_iterations": 26,
                 "law_mu": 10.0,
                 "law_lambda": 0.55,
                 "law_delta_max": 0.34,
                 "bolt_forces": [
                   {
                     "tag": "w1",
-                    "fx_kip": -9.281354344676444,
-                    "fy_kip": -6.988936734059315,
-                    "resultant_kip": 11.618466987693687,
-                    "moment_about_cg_kip_in": -69.61015758507334
+                    "fx_kip": -9.282981454160948,
+                    "fy_kip": -6.98713238222919,
+                    "resultant_kip": 11.618681663815902,
+                    "moment_about_cg_kip_in": -69.62236090620712
                   },
                   {
                     "tag": "w2",
-                    "fx_kip": -7.798146824346004,
-                    "fy_kip": -8.362768775696496,
-                    "resultant_kip": 11.434465247217377,
-                    "moment_about_cg_kip_in": -35.09166070955702
+                    "fx_kip": -7.799868086252189,
+                    "fy_kip": -8.361307394691806,
+                    "resultant_kip": 11.434570543376925,
+                    "moment_about_cg_kip_in": -35.09940638813485
                   },
                   {
                     "tag": "w3",
-                    "fx_kip": -5.290714779994,
-                    "fy_kip": -9.853069639039074,
-                    "resultant_kip": 11.183677579177635,
-                    "moment_about_cg_kip_in": -7.936072169991
+                    "fx_kip": -5.291896508053508,
+                    "fy_kip": -9.852300519320664,
+                    "resultant_kip": 11.183559101420046,
+                    "moment_about_cg_kip_in": -7.937844762080262
                   },
                   {
                     "tag": "w4",
-                    "fx_kip": -1.5386862225904834,
-                    "fy_kip": -10.878852551888428,
-                    "resultant_kip": 10.987128293476832,
-                    "moment_about_cg_kip_in": 2.3080293338857265
+                    "fx_kip": -1.538161695216566,
+                    "fy_kip": -10.87861397375206,
+                    "resultant_kip": 10.986818620080387,
+                    "moment_about_cg_kip_in": 2.3072425428248504
                   },
                   {
                     "tag": "w5",
-                    "fx_kip": 2.7151010288132484,
-                    "fy_kip": -10.685819161331823,
-                    "resultant_kip": 11.025357352274307,
-                    "moment_about_cg_kip_in": -12.217954629659621
+                    "fx_kip": 2.717587255154897,
+                    "fy_kip": -10.685003017846281,
+                    "resultant_kip": 11.025178909240632,
+                    "moment_about_cg_kip_in": -12.22914264819704
                   },
                   {
                     "tag": "w6",
-                    "fx_kip": 6.132680104091639,
-                    "fy_kip": -9.440596264269884,
-                    "resultant_kip": 11.257647315672486,
-                    "moment_about_cg_kip_in": -45.995100780687295
+                    "fx_kip": 6.13578759928232,
+                    "fy_kip": -9.438709717812255,
+                    "resultant_kip": 11.257758684597489,
+                    "moment_about_cg_kip_in": -46.01840699461741
                   }
                 ],
                 "note": null
@@ -2385,6 +2583,76 @@
                 "residual_fx": -0.0017773742166991013,
                 "residual_fy": -0.007807351357399739,
                 "residual_norm": 0.008007108986649194,
+                "step_dx": -0.0012155090173071631,
+                "step_dy": -0.0002767154043194677
+              },
+              {
+                "iteration": 20,
+                "icr_x": -7.583682565391413,
+                "icr_y": 10.072518242628263,
+                "residual_fx": -0.0012909938782197372,
+                "residual_fy": -0.005670936594739828,
+                "residual_norm": 0.005816028460655966,
+                "step_dx": -0.0008828953958822722,
+                "step_dy": -0.0002009919405993107
+              },
+              {
+                "iteration": 21,
+                "icr_x": -7.582799669995531,
+                "icr_y": 10.072317250687664,
+                "residual_fx": -0.0009375826859567837,
+                "residual_fy": -0.004118550230558071,
+                "residual_norm": 0.004223922027527956,
+                "step_dx": -0.0006412078455686589,
+                "step_dy": -0.00014597014494184378
+              },
+              {
+                "iteration": 22,
+                "icr_x": -7.582158462149962,
+                "icr_y": 10.072171280542722,
+                "residual_fx": -0.000680849995355004,
+                "residual_fy": -0.0029908130049420834,
+                "residual_norm": 0.0030673309483499824,
+                "step_dx": -0.0004656329669524957,
+                "step_dy": -0.00010600000831308496
+              },
+              {
+                "iteration": 23,
+                "icr_x": -7.581692829183009,
+                "icr_y": 10.072065280534408,
+                "residual_fx": -0.0004943808852608811,
+                "residual_fy": -0.002171709314083614,
+                "residual_norm": 0.002227270483032731,
+                "step_dx": -0.0003381085509539252,
+                "step_dy": -0.00007696905089961758
+              },
+              {
+                "iteration": 24,
+                "icr_x": -7.581354720632055,
+                "icr_y": 10.071988311483508,
+                "residual_fx": -0.0003589623749800097,
+                "residual_fy": -0.0015768506121176529,
+                "residual_norm": 0.0016171925796228184,
+                "step_dx": -0.00024549633419004743,
+                "step_dy": -0.00005588604684079638
+              },
+              {
+                "iteration": 25,
+                "icr_x": -7.581109224297864,
+                "icr_y": 10.071932425436668,
+                "residual_fx": -0.0002606270599905258,
+                "residual_fy": -0.0011448861088965145,
+                "residual_norm": 0.0011741765909536379,
+                "step_dx": -0.0001782447497811738,
+                "step_dy": -0.000040576442262007845
+              },
+              {
+                "iteration": 26,
+                "icr_x": -7.580930979548083,
+                "icr_y": 10.071891848994406,
+                "residual_fx": -0.00018922476064275884,
+                "residual_fy": -0.0008312307246356454,
+                "residual_norm": 0.0008524966437579737,
                 "step_dx": 0.0,
                 "step_dy": 0.0
               }
@@ -2407,7 +2675,7 @@
           "Muz_blt_web": "kN-mm"
         },
         "final_capacity": {
-          "value": 1617.9737158562302,
+          "value": 1617.943820870446,
           "unit": "kN"
         }
       },
@@ -2420,6 +2688,6 @@
     "fail_count": 1,
     "error_count": 0,
     "not_implemented_count": 0,
-    "worst_dcr": 0.15996492559686498
+    "worst_dcr": 0.15996788129230696
   }
 }

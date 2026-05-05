@@ -1033,6 +1033,7 @@ class BeamBeamMomentBoltedGeometry(StrictModel):
     Le_blt_web_y1: Quantity
     Le_blt_web_y2: Quantity
     type_tight_blt_web: str | None = None
+    svc_hole_deformation_design_web: bool = False
     n_blt_flange_x: int
     n_blt_flange_z: int
     p_blt_flange: Quantity
@@ -1105,6 +1106,23 @@ class BeamBeamMomentBoltedGeometry(StrictModel):
         if normalized in {"snug_tight", "snugtight", "apriete_justo"}:
             return "snug_tight"
         raise ValueError("Bolt tightening type must be 'pretensioned', 'snug_tight', or 'slip_critical'.")
+
+    @field_validator("svc_hole_deformation_design_web", mode="before")
+    @classmethod
+    def normalize_service_hole_deformation_design_flag(cls, value: object) -> bool:
+        if isinstance(value, bool):
+            return value
+        if isinstance(value, str):
+            normalized = value.strip().lower()
+            if normalized in {"true", "1", "yes", "si", "s", "y"}:
+                return True
+            if normalized in {"false", "0", "no", "n"}:
+                return False
+        if value is None:
+            return False
+        raise ValueError(
+            "svc_hole_deformation_design_web must be boolean (or true/false text)."
+        )
 
     @field_validator("type_hole_plt_web", "type_hole_plt_flange")
     @classmethod

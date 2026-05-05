@@ -392,3 +392,123 @@ def compute_bolt_shear_rupture_capacity_per_bolt(
         "pn_base_force": rnv_b_base,
         "phi": phi,
     }
+
+
+def compute_bolt_hole_tearout_strength_j36(
+    *,
+    material_fu: Quantity,
+    clear_distance_lc: Quantity,
+    connected_thickness_t: Quantity,
+    n_critical_bolts: int,
+    phi_n: float,
+    unit_system: UnitSystem,
+    deformation_at_service_is_design_consideration: bool,
+) -> tuple[Quantity, dict[str, Quantity | float | str | bool | int]]:
+    """Compute bolt-hole tearout strength per AISC 360-22 J3.
+
+    Per-bolt nominal:
+    - J3-6c: ``Rn1_ind = 1.2 * lc * t * Fu`` when service-load deformation is a design consideration.
+    - J3-6d: ``Rn1_ind = 1.5 * lc * t * Fu`` otherwise.
+
+    Group design strength:
+    ``phi*Rn1 = phi_n * n_critical_bolts * Rn1_ind``
+    """
+
+    validate_quantity_unit(material_fu, "stress", unit_system, "material_fu")
+    validate_quantity_unit(clear_distance_lc, "length", unit_system, "clear_distance_lc")
+    validate_quantity_unit(connected_thickness_t, "length", unit_system, "connected_thickness_t")
+
+    if clear_distance_lc.unit != connected_thickness_t.unit:
+        raise ValueError("clear_distance_lc and connected_thickness_t must use the same length unit.")
+    if n_critical_bolts <= 0:
+        raise ValueError("n_critical_bolts must be >= 1.")
+
+    coefficient = 1.2 if deformation_at_service_is_design_consideration else 1.5
+    reference = (
+        "AISC 360-22 J3-6c"
+        if deformation_at_service_is_design_consideration
+        else "AISC 360-22 J3-6d"
+    )
+
+    rn1_ind_base = coefficient * clear_distance_lc.value * connected_thickness_t.value * material_fu.value
+    rn1_total_base = float(n_critical_bolts) * rn1_ind_base
+    phi_rn1_total_base = phi_n * rn1_total_base
+
+    if unit_system == UnitSystem.US:
+        force_unit = "kip"
+        rn1_ind = Quantity(value=rn1_ind_base, unit=force_unit)
+        rn1_total = Quantity(value=rn1_total_base, unit=force_unit)
+        phi_rn1_total = Quantity(value=phi_rn1_total_base, unit=force_unit)
+    else:
+        # SI: MPa * mm^2 = N
+        force_unit = "kN"
+        rn1_ind = Quantity(value=rn1_ind_base / 1000.0, unit=force_unit)
+        rn1_total = Quantity(value=rn1_total_base / 1000.0, unit=force_unit)
+        phi_rn1_total = Quantity(value=phi_rn1_total_base / 1000.0, unit=force_unit)
+
+    return phi_rn1_total, {
+        "coefficient": coefficient,
+        "reference": reference,
+        "deformation_at_service_is_design_consideration": deformation_at_service_is_design_consideration,
+        "n_critical_bolts": n_critical_bolts,
+        "rn1_ind": rn1_ind,
+        "rn1_total": rn1_total,
+        "phi_n": phi_n,
+        "equation_individual": "Rn1_ind = C*lc*t*Fu",
+        "equation_group_design": "phi*Rn1 = phi_n*n_critical_bolts*Rn1_ind",
+    }
+
+
+def compute_bolt_hole_bearing_strength_j36(
+    *,
+    material_fu: Quantity,
+    bolt_diameter_d: Quantity,
+    connected_thickness_t: Quantity,
+    phi_n: float,
+    unit_system: UnitSystem,
+    deformation_at_service_is_design_consideration: bool,
+) -> tuple[Quantity, dict[str, Quantity | float | str | bool]]:
+    """Compute per-bolt hole-bearing strength per AISC 360-22 J3.
+
+    Per-bolt nominal:
+    - J3-6a: ``Rn2 = 2.4*d*t*Fu`` when service-load deformation is a design consideration.
+    - J3-6b: ``Rn2 = 3.0*d*t*Fu`` otherwise.
+
+    Per-bolt design:
+    ``phi*Rn2 = phi_n*Rn2``
+    """
+
+    validate_quantity_unit(material_fu, "stress", unit_system, "material_fu")
+    validate_quantity_unit(bolt_diameter_d, "length", unit_system, "bolt_diameter_d")
+    validate_quantity_unit(connected_thickness_t, "length", unit_system, "connected_thickness_t")
+    if bolt_diameter_d.unit != connected_thickness_t.unit:
+        raise ValueError("bolt_diameter_d and connected_thickness_t must use the same length unit.")
+
+    coefficient = 2.4 if deformation_at_service_is_design_consideration else 3.0
+    reference = (
+        "AISC 360-22 J3-6a"
+        if deformation_at_service_is_design_consideration
+        else "AISC 360-22 J3-6b"
+    )
+
+    rn2_base = coefficient * bolt_diameter_d.value * connected_thickness_t.value * material_fu.value
+    phi_rn2_base = phi_n * rn2_base
+    if unit_system == UnitSystem.US:
+        force_unit = "kip"
+        rn2 = Quantity(value=rn2_base, unit=force_unit)
+        phi_rn2 = Quantity(value=phi_rn2_base, unit=force_unit)
+    else:
+        # SI: MPa * mm^2 = N
+        force_unit = "kN"
+        rn2 = Quantity(value=rn2_base / 1000.0, unit=force_unit)
+        phi_rn2 = Quantity(value=phi_rn2_base / 1000.0, unit=force_unit)
+
+    return phi_rn2, {
+        "coefficient": coefficient,
+        "reference": reference,
+        "deformation_at_service_is_design_consideration": deformation_at_service_is_design_consideration,
+        "rn2": rn2,
+        "phi_n": phi_n,
+        "equation_individual": "Rn2 = C*d*t*Fu",
+        "equation_design": "phi*Rn2 = phi_n*Rn2",
+    }

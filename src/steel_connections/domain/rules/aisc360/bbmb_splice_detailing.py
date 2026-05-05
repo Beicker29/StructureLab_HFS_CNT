@@ -1,10 +1,14 @@
 from __future__ import annotations
 
 from steel_connections.codes.engineering.common import (
+    compute_bolt_hole_bearing_strength_j36,
+    compute_bolt_hole_tearout_strength_j36,
     compute_max_spacing_and_edge_distance_limits_j36,
     compute_maximum_bolt_spacing_j36,
     compute_minimum_bolt_spacing_j33,
     compute_minimum_edge_distance_standard_hole_j34,
+    compute_bolt_shear_rupture_capacity_per_bolt,
+    compute_element_shear_rupture_strength_j43,
     compute_standard_hole_diameter_j33,
 )
 from steel_connections.data.materials_repository import (
@@ -302,6 +306,81 @@ def run_step1_viga_detailing(case: BeamBeamMomentBoltedCase, rule_binding: objec
     else:
         u1 = 1.0 - 0.5 * tw_catalog.value / ((case.geometry.n_blt_web_x - 1) * s1x.value)
         u1_formula = "si n_blt_web_x > 1 -> U1 = 1 - 0.5*tw_vg/((n_blt_web_x-1)*g_blt_web)"
+
+    if fu_vg is None:
+        raise ValueError("Unable to resolve Fu_vg for splice web bolt-hole tearout calculation.")
+    if s1y.unit != dh_web.unit:
+        raise ValueError("Incompatible units in lc_blt_web_y = p_blt_web - dh.1.")
+    lc_blt_web_y = Quantity(value=s1y.value - dh_web.value, unit=s1y.unit)
+    svc_hole_deformation_design_web = bool(case.geometry.svc_hole_deformation_design_web)
+    phi_fragil_web = 0.75
+    phi_rn1_web_v2_vg, tearout_web_inter = compute_bolt_hole_tearout_strength_j36(
+        material_fu=fu_vg,
+        clear_distance_lc=lc_blt_web_y,
+        connected_thickness_t=tw_catalog,
+        n_critical_bolts=1,
+        phi_n=phi_fragil_web,
+        unit_system=case.units_system,
+        deformation_at_service_is_design_consideration=svc_hole_deformation_design_web,
+    )
+    rn1_web_ind_v2_vg = tearout_web_inter.get("rn1_ind")
+    ru_web_v2_vg = case.loads.Vu2_sp
+    tearout_web_dcr: float | None = None
+    tearout_web_passed = False
+    if (
+        isinstance(ru_web_v2_vg, Quantity)
+        and isinstance(phi_rn1_web_v2_vg, Quantity)
+        and ru_web_v2_vg.unit == phi_rn1_web_v2_vg.unit
+        and phi_rn1_web_v2_vg.value > 0.0
+    ):
+        tearout_web_dcr = ru_web_v2_vg.value / phi_rn1_web_v2_vg.value
+        tearout_web_passed = tearout_web_dcr <= 1.0
+
+    # Hole bearing (aplatamiento) per J3-6a/J3-6b at one critical bolt.
+    phi_rn2_web_v2_vg, bearing_web_inter = compute_bolt_hole_bearing_strength_j36(
+        material_fu=fu_vg,
+        bolt_diameter_d=db_web,
+        connected_thickness_t=tw_catalog,
+        phi_n=phi_fragil_web,
+        unit_system=case.units_system,
+        deformation_at_service_is_design_consideration=svc_hole_deformation_design_web,
+    )
+    rn2_web_v2_vg = bearing_web_inter.get("rn2")
+    # Bolt shear rupture per bolt (AISC 360-22 J3.7) with project-requested fragile phi.
+    bolt_shear_web = compute_bolt_shear_rupture_capacity_per_bolt(
+        bolt_diameter=db_web,
+        bolt_fnv=fnv_web if isinstance(fnv_web, Quantity) else Quantity(value=0.0, unit="MPa" if case.units_system == UnitSystem.SI else "ksi"),
+        phi=phi_fragil_web,
+        unit_system=case.units_system,
+    ) if isinstance(fnv_web, Quantity) else None
+    # Beam shear rupture (AISC 360-22 J4.3) with net shear area at web.
+    av_web_v2_vg = Quantity(
+        value=dvg_catalog.value * tw_catalog.value,
+        unit="in2" if case.units_system == UnitSystem.US else "mm2",
+    )
+    hole_add_web = 1.8 if case.units_system == UnitSystem.SI else (1.8 / 25.4)
+    anv_web_v2_vg = Quantity(
+        value=av_web_v2_vg.value - case.geometry.n_blt_web_y * (dh_web.value + hole_add_web) * tw_catalog.value,
+        unit=av_web_v2_vg.unit,
+    )
+    phi_rn4_web_v2_vg, shear_rupture_web_inter = compute_element_shear_rupture_strength_j43(
+        material_fu=fu_vg,
+        net_shear_area_anv=anv_web_v2_vg,
+        phi_n=phi_fragil_web,
+        unit_system=case.units_system,
+    )
+    rn4_web_v2_vg = shear_rupture_web_inter.get("rn")
+    ru4_web_v2_vg = case.loads.Vu2_sp
+    dcr4_web_v2_vg: float | None = None
+    result4_web_v2_vg = "FAIL"
+    if (
+        isinstance(ru4_web_v2_vg, Quantity)
+        and isinstance(phi_rn4_web_v2_vg, Quantity)
+        and ru4_web_v2_vg.unit == phi_rn4_web_v2_vg.unit
+        and abs(phi_rn4_web_v2_vg.value) > 1e-12
+    ):
+        dcr4_web_v2_vg = abs(ru4_web_v2_vg.value) / phi_rn4_web_v2_vg.value
+        result4_web_v2_vg = "PASS" if dcr4_web_v2_vg <= 1.0 else "FAIL"
 
     # J3.6 max spacing / edge distance (DRY common functions)
     t_web = Quantity(
@@ -1022,7 +1101,8 @@ def run_step1_viga_detailing(case: BeamBeamMomentBoltedCase, rule_binding: objec
             )
         )
 
-    status = CheckStatus.PASS if all(row["result"] == "PASS" for row in rows) else CheckStatus.FAIL
+    passing_results = {"PASS", "NOT_APPLICABLE"}
+    status = CheckStatus.PASS if all(row["result"] in passing_results for row in rows) else CheckStatus.FAIL
 
     tlvg = case.geometry.tol_L_vg
     le1_x1_prime = Quantity(value=le1_x1.value - tlvg.value, unit=le1_x1.unit) if le1_x1.unit == tlvg.unit else None
@@ -1149,6 +1229,135 @@ def run_step1_viga_detailing(case: BeamBeamMomentBoltedCase, rule_binding: objec
                     "us1": u1,
                     "dh_1": dh_web.model_dump(),
                     "dh_2": dh_flange.model_dump(),
+                },
+                {
+                    "id": "bbmb_splice.step4.web_tearout_note",
+                    "scope": "viga",
+                    "description": "Revision de resistencia por desgarramiento de perno critico en alma",
+                    "clause": "AISC 360-22 J3-6c/J3-6d",
+                    "fu_vg_var": "Fu_vg",
+                    "fu_vg": fu_vg.model_dump(),
+                    "tw_vg_var": "tw_vg",
+                    "tw_vg": tw_catalog.model_dump(),
+                    "p_blt_web_var": "p_blt_web",
+                    "p_blt_web": s1y.model_dump(),
+                    "dh_1_var": "dh.1",
+                    "dh_1": dh_web.model_dump(),
+                    "lc_blt_web_y_var": "lc_blt_web_y",
+                    "lc_blt_web_y_formula": "lc_blt_web_y = p_blt_web - dh.1",
+                    "lc_blt_web_y": lc_blt_web_y.model_dump(),
+                    "svc_hole_deformation_design_web_var": "svc_hole_deformation_design_web",
+                    "svc_hole_deformation_design_web": svc_hole_deformation_design_web,
+                    "rn1_web_v2_vg_var": "Rn1_web_v2_vg",
+                    "rn1_web_v2_vg_formula": (
+                        "Rn1_web_v2_vg = 1.2*lc_blt_web_y*tw_vg*Fu_vg"
+                        if svc_hole_deformation_design_web
+                        else "Rn1_web_v2_vg = 1.5*lc_blt_web_y*tw_vg*Fu_vg"
+                    ),
+                    "rn1_web_v2_vg": (
+                        rn1_web_ind_v2_vg.model_dump() if isinstance(rn1_web_ind_v2_vg, Quantity) else None
+                    ),
+                    "phi_fragil_var": "phi_fragil",
+                    "phi_fragil": phi_fragil_web,
+                    "phi_rn1_web_v2_vg_var": "phi*Rn1_web_v2_vg",
+                    "phi_rn1_web_v2_vg_formula": "phi*Rn1_web_v2_vg = phi_fragil*Rn1_web_v2_vg",
+                    "phi_rn1_web_v2_vg": phi_rn1_web_v2_vg.model_dump(),
+                    "ru1_web_v2_vg_var": "Ru1_web_v2_vg",
+                    "ru1_web_v2_vg": ru_web_v2_vg.model_dump(),
+                    "dcr1_web_v2_vg_var": "DCR1_web_v2_vg",
+                    "dcr1_web_v2_vg": tearout_web_dcr,
+                    "result_web_tearout_v2_vg": "PASS" if tearout_web_passed else "FAIL",
+                    "coefficient": tearout_web_inter.get("coefficient"),
+                    "reference": tearout_web_inter.get("reference"),
+                },
+                {
+                    "id": "bbmb_splice.step4.web_bearing_note",
+                    "scope": "viga",
+                    "description": "Revision de resistencia por aplatamiento en perforacion de perno critico en alma",
+                    "clause": "AISC 360-22 J3.11a.(b)",
+                    "fu_vg_var": "Fu_vg",
+                    "fu_vg": fu_vg.model_dump(),
+                    "tw_vg_var": "tw_vg",
+                    "tw_vg": tw_catalog.model_dump(),
+                    "db_blt_web_var": "db_blt_web",
+                    "db_blt_web": db_web.model_dump(),
+                    "svc_hole_deformation_design_web_var": "svc_hole_deformation_design_web",
+                    "svc_hole_deformation_design_web": svc_hole_deformation_design_web,
+                    "rn2_web_v2_vg_var": "Rn2_web_v2_vg",
+                    "rn2_web_v2_vg_formula": (
+                        "Rn2_web_v2_vg = 2.4*db_blt_web*tw_vg*Fu_vg"
+                        if svc_hole_deformation_design_web
+                        else "Rn2_web_v2_vg = 3.0*db_blt_web*tw_vg*Fu_vg"
+                    ),
+                    "rn2_web_v2_vg": rn2_web_v2_vg.model_dump() if isinstance(rn2_web_v2_vg, Quantity) else None,
+                    "phi_fragil_var": "phi_fragil",
+                    "phi_fragil": phi_fragil_web,
+                    "phi_rn2_web_v2_vg_var": "phi*Rn2_web_v2_vg",
+                    "phi_rn2_web_v2_vg_formula": "phi*Rn2_web_v2_vg = phi_fragil*Rn2_web_v2_vg",
+                    "phi_rn2_web_v2_vg": phi_rn2_web_v2_vg.model_dump(),
+                    "coefficient": bearing_web_inter.get("coefficient"),
+                    "reference": bearing_web_inter.get("reference"),
+                },
+                {
+                    "id": "bbmb_splice.step4.web_bolt_shear_rupture_note",
+                    "scope": "viga",
+                    "description": "Revision de resistencia por rotura a cortante en el perno",
+                    "clause": "AISC 360-22 J3.7",
+                    "db_blt_web_var": "db_blt_web",
+                    "db_blt_web": db_web.model_dump(),
+                    "fnv_blt_web_var": "Fnv_blt_web",
+                    "fnv_blt_web": fnv_web.model_dump() if isinstance(fnv_web, Quantity) else None,
+                    "phi_fragil_var": "phi_fragil",
+                    "phi_fragil": phi_fragil_web,
+                    "rn3_web_v2_vg_var": "Rn3_web_v2_vg",
+                    "rn3_web_v2_vg_formula": "Rn3_web_v2_vg = Ab_blt_web*Fnv_blt_web",
+                    "rn3_web_v2_vg": (
+                        bolt_shear_web.get("rnv_b").model_dump()
+                        if isinstance(bolt_shear_web, dict) and isinstance(bolt_shear_web.get("rnv_b"), Quantity)
+                        else None
+                    ),
+                    "phi_rn3_web_v2_vg_var": "phi*Rn3_web_v2_vg",
+                    "phi_rn3_web_v2_vg_formula": "phi*Rn3_web_v2_vg = phi_fragil*Rn3_web_v2_vg",
+                    "phi_rn3_web_v2_vg": (
+                        bolt_shear_web.get("phi_rnv_b").model_dump()
+                        if isinstance(bolt_shear_web, dict) and isinstance(bolt_shear_web.get("phi_rnv_b"), Quantity)
+                        else None
+                    ),
+                    "reference": (bolt_shear_web.get("reference") if isinstance(bolt_shear_web, dict) else "AISC 360-22 Section J3.7"),
+                },
+                {
+                    "id": "bbmb_splice.step4.web_shear_rupture_note",
+                    "scope": "viga",
+                    "description": "Revision de resistencia por rotura a cortante del alma de la viga",
+                    "clause": "AISC 360-22 J4.3",
+                    "fu_vg_var": "Fu_vg",
+                    "fu_vg": fu_vg.model_dump(),
+                    "tw_vg_var": "tw_vg",
+                    "tw_vg": tw_catalog.model_dump(),
+                    "a_vg_var": "A_vg",
+                    "a_vg_formula": "A_vg = d_vg*tw_vg",
+                    "a_vg": av_web_v2_vg.model_dump(),
+                    "n_blt_web_y_var": "n_blt_web_y",
+                    "n_blt_web_y": case.geometry.n_blt_web_y,
+                    "dh_1_var": "dh.1",
+                    "dh_1": dh_web.model_dump(),
+                    "anv_web_v2_vg_var": "Anv_web_v2_vg",
+                    "anv_web_v2_vg_formula": "Anv_web_v2_vg = A_vg - n_blt_web_y*(dh.1+1.8mm)*tw_vg",
+                    "anv_web_v2_vg": anv_web_v2_vg.model_dump(),
+                    "phi_fragil_var": "phi_fragil",
+                    "phi_fragil": phi_fragil_web,
+                    "rn4_web_v2_vg_var": "Rn4_web_v2_vg",
+                    "rn4_web_v2_vg_formula": "Rn4_web_v2_vg = 0.60*Fu_vg*Anv_web_v2_vg",
+                    "rn4_web_v2_vg": rn4_web_v2_vg.model_dump() if isinstance(rn4_web_v2_vg, Quantity) else None,
+                    "phi_rn4_web_v2_vg_var": "phi*Rn4_web_v2_vg",
+                    "phi_rn4_web_v2_vg_formula": "phi*Rn4_web_v2_vg = phi_fragil*Rn4_web_v2_vg",
+                    "phi_rn4_web_v2_vg": phi_rn4_web_v2_vg.model_dump(),
+                    "ru4_web_v2_vg_var": "Ru4_web_v2_vg",
+                    "ru4_web_v2_vg": ru4_web_v2_vg.model_dump() if isinstance(ru4_web_v2_vg, Quantity) else None,
+                    "dcr4_web_v2_vg_var": "DCR4_web_v2_vg",
+                    "dcr4_web_v2_vg": dcr4_web_v2_vg,
+                    "result4_web_v2_vg": result4_web_v2_vg,
+                    "reference": shear_rupture_web_inter.get("reference"),
                 },
                 {
                     "id": "bbmb_splice.step1.geometry_formulas_plt1_note",
