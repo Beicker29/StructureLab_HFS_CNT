@@ -2,6 +2,22 @@
 
 Motor de diseno de conexiones de acero estructural hot-rolled, deterministico, auditable y fail-hard.
 
+## Estado de migracion
+
+Las fases 0 a 6 de estabilizacion y migracion arquitectonica estan completas.
+El cierre esta documentado en:
+
+- `docs/migration_closure.md`
+- `docs/architecture_current.md`
+- `docs/golden_comparison.md`
+
+Estado de validacion final:
+
+```text
+178 passed
+golden approved sin diferencias
+```
+
 ## Filosofia tecnica
 
 - Sin defaults ocultos ni supuestos silenciosos.
@@ -45,16 +61,32 @@ Motor de diseno de conexiones de acero estructural hot-rolled, deterministico, a
 
 ```text
 src/steel_connections/
-  models/        # contratos de entrada/salida, unidades y errores
-  codes/         # calculos normativos puros
-    engineering/ # ecuaciones reutilizables por tema (DRY): weld, shear, flexure, geometry
-  domain/        # reglas, routing y pipeline de motor
-  reporting/     # salida terminal + persistencia JSON
+  models/        # contratos Pydantic, entrada/salida, unidades, diagnosticos
+  catalogs/      # lectura tipada de catalogos XLSX
+  adapters/      # JSON, split inputs y compatibilidad legacy
+  codes/         # funciones normativas/de ingenieria puras
+    aisc358/     # helpers AISC 358 extraidos gradualmente
+    dg1/         # helpers Design Guide 1
+    engineering/ # ecuaciones compartidas: weld, shear, flexure, bolt groups
+  domain/        # pipeline, reglas, registry y estrategias
+    rules/       # reglas ejecutables legacy
+    strategies/  # estrategias por familia/conexion
+  reporting/     # JSON, Markdown puro y writer legacy de memoria
   cli/           # interfaz de ejecucion
 examples/        # casos de entrada
 results/         # salidas por example
 tests/           # unit e integration tests
 ```
+
+Notas:
+
+- `markdown_writer.py` se mantiene como writer legacy para preservar el formato
+  publico aprobado de `memory.md`.
+- `reporting/markdown/` contiene la ruta pura basada en `DesignResult`, pero no
+  reemplaza todavia la memoria legacy especializada.
+- `domain/registry.py` y `domain/strategies/` resuelven familias/conexiones; las
+  reglas internas siguen migrando gradualmente desde `InputCase` hacia
+  `DesignInput`.
 
 ## API DRY de ecuaciones
 
@@ -195,6 +227,29 @@ Opcionalmente puedes indicar carpeta de salida como segundo argumento:
 ```bash
 python -m src.steel_connections.run <archivo.json> <carpeta_salida>
 ```
+
+## Puerta de calidad
+
+Antes de refactorizar, correr:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\quality_gate.py
+```
+
+La puerta ejecuta:
+
+- `pytest -q`
+- regeneracion temporal de los casos golden approved
+- comparacion numerica de `detailed.json`
+- comparacion textual de `memory.md`
+
+Los casos approved actuales son:
+
+- `examples/moment_prequalified/case_003_bseep_8es_split_inputs`
+- `examples/Fully Restrained Moment/case_001_bbmb_splice.json`
+
+No se debe actualizar un golden approved para hacer pasar la puerta sin
+explicacion tecnica y aprobacion explicita.
 
 En `bbmb_splice` (Pernos 1 / Punto 2) puedes seleccionar:
 

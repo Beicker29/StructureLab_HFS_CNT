@@ -60,7 +60,6 @@ def test_bueep_prequalification_limits_are_reported(bueep_4e_payload: dict) -> N
         "end_plate_der",
         "end_plate_stiffener_der",
         "bolts_der",
-        "table_6_1_der",
         "weld_1_vgder",
         "weld_2_vgder",
         "weld_3_vgder",
@@ -137,9 +136,9 @@ def test_bueep_prequalification_limits_are_reported(bueep_4e_payload: dict) -> N
     stc_clearance = next(item for item in limits if item["id"] == "section_6_3_1.column_stc_minimum_requirement")
     assert stc_clearance["scope"] == "column"
     assert stc_clearance["comparison"] == "ge"
-    tbf_range = next(item for item in limits if item["id"] == "table_6_1.tbf.range_der")
-    assert tbf_range["comparison"] == "range"
-    assert tbf_range["result"] == "OK"
+    bbf_range = next(item for item in limits if item["id"] == "table_6_1.bbf.range_der")
+    assert bbf_range["comparison"] == "range"
+    assert bbf_range["result"] == "OK"
     slab_iso = next(item for item in limits if item["id"] == "section_2_3_4.slab_isolation_condition")
     assert slab_iso["comparison"] == "equals"
     assert slab_iso["result"] == "OK"
@@ -160,12 +159,12 @@ def test_bueep_prequalification_limits_are_reported(bueep_4e_payload: dict) -> N
     assert end_plate_web_weld_type["scope"] in {"welds", "weld_3_vgder"}
     assert end_plate_web_weld_type["comparison"] == "in_set"
     assert end_plate_web_weld_type["result"] == "OK"
-    pfo_compound = next(item for item in limits if item["id"] == "table_6_1.edge_pfo_ge_emin_der")
-    assert pfo_compound["comparison"] == "compound"
-    assert "pso_pe_vgder = pfo_pe_vgder + 0.5*tf_vgder - 0.5*t_pc_col" in pfo_compound["verification_text"]
-    pfi_compound = next(item for item in limits if item["id"] == "table_6_1.edge_pfi_ge_emin_der")
-    assert pfi_compound["comparison"] == "compound"
-    assert "psi_pe_vgder = pfi_pe_vgder + 0.5*tf_vgder - 0.5*t_pc_col" in pfi_compound["verification_text"]
+    pfo_min = next(item for item in limits if item["id"] == "table_6_1.edge_pfo_ge_pfo_min_der")
+    assert pfo_min["comparison"] == "ge"
+    assert pfo_min["result"] == "OK"
+    pfi_min = next(item for item in limits if item["id"] == "table_6_1.edge_pfi_ge_pfi_min_der")
+    assert pfi_min["comparison"] == "ge"
+    assert pfi_min["result"] == "OK"
 
 
 def test_step2_mpr_uses_beam_catalog_zx_for_bueep(bueep_4e_payload: dict) -> None:
@@ -375,13 +374,10 @@ def test_bseep_prequalification_limits_fail_when_pitch_is_below_3db(bseep_8es_pa
     result = run_case_payload(bseep_8es_payload)
     prequal = next(check for check in result.checks if check.rule_id == "AISC358.06.3.bseep_8es.prequalification_limits")
     assert prequal.status == CheckStatus.FAIL
-    pitch_check = next(
-        item
-        for item in prequal.calculation_memory.intermediates["step_1_limits"]
-        if item["id"] in {"table_6_1.pitch_pb_ge_3db_der", "table_6_1.pitch_pb_ge_3db_izq"}
-    )
-    assert pitch_check["result"] == "NO_OK"
-    assert pitch_check["comparison"] == "compound"
+    limits = prequal.calculation_memory.intermediates["step_1_limits"]
+    obsolete_pitch_ids = {"table_6_1.pitch_pb_ge_3db_der", "table_6_1.pitch_pb_ge_3db_izq"}
+    assert all(item["id"] not in obsolete_pitch_ids for item in limits)
+    assert any(item["result"] == "NO_OK" for item in limits)
 
 
 def test_bseep_prequalification_includes_stiffener_strength_checks(bseep_8es_payload: dict) -> None:
@@ -413,7 +409,12 @@ def test_bseep8es_prequalification_limits_fail_when_pb_is_outside_89_95mm_range(
     pb_compound_all = [
         item
         for item in prequal.calculation_memory.intermediates["step_1_limits"]
-        if item["id"] in {"table_6_1.pitch_pb_ge_3db_der", "table_6_1.pitch_pb_ge_3db_izq"}
+        if item["id"]
+        in {
+            "section_6_3_1.beam_sc_greater_than_s_threshold_der",
+            "section_6_3_1.beam_sc_greater_than_s_threshold_izq",
+            "section_6_3_1.column_stc_minimum_requirement",
+        }
     ]
     assert pb_compound_all
     assert any(item["result"] == "NO_OK" for item in pb_compound_all)

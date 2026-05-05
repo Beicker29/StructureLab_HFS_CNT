@@ -1,0 +1,24 @@
+{
+  "classification": "approved",
+  "classification_reason": "Validado por ingenieria segun instruccion explicita del usuario para Fase 0.",
+  "source_input": "examples/moment_prequalified/case_003_bseep_8es_split_inputs",
+  "generated_at": "2026-05-04T15:46:36.9934729-05:00",
+  "commit": "b900c9b80e503b70851e536330c37068c671a599",
+  "package_name": "steel-connections-engine",
+  "package_version": "0.1.0",
+  "python_version": "Python 3.12.10",
+  "os": "Microsoft Windows NT 10.0.26100.0",
+  "catalogs": {
+    "sections.xlsx": "3B7077D03D22B89CF5518C532F2E47C6E5365833918A0C4517D5DA5F33F15329",
+    "materials.xlsx": "3615FB9D7BA3A339BA587BAD294BCDA2432CA44E233E1683B623A41C3934221D"
+  },
+  "generation_command": ".\\.venv\\Scripts\\python.exe -m src.steel_connections.run examples/moment_prequalified/case_003_bseep_8es_split_inputs .tmp_phase0_baseline\\approved",
+  "cli_exit_code": 0,
+  "output_files": [
+    "detailed.json",
+    "memory.md"
+  ],
+  "global_status": "PASS",
+  "check_count": 34,
+  "worst_dcr": 1.0
+}

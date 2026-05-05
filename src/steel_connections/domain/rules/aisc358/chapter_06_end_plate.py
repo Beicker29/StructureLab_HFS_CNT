@@ -13,24 +13,33 @@ from steel_connections.codes.aisc358.chapter_06 import (
     compute_column_web_local_crippling_strength,
     compute_column_web_local_buckling_strength,
     compute_column_web_local_yielding_strength,
+    compute_column_beam_clearance_distance,
+    compute_column_beam_clearance_threshold,
     compute_column_panel_zone_shear_strength_j10_6,
     compute_beam_flange_force_from_mf,
     compute_end_plate_yield_line_parameter,
     compute_mf,
     compute_bolt_bearing_tearout_capacity,
     compute_required_bolt_diameter,
+    compute_detail_stiffener_length_from_height,
+    compute_minimum_column_end_distance_to_beam_flange,
     compute_required_end_plate_thickness,
     compute_bolt_shear_rupture_capacity,
     compute_end_plate_shear_rupture_capacity,
     compute_end_plate_shear_yielding_capacity,
     compute_end_plate_hole_tearout_capacity,
     compute_end_plate_hole_bearing_capacity,
+    compute_end_plate_height_from_geometry,
+    compute_end_plate_yield_line_h_terms,
     compute_flange_slenderness_limit,
     compute_flange_slenderness_ratio,
     compute_minimum_stiffener_length,
+    compute_minimum_stiffener_bolt_gage,
+    compute_stiffener_height_from_end_plate_geometry,
     compute_sh,
     compute_vh,
     compute_required_stiffener_thickness,
+    compute_stiffener_slenderness_ratio,
     compute_stiffener_slenderness_ratio_limit,
     compute_web_slenderness_limit,
     compute_web_slenderness_ratio,
@@ -381,20 +390,27 @@ def _derive_stiffener_height_from_de_pfo(
     pfo: Quantity,
     pb: Quantity | None = None,
 ) -> Quantity:
-    pb_value = pb.value if pb is not None else 0.0
-    return Quantity(value=pfo.value + de.value + pb_value, unit=pfo.unit)
+    unit_system = UnitSystem.US if pfo.unit == "in" else UnitSystem.SI
+    return compute_stiffener_height_from_end_plate_geometry(
+        pfo=pfo,
+        de=de,
+        pb=pb,
+        unit_system=unit_system,
+    )
 
 
 def _derive_end_plate_height(*, beam_depth: Quantity, de: Quantity, pfo: Quantity) -> Quantity:
-    return Quantity(value=beam_depth.value + 2.0 * pfo.value + 2.0 * de.value, unit=beam_depth.unit)
+    unit_system = UnitSystem.US if beam_depth.unit == "in" else UnitSystem.SI
+    return compute_end_plate_height_from_geometry(
+        beam_depth=beam_depth,
+        pfo=pfo,
+        de=de,
+        unit_system=unit_system,
+    )
 
 
 def _derive_stiffener_length_from_hst(*, stiffener_height: Quantity, unit_system: UnitSystem) -> Quantity:
-    lst = compute_minimum_stiffener_length(stiffener_height, unit_system)
-    if unit_system == UnitSystem.SI and lst.unit == "mm":
-        rounded = math.ceil(lst.value / 10.0) * 10.0
-        return Quantity(value=rounded, unit=lst.unit)
-    return lst
+    return compute_detail_stiffener_length_from_height(stiffener_height, unit_system)
 
 
 def _compute_protected_zone_length(
@@ -2887,59 +2903,24 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
     )
     stiffener_length_derived = stiffener_length_derived_der
 
-    def _compute_h_terms(
-        *,
-        side_profile: dict[str, Quantity],
-        pfo_side: Quantity,
-        pfi_side: Quantity,
-        pb_side: Quantity | None,
-    ) -> dict[str, Quantity | None]:
-        beam_depth_side = side_profile["d"]
-        beam_tf_side = side_profile["tf"]
-        if case.connection_type == "bseep_8es":
-            if pb_side is None:
-                raise ValueError("geometry.pb is required for bseep_8es prequalification checks.")
-            h1_side = Quantity(
-                value=beam_depth_side.value - 0.5 * beam_tf_side.value + pfo_side.value + pb_side.value,
-                unit=beam_depth_side.unit,
-            )
-            h2_side = Quantity(
-                value=beam_depth_side.value - 0.5 * beam_tf_side.value + pfo_side.value,
-                unit=beam_depth_side.unit,
-            )
-            h3_side = Quantity(
-                value=beam_depth_side.value - 1.5 * beam_tf_side.value - pfi_side.value,
-                unit=beam_depth_side.unit,
-            )
-            h4_side = Quantity(
-                value=beam_depth_side.value - 1.5 * beam_tf_side.value - pfi_side.value - pb_side.value,
-                unit=beam_depth_side.unit,
-            )
-        else:
-            h1_side = Quantity(
-                value=beam_depth_side.value - 0.5 * beam_tf_side.value + pfo_side.value,
-                unit=beam_depth_side.unit,
-            )
-            h2_side = Quantity(
-                value=beam_depth_side.value - 1.5 * beam_tf_side.value - pfi_side.value,
-                unit=beam_depth_side.unit,
-            )
-            h3_side = None
-            h4_side = None
-        return {"h1": h1_side, "h2": h2_side, "h3": h3_side, "h4": h4_side}
-
-    h_terms_der = _compute_h_terms(
-        side_profile=beam_profile_der,
-        pfo_side=pfo_der,
-        pfi_side=pfi_der,
-        pb_side=pb_der,
+    h_terms_der = compute_end_plate_yield_line_h_terms(
+        connection_type=case.connection_type,
+        beam_depth=beam_profile_der["d"],
+        beam_flange_thickness=beam_profile_der["tf"],
+        pfo=pfo_der,
+        pfi=pfi_der,
+        pb=pb_der,
+        unit_system=case.units_system,
     )
     h_terms_izq = (
-        _compute_h_terms(
-            side_profile=beam_profile_izq,
-            pfo_side=pfo_izq,
-            pfi_side=pfi_izq,
-            pb_side=pb_izq,
+        compute_end_plate_yield_line_h_terms(
+            connection_type=case.connection_type,
+            beam_depth=beam_profile_izq["d"],
+            beam_flange_thickness=beam_profile_izq["tf"],
+            pfo=pfo_izq,
+            pfi=pfi_izq,
+            pb=pb_izq,
+            unit_system=case.units_system,
         )
         if beam_profile_izq is not None and pfo_izq is not None and pfi_izq is not None and de_izq is not None
         else None
@@ -3710,19 +3691,43 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
     if case.connection_type == "bseep_8es":
         if pb_der is None:
             raise ValueError("geometry.pb_vgder is required for bseep_8es prequalification checks.")
-        stc_min_der = Quantity(value=pfo_der.value + pb_der.value + de_der.value + stc_margin.value, unit=stc.unit)
+        stc_min_der = compute_minimum_column_end_distance_to_beam_flange(
+            pfo=pfo_der,
+            de=de_der,
+            pb=pb_der,
+            margin=stc_margin,
+            unit_system=case.units_system,
+        )
         stc_limit_symbol = "pfo_pe_vgder + pb_pe_vgder + de_pe_vgder + 12.5 mm"
         if beam_connection_sides == "both_sides":
             if pb_izq is None or pfo_izq is None or de_izq is None:
                 raise ValueError("geometry.pb_vgizq, geometry.pfo_vgizq and geometry.de_vgizq are required for both_sides.")
-            stc_min_izq = Quantity(value=pfo_izq.value + pb_izq.value + de_izq.value + stc_margin.value, unit=stc.unit)
+            stc_min_izq = compute_minimum_column_end_distance_to_beam_flange(
+                pfo=pfo_izq,
+                de=de_izq,
+                pb=pb_izq,
+                margin=stc_margin,
+                unit_system=case.units_system,
+            )
     else:
-        stc_min_der = Quantity(value=pfo_der.value + de_der.value + stc_margin.value, unit=stc.unit)
+        stc_min_der = compute_minimum_column_end_distance_to_beam_flange(
+            pfo=pfo_der,
+            de=de_der,
+            pb=None,
+            margin=stc_margin,
+            unit_system=case.units_system,
+        )
         stc_limit_symbol = "pfo_pe_vgder + de_pe_vgder + 12.5 mm"
         if beam_connection_sides == "both_sides":
             if pfo_izq is None or de_izq is None:
                 raise ValueError("geometry.pfo_vgizq and geometry.de_vgizq are required for both_sides.")
-            stc_min_izq = Quantity(value=pfo_izq.value + de_izq.value + stc_margin.value, unit=stc.unit)
+            stc_min_izq = compute_minimum_column_end_distance_to_beam_flange(
+                pfo=pfo_izq,
+                de=de_izq,
+                pb=None,
+                margin=stc_margin,
+                unit_system=case.units_system,
+            )
     stc_min = stc_min_der
     if stc_min_izq is not None and stc_min_izq.value > stc_min.value:
         stc_min = stc_min_izq
@@ -3753,27 +3758,59 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
             calculated=stc,
             minimum=stc_min,
         )
-    s_threshold_der = Quantity(value=0.5 * math.sqrt(bcf.value * g_der.value), unit=bcf.unit)
+    s_threshold_der = compute_column_beam_clearance_threshold(
+        column_flange_width=bcf,
+        bolt_gage=g_der,
+        unit_system=case.units_system,
+    )
     s_threshold_izq = (
-        Quantity(value=0.5 * math.sqrt(bcf.value * g_izq.value), unit=bcf.unit)
+        compute_column_beam_clearance_threshold(
+            column_flange_width=bcf,
+            bolt_gage=g_izq,
+            unit_system=case.units_system,
+        )
         if g_izq is not None
         else None
     )
     if case.connection_type == "bseep_8es":
         if pb_der is None:
             raise ValueError("geometry.pb_vgder is required for bseep_8es prequalification checks.")
-        sc_der = Quantity(value=stc.value - pfo_der.value - pb_der.value, unit=stc.unit)
+        sc_der = compute_column_beam_clearance_distance(
+            column_end_distance_to_beam_flange=stc,
+            pfo=pfo_der,
+            pb=pb_der,
+            unit_system=case.units_system,
+        )
         sc_formula_der = "Sc_vgder = St_col - pfo_vgder - pb_vgder"
         sc_izq = (
-            Quantity(value=stc.value - pfo_izq.value - pb_izq.value, unit=stc.unit)
+            compute_column_beam_clearance_distance(
+                column_end_distance_to_beam_flange=stc,
+                pfo=pfo_izq,
+                pb=pb_izq,
+                unit_system=case.units_system,
+            )
             if pfo_izq is not None and pb_izq is not None
             else None
         )
         sc_formula_izq = "Sc_vgizq = St_col - pfo_vgizq - pb_vgizq"
     else:
-        sc_der = Quantity(value=stc.value - pfo_der.value, unit=stc.unit)
+        sc_der = compute_column_beam_clearance_distance(
+            column_end_distance_to_beam_flange=stc,
+            pfo=pfo_der,
+            pb=None,
+            unit_system=case.units_system,
+        )
         sc_formula_der = "Sc_vgder = St_col - pfo_vgder"
-        sc_izq = Quantity(value=stc.value - pfo_izq.value, unit=stc.unit) if pfo_izq is not None else None
+        sc_izq = (
+            compute_column_beam_clearance_distance(
+                column_end_distance_to_beam_flange=stc,
+                pfo=pfo_izq,
+                pb=None,
+                unit_system=case.units_system,
+            )
+            if pfo_izq is not None
+            else None
+        )
         sc_formula_izq = "Sc_vgizq = St_col - pfo_vgizq"
     sc_pass_der = sc_der.value > s_threshold_der.value
     sc_pass_izq = (
@@ -4613,14 +4650,22 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
         stiffener_fy_izq = case.materials.stiffener_fy_vgizq or stiffener_fy_der
         ts = ts_der
         tbw = beam_profile_der["tw"]
-        g_min_stiffener = Quantity(value=(2.0 * min_edge_der.value) + ts.value, unit=g_der.unit)
+        g_min_stiffener = compute_minimum_stiffener_bolt_gage(
+            minimum_edge_distance=min_edge_der,
+            stiffener_thickness=ts,
+            unit_system=case.units_system,
+        )
         ts_required = compute_required_stiffener_thickness(
             beam_web_thickness=tbw,
             beam_fy=beam_fy,
             stiffener_fy=stiffener_fy_der,
             unit_system=case.units_system,
         )
-        slenderness_ratio = stiffener_height.value / ts.value
+        slenderness_ratio = compute_stiffener_slenderness_ratio(
+            stiffener_height=stiffener_height,
+            stiffener_thickness=ts,
+            unit_system=case.units_system,
+        )
         slenderness_limit = compute_stiffener_slenderness_ratio_limit(
             elastic_modulus=elastic_modulus,
             stiffener_fy=stiffener_fy_der,
@@ -4682,14 +4727,22 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
                 stiffener_fy=stiffener_fy_izq,
                 unit_system=case.units_system,
             )
-            slenderness_ratio_izq = stiffener_height_izq.value / ts_izq.value
+            slenderness_ratio_izq = compute_stiffener_slenderness_ratio(
+                stiffener_height=stiffener_height_izq,
+                stiffener_thickness=ts_izq,
+                unit_system=case.units_system,
+            )
             slenderness_limit_izq = compute_stiffener_slenderness_ratio_limit(
                 elastic_modulus=elastic_modulus,
                 stiffener_fy=stiffener_fy_izq,
                 unit_system=case.units_system,
             )
             min_edge_for_izq = min_edge_izq if min_edge_izq is not None else min_edge_der
-            g_min_stiffener_izq = Quantity(value=(2.0 * min_edge_for_izq.value) + ts_izq.value, unit=g_izq.unit)
+            g_min_stiffener_izq = compute_minimum_stiffener_bolt_gage(
+                minimum_edge_distance=min_edge_for_izq,
+                stiffener_thickness=ts_izq,
+                unit_system=case.units_system,
+            )
             end_plate_stiffener_limits.extend(
                 [
                     _step1_limit(
@@ -7996,7 +8049,11 @@ def run_stiffener_local_buckling(case: AISC358MomentCase, rule_binding: object) 
     elastic_modulus = _require(case, "materials.elastic_modulus", rule_binding)
     stiffener_fy = _require(case, "materials.stiffener_fy", rule_binding)
 
-    ratio = hst.value / ts.value
+    ratio = compute_stiffener_slenderness_ratio(
+        stiffener_height=hst,
+        stiffener_thickness=ts,
+        unit_system=case.units_system,
+    )
     limit = compute_stiffener_slenderness_ratio_limit(
         elastic_modulus=elastic_modulus,
         stiffener_fy=stiffener_fy,

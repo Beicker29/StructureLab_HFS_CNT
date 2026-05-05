@@ -13,7 +13,11 @@ from steel_connections.data.materials_repository import (
     get_hrs_steel_properties,
     get_plate_steel_properties,
 )
-from steel_connections.data.sections_repository import get_beam_profile_properties, get_bolt_section_properties
+from steel_connections.data.sections_repository import (
+    get_beam_profile_properties,
+    get_bolt_section_properties,
+    get_column_profile_properties,
+)
 from steel_connections.data.xlsx_sheet_reader import normalize_text
 from steel_connections.models.errors import ErrorCode, Stage, StructuredEngineException, StructuredError
 from steel_connections.models.input import AISC358MomentCase, InputCase, parse_input_case
@@ -1295,6 +1299,49 @@ def _normalize_moment_geometry_payload(payload: dict[str, Any]) -> dict[str, Any
     return normalized
 
 
+def _zero_length_quantity_like(value: Any, units_system: Any) -> dict[str, Any]:
+    if isinstance(value, dict) and isinstance(value.get("unit"), str):
+        unit = value["unit"]
+    else:
+        unit = "in" if str(units_system).upper() == "US" else "mm"
+    return {"value": 0.0, "unit": unit}
+
+
+def _normalize_disabled_doubler_plate_payload(payload: dict[str, Any]) -> dict[str, Any]:
+    normalized = deepcopy(payload)
+    if normalized.get("connection_family") != "moment_prequalified":
+        return normalized
+
+    geometry = normalized.get("geometry")
+    if not isinstance(geometry, dict):
+        return normalized
+    enabled = geometry.get("doubler_plate_enabled")
+    has_explicit_doubler_plate = any(
+        key in geometry
+        for key in (
+            "doubler_plate_thickness",
+            "doubler_plate_count",
+            "gap_dp_col",
+            "extended_dp_col",
+            "use_weld_7_col",
+            "use_weld_9_col",
+            "doubler_plate_web_plug_weld_type",
+        )
+    )
+    if enabled is not False and not (enabled is None and not has_explicit_doubler_plate):
+        return normalized
+
+    geometry = deepcopy(geometry)
+    geometry["doubler_plate_enabled"] = False
+    geometry["doubler_plate_thickness"] = _zero_length_quantity_like(
+        geometry.get("doubler_plate_thickness"),
+        normalized.get("units_system"),
+    )
+    geometry["doubler_plate_count"] = 1
+    normalized["geometry"] = geometry
+    return normalized
+
+
 def _normalize_fully_restrained_splice_payload(payload: dict[str, Any]) -> dict[str, Any]:
     normalized = deepcopy(payload)
     if normalized.get("connection_family") != "Fully_Restrained_Moment":
@@ -1547,6 +1594,12 @@ def _resolve_catalog_driven_properties(case: AISC358MomentCase) -> None:
 
     if case.connection_type not in {"bueep_4e", "bseep_4es", "bseep_8es"}:
         return
+
+    if case.geometry.doubler_plate_enabled is False:
+        column_shape = _require_text(case.sections.column_shape, "sections.column_shape", "data/sections.xlsx")
+        column_profile = get_column_profile_properties(column_shape=column_shape, unit_system=case.units_system)
+        case.geometry.doubler_plate_thickness = column_profile["tw"]  # type: ignore[assignment]
+        case.geometry.doubler_plate_count = 1
 
     # Procedure fields now derived internally from catalog/geometry and are not accepted as input.
     if case.procedure is not None:
@@ -3483,6 +3536,7 @@ def parse_and_validate_payload(payload: dict[str, Any]) -> InputCase:
     normalized_payload = _normalize_connection_family_payload(payload)
     normalized_payload = _normalize_fully_restrained_splice_payload(normalized_payload)
     normalized_payload = _normalize_moment_geometry_payload(normalized_payload)
+    normalized_payload = _normalize_disabled_doubler_plate_payload(normalized_payload)
     normalized_payload = _normalize_moment_loads_payload(normalized_payload)
     try:
         case = parse_input_case(normalized_payload)

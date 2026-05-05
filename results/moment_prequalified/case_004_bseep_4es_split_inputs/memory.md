@@ -32,14 +32,52 @@ Propiedades organizadas por ambito.
 - Longitud sin conectores desde cara de columna (Lnc_vgder) (inp): `1000 mm`
 - Longitud de zona protegida (Lpz_vgder): `421.53 mm`
 
-### 1.3 Ámbito `COLUMN`
+### 1.3 Ámbito `END_PLATE_IZQ`
 
 #### 1.3.1 Resumen de geometria
+
+- Altura de platina extremo de viga izquierda (Hpe_vgizq): `827 mm`
+- Ancho de platina extremo de viga izquierda (Bpe_vgizq) (inp): `270 mm`
+- Espesor de platina extremo de viga izquierda (tpe_vgizq) (inp): `25.4 mm`
+- Distancia de borde a fila 1 de pernos (de_pe_vgizq) (inp): `n/a`
+- Distancia entre filas de pernos (pb_pe_vgizq) (inp): `0 mm`
+- Distancia exterior a fila de pernos (pfo_pe_vgizq) (inp): `50 mm`
+- Distancia interior a fila de pernos (pfi_pe_vgizq) (inp): `50 mm`
+- Diametro de perforacion de perno (dh_pe_vgizq): `28.57 mm`
+- Distancia horizontal entre pernos en platina (g_pe_vgizq) (inp): `n/a`
+- Distancia horizontal de borde en platina (deh_pe_vgizq): `n/a`
+- Parametro s de platina extremo izquierda (s_pe_vgizq): `97.21 mm`
+- Distancia h1 de platina extremo izquierda (h1_pe_vgizq): `648.35 mm`
+- Distancia h2 de platina extremo izquierda (h2_pe_vgizq): `531.05 mm`
+
+### 1.4 Ámbito `END_PLATE_DER`
+
+#### 1.4.1 Resumen de geometria
+
+- Altura de platina extremo de viga derecha (Hpe_vgder): `682 mm`
+- Ancho de platina extremo de viga derecha (Bpe_vgder) (inp): `260 mm`
+- Espesor de platina extremo de viga derecha (tpe_vgder) (inp): `25.4 mm`
+- Distancia de borde a fila 1 de pernos (de_pe_vgder) (inp): `n/a`
+- Distancia entre filas de pernos (pb_pe_vgder) (inp): `0 mm`
+- Distancia exterior a fila de pernos (pfo_pe_vgder) (inp): `55 mm`
+- Distancia interior a fila de pernos (pfi_pe_vgder) (inp): `55 mm`
+- Diametro de perforacion de perno (dh_pe_vgder): `28.57 mm`
+- Distancia horizontal entre pernos en platina (g_pe_vgder) (inp): `n/a`
+- Distancia horizontal de borde en platina (deh_pe_vgder): `n/a`
+- Parametro s de platina extremo derecha (s_pe_vgder): `93.67 mm`
+- Distancia h1 de platina extremo derecha (h1_pe_vgder): `508.35 mm`
+- Distancia h2 de platina extremo derecha (h2_pe_vgder): `381.05 mm`
+
+### 1.5 Ámbito `COLUMN`
+
+#### 1.5.1 Resumen de geometria
 
 - Perfil de columna (shape_col) (inp): `W18X175`
 - Tipo de acero del perfil de columna (tipo_acero_perfil_col) (inp): `ASTM A572 Gr 50`
 - Altura de columna (d_col) (inp): `508 mm`
 - Espesor de alma de columna (tw_col) (inp): `22.6 mm`
+- Espesor de ala de columna (tf_col) (inp): `40.4 mm`
+- Ancho de ala de columna (bf_col) (inp): `290 mm`
 - Proyeccion de columna sobre vigas (St_col) (inp): `240 mm`
 - Distancia al punto de inflexion superior (ht_col) (inp): `240 mm`
 - Distancia al punto de inflexion inferior (hb_col) (inp): `240 mm`
@@ -60,83 +98,147 @@ Propiedades organizadas por ambito.
 - Distancia h1 de columna lado derecha (h1_col_vgder): `508.35 mm`
 - Distancia h2 de columna lado derecha (h2_col_vgder): `381.05 mm`
 
-### 1.4 Ámbito `END_PLATE_DER`
-
-#### 1.4.1 Resumen de geometria
-
-- Altura de platina extremo de viga derecha (Hpe_vgder): `682 mm`
-- Ancho de platina extremo de viga derecha (Bpe_vgder) (inp): `260 mm`
-- Espesor de platina extremo de viga derecha (tpe_vgder) (inp): `25.4 mm`
-- Distancia de borde a fila 1 de pernos (de_pe_vgder) (inp): `55 mm`
-- Distancia entre filas de pernos (pb_pe_vgder) (inp): `0 mm`
-- Distancia exterior a fila de pernos (pfo_pe_vgder) (inp): `55 mm`
-- Distancia interior a fila de pernos (pfi_pe_vgder) (inp): `55 mm`
-- Diametro de perforacion de perno (dh_pe_vgder): `28.57 mm`
-- Distancia horizontal entre pernos en platina (g_pe_vgder) (inp): `135 mm`
-- Parametro s de platina extremo derecha (s_pe_vgder): `93.67 mm`
-- Distancia h1 de platina extremo derecha (h1_pe_vgder): `508.35 mm`
-- Distancia h2 de platina extremo derecha (h2_pe_vgder): `381.05 mm`
-
-### 1.5 Ámbito `END_PLATE_IZQ`
-
-#### 1.5.1 Resumen de geometria
-
-- Altura de platina extremo de viga izquierda (Hpe_vgizq): `827 mm`
-- Ancho de platina extremo de viga izquierda (Bpe_vgizq) (inp): `270 mm`
-- Espesor de platina extremo de viga izquierda (tpe_vgizq) (inp): `25.4 mm`
-- Distancia de borde a fila 1 de pernos (de_pe_vgizq) (inp): `60 mm`
-- Distancia entre filas de pernos (pb_pe_vgizq) (inp): `0 mm`
-- Distancia exterior a fila de pernos (pfo_pe_vgizq) (inp): `50 mm`
-- Distancia interior a fila de pernos (pfi_pe_vgizq) (inp): `50 mm`
-- Diametro de perforacion de perno (dh_pe_vgizq): `28.57 mm`
-- Distancia horizontal entre pernos en platina (g_pe_vgizq) (inp): `140 mm`
-- Parametro s de platina extremo izquierda (s_pe_vgizq): `97.21 mm`
-- Distancia h1 de platina extremo izquierda (h1_pe_vgizq): `648.35 mm`
-- Distancia h2 de platina extremo izquierda (h2_pe_vgizq): `531.05 mm`
-
 ### 1.6 Ámbito `END_PLATE_STIFFENER_DER`
 
-#### 1.6.1 Nota técnica - Geometria derivada del rigidizador de placa de extremo y requisito de borde
+#### 1.6.1 Resumen de geometria
 
-- Ámbito: `END_PLATE_STIFFENER_DER`
-- Clausula: `Documento: AISC 358-22 | Seccion: Seccion 6.3`
-- Formula: `h_pest_vgder = pfo_pe_vgder + de_pe_vgder; L_pest_vgder = h_pest_vgder/tan(30 deg); Ed_pest_vgder = 25 mm`
+- Tipo de acero de rigidizador derecha (tipo_acero_pest_vgder) (inp): `ASTM A572 Gr 50`
+- Espesor de rigidizador derecha (t_pest_vgder) (inp): `15.9 mm`
+- Altura del rigidizador de platina extremo derecha (h_pest_vgder): `110 mm`
+- Longitud del rigidizador de platina extremo derecha (L_pest_vgder): `200 mm`
+- Requisito de borde del rigidizador de platina extremo derecha (Ed_pest_vgder): `25 mm`
 
 ### 1.7 Ámbito `END_PLATE_STIFFENER_IZQ`
 
-#### 1.7.1 Nota técnica - Geometria derivada del rigidizador de placa de extremo y requisito de borde
+#### 1.7.1 Resumen de geometria
 
-- Ámbito: `END_PLATE_STIFFENER_IZQ`
-- Clausula: `Documento: AISC 358-22 | Seccion: Seccion 6.3`
-- Formula: `h_pest_vgizq = pfo_pe_vgizq + de_pe_vgizq; L_pest_vgizq = h_pest_vgizq/tan(30 deg); Ed_pest_vgizq = 25 mm`
+- Tipo de acero de rigidizador izquierda (tipo_acero_pest_vgizq) (inp): `ASTM A572 Gr 50`
+- Espesor de rigidizador izquierda (t_pest_vgizq) (inp): `15.9 mm`
+- Altura del rigidizador de platina extremo izquierda (h_pest_vgizq): `110 mm`
+- Longitud del rigidizador de platina extremo izquierda (L_pest_vgizq): `200 mm`
+- Requisito de borde del rigidizador de platina extremo izquierda (Ed_pest_vgizq): `25 mm`
 
 ### 1.8 Ámbito `BOLTS_DER`
 
+#### 1.8.1 Resumen de geometria
+
+- Diametro nominal de perno lado derecha (db_b_vgder) (inp): `25.4 mm`
+- Resistencia nominal a traccion de perno lado derecha (Fnt_b_vgder) (inp): `780 MPa`
+- Resistencia nominal a cortante de perno lado derecha (Fnv_b_vgder) (inp): `470 MPa`
+- Condicion de rosca de perno lado derecha (thread_b_vgder) (inp): `N`
+- Numero de pernos lado derecha (n_b_vgder) (inp): `4`
+- Norma de fabricacion del perno lado derecha (std_v_vgder) (inp): `ASTM A490`
+- Tipo de apriete del perno lado derecha (tipo_apriete_b_vgder) (inp): `pretensioned`
+- Area efectiva de perno lado derecha (A_b_vgder): `506.71 mm2`
+
 ### 1.9 Ámbito `BOLTS_IZQ`
 
-### 1.10 Ámbito `TABLE_6_1_DER`
+#### 1.9.1 Resumen de geometria
 
-### 1.11 Ámbito `TABLE_6_1_IZQ`
+- Diametro nominal de perno lado izquierda (db_b_vgizq) (inp): `25.4 mm`
+- Resistencia nominal a traccion de perno lado izquierda (Fnt_b_vgizq) (inp): `780 MPa`
+- Resistencia nominal a cortante de perno lado izquierda (Fnv_b_vgizq) (inp): `470 MPa`
+- Condicion de rosca de perno lado izquierda (thread_b_vgizq) (inp): `N`
+- Numero de pernos lado izquierda (n_b_vgizq) (inp): `4`
+- Norma de fabricacion del perno lado izquierda (std_v_vgizq) (inp): `ASTM A490`
+- Tipo de apriete del perno lado izquierda (tipo_apriete_b_vgizq) (inp): `pretensioned`
+- Area efectiva de perno lado izquierda (A_b_vgizq): `506.71 mm2`
 
-### 1.12 Ámbito `WELD_1_VGDER`
+### 1.10 Ámbito `WELD_1_VGDER`
 
-### 1.13 Ámbito `WELD_1_VGIZQ`
+#### 1.10.1 Resumen de geometria
 
-### 1.14 Ámbito `WELD_2_VGDER`
+- Tipo de soldadura #1 lado derecha (tipo_w1_vgder) (inp): `CJP`
+- Resistencia del electrodo de soldadura #1 lado derecha (Fexx_w1_vgder) (inp): `490 MPa`
+- Espesor/size de soldadura #1 lado derecha (w_w1_vgder) (inp): `9.53 mm`
+- Numero de lineas de soldadura #1 lado derecha (nl_w1_vgder) (inp): `2`
+- Separacion de extremos de soldadura #1 lado derecha (L_gap_w1_vgder) (inp): `n/a`
+- Factor de direccion/sistema de soldadura #1 lado derecha (kds_w1_vgder) (inp): `1`
+- Longitud efectiva de soldadura #1 lado derecha (L_w1_vgder): `n/a`
 
-### 1.15 Ámbito `WELD_2_VGIZQ`
+### 1.11 Ámbito `WELD_1_VGIZQ`
 
-### 1.16 Ámbito `WELD_3_VGDER`
+#### 1.11.1 Resumen de geometria
 
-### 1.17 Ámbito `WELD_3_VGIZQ`
+- Tipo de soldadura #1 lado izquierda (tipo_w1_vgizq) (inp): `CJP`
+- Resistencia del electrodo de soldadura #1 lado izquierda (Fexx_w1_vgizq) (inp): `490 MPa`
+- Espesor/size de soldadura #1 lado izquierda (w_w1_vgizq) (inp): `9.53 mm`
+- Numero de lineas de soldadura #1 lado izquierda (nl_w1_vgizq) (inp): `2`
+- Separacion de extremos de soldadura #1 lado izquierda (L_gap_w1_vgizq) (inp): `n/a`
+- Factor de direccion/sistema de soldadura #1 lado izquierda (kds_w1_vgizq) (inp): `1`
+- Longitud efectiva de soldadura #1 lado izquierda (L_w1_vgizq): `n/a`
 
-### 1.18 Ámbito `WELD_4_VGDER`
+### 1.12 Ámbito `WELD_2_VGDER`
 
-### 1.19 Ámbito `WELD_4_VGIZQ`
+#### 1.12.1 Resumen de geometria
 
-### 1.20 Ámbito `WELD_5_COL`
+- Tipo de soldadura #2 lado derecha (tipo_w2_vgder) (inp): `CJP`
+- Resistencia del electrodo de soldadura #2 lado derecha (Fexx_w2_vgder) (inp): `490 MPa`
+- Espesor/size de soldadura #2 lado derecha (w_w2_vgder) (inp): `9.53 mm`
+- Numero de lineas de soldadura #2 lado derecha (nl_w2_vgder) (inp): `2`
+- Separacion de extremos de soldadura #2 lado derecha (L_gap_w2_vgder) (inp): `n/a`
+- Factor de direccion/sistema de soldadura #2 lado derecha (kds_w2_vgder) (inp): `1`
+- Longitud efectiva de soldadura #2 lado derecha (L_w2_vgder): `n/a`
 
-#### 1.20.1 Resumen de geometria
+### 1.13 Ámbito `WELD_2_VGIZQ`
+
+#### 1.13.1 Resumen de geometria
+
+- Tipo de soldadura #2 lado izquierda (tipo_w2_vgizq) (inp): `CJP`
+- Resistencia del electrodo de soldadura #2 lado izquierda (Fexx_w2_vgizq) (inp): `490 MPa`
+- Espesor/size de soldadura #2 lado izquierda (w_w2_vgizq) (inp): `9.53 mm`
+- Numero de lineas de soldadura #2 lado izquierda (nl_w2_vgizq) (inp): `2`
+- Separacion de extremos de soldadura #2 lado izquierda (L_gap_w2_vgizq) (inp): `n/a`
+- Factor de direccion/sistema de soldadura #2 lado izquierda (kds_w2_vgizq) (inp): `1`
+- Longitud efectiva de soldadura #2 lado izquierda (L_w2_vgizq): `n/a`
+
+### 1.14 Ámbito `WELD_3_VGDER`
+
+#### 1.14.1 Resumen de geometria
+
+- Tipo de soldadura #3 lado derecha (tipo_w3_vgder) (inp): `CJP`
+- Resistencia del electrodo de soldadura #3 lado derecha (Fexx_w3_vgder) (inp): `490 MPa`
+- Espesor/size de soldadura #3 lado derecha (w_w3_vgder) (inp): `8 mm`
+- Numero de lineas de soldadura #3 lado derecha (nl_w3_vgder) (inp): `2`
+- Longitud efectiva de soldadura #3 lado derecha (hwef_w3_vgder): `205 mm`
+
+### 1.15 Ámbito `WELD_3_VGIZQ`
+
+#### 1.15.1 Resumen de geometria
+
+- Tipo de soldadura #3 lado izquierda (tipo_w3_vgizq) (inp): `CJP`
+- Resistencia del electrodo de soldadura #3 lado izquierda (Fexx_w3_vgizq) (inp): `490 MPa`
+- Espesor/size de soldadura #3 lado izquierda (w_w3_vgizq) (inp): `8 mm`
+- Numero de lineas de soldadura #3 lado izquierda (nl_w3_vgizq) (inp): `2`
+- Longitud efectiva de soldadura #3 lado izquierda (hwef_w3_vgizq): `200 mm`
+
+### 1.16 Ámbito `WELD_4_VGDER`
+
+#### 1.16.1 Resumen de geometria
+
+- Tipo de soldadura #4 lado derecha (tipo_w4_vgder) (inp): `cjp`
+- Resistencia del electrodo de soldadura #4 lado derecha (Fexx_w4_vgder) (inp): `490 MPa`
+- Espesor/size de soldadura #4 lado derecha (w_w4_vgder) (inp): `8 mm`
+- Espesor total de garganta requerida #4 lado derecha (t_w4.1_vgder) (inp): `0 mm`
+- Numero de lineas de soldadura #4 lado derecha (nl_w4_vgder) (inp): `2`
+- Factor de direccion/sistema de soldadura #4 lado derecha (kds_w4_vgder) (inp): `1`
+- Longitud efectiva de soldadura #4 lado derecha (L_w4_vgder): `279 mm`
+
+### 1.17 Ámbito `WELD_4_VGIZQ`
+
+#### 1.17.1 Resumen de geometria
+
+- Tipo de soldadura #4 lado izquierda (tipo_w4_vgizq) (inp): `cjp`
+- Resistencia del electrodo de soldadura #4 lado izquierda (Fexx_w4_vgizq) (inp): `490 MPa`
+- Espesor/size de soldadura #4 lado izquierda (w_w4_vgizq) (inp): `8 mm`
+- Espesor total de garganta requerida #4 lado izquierda (t_w4.1_vgizq) (inp): `0 mm`
+- Numero de lineas de soldadura #4 lado izquierda (nl_w4_vgizq) (inp): `2`
+- Factor de direccion/sistema de soldadura #4 lado izquierda (kds_w4_vgizq) (inp): `1`
+- Longitud efectiva de soldadura #4 lado izquierda (L_w4_vgizq): `228 mm`
+
+### 1.18 Ámbito `WELD_5_COL`
+
+#### 1.18.1 Resumen de geometria
 
 - Tipo de soldadura #5 de platina de continuidad (tipo_w5_col) (inp): `CJP`
 - Resistencia del electrodo de soldadura #5 (Fexx_w5_col) (inp): `490 MPa`
@@ -146,9 +248,9 @@ Propiedades organizadas por ambito.
 - Factor de direccion/sistema de soldadura #5 (kds_w5_col) (inp): `1`
 - Longitud efectiva de soldadura #5 (L_w5_col): `n/a`
 
-### 1.21 Ámbito `WELD_6_COL`
+### 1.19 Ámbito `WELD_6_COL`
 
-#### 1.21.1 Resumen de geometria
+#### 1.19.1 Resumen de geometria
 
 - Tipo de soldadura #6 de platina de continuidad (tipo_w6_col) (inp): `CJP`
 - Resistencia del electrodo de soldadura #6 (Fexx_w6_col) (inp): `490 MPa`
@@ -158,9 +260,9 @@ Propiedades organizadas por ambito.
 - Factor de direccion/sistema de soldadura #6 (kds_w6_col) (inp): `1`
 - Longitud efectiva de soldadura #6 (Lws_col): `328 mm`
 
-### 1.22 platinas de continuidad
+### 1.20 platinas de continuidad
 
-#### 1.22.1 Resumen de geometria
+#### 1.20.1 Resumen de geometria
 
 - Uso de platinas de continuidad (usar_pc_col) (inp): `True`
 - Tipo de acero de platina de continuidad (tipo_acero_pc_col) (inp): `ASTM A572 Gr 50`
@@ -182,17 +284,17 @@ Especificaciones tecnicas organizadas por ambito.
 
 ### 2.2 Ámbito `BEAM_DER`
 
-### 2.3 Ámbito `COLUMN`
+### 2.3 Ámbito `END_PLATE_IZQ`
 
-#### 2.3.1 Nota técnica - Ubicacion de la conexión de placa de extremo en columna
+### 2.4 Ámbito `END_PLATE_DER`
+
+### 2.5 Ámbito `COLUMN`
+
+#### 2.5.1 Nota técnica - Ubicacion de la conexión de placa de extremo en columna
 
 - Ámbito: `COLUMN`
 - Clausula: `Documento: AISC 358-22 | Seccion: Seccion 6.3 (2)`
 - Requisito: `La placa de extremo debe conectarse al ala de la columna.`
-
-### 2.4 Ámbito `END_PLATE_DER`
-
-### 2.5 Ámbito `END_PLATE_IZQ`
 
 ### 2.6 Ámbito `END_PLATE_STIFFENER_DER`
 
@@ -226,31 +328,27 @@ Especificaciones tecnicas organizadas por ambito.
 - Clausula: `Documento: AISC 358-22 | Seccion: Seccion 4.3`
 - Requisito: `El control de calidad y el aseguramiento de calidad deben cumplir con las AISC Seismic Provisions.`
 
-### 2.10 Ámbito `TABLE_6_1_DER`
+### 2.10 Ámbito `WELD_1_VGDER`
 
-### 2.11 Ámbito `TABLE_6_1_IZQ`
+### 2.11 Ámbito `WELD_1_VGIZQ`
 
-### 2.12 Ámbito `WELD_1_VGDER`
+### 2.12 Ámbito `WELD_2_VGDER`
 
-### 2.13 Ámbito `WELD_1_VGIZQ`
+### 2.13 Ámbito `WELD_2_VGIZQ`
 
-### 2.14 Ámbito `WELD_2_VGDER`
+### 2.14 Ámbito `WELD_3_VGDER`
 
-### 2.15 Ámbito `WELD_2_VGIZQ`
+### 2.15 Ámbito `WELD_3_VGIZQ`
 
-### 2.16 Ámbito `WELD_3_VGDER`
+### 2.16 Ámbito `WELD_4_VGDER`
 
-### 2.17 Ámbito `WELD_3_VGIZQ`
+### 2.17 Ámbito `WELD_4_VGIZQ`
 
-### 2.18 Ámbito `WELD_4_VGDER`
+### 2.18 Ámbito `WELD_5_COL`
 
-### 2.19 Ámbito `WELD_4_VGIZQ`
+### 2.19 Ámbito `WELD_6_COL`
 
-### 2.20 Ámbito `WELD_5_COL`
-
-### 2.21 Ámbito `WELD_6_COL`
-
-### 2.22 Ámbito `CONTINUITY_PLATE_COL`
+### 2.20 Ámbito `CONTINUITY_PLATE_COL`
 
 ## Paso 3 - Revisiónes de requerimientos de propiedades mecánicas y geométricas
 
@@ -272,46 +370,53 @@ Comparacion directa de valor calculado contra limite normativo (sin formato DCR)
 - Clausula: `Documento: AISC 358-22 | Seccion: Seccion 6.3 / Tabla 6.1`
 - Resultado: 🔴 No cumple
 
-#### Chequeo 3.1.3 - Separacion minima de gage de pernos (left beam) (`g_b_vgizq`)
-
-- Ámbito: `BEAM_IZQ`
-- Verificacion: `g_b_vgizq >= 3db; 140 mm >= 76.2 mm`
-- Clausula: `Documento: AISC 358-22 | Seccion: Seccion 6.3 / Tabla 6.1`
-- Resultado: 🟢 Cumple
-
-#### Chequeo 3.1.4 - Longitud sin conectores de cortante desde la cara de columna (left beam) (`Lnc_vgizq`)
+#### Chequeo 3.1.3 - Longitud sin conectores de cortante desde la cara de columna (left beam) (`Lnc_vgizq`)
 
 - Ámbito: `BEAM_IZQ`
 - Verificacion: `Lnc_vgizq >= 1.5d_vgizq; 1000 mm >= 910.5 mm`
 - Clausula: `Documento: AISC 358-22 | Seccion: Seccion 2.3.4 (2)`
 - Resultado: 🟢 Cumple
 
-#### Chequeo 3.1.5 - Criterio de despeje de viga con umbral Sc y S (left beam) (`Sc_vgizq`)
+#### Chequeo 3.1.4 - Criterio de despeje de viga con umbral Sc y S (left beam) (`Sc_vgizq`)
 
 - Ámbito: `BEAM_IZQ`
 - Verificacion: `Sc_vgizq = St_col - pfo_vgizq; S_vgizq = 0.5*sqrt(bcf*g_vgizq); Sc_vgizq > S_vgizq => 190.000 mm > 100.747 mm`
 - Clausula: `Documento: AISC 358-22 | Seccion: Seccion 6.3.1 (criterio de despeje de viga)`
 - Resultado: 🟢 Cumple
 
-#### Chequeo 3.1.6 - Relacion luz libre/peralte por sistema de marco (left beam) (`Llb_vgizq/d_vgizq`)
+#### Chequeo 3.1.5 - Relacion luz libre/peralte por sistema de marco (left beam) (`Llb_vgizq/d_vgizq`)
 
 - Ámbito: `BEAM_IZQ`
 - Verificacion: `Llb_vgizq/d_vgizq >= 7 (SMF); 10.04 adim >= 7 adim`
 - Clausula: `Documento: AISC 358-22 | Seccion: Seccion 2.3.4 (5)`
 - Resultado: 🟢 Cumple
 
-#### Chequeo 3.1.7 - Compacidad ancho-espesor del ala de viga (left beam) (`lambda_f_vgizq`)
+#### Chequeo 3.1.6 - Compacidad ancho-espesor del ala de viga (left beam) (`lambda_f_vgizq`)
 
 - Ámbito: `BEAM_IZQ`
 - Verificacion: `lambda_f_vgizq <= lambda_f_limit; 6.59 adim <= 6.89 adim`
 - Clausula: `Documento: AISC 358-22 | Seccion: AISC 341-22w / AISC 358-22w Seccion 2.3.4 (6) + AISC Seismic Provisions`
 - Resultado: 🟢 Cumple
 
-#### Chequeo 3.1.8 - Compacidad ancho-espesor del alma de viga (left beam) (`lambda_w_vgizq`)
+#### Chequeo 3.1.7 - Compacidad ancho-espesor del alma de viga (left beam) (`lambda_w_vgizq`)
 
 - Ámbito: `BEAM_IZQ`
 - Verificacion: `lambda_w_vgizq <= lambda_w_limit; 48.84 adim <= 56.24 adim`
 - Clausula: `Documento: AISC 358-22 | Seccion: AISC 341-22w / AISC 358-22w Seccion 2.3.4 (6) + AISC Seismic Provisions`
+- Resultado: 🟢 Cumple
+
+#### Chequeo 3.1.8 - Limites de ancho del ala de viga (left beam) (`bf_vgizq`)
+
+- Ámbito: `BEAM_IZQ`
+- Verificacion: `bf_vgizq in [bf_vgizq_min, bf_vgizq_max]; 152.4 mm <= 228 mm <= 228.6 mm`
+- Clausula: `Documento: AISC 358-22 | Seccion: Tabla 6.1`
+- Resultado: 🟢 Cumple
+
+#### Chequeo 3.1.9 - Limites de peralte de la viga conectada (left beam) (`d_vgizq`)
+
+- Ámbito: `BEAM_IZQ`
+- Verificacion: `d_vgizq in [d_vgizq_min, d_vgizq_max]; 349.25 mm <= 607 mm <= 609.6 mm`
+- Clausula: `Documento: AISC 358-22 | Seccion: Tabla 6.1`
 - Resultado: 🟢 Cumple
 
 ### 3.2 Ámbito `BEAM_DER`
@@ -330,123 +435,312 @@ Comparacion directa de valor calculado contra limite normativo (sin formato DCR)
 - Clausula: `Documento: AISC 358-22 | Seccion: Seccion 6.3 / Tabla 6.1`
 - Resultado: 🟢 Cumple
 
-#### Chequeo 3.2.3 - Separacion minima de gage de pernos (right beam) (`g_b_vgder`)
-
-- Ámbito: `BEAM_DER`
-- Verificacion: `g_b_vgder >= 3db; 135 mm >= 76.2 mm`
-- Clausula: `Documento: AISC 358-22 | Seccion: Seccion 6.3 / Tabla 6.1`
-- Resultado: 🟢 Cumple
-
-#### Chequeo 3.2.4 - Longitud sin conectores de cortante desde la cara de columna (right beam) (`Lnc_vgder`)
+#### Chequeo 3.2.3 - Longitud sin conectores de cortante desde la cara de columna (right beam) (`Lnc_vgder`)
 
 - Ámbito: `BEAM_DER`
 - Verificacion: `Lnc_vgder >= 1.5d_vgder; 1000 mm >= 693 mm`
 - Clausula: `Documento: AISC 358-22 | Seccion: Seccion 2.3.4 (2)`
 - Resultado: 🟢 Cumple
 
-#### Chequeo 3.2.5 - Criterio de despeje de viga con umbral Sc y S (right beam) (`Sc_vgder`)
+#### Chequeo 3.2.4 - Criterio de despeje de viga con umbral Sc y S (right beam) (`Sc_vgder`)
 
 - Ámbito: `BEAM_DER`
 - Verificacion: `Sc_vgder = St_col - pfo_vgder; S_vgder = 0.5*sqrt(bcf*g_vgder); Sc_vgder > S_vgder => 185.000 mm > 98.932 mm`
 - Clausula: `Documento: AISC 358-22 | Seccion: Seccion 6.3.1 (criterio de despeje de viga)`
 - Resultado: 🟢 Cumple
 
-#### Chequeo 3.2.6 - Relacion luz libre/peralte por sistema de marco (right beam) (`Llb_vgder/d_vgder`)
+#### Chequeo 3.2.5 - Relacion luz libre/peralte por sistema de marco (right beam) (`Llb_vgder/d_vgder`)
 
 - Ámbito: `BEAM_DER`
 - Verificacion: `Llb_vgder/d_vgder >= 7 (SMF); 13.19 adim >= 7 adim`
 - Clausula: `Documento: AISC 358-22 | Seccion: Seccion 2.3.4 (5)`
 - Resultado: 🟢 Cumple
 
-#### Chequeo 3.2.7 - Compacidad ancho-espesor del ala de viga (right beam) (`lambda_f_vgder`)
+#### Chequeo 3.2.6 - Compacidad ancho-espesor del ala de viga (right beam) (`lambda_f_vgder`)
 
 - Ámbito: `BEAM_DER`
 - Verificacion: `lambda_f_vgder <= lambda_f_limit; 8.06 adim <= 6.89 adim`
 - Clausula: `Documento: AISC 358-22 | Seccion: AISC 341-22w / AISC 358-22w Seccion 2.3.4 (6) + AISC Seismic Provisions`
 - Resultado: 🔴 No cumple
 
-#### Chequeo 3.2.8 - Compacidad ancho-espesor del alma de viga (right beam) (`lambda_w_vgder`)
+#### Chequeo 3.2.7 - Compacidad ancho-espesor del alma de viga (right beam) (`lambda_w_vgder`)
 
 - Ámbito: `BEAM_DER`
 - Verificacion: `lambda_w_vgder <= lambda_w_limit; 37.7 adim <= 56.24 adim`
 - Clausula: `Documento: AISC 358-22 | Seccion: AISC 341-22w / AISC 358-22w Seccion 2.3.4 (6) + AISC Seismic Provisions`
 - Resultado: 🟢 Cumple
 
-### 3.3 Ámbito `COLUMN`
+#### Chequeo 3.2.8 - Limites de ancho del ala de viga (right beam) (`bf_vgder`)
 
-#### Chequeo 3.3.1 - Familia de perfil de columna permitida para precalificación (`shape_col`)
+- Ámbito: `BEAM_DER`
+- Verificacion: `bf_vgder in [bf_vgder_min, bf_vgder_max]; 152.4 mm <= 279 mm <= 228.6 mm`
+- Clausula: `Documento: AISC 358-22 | Seccion: Tabla 6.1`
+- Resultado: 🔴 No cumple
 
-- Ámbito: `COLUMN`
-- Verificacion: `shape_col in {W, HEA, HEB, IPE}; 'W18X175' in {W, HEA, HEB, IPE}`
-- Clausula: `Documento: AISC 358-22 | Seccion: Seccion 2.3.4`
+#### Chequeo 3.2.9 - Limites de peralte de la viga conectada (right beam) (`d_vgder`)
+
+- Ámbito: `BEAM_DER`
+- Verificacion: `d_vgder in [d_vgder_min, d_vgder_max]; 349.25 mm <= 462 mm <= 609.6 mm`
+- Clausula: `Documento: AISC 358-22 | Seccion: Tabla 6.1`
 - Resultado: 🟢 Cumple
 
-#### Chequeo 3.3.2 - Peralte máximo del perfil de columna (W36/W920) (`d_col`)
+### 3.3 Ámbito `END_PLATE_IZQ`
 
-- Ámbito: `COLUMN`
-- Verificacion: `d_col <= W36/W920; 508 mm <= 920 mm`
-- Clausula: `Documento: AISC 358-22 | Seccion: Seccion 6.3 (3)`
-- Resultado: 🟢 Cumple
+#### Chequeo 3.3.1 - Separacion minima de gage de pernos (left beam) (`g_b_vgizq`)
 
-#### Chequeo 3.3.3 - Ajuste de placa de extremo dentro del ala de la columna (`bp`)
-
-- Ámbito: `COLUMN`
-- Verificacion: `bp <= bcf; 260 mm <= 290 mm`
+- Ámbito: `END_PLATE_IZQ`
+- Verificacion: `g_b_vgizq >= 3db; 140 mm >= 76.2 mm`
 - Clausula: `Documento: AISC 358-22 | Seccion: Seccion 6.3 / Tabla 6.1`
 - Resultado: 🟢 Cumple
 
-#### Chequeo 3.3.4 - Condicion de conexión columna-losa (`col_losa`)
+#### Chequeo 3.3.2 - Desigualdades explicitas de ancho de placa de extremo (left beam) (`bp_pe_vgizq`)
 
-- Ámbito: `COLUMN`
-- Verificacion: `col_losa == isolated; 'isolated' == 'isolated'`
-- Clausula: `Documento: AISC 358-22 | Seccion: Seccion 2.3.4 (3)`
+- Ámbito: `END_PLATE_IZQ`
+- Verificacion: `bp_pe_vgizq <= bbf_vgizq + 25 mm; bp_pe_vgizq <= bcf; [min,max] = [177.8 mm, 253 mm]`
+- Clausula: `Documento: AISC 358-22 | Seccion: Seccion 6.3 / Tabla 6.1`
+- Resultado: 🔴 No cumple
+
+#### Chequeo 3.3.3 - Horizontal edge distance from plate edge to bolt line (left beam) (`deh_pe_vgizq`)
+
+- Ámbito: `END_PLATE_IZQ`
+- Verificacion: `deh_pe_vgizq >= emin; 65 mm >= 31.75 mm`
+- Clausula: `Documento: AISC 358-22 | Seccion: Seccion 6.3 / Tabla 6.1 + AISC 360 Tabla J3.4`
 - Resultado: 🟢 Cumple
 
-#### Chequeo 3.3.5 - Proyeccion de columna minima por encima de las vigas (`St_col`)
+#### Chequeo 3.3.4 - Distancia de borde en de (left beam) (`de_pe_vgizq`)
 
-- Ámbito: `COLUMN`
-- Verificacion: `St_col >= pfo_pe_vgder + de_pe_vgder + 12.5 mm; St_col >= pfo_pe_vgizq + de_pe_vgizq + 12.5 mm; 240.000 mm >= 122.500 mm; 240.000 mm >= 122.500 mm`
-- Clausula: `Documento: AISC 358-22 | Seccion: Seccion 6.3.1 (criterio de despeje superior de columna)`
+- Ámbito: `END_PLATE_IZQ`
+- Verificacion: `de_pe_vgizq >= emin; 60 mm >= 31.75 mm`
+- Clausula: `Documento: AISC 358-22 | Seccion: Tabla 6.1 + AISC 360 Tabla J3.4`
 - Resultado: 🟢 Cumple
 
-#### Chequeo 3.3.6 - Column flange width-to-thickness compactness (`lambda_f_col`)
+#### Chequeo 3.3.5 - Maximum edge distance at de (left beam) (`de_pe_vgizq`)
 
-- Ámbito: `COLUMN`
-- Verificacion: `lambda_f_col <= lambda_f_limit; 3.59 adim <= 6.89 adim`
-- Clausula: `Documento: AISC 358-22 | Seccion: AISC 341-22w / AISC 358-22w Seccion 2.3.4 (6) + AISC Seismic Provisions`
+- Ámbito: `END_PLATE_IZQ`
+- Verificacion: `de_pe_vgizq <= emax_j36; 60 mm <= 150 mm`
+- Clausula: `Documento: AISC 358-22 | Seccion: Tabla 6.1 + AISC 360-22 J3.6`
 - Resultado: 🟢 Cumple
 
-#### Chequeo 3.3.7 - Column web width-to-thickness compactness (`lambda_w_col`)
+#### Chequeo 3.3.6 - Outside bolt-row distance minimum (left beam) (`pfo_pe_vgizq`)
 
-- Ámbito: `COLUMN`
-- Verificacion: `lambda_w_col <= lambda_w_limit; 18.01 adim <= 56.24 adim`
-- Clausula: `Documento: AISC 358-22 | Seccion: AISC 341-22w / AISC 358-22w Seccion 2.3.4 (6) + AISC Seismic Provisions`
+- Ámbito: `END_PLATE_IZQ`
+- Verificacion: `pfo_pe_vgizq >= max(pfo_pe_vgizq_min, emin); 50 mm >= 44.45 mm`
+- Clausula: `Documento: AISC 358-22 | Seccion: Tabla 6.1 + AISC 360 Tabla J3.4`
 - Resultado: 🟢 Cumple
 
-#### Chequeo 3.3.8 - Espesor individual minimo del alma de columna (`tw_col`)
+#### Chequeo 3.3.7 - Outside bolt-row distance maximum (left beam) (`pfo_pe_vgizq`)
 
-- Ámbito: `COLUMN`
-- Verificacion: `tw_col >= (dz_dp_col + wz_dp_col)/90; si use_weld_7_col=false: dz_dp_col=d_col-2*tf_col, wz_dp_col=max{d_<lado>-2*tf_<lado>}; si use_weld_7_col=true: dz_dp_col=h_dp_col/nfilas_w7_col, wz_dp_col=b_dp_col/ncolumna_w7_col; 22.6 mm >= 11.11 mm`
-- Clausula: `Documento: AISC 358-22 | Seccion: AISC 341-22w E3.6e.2`
+- Ámbito: `END_PLATE_IZQ`
+- Verificacion: `pfo_pe_vgizq <= min(pfo_pe_vgizq_max, emax_j36); 50 mm <= 139.7 mm`
+- Clausula: `Documento: AISC 358-22 | Seccion: Tabla 6.1 + AISC 360-22 J3.6`
+- Resultado: 🟢 Cumple
+
+#### Chequeo 3.3.8 - Inside bolt-row distance minimum (left beam) (`pfi_pe_vgizq`)
+
+- Ámbito: `END_PLATE_IZQ`
+- Verificacion: `pfi_pe_vgizq >= max(pfi_pe_vgizq_min, emin); 50 mm >= 44.45 mm`
+- Clausula: `Documento: AISC 358-22 | Seccion: Tabla 6.1 + AISC 360 Tabla J3.4`
+- Resultado: 🟢 Cumple
+
+#### Chequeo 3.3.9 - Inside bolt-row distance maximum (left beam) (`pfi_pe_vgizq`)
+
+- Ámbito: `END_PLATE_IZQ`
+- Verificacion: `pfi_pe_vgizq <= min(pfi_pe_vgizq_max, emax_j36); 50 mm <= 139.7 mm`
+- Clausula: `Documento: AISC 358-22 | Seccion: Tabla 6.1 + AISC 360-22 J3.6`
+- Resultado: 🟢 Cumple
+
+#### Chequeo 3.3.10 - Limites de espesor de placa de extremo (left beam) (`tpe_vgizq`)
+
+- Ámbito: `END_PLATE_IZQ`
+- Verificacion: `tpe_vgizq in [tpe_vgizq_min, tpe_vgizq_max]; 12.7 mm <= 25.4 mm <= 38.1 mm`
+- Clausula: `Documento: AISC 358-22 | Seccion: Tabla 6.1`
+- Resultado: 🟢 Cumple
+
+#### Chequeo 3.3.11 - Horizontal bolt spacing minimum (left beam) (`g_b_vgizq`)
+
+- Ámbito: `END_PLATE_IZQ`
+- Verificacion: `g_b_vgizq >= max(g_b_vgizq_min, 3db_j33); 140 mm >= 82.55 mm`
+- Clausula: `Documento: AISC 358-22 | Seccion: Tabla 6.1 + AISC 360 Tabla J3.3 (compute_minimum_bolt_spacing_j33)`
+- Resultado: 🟢 Cumple
+
+#### Chequeo 3.3.12 - Horizontal bolt spacing maximum (left beam) (`g_b_vgizq`)
+
+- Ámbito: `END_PLATE_IZQ`
+- Verificacion: `g_b_vgizq <= min(g_b_vgizq_max, smax_j36); 140 mm <= 152.4 mm`
+- Clausula: `Documento: AISC 358-22 | Seccion: Tabla 6.1 + AISC 360-22 J3.6 (compute_maximum_bolt_spacing_j36)`
 - Resultado: 🟢 Cumple
 
 ### 3.4 Ámbito `END_PLATE_DER`
 
-#### Chequeo 3.4.1 - Desigualdades explicitas de ancho de placa de extremo (right beam) (`bp_pe_vgder`)
+#### Chequeo 3.4.1 - Separacion minima de gage de pernos (right beam) (`g_b_vgder`)
+
+- Ámbito: `END_PLATE_DER`
+- Verificacion: `g_b_vgder >= 3db; 135 mm >= 76.2 mm`
+- Clausula: `Documento: AISC 358-22 | Seccion: Seccion 6.3 / Tabla 6.1`
+- Resultado: 🟢 Cumple
+
+#### Chequeo 3.4.2 - Desigualdades explicitas de ancho de placa de extremo (right beam) (`bp_pe_vgder`)
 
 - Ámbito: `END_PLATE_DER`
 - Verificacion: `bp_pe_vgder <= bbf_vgder + 25 mm; bp_pe_vgder <= bcf; [min,max] = [177.8 mm, 273.05 mm]`
 - Clausula: `Documento: AISC 358-22 | Seccion: Seccion 6.3 / Tabla 6.1`
 - Resultado: 🟢 Cumple
 
-### 3.5 Ámbito `END_PLATE_IZQ`
+#### Chequeo 3.4.3 - Horizontal edge distance from plate edge to bolt line (right beam) (`deh_pe_vgder`)
 
-#### Chequeo 3.5.1 - Desigualdades explicitas de ancho de placa de extremo (left beam) (`bp_pe_vgizq`)
+- Ámbito: `END_PLATE_DER`
+- Verificacion: `deh_pe_vgder >= emin; 62.5 mm >= 31.75 mm`
+- Clausula: `Documento: AISC 358-22 | Seccion: Seccion 6.3 / Tabla 6.1 + AISC 360 Tabla J3.4`
+- Resultado: 🟢 Cumple
 
-- Ámbito: `END_PLATE_IZQ`
-- Verificacion: `bp_pe_vgizq <= bbf_vgizq + 25 mm; bp_pe_vgizq <= bcf; [min,max] = [177.8 mm, 253 mm]`
+#### Chequeo 3.4.4 - Distancia de borde en de (right beam) (`de_pe_vgder`)
+
+- Ámbito: `END_PLATE_DER`
+- Verificacion: `de_pe_vgder >= emin; 55 mm >= 31.75 mm`
+- Clausula: `Documento: AISC 358-22 | Seccion: Tabla 6.1 + AISC 360 Tabla J3.4`
+- Resultado: 🟢 Cumple
+
+#### Chequeo 3.4.5 - Maximum edge distance at de (right beam) (`de_pe_vgder`)
+
+- Ámbito: `END_PLATE_DER`
+- Verificacion: `de_pe_vgder <= emax_j36; 55 mm <= 150 mm`
+- Clausula: `Documento: AISC 358-22 | Seccion: Tabla 6.1 + AISC 360-22 J3.6`
+- Resultado: 🟢 Cumple
+
+#### Chequeo 3.4.6 - Outside bolt-row distance minimum (right beam) (`pfo_pe_vgder`)
+
+- Ámbito: `END_PLATE_DER`
+- Verificacion: `pfo_pe_vgder >= max(pfo_pe_vgder_min, emin); 55 mm >= 44.45 mm`
+- Clausula: `Documento: AISC 358-22 | Seccion: Tabla 6.1 + AISC 360 Tabla J3.4`
+- Resultado: 🟢 Cumple
+
+#### Chequeo 3.4.7 - Outside bolt-row distance maximum (right beam) (`pfo_pe_vgder`)
+
+- Ámbito: `END_PLATE_DER`
+- Verificacion: `pfo_pe_vgder <= min(pfo_pe_vgder_max, emax_j36); 55 mm <= 139.7 mm`
+- Clausula: `Documento: AISC 358-22 | Seccion: Tabla 6.1 + AISC 360-22 J3.6`
+- Resultado: 🟢 Cumple
+
+#### Chequeo 3.4.8 - Inside bolt-row distance minimum (right beam) (`pfi_pe_vgder`)
+
+- Ámbito: `END_PLATE_DER`
+- Verificacion: `pfi_pe_vgder >= max(pfi_pe_vgder_min, emin); 55 mm >= 44.45 mm`
+- Clausula: `Documento: AISC 358-22 | Seccion: Tabla 6.1 + AISC 360 Tabla J3.4`
+- Resultado: 🟢 Cumple
+
+#### Chequeo 3.4.9 - Inside bolt-row distance maximum (right beam) (`pfi_pe_vgder`)
+
+- Ámbito: `END_PLATE_DER`
+- Verificacion: `pfi_pe_vgder <= min(pfi_pe_vgder_max, emax_j36); 55 mm <= 139.7 mm`
+- Clausula: `Documento: AISC 358-22 | Seccion: Tabla 6.1 + AISC 360-22 J3.6`
+- Resultado: 🟢 Cumple
+
+#### Chequeo 3.4.10 - Limites de espesor de placa de extremo (right beam) (`tpe_vgder`)
+
+- Ámbito: `END_PLATE_DER`
+- Verificacion: `tpe_vgder in [tpe_vgder_min, tpe_vgder_max]; 12.7 mm <= 25.4 mm <= 38.1 mm`
+- Clausula: `Documento: AISC 358-22 | Seccion: Tabla 6.1`
+- Resultado: 🟢 Cumple
+
+#### Chequeo 3.4.11 - Horizontal bolt spacing minimum (right beam) (`g_b_vgder`)
+
+- Ámbito: `END_PLATE_DER`
+- Verificacion: `g_b_vgder >= max(g_b_vgder_min, 3db_j33); 135 mm >= 82.55 mm`
+- Clausula: `Documento: AISC 358-22 | Seccion: Tabla 6.1 + AISC 360 Tabla J3.3 (compute_minimum_bolt_spacing_j33)`
+- Resultado: 🟢 Cumple
+
+#### Chequeo 3.4.12 - Horizontal bolt spacing maximum (right beam) (`g_b_vgder`)
+
+- Ámbito: `END_PLATE_DER`
+- Verificacion: `g_b_vgder <= min(g_b_vgder_max, smax_j36); 135 mm <= 152.4 mm`
+- Clausula: `Documento: AISC 358-22 | Seccion: Tabla 6.1 + AISC 360-22 J3.6 (compute_maximum_bolt_spacing_j36)`
+- Resultado: 🟢 Cumple
+
+### 3.5 Ámbito `COLUMN`
+
+#### Chequeo 3.5.1 - Familia de perfil de columna permitida para precalificación (`shape_col`)
+
+- Ámbito: `COLUMN`
+- Verificacion: `shape_col in {W, HEA, HEB, IPE}; 'W18X175' in {W, HEA, HEB, IPE}`
+- Clausula: `Documento: AISC 358-22 | Seccion: Seccion 2.3.4`
+- Resultado: 🟢 Cumple
+
+#### Chequeo 3.5.2 - Peralte máximo del perfil de columna (W36/W920) (`d_col`)
+
+- Ámbito: `COLUMN`
+- Verificacion: `d_col <= W36/W920; 508 mm <= 920 mm`
+- Clausula: `Documento: AISC 358-22 | Seccion: Seccion 6.3 (3)`
+- Resultado: 🟢 Cumple
+
+#### Chequeo 3.5.3 - Ajuste de placa de extremo dentro del ala de la columna (`bp`)
+
+- Ámbito: `COLUMN`
+- Verificacion: `bp <= bcf; 260 mm <= 290 mm`
 - Clausula: `Documento: AISC 358-22 | Seccion: Seccion 6.3 / Tabla 6.1`
-- Resultado: 🔴 No cumple
+- Resultado: 🟢 Cumple
+
+#### Chequeo 3.5.4 - Condicion de conexión columna-losa (`col_losa`)
+
+- Ámbito: `COLUMN`
+- Verificacion: `col_losa == isolated; 'isolated' == 'isolated'`
+- Clausula: `Documento: AISC 358-22 | Seccion: Seccion 2.3.4 (3)`
+- Resultado: 🟢 Cumple
+
+#### Chequeo 3.5.5 - Proyeccion de columna minima por encima de las vigas (`St_col`)
+
+- Ámbito: `COLUMN`
+- Verificacion: `St_col >= pfo_pe_vgder + de_pe_vgder + 12.5 mm; St_col >= pfo_pe_vgizq + de_pe_vgizq + 12.5 mm; 240.000 mm >= 122.500 mm; 240.000 mm >= 122.500 mm`
+- Clausula: `Documento: AISC 358-22 | Seccion: Seccion 6.3.1 (criterio de despeje superior de columna)`
+- Resultado: 🟢 Cumple
+
+#### Chequeo 3.5.6 - Column flange width-to-thickness compactness (`lambda_f_col`)
+
+- Ámbito: `COLUMN`
+- Verificacion: `lambda_f_col <= lambda_f_limit; 3.59 adim <= 6.89 adim`
+- Clausula: `Documento: AISC 358-22 | Seccion: AISC 341-22w / AISC 358-22w Seccion 2.3.4 (6) + AISC Seismic Provisions`
+- Resultado: 🟢 Cumple
+
+#### Chequeo 3.5.7 - Column web width-to-thickness compactness (`lambda_w_col`)
+
+- Ámbito: `COLUMN`
+- Verificacion: `lambda_w_col <= lambda_w_limit; 18.01 adim <= 56.24 adim`
+- Clausula: `Documento: AISC 358-22 | Seccion: AISC 341-22w / AISC 358-22w Seccion 2.3.4 (6) + AISC Seismic Provisions`
+- Resultado: 🟢 Cumple
+
+#### Chequeo 3.5.8 - Espesor individual minimo del alma de columna (`tw_col`)
+
+- Ámbito: `COLUMN`
+- Verificacion: `tw_col >= (dz_dp_col + wz_dp_col)/90; si use_weld_7_col=false: dz_dp_col=d_col-2*tf_col, wz_dp_col=max{d_lado-2*tf_lado}; si use_weld_7_col=true: dz_dp_col=h_dp_col/(nfilas_w7_col + 1), wz_dp_col=b_dp_col/(ncolumna_w7_col + 1); 22.6 mm >= 11.11 mm`
+- Clausula: `Documento: AISC 358-22 | Seccion: AISC 341-22w E3.6e.2`
+- Resultado: 🟢 Cumple
+
+#### Chequeo 3.5.9 - Outside adjusted edge distance minimum (right beam) (`pso_pe_vgder`)
+
+- Ámbito: `COLUMN`
+- Verificacion: `pso_pe_vgder >= emin; 55.7 mm >= 31.75 mm`
+- Clausula: `Documento: AISC 358-22 | Seccion: Tabla 6.1 + AISC 360 Tabla J3.4`
+- Resultado: 🟢 Cumple
+
+#### Chequeo 3.5.10 - Outside adjusted edge distance maximum (right beam) (`pso_pe_vgder`)
+
+- Ámbito: `COLUMN`
+- Verificacion: `pso_pe_vgder <= emax_j36; 55.7 mm <= 150 mm`
+- Clausula: `Documento: AISC 358-22 | Seccion: AISC 360-22 J3.6`
+- Resultado: 🟢 Cumple
+
+#### Chequeo 3.5.11 - Outside adjusted edge distance minimum (left beam) (`pso_pe_vgizq`)
+
+- Ámbito: `COLUMN`
+- Verificacion: `pso_pe_vgizq >= emin; 50.7 mm >= 31.75 mm`
+- Clausula: `Documento: AISC 358-22 | Seccion: Tabla 6.1 + AISC 360 Tabla J3.4`
+- Resultado: 🟢 Cumple
+
+#### Chequeo 3.5.12 - Outside adjusted edge distance maximum (left beam) (`pso_pe_vgizq`)
+
+- Ámbito: `COLUMN`
+- Verificacion: `pso_pe_vgizq <= emax_j36; 50.7 mm <= 150 mm`
+- Clausula: `Documento: AISC 358-22 | Seccion: AISC 360-22 J3.6`
+- Resultado: 🟢 Cumple
 
 ### 3.6 Ámbito `END_PLATE_STIFFENER_DER`
 
@@ -554,245 +848,127 @@ Comparacion directa de valor calculado contra limite normativo (sin formato DCR)
 - Clausula: `Documento: AISC 358-22 | Seccion: Seccion 4.1 FASTENER ASSEMBLIES`
 - Resultado: 🟢 Cumple
 
-### 3.10 Ámbito `TABLE_6_1_DER`
+### 3.10 Ámbito `WELD_1_VGDER`
 
-#### Chequeo 3.10.1 - Distancia de borde en de (right beam) (`de_pe_vgder`)
-
-- Ámbito: `TABLE_6_1_DER`
-- Verificacion: `de_pe_vgder >= emin; 55 mm >= 31.75 mm`
-- Clausula: `Documento: AISC 358-22 | Seccion: Tabla 6.1 + AISC 360 Tabla J3.4`
-- Resultado: 🟢 Cumple
-
-#### Chequeo 3.10.2 - Limites de distancia en fila exterior de pernos (right beam) (`pfo_pe_vgder - pso_pe_vgder`)
-
-- Ámbito: `TABLE_6_1_DER`
-- Verificacion: `pso_pe_vgder = pfo_pe_vgder + 0.5*tf_vgder - 0.5*t_pc_col; pso_pe_vgder >= emin; pfo_pe_vgder <= 140 mm; pfo_pe_vgder >= 44 mm; [min,max] = [44.45 mm, 139.7 mm]`
-- Clausula: `Documento: AISC 358-22 | Seccion: Tabla 6.1 + AISC 360 Tabla J3.4`
-- Resultado: 🟢 Cumple
-
-#### Chequeo 3.10.3 - Limites de distancia en fila interior de pernos (right beam) (`pfi_pe_vgder - psi_pe_vgder`)
-
-- Ámbito: `TABLE_6_1_DER`
-- Verificacion: `pfi_pe_vgder >= emin; pfi_pe_vgder <= 140 mm; pfi_pe_vgder >= 44 mm; psi_pe_vgder = pfi_pe_vgder + 0.5*tf_vgder - 0.5*t_pc_col; psi_pe_vgder > 0; [min,max] = [44.45 mm, 139.7 mm]`
-- Clausula: `Documento: AISC 358-22 | Seccion: Tabla 6.1 + AISC 360 Tabla J3.4`
-- Resultado: 🟢 Cumple
-
-#### Chequeo 3.10.4 - Limites de espesor del ala de viga (right beam) (`tf_vgder`)
-
-- Ámbito: `TABLE_6_1_DER`
-- Verificacion: `tf_vgder in [tf_vgder_min, tf_vgder_max]; 9.52 mm <= 17.3 mm <= 19.05 mm`
-- Clausula: `Documento: AISC 358-22 | Seccion: Tabla 6.1`
-- Resultado: 🟢 Cumple
-
-#### Chequeo 3.10.5 - Limites de ancho del ala de viga (right beam) (`bf_vgder`)
-
-- Ámbito: `TABLE_6_1_DER`
-- Verificacion: `bf_vgder in [bf_vgder_min, bf_vgder_max]; 152.4 mm <= 279 mm <= 228.6 mm`
-- Clausula: `Documento: AISC 358-22 | Seccion: Tabla 6.1`
-- Resultado: 🔴 No cumple
-
-#### Chequeo 3.10.6 - Limites de peralte de la viga conectada (right beam) (`d_vgder`)
-
-- Ámbito: `TABLE_6_1_DER`
-- Verificacion: `d_vgder in [d_vgder_min, d_vgder_max]; 349.25 mm <= 462 mm <= 609.6 mm`
-- Clausula: `Documento: AISC 358-22 | Seccion: Tabla 6.1`
-- Resultado: 🟢 Cumple
-
-#### Chequeo 3.10.7 - Limites de espesor de placa de extremo (right beam) (`tpe_vgder`)
-
-- Ámbito: `TABLE_6_1_DER`
-- Verificacion: `tpe_vgder in [tpe_vgder_min, tpe_vgder_max]; 12.7 mm <= 25.4 mm <= 38.1 mm`
-- Clausula: `Documento: AISC 358-22 | Seccion: Tabla 6.1`
-- Resultado: 🟢 Cumple
-
-#### Chequeo 3.10.8 - Limites de separacion horizontal de pernos (right beam) (`g_b_vgder`)
-
-- Ámbito: `TABLE_6_1_DER`
-- Verificacion: `g_b_vgder in [g_b_vgder_min, g_b_vgder_max]; 82.55 mm <= 135 mm <= 152.4 mm`
-- Clausula: `Documento: AISC 358-22 | Seccion: Tabla 6.1`
-- Resultado: 🟢 Cumple
-
-### 3.11 Ámbito `TABLE_6_1_IZQ`
-
-#### Chequeo 3.11.1 - Distancia de borde en de (left beam) (`de_pe_vgizq`)
-
-- Ámbito: `TABLE_6_1_IZQ`
-- Verificacion: `de_pe_vgizq >= emin; 60 mm >= 31.75 mm`
-- Clausula: `Documento: AISC 358-22 | Seccion: Tabla 6.1 + AISC 360 Tabla J3.4`
-- Resultado: 🟢 Cumple
-
-#### Chequeo 3.11.2 - Limites de distancia en fila exterior de pernos (left beam) (`pfo_pe_vgizq - pso_pe_vgizq`)
-
-- Ámbito: `TABLE_6_1_IZQ`
-- Verificacion: `pso_pe_vgizq = pfo_pe_vgizq + 0.5*tf_vgizq - 0.5*t_pc_col; pso_pe_vgizq >= emin; pfo_pe_vgizq <= 140 mm; pfo_pe_vgizq >= 44 mm; [min,max] = [44.45 mm, 139.7 mm]`
-- Clausula: `Documento: AISC 358-22 | Seccion: Tabla 6.1 + AISC 360 Tabla J3.4`
-- Resultado: 🟢 Cumple
-
-#### Chequeo 3.11.3 - Limites de distancia en fila interior de pernos (left beam) (`pfi_pe_vgizq - psi_pe_vgizq`)
-
-- Ámbito: `TABLE_6_1_IZQ`
-- Verificacion: `pfi_pe_vgizq >= emin; pfi_pe_vgizq <= 140 mm; pfi_pe_vgizq >= 44 mm; psi_pe_vgizq = pfi_pe_vgizq + 0.5*tf_vgizq - 0.5*t_pc_col; psi_pe_vgizq > 0; [min,max] = [44.45 mm, 139.7 mm]`
-- Clausula: `Documento: AISC 358-22 | Seccion: Tabla 6.1 + AISC 360 Tabla J3.4`
-- Resultado: 🟢 Cumple
-
-#### Chequeo 3.11.4 - Limites de espesor del ala de viga (left beam) (`tf_vgizq`)
-
-- Ámbito: `TABLE_6_1_IZQ`
-- Verificacion: `tf_vgizq in [tf_vgizq_min, tf_vgizq_max]; 9.52 mm <= 17.3 mm <= 19.05 mm`
-- Clausula: `Documento: AISC 358-22 | Seccion: Tabla 6.1`
-- Resultado: 🟢 Cumple
-
-#### Chequeo 3.11.5 - Limites de ancho del ala de viga (left beam) (`bf_vgizq`)
-
-- Ámbito: `TABLE_6_1_IZQ`
-- Verificacion: `bf_vgizq in [bf_vgizq_min, bf_vgizq_max]; 152.4 mm <= 228 mm <= 228.6 mm`
-- Clausula: `Documento: AISC 358-22 | Seccion: Tabla 6.1`
-- Resultado: 🟢 Cumple
-
-#### Chequeo 3.11.6 - Limites de peralte de la viga conectada (left beam) (`d_vgizq`)
-
-- Ámbito: `TABLE_6_1_IZQ`
-- Verificacion: `d_vgizq in [d_vgizq_min, d_vgizq_max]; 349.25 mm <= 607 mm <= 609.6 mm`
-- Clausula: `Documento: AISC 358-22 | Seccion: Tabla 6.1`
-- Resultado: 🟢 Cumple
-
-#### Chequeo 3.11.7 - Limites de espesor de placa de extremo (left beam) (`tpe_vgizq`)
-
-- Ámbito: `TABLE_6_1_IZQ`
-- Verificacion: `tpe_vgizq in [tpe_vgizq_min, tpe_vgizq_max]; 12.7 mm <= 25.4 mm <= 38.1 mm`
-- Clausula: `Documento: AISC 358-22 | Seccion: Tabla 6.1`
-- Resultado: 🟢 Cumple
-
-#### Chequeo 3.11.8 - Limites de separacion horizontal de pernos (left beam) (`g_b_vgizq`)
-
-- Ámbito: `TABLE_6_1_IZQ`
-- Verificacion: `g_b_vgizq in [g_b_vgizq_min, g_b_vgizq_max]; 82.55 mm <= 140 mm <= 152.4 mm`
-- Clausula: `Documento: AISC 358-22 | Seccion: Tabla 6.1`
-- Resultado: 🟢 Cumple
-
-### 3.12 Ámbito `WELD_1_VGDER`
-
-#### Chequeo 3.12.1 - Tipo de soldadura de placa de extremo con rigidizador segun espesor del rigidizador (viga derecha) (`tipo_w1_vgder`)
+#### Chequeo 3.10.1 - Tipo de soldadura de placa de extremo con rigidizador segun espesor del rigidizador (viga derecha) (`tipo_w1_vgder`)
 
 - Ámbito: `WELD_1_VGDER`
 - Verificacion: `si t_pest_vgder > 10.000 mm: tipo_w1_vgder == cjp; t_pest_vgder = 15.900 mm; tipo_w1_vgder = cjp`
 - Clausula: `Documento: AISC 358-22 | Seccion: Seccion 6.7 (item 6)`
 - Resultado: 🟢 Cumple
 
-### 3.13 Ámbito `WELD_1_VGIZQ`
+### 3.11 Ámbito `WELD_1_VGIZQ`
 
-#### Chequeo 3.13.1 - Tipo de soldadura de placa de extremo con rigidizador segun espesor del rigidizador (viga izquierda) (`tipo_w1_vgizq`)
+#### Chequeo 3.11.1 - Tipo de soldadura de placa de extremo con rigidizador segun espesor del rigidizador (viga izquierda) (`tipo_w1_vgizq`)
 
 - Ámbito: `WELD_1_VGIZQ`
 - Verificacion: `si t_pest_vgizq > 10.000 mm: tipo_w1_vgizq == cjp; t_pest_vgizq = 15.900 mm; tipo_w1_vgizq = cjp`
 - Clausula: `Documento: AISC 358-22 | Seccion: Seccion 6.7 (item 6)`
 - Resultado: 🟢 Cumple
 
-### 3.14 Ámbito `WELD_2_VGDER`
+### 3.12 Ámbito `WELD_2_VGDER`
 
-#### Chequeo 3.14.1 - Tipo de soldadura de viga con rigidizador segun espesor del rigidizador (viga derecha) (`tipo_w2_vgder`)
+#### Chequeo 3.12.1 - Tipo de soldadura de viga con rigidizador segun espesor del rigidizador (viga derecha) (`tipo_w2_vgder`)
 
 - Ámbito: `WELD_2_VGDER`
 - Verificacion: `si t_pest_vgder > 10.000 mm: tipo_w2_vgder == cjp; t_pest_vgder = 15.900 mm; tipo_w2_vgder = cjp`
 - Clausula: `Documento: AISC 358-22 | Seccion: Seccion 6.7 (item 6)`
 - Resultado: 🟢 Cumple
 
-### 3.15 Ámbito `WELD_2_VGIZQ`
+### 3.13 Ámbito `WELD_2_VGIZQ`
 
-#### Chequeo 3.15.1 - Tipo de soldadura de viga con rigidizador segun espesor del rigidizador (viga izquierda) (`tipo_w2_vgizq`)
+#### Chequeo 3.13.1 - Tipo de soldadura de viga con rigidizador segun espesor del rigidizador (viga izquierda) (`tipo_w2_vgizq`)
 
 - Ámbito: `WELD_2_VGIZQ`
 - Verificacion: `si t_pest_vgizq > 10.000 mm: tipo_w2_vgizq == cjp; t_pest_vgizq = 15.900 mm; tipo_w2_vgizq = cjp`
 - Clausula: `Documento: AISC 358-22 | Seccion: Seccion 6.7 (item 6)`
 - Resultado: 🟢 Cumple
 
-### 3.16 Ámbito `WELD_3_VGDER`
+### 3.14 Ámbito `WELD_3_VGDER`
 
-#### Chequeo 3.16.1 - El tipo de soldadura entre placa de extremo y alma de viga debe ser permitido (right beam) (`weld_ep_web_vgder`)
+#### Chequeo 3.14.1 - El tipo de soldadura entre placa de extremo y alma de viga debe ser permitido (right beam) (`weld_ep_web_vgder`)
 
 - Ámbito: `WELD_3_VGDER`
 - Verificacion: `weld_ep_web_vgder in {cjp, double_sided_fillet, single_sided_fillet}; 'cjp' in {cjp, double_sided_fillet, single_sided_fillet}`
 - Clausula: `Documento: AISC 358-22 | Seccion: Seccion 6.7`
 - Resultado: 🟢 Cumple
 
-### 3.17 Ámbito `WELD_3_VGIZQ`
+### 3.15 Ámbito `WELD_3_VGIZQ`
 
-#### Chequeo 3.17.1 - El tipo de soldadura entre placa de extremo y alma de viga debe ser permitido (left beam) (`weld_ep_web_vgizq`)
+#### Chequeo 3.15.1 - El tipo de soldadura entre placa de extremo y alma de viga debe ser permitido (left beam) (`weld_ep_web_vgizq`)
 
 - Ámbito: `WELD_3_VGIZQ`
 - Verificacion: `weld_ep_web_vgizq in {cjp, double_sided_fillet, single_sided_fillet}; 'cjp' in {cjp, double_sided_fillet, single_sided_fillet}`
 - Clausula: `Documento: AISC 358-22 | Seccion: Seccion 6.7`
 - Resultado: 🟢 Cumple
 
-### 3.18 Ámbito `WELD_4_VGDER`
+### 3.16 Ámbito `WELD_4_VGDER`
 
-#### Chequeo 3.18.1 - Requisitos de soldadura entre ala de viga y placa de extremo (viga derecha) (`tipo_w4_vgder`)
+#### Chequeo 3.16.1 - Requisitos de soldadura entre ala de viga y placa de extremo (viga derecha) (`tipo_w4_vgder`)
 
 - Ámbito: `WELD_4_VGDER`
 - Verificacion: `si demanda_ductilidad_vgder in {high, moderate}: tipo_w4_vgder == cjp; t_w4_1_vgder == 8 mm; demanda_ductilidad_vgder = high; tipo_w4_vgder = cjp; t_w4_1_vgder = 0.000 mm`
 - Clausula: `Documento: AISC 358-22 | Seccion: Seccion 6.7`
 - Resultado: 🔴 No cumple
 
-### 3.19 Ámbito `WELD_4_VGIZQ`
+### 3.17 Ámbito `WELD_4_VGIZQ`
 
-#### Chequeo 3.19.1 - Requisitos de soldadura entre ala de viga y placa de extremo (viga izquierda) (`tipo_w4_vgizq`)
+#### Chequeo 3.17.1 - Requisitos de soldadura entre ala de viga y placa de extremo (viga izquierda) (`tipo_w4_vgizq`)
 
 - Ámbito: `WELD_4_VGIZQ`
 - Verificacion: `si demanda_ductilidad_vgizq in {high, moderate}: tipo_w4_vgizq == cjp; t_w4_1_vgizq == 8 mm; demanda_ductilidad_vgizq = high; tipo_w4_vgizq = cjp; t_w4_1_vgizq = 0.000 mm`
 - Clausula: `Documento: AISC 358-22 | Seccion: Seccion 6.7`
 - Resultado: 🔴 No cumple
 
-### 3.20 Ámbito `WELD_5_COL`
+### 3.18 Ámbito `WELD_5_COL`
 
-#### Chequeo 3.20.1 - El tipo de soldadura de platina de continuidad debe declararse y ser permitido (`tipo_w5_col`)
+#### Chequeo 3.18.1 - El tipo de soldadura de platina de continuidad debe declararse y ser permitido (`tipo_w5_col`)
 
 - Ámbito: `WELD_5_COL`
 - Verificacion: `tipo_w5_col in {fillet, cjp}; 'cjp' in {fillet, cjp}`
 - Clausula: `Documento: AISC 358-22 | Seccion: Seccion 6.3 (detalle de soldadura de platina de continuidad)`
 - Resultado: 🟢 Cumple
 
-#### Chequeo 3.20.2 - Tamano minimo de soldadura #5 cuando tipo_w5_col es fillet (`tipo_w5_col`)
+#### Chequeo 3.18.2 - Tamano minimo de soldadura #5 cuando tipo_w5_col es fillet (`tipo_w5_col`)
 
 - Ámbito: `WELD_5_COL`
 - Verificacion: `tipo_w5_col='cjp' => cumple; t_pc_col=15.9 mm; tipo_w5_col='cjp'`
 - Clausula: `Documento: AISC 358-22 | Seccion: Seccion 6.3 (detalle de soldadura de platina de continuidad)`
 - Resultado: 🟢 Cumple
 
-### 3.21 Ámbito `WELD_6_COL`
+### 3.19 Ámbito `WELD_6_COL`
 
-#### Chequeo 3.21.1 - Tipo de soldadura #6 permitido (`tipo_w6_col`)
+#### Chequeo 3.19.1 - Tipo de soldadura #6 permitido (`tipo_w6_col`)
 
 - Ámbito: `WELD_6_COL`
 - Verificacion: `tipo_w6_col in {cjp, pjp, fillet}; 'cjp' in {cjp, pjp, fillet}`
 - Clausula: `Documento: AISC 358-22 | Seccion: Seccion 6.7`
 - Resultado: 🟢 Cumple
 
-### 3.22 platina de continuidad
+### 3.20 platina de continuidad
 
-### 3.23 Resumen de chequeos por ámbito
+### 3.21 Resumen de chequeos por ámbito
 
-- 🔴 `3.1` `BEAM_IZQ`: total=8, cumple=7, no_cumple=1, numerales_no_cumplen=3.1.2
-- 🔴 `3.2` `BEAM_DER`: total=8, cumple=7, no_cumple=1, numerales_no_cumplen=3.2.7
-- 🟢 `3.3` `COLUMN`: total=8, cumple=8, no_cumple=0, numerales_no_cumplen=ninguno
-- 🟢 `3.4` `END_PLATE_DER`: total=1, cumple=1, no_cumple=0, numerales_no_cumplen=ninguno
-- 🔴 `3.5` `END_PLATE_IZQ`: total=1, cumple=0, no_cumple=1, numerales_no_cumplen=3.5.1
+- 🔴 `3.1` `BEAM_IZQ`: total=9, cumple=8, no_cumple=1, numerales_no_cumplen=3.1.2
+- 🔴 `3.2` `BEAM_DER`: total=9, cumple=7, no_cumple=2, numerales_no_cumplen=3.2.6, 3.2.8
+- 🔴 `3.3` `END_PLATE_IZQ`: total=12, cumple=11, no_cumple=1, numerales_no_cumplen=3.3.2
+- 🟢 `3.4` `END_PLATE_DER`: total=12, cumple=12, no_cumple=0, numerales_no_cumplen=ninguno
+- 🟢 `3.5` `COLUMN`: total=12, cumple=12, no_cumple=0, numerales_no_cumplen=ninguno
 - 🟢 `3.6` `END_PLATE_STIFFENER_DER`: total=4, cumple=4, no_cumple=0, numerales_no_cumplen=ninguno
 - 🟢 `3.7` `END_PLATE_STIFFENER_IZQ`: total=4, cumple=4, no_cumple=0, numerales_no_cumplen=ninguno
 - 🟢 `3.8` `BOLTS_DER`: total=3, cumple=3, no_cumple=0, numerales_no_cumplen=ninguno
 - 🟢 `3.9` `BOLTS_IZQ`: total=3, cumple=3, no_cumple=0, numerales_no_cumplen=ninguno
-- 🔴 `3.10` `TABLE_6_1_DER`: total=8, cumple=7, no_cumple=1, numerales_no_cumplen=3.10.5
-- 🟢 `3.11` `TABLE_6_1_IZQ`: total=8, cumple=8, no_cumple=0, numerales_no_cumplen=ninguno
-- 🟢 `3.12` `WELD_1_VGDER`: total=1, cumple=1, no_cumple=0, numerales_no_cumplen=ninguno
-- 🟢 `3.13` `WELD_1_VGIZQ`: total=1, cumple=1, no_cumple=0, numerales_no_cumplen=ninguno
-- 🟢 `3.14` `WELD_2_VGDER`: total=1, cumple=1, no_cumple=0, numerales_no_cumplen=ninguno
-- 🟢 `3.15` `WELD_2_VGIZQ`: total=1, cumple=1, no_cumple=0, numerales_no_cumplen=ninguno
-- 🟢 `3.16` `WELD_3_VGDER`: total=1, cumple=1, no_cumple=0, numerales_no_cumplen=ninguno
-- 🟢 `3.17` `WELD_3_VGIZQ`: total=1, cumple=1, no_cumple=0, numerales_no_cumplen=ninguno
-- 🔴 `3.18` `WELD_4_VGDER`: total=1, cumple=0, no_cumple=1, numerales_no_cumplen=3.18.1
-- 🔴 `3.19` `WELD_4_VGIZQ`: total=1, cumple=0, no_cumple=1, numerales_no_cumplen=3.19.1
-- 🟢 `3.20` `WELD_5_COL`: total=2, cumple=2, no_cumple=0, numerales_no_cumplen=ninguno
-- 🟢 `3.21` `WELD_6_COL`: total=1, cumple=1, no_cumple=0, numerales_no_cumplen=ninguno
-- 🟢 `3.22` `CONTINUITY_PLATE_COL`: total=0, cumple=0, no_cumple=0, numerales_no_cumplen=ninguno
+- 🟢 `3.10` `WELD_1_VGDER`: total=1, cumple=1, no_cumple=0, numerales_no_cumplen=ninguno
+- 🟢 `3.11` `WELD_1_VGIZQ`: total=1, cumple=1, no_cumple=0, numerales_no_cumplen=ninguno
+- 🟢 `3.12` `WELD_2_VGDER`: total=1, cumple=1, no_cumple=0, numerales_no_cumplen=ninguno
+- 🟢 `3.13` `WELD_2_VGIZQ`: total=1, cumple=1, no_cumple=0, numerales_no_cumplen=ninguno
+- 🟢 `3.14` `WELD_3_VGDER`: total=1, cumple=1, no_cumple=0, numerales_no_cumplen=ninguno
+- 🟢 `3.15` `WELD_3_VGIZQ`: total=1, cumple=1, no_cumple=0, numerales_no_cumplen=ninguno
+- 🔴 `3.16` `WELD_4_VGDER`: total=1, cumple=0, no_cumple=1, numerales_no_cumplen=3.16.1
+- 🔴 `3.17` `WELD_4_VGIZQ`: total=1, cumple=0, no_cumple=1, numerales_no_cumplen=3.17.1
+- 🟢 `3.18` `WELD_5_COL`: total=2, cumple=2, no_cumple=0, numerales_no_cumplen=ninguno
+- 🟢 `3.19` `WELD_6_COL`: total=1, cumple=1, no_cumple=0, numerales_no_cumplen=ninguno
+- 🟢 `3.20` `CONTINUITY_PLATE_COL`: total=0, cumple=0, no_cumple=0, numerales_no_cumplen=ninguno
 
 ## Paso 4 - Momento probable máximo en rótula plástica (Mpr)
 
@@ -919,7 +1095,8 @@ Calculo segun Eq. (2.4-4): `Mfmax = Mpr + Vhmax*Sh` y `Mfmin = Mpr + Vhmin*Sh`.
 - Vh_vgizq_critico: `514.13 kN`
 - n_b_vgizq: `4`
 - A_b_vgizq: `506.71 mm2`
-- Fnt_b_vgizq: `780 MPa`
+- Fnv_b_vgizq: `470 MPa`
+- thread_b_vgizq: `N`
 - Ru_b_v2_vgizq: `128.53 kN`
 - phi*Rn_b_v2_vgizq: `214.34 kN`
 - DCR_b_v2_vgizq: `0.6`
@@ -956,7 +1133,8 @@ Calculo segun Eq. (2.4-4): `Mfmax = Mpr + Vhmax*Sh` y `Mfmin = Mpr + Vhmin*Sh`.
 - Vh_vgder_critico: `426.78 kN`
 - n_b_vgder: `4`
 - A_b_vgder: `506.71 mm2`
-- Fnt_b_vgder: `780 MPa`
+- Fnv_b_vgder: `470 MPa`
+- thread_b_vgder: `N`
 - Ru_b_v2_vgder: `106.7 kN`
 - phi*Rn_b_v2_vgder: `214.34 kN`
 - DCR_b_v2_vgder: `0.5`
@@ -1473,7 +1651,7 @@ Donde:
 #### 23.5.1. ELR #1: Cortante en la zona del panel del alma (WPZS)
 
 - Clausula: `Documento: AISC 360-22w | Seccion: AISC 360-22w Seccion J10.6 + Eq. (J10-9) to Eq. (J10-12)`
-- Ecuacion: `Rn1_wpz_v2_col = 0.60*Fy_col*d_col*tw_col; Rn2_wpz_v2_col = 0.60*Fy_col*d_col*t_dp_col; Rn_wpz_v2_col = min{Rn1_wpz_v2_col, Rn2_wpz_v2_col} (J10-9)`
+- Ecuacion: `Ru_wpz_v2_col = sum_Mf_col/(db-tf) - Vc2_col; Rn1_wpz_v2_col = 0.60*Fy_col*d_col*tw_col; Rn2_wpz_v2_col = 0.60*Fy_col*d_col*(n_dp_col*t_dp_col); Rn_wpz_v2_col = min{Rn1_wpz_v2_col, Rn2_wpz_v2_col} (J10-9)`
 - Considera deformacion inelastica del panel zone: `No`
 - phi_ductil (usado en WPZS): `1`
 - hb_col: `240 mm`
@@ -1499,15 +1677,15 @@ Donde:
 - Fy_col: `345 MPa`
 - d_col: `508 mm`
 - tw_col: `22.6 mm`
-- t_dp_col: `12.7 mm`
+- t_dp_col: `22.6 mm`
 - usar_weld_7_col: `False`
-- tw_wpz_effective_col: `12.7 mm`
+- tw_wpz_effective_col: `22.6 mm`
 - Rn1_wpz_v2_col: `2376.53 kN`
-- Rn2_wpz_v2_col: `1335.48 kN`
+- Rn2_wpz_v2_col: `2376.53 kN`
 - bcf_col: `290 mm`
 - tcf_col: `40.4 mm`
-- Rn_wpz_v2_col: `1335.48 kN`
-- DCR_wpz_v2_col: `-0.62`
+- Rn_wpz_v2_col: `2376.53 kN`
+- DCR_wpz_v2_col: `-0.35`
 - Resultado: `🟢 Cumple`
 
 ## Paso 24 - Revisión de resistencia del alma de platinas de continuidad
@@ -1654,3 +1832,76 @@ Donde:
 ### 27.1. Revisión de capacidad a cortante
 
 #### 27.1.1. ELR #1: Rotura de soldadura
+
+- Clausula: `Documento: AISC 358-22 | Seccion: Capitulo 6 / Seccion 6.7 + AISC 360-22 J2.4`
+- Ecuacion: `Ru_w8_v2_col = max{Ru1_w8_v2_col, Ru2_w8_v2_col}; Ru1_w8_v2_col = 0.6 * Fy_dp_col * h_dp_col * t_dp_col; Ru2_w8_v2_col = max{Mf_vgizq_max + Mf_vgder_min, Mf_vgder_max + Mf_vgizq_min} * (t_dp_col/(t_dp_col*n_dp_col + tw_col)) / b_dp_col; Fillet: L_w8_col = h_dp_col - 2*L_gap_w8_col; phi*Rn_w8_v2_col = phi_fragil * kds_w8_col * nl_w8_col * 0.6 * Fexx_w8_col * 0.707 * L_w8_col * w_w8_col; DCR_w8_v2_col = Ru_w8_v2_col / phi*Rn_w8_v2_col`
+- tipo_w8_col: `CJP`
+- CJP: `Cumple`
+- Resultado: `🟢 Cumple`
+
+## Paso 28- Revisión de resistencia de soldadura # 7 (Platina de enchape con alma de columna)
+
+### 28.1. Revisión de capacidad a cortante
+
+#### 28.1.1. ELR #1: Rotura de soldadura
+
+- Clausula: `Documento: AISC 358-22 | Seccion: Capitulo 6 / Seccion 6.7 + Desarrollo interno`
+- Ecuacion: `Ru_w7_v2_col = Ru_wpz_v2_col * (t_dp_col / (t_dp_col*n_dp_col + tw_col)); phi*Rn_w7_v2_col = phi_fragil * (nfilas_w7_col)*(ncolumna_w7_col) * 0.60 * Fexx_w7_col * 0.25 * 3.1416 * d_hole_w7_col^2; DCR_w7_v2_col = Ru_w7_v2_col / phi*Rn_w7_v2_col`
+- phi usado (phi_fragil): `0.75`
+- nfilas_w7_col: `1`
+- ncolumna_w7_col: `1`
+- Ru_wpz_v2_col: `-834.13 kN`
+- t_dp_col: `22.6 mm`
+- n_dp_col: `1`
+- tw_col: `22.6 mm`
+- Fexx_w7_col: `490 MPa`
+- d_hole_w7_col (usado en formula): `n/a`
+- Ru_w7_v2_col: `-417.06 kN`
+- phi*Rn_w7_v2_col: `n/a`
+- DCR_w7_v2_col: `n/a`
+- Resultado: `n/a`
+
+## Paso 29 - Resumen general
+
+DCR ordenados de mayor a menor para identificar los estados limite criticos.
+
+- DCR critico global: 🔴 `DCR_b_p+_vgder = 1.99` en `9.1.1 Estado #1: Rotura en el perno (vg_der)`
+
+1. 🔴 `DCR_b_p+_vgder` = `1.99`
+Subcapitulo aplicado: `9.1.1 Estado #1: Rotura en el perno (vg_der)`
+2. 🔴 `DCR_b_p+_vgizq` = `1.84`
+Subcapitulo aplicado: `8.1.1 Estado #1: Rotura en el perno (vg_izq)`
+3. 🔴 `DCR_pe_m3_vgder` = `1.16`
+Subcapitulo aplicado: `11.1.1. ELR #1: Fluencia (vg_der)`
+4. 🔴 `DCR_pe_m3_vgizq` = `1.02`
+Subcapitulo aplicado: `10.1.1. ELR #1: Fluencia (vg_izq)`
+5. 🟢 `DCR_cw_v2_col_vgizq` = `1`
+Subcapitulo aplicado: `23.1.1. ELR #1: Fluencia local del alma (WLY)`
+6. 🟢 `DCR_cw_v2_col_vgizq` = `1`
+Subcapitulo aplicado: `23.2.1. ELR #1: Arrugamiento local del alma (WLC)`
+7. 🟢 `DCR_cw_v2_col_vgder` = `1`
+Subcapitulo aplicado: `23.3.1. ELR #1: Fluencia local del alma (WLY)`
+8. 🟢 `DCR_cw_v2_col_vgder` = `1`
+Subcapitulo aplicado: `23.4.1. ELR #1: Arrugamiento local del alma (WLC)`
+9. 🟢 `DCR_b_v2_vgizq` = `0.6`
+Subcapitulo aplicado: `8.2.1 ELR #2: Rotura por cortante en el perno (vg_izq)`
+10. 🟢 `DCR_b_v2_vgder` = `0.5`
+Subcapitulo aplicado: `9.2.1 ELR #2: Rotura por cortante en el perno (vg_der)`
+11. 🟢 `DCR_cf_v2_col_vgder` = `0.44`
+Subcapitulo aplicado: `22.2.1. ELR #1: Flexion local de la aleta (LFB)`
+12. 🟢 `DCR_v2_vgder` = `0.41`
+Subcapitulo aplicado: `19.1.1. ELR #1: Fluencia por cortante (AISC 360-22 G2.1) (vg_der)`
+13. 🟢 `DCR_cf_v2_col_vgizq` = `0.4`
+Subcapitulo aplicado: `22.1.1. ELR #1: Flexion local de la aleta (LFB)`
+14. 🟢 `DCR_v2_vgizq` = `0.37`
+Subcapitulo aplicado: `18.1.1. ELR #1: Fluencia por cortante (AISC 360-22 G2.1) (vg_izq)`
+15. 🟢 `DCR_pe_v2_vgizq` = `0.2`
+Subcapitulo aplicado: `10.3.2. ELR #2: Aplastamiento en la perforacion del perno (vg_izq)`
+16. 🟢 `DCR_pe_v2_vgder` = `0.17`
+Subcapitulo aplicado: `11.3.2. ELR #2: Aplastamiento en la perforacion del perno (vg_der)`
+17. 🟢 `DCR_pe_v2_vgizq` = `0.12`
+Subcapitulo aplicado: `10.3.1. ELR #1: Desgarramiento en la perforacion del perno (vg_izq)`
+18. 🟢 `DCR_pe_v2_vgder` = `0.09`
+Subcapitulo aplicado: `11.3.1. ELR #1: Desgarramiento en la perforacion del perno (vg_der)`
+19. 🟢 `DCR_wpz_v2_col` = `-0.35`
+Subcapitulo aplicado: `23.5.1. ELR #1: Cortante en la zona del panel del alma (WPZS)`

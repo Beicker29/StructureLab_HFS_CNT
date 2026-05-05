@@ -2,19 +2,27 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from steel_connections.domain.engine.evaluate import evaluate_rules
+from steel_connections.adapters.legacy_input import design_input_from_payload, load_legacy_design_input
 from steel_connections.domain.engine.validate import (
     load_input_payload,
     parse_and_validate_payload,
 )
-from steel_connections.domain.routing.dispatcher import resolve_applicable_rules
+from steel_connections.domain.engine.result_mapping import (
+    map_check_result,
+    map_legacy_global_status,
+    map_structured_error,
+)
+from steel_connections.domain.registry import default_registry
 from steel_connections.models.errors import StructuredEngineException
+from steel_connections.models.design_input import DesignInput
 from steel_connections.models.output import (
     CheckStatus,
     DetailedRunResult,
     GlobalStatus,
     RunSummary,
 )
+from steel_connections.models.results import CheckStatus as DesignCheckStatus
+from steel_connections.models.results import DesignResult, DesignSummary
 
 
 def _build_summary(statuses: list[CheckStatus], dcr_values: list[float | None]) -> RunSummary:
@@ -39,8 +47,7 @@ def _global_status(summary: RunSummary) -> GlobalStatus:
 
 def run_case_payload(payload: dict) -> DetailedRunResult:
     case = parse_and_validate_payload(payload)
-    applicable_rules = resolve_applicable_rules(case)
-    checks, errors = evaluate_rules(case=case, applicable_rules=applicable_rules)
+    checks, errors = default_registry().evaluate(case)
 
     summary = _build_summary([check.status for check in checks], [check.dcr for check in checks])
     return DetailedRunResult(
@@ -105,3 +112,45 @@ def run_case_file(path: str | Path) -> DetailedRunResult:
             errors=[exc.error],
             summary=summary,
         )
+
+
+def _build_design_summary(checks: list, worst_dcr: float | None) -> DesignSummary:
+    return DesignSummary(
+        ok_count=sum(1 for check in checks if check.status == DesignCheckStatus.OK),
+        ng_count=sum(1 for check in checks if check.status == DesignCheckStatus.NG),
+        na_count=sum(1 for check in checks if check.status == DesignCheckStatus.NA),
+        error_count=sum(1 for check in checks if check.status == DesignCheckStatus.ERROR),
+        warning_count=sum(len(check.warnings) for check in checks),
+        worst_dcr=worst_dcr,
+    )
+
+
+def run_design_input_result(design_input: DesignInput) -> DesignResult:
+    """Evaluate a DesignInput and emit DesignResult without building DetailedRunResult."""
+    legacy_checks, structured_errors = default_registry().evaluate(design_input)
+    legacy_summary = _build_summary(
+        [check.status for check in legacy_checks],
+        [check.dcr for check in legacy_checks],
+    )
+    checks = [map_check_result(check) for check in legacy_checks]
+    return DesignResult(
+        project_id=design_input.project_id,
+        case_id=design_input.case_id,
+        connection_family=design_input.connection_family,
+        connection_type=design_input.connection_type,
+        load_state=design_input.load_state,
+        status=map_legacy_global_status(_global_status(legacy_summary)),
+        checks=checks,
+        errors=[map_structured_error(error) for error in structured_errors],
+        warnings=[],
+        summary=_build_design_summary(checks, legacy_summary.worst_dcr),
+        legacy_result_type="CheckResult bridge",
+    )
+
+
+def run_case_payload_design_result(payload: dict) -> DesignResult:
+    return run_design_input_result(design_input_from_payload(payload))
+
+
+def run_case_file_design_result(path: str | Path) -> DesignResult:
+    return run_design_input_result(load_legacy_design_input(path))

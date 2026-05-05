@@ -171,6 +171,184 @@ def compute_mf(
     return Quantity(value=mpr.value + vh.value * sh.value, unit=moment_unit)
 
 
+def compute_end_plate_yield_line_spacing_limit(
+    *,
+    end_plate_width: Quantity,
+    bolt_gage: Quantity,
+    unit_system: UnitSystem,
+) -> Quantity:
+    validate_quantity_unit(end_plate_width, "length", unit_system, "geometry.end_plate_width")
+    validate_quantity_unit(bolt_gage, "length", unit_system, "geometry.bolt_gage")
+    if end_plate_width.value <= 0.0:
+        raise ValueError("end_plate_width must be positive.")
+    if bolt_gage.value <= 0.0:
+        raise ValueError("bolt_gage must be positive.")
+    return Quantity(
+        value=0.5 * math.sqrt(end_plate_width.value * bolt_gage.value),
+        unit=end_plate_width.unit,
+    )
+
+
+def compute_effective_end_plate_inner_pitch(
+    *,
+    inner_pitch: Quantity,
+    spacing_limit: Quantity,
+    unit_system: UnitSystem,
+) -> Quantity:
+    validate_quantity_unit(inner_pitch, "length", unit_system, "geometry.pfi")
+    validate_quantity_unit(spacing_limit, "length", unit_system, "yield_line_spacing_limit")
+    if inner_pitch.value <= 0.0:
+        raise ValueError("inner_pitch must be positive.")
+    if spacing_limit.value <= 0.0:
+        raise ValueError("spacing_limit must be positive.")
+    return Quantity(value=min(inner_pitch.value, spacing_limit.value), unit=inner_pitch.unit)
+
+
+def is_end_plate_edge_distance_within_spacing_limit(
+    *,
+    edge_distance: Quantity,
+    spacing_limit: Quantity,
+    unit_system: UnitSystem,
+) -> bool:
+    validate_quantity_unit(edge_distance, "length", unit_system, "geometry.de")
+    validate_quantity_unit(spacing_limit, "length", unit_system, "yield_line_spacing_limit")
+    return edge_distance.value <= spacing_limit.value + 1e-9
+
+
+def compute_bueep_4e_end_plate_yield_line_parameter_value(
+    *,
+    bp: Quantity,
+    g: Quantity,
+    pfi_effective: Quantity,
+    pfo: Quantity,
+    h1: Quantity,
+    h2: Quantity,
+    spacing_limit: Quantity,
+    unit_system: UnitSystem,
+) -> float:
+    for name, value in {
+        "bp": bp,
+        "g": g,
+        "pfi_effective": pfi_effective,
+        "pfo": pfo,
+        "h1": h1,
+        "h2": h2,
+        "spacing_limit": spacing_limit,
+    }.items():
+        validate_quantity_unit(value, "length", unit_system, name)
+        if value.value <= 0.0:
+            raise ValueError(f"{name} must be positive.")
+
+    return (
+        (bp.value / 2.0)
+        * (
+            h2.value * ((1.0 / pfi_effective.value) + (1.0 / spacing_limit.value))
+            + h1.value * (1.0 / pfo.value)
+            - 0.5
+        )
+        + (2.0 / g.value) * (h2.value * (pfi_effective.value + spacing_limit.value))
+    )
+
+
+def compute_bseep_4es_end_plate_yield_line_parameter_value(
+    *,
+    bp: Quantity,
+    g: Quantity,
+    pfi_effective: Quantity,
+    pfo: Quantity,
+    de: Quantity,
+    h1: Quantity,
+    h2: Quantity,
+    spacing_limit: Quantity,
+    de_le_spacing_limit: bool,
+    unit_system: UnitSystem,
+) -> float:
+    for name, value in {
+        "bp": bp,
+        "g": g,
+        "pfi_effective": pfi_effective,
+        "pfo": pfo,
+        "de": de,
+        "h1": h1,
+        "h2": h2,
+        "spacing_limit": spacing_limit,
+    }.items():
+        validate_quantity_unit(value, "length", unit_system, name)
+        if value.value <= 0.0:
+            raise ValueError(f"{name} must be positive.")
+
+    return (
+        (bp.value / 2.0)
+        * (
+            h2.value * ((1.0 / pfi_effective.value) + (1.0 / spacing_limit.value))
+            + h1.value
+            * (
+                (1.0 / pfo.value) + (1.0 / (2.0 * de.value))
+                if de_le_spacing_limit
+                else (1.0 / spacing_limit.value) + (1.0 / pfo.value)
+            )
+        )
+        + (2.0 / g.value)
+        * (
+            h2.value * (pfi_effective.value + spacing_limit.value)
+            + h1.value * ((de.value + pfo.value) if de_le_spacing_limit else (spacing_limit.value + pfo.value))
+        )
+    )
+
+
+def compute_bseep_8es_end_plate_yield_line_parameter_value(
+    *,
+    bp: Quantity,
+    g: Quantity,
+    pfi_effective: Quantity,
+    pfo: Quantity,
+    de: Quantity,
+    pb: Quantity,
+    h1: Quantity,
+    h2: Quantity,
+    h3: Quantity,
+    h4: Quantity,
+    spacing_limit: Quantity,
+    de_le_spacing_limit: bool,
+    unit_system: UnitSystem,
+) -> float:
+    for name, value in {
+        "bp": bp,
+        "g": g,
+        "pfi_effective": pfi_effective,
+        "pfo": pfo,
+        "de": de,
+        "pb": pb,
+        "h1": h1,
+        "h2": h2,
+        "h3": h3,
+        "h4": h4,
+        "spacing_limit": spacing_limit,
+    }.items():
+        validate_quantity_unit(value, "length", unit_system, name)
+        if value.value <= 0.0:
+            raise ValueError(f"{name} must be positive.")
+
+    return (
+        (bp.value / 2.0)
+        * (
+            h1.value * ((1.0 / (2.0 * de.value)) if de_le_spacing_limit else (1.0 / spacing_limit.value))
+            + h2.value * (1.0 / pfo.value)
+            + h3.value * (1.0 / pfi_effective.value)
+            + h4.value * (1.0 / spacing_limit.value)
+        )
+        + (2.0 / g.value)
+        * (
+            h1.value
+            * ((de.value + 3.0 * pb.value / 4.0) if de_le_spacing_limit else (spacing_limit.value + pb.value / 4.0))
+            + h2.value * (pfo.value + (pb.value / 4.0 if de_le_spacing_limit else 3.0 * pb.value / 4.0))
+            + h3.value * (pfi_effective.value + (3.0 * pb.value / 4.0 if de_le_spacing_limit else pb.value / 4.0))
+            + h4.value * (spacing_limit.value + (pb.value / 4.0 if de_le_spacing_limit else 3.0 * pb.value / 4.0))
+        )
+        + g.value
+    )
+
+
 def compute_end_plate_yield_line_parameter(
     *,
     connection_type: str,
@@ -213,41 +391,50 @@ def compute_end_plate_yield_line_parameter(
     if h4 is not None:
         validate_quantity_unit(h4, "length", unit_system, "h4")
 
-    s = Quantity(value=0.5 * math.sqrt(bp.value * g.value), unit=bp.unit)
-    pfi_eff = Quantity(value=min(pfi.value, s.value), unit=pfi.unit)
-    de_le_s = de.value <= s.value + 1e-9
+    s = compute_end_plate_yield_line_spacing_limit(
+        end_plate_width=bp,
+        bolt_gage=g,
+        unit_system=unit_system,
+    )
+    pfi_eff = compute_effective_end_plate_inner_pitch(
+        inner_pitch=pfi,
+        spacing_limit=s,
+        unit_system=unit_system,
+    )
+    de_le_s = is_end_plate_edge_distance_within_spacing_limit(
+        edge_distance=de,
+        spacing_limit=s,
+        unit_system=unit_system,
+    )
     case_ref = "N/A"
 
     if connection_type == "bueep_4e":
-        yp_value = (
-            (bp.value / 2.0)
-            * (
-                h2.value * ((1.0 / pfi_eff.value) + (1.0 / s.value))
-                + h1.value * (1.0 / pfo.value)
-                - 0.5
-            )
-            + (2.0 / g.value) * (h2.value * (pfi_eff.value + s.value))
+        yp_value = compute_bueep_4e_end_plate_yield_line_parameter_value(
+            bp=bp,
+            g=g,
+            pfi_effective=pfi_eff,
+            pfo=pfo,
+            h1=h1,
+            h2=h2,
+            spacing_limit=s,
+            unit_system=unit_system,
         )
         table_ref = "AISC 358-22 Table 6.2"
         formula_text = (
             "Yp = bp/2*[h2*(1/pfi + 1/s) + h1*(1/pfo) - 1/2] + (2/g)*[h2*(pfi + s)]"
         )
     elif connection_type == "bseep_4es":
-        yp_value = (
-            (bp.value / 2.0)
-            * (
-                h2.value * ((1.0 / pfi_eff.value) + (1.0 / s.value))
-                + h1.value * (
-                    (1.0 / pfo.value) + (1.0 / (2.0 * de.value))
-                    if de_le_s
-                    else (1.0 / s.value) + (1.0 / pfo.value)
-                )
-            )
-            + (2.0 / g.value)
-            * (
-                h2.value * (pfi_eff.value + s.value)
-                + h1.value * ((de.value + pfo.value) if de_le_s else (s.value + pfo.value))
-            )
+        yp_value = compute_bseep_4es_end_plate_yield_line_parameter_value(
+            bp=bp,
+            g=g,
+            pfi_effective=pfi_eff,
+            pfo=pfo,
+            de=de,
+            h1=h1,
+            h2=h2,
+            spacing_limit=s,
+            de_le_spacing_limit=de_le_s,
+            unit_system=unit_system,
         )
         case_ref = "Case 1 (de <= s)" if de_le_s else "Case 2 (de > s)"
         table_ref = "AISC 358-22 Table 6.3"
@@ -261,22 +448,20 @@ def compute_end_plate_yield_line_parameter(
     elif connection_type == "bseep_8es":
         if pb is None or h3 is None or h4 is None:
             raise ValueError("bseep_8es requires pb, h3 and h4 to compute Yp.")
-        yp_value = (
-            (bp.value / 2.0)
-            * (
-                h1.value * ((1.0 / (2.0 * de.value)) if de_le_s else (1.0 / s.value))
-                + h2.value * (1.0 / pfo.value)
-                + h3.value * (1.0 / pfi_eff.value)
-                + h4.value * (1.0 / s.value)
-            )
-            + (2.0 / g.value)
-            * (
-                h1.value * ((de.value + 3.0 * pb.value / 4.0) if de_le_s else (s.value + pb.value / 4.0))
-                + h2.value * (pfo.value + (pb.value / 4.0 if de_le_s else 3.0 * pb.value / 4.0))
-                + h3.value * (pfi_eff.value + (3.0 * pb.value / 4.0 if de_le_s else pb.value / 4.0))
-                + h4.value * (s.value + (pb.value / 4.0 if de_le_s else 3.0 * pb.value / 4.0))
-            )
-            + g.value
+        yp_value = compute_bseep_8es_end_plate_yield_line_parameter_value(
+            bp=bp,
+            g=g,
+            pfi_effective=pfi_eff,
+            pfo=pfo,
+            de=de,
+            pb=pb,
+            h1=h1,
+            h2=h2,
+            h3=h3,
+            h4=h4,
+            spacing_limit=s,
+            de_le_spacing_limit=de_le_s,
+            unit_system=unit_system,
         )
         case_ref = "Case 1 (de <= s)" if de_le_s else "Case 2 (de > s)"
         table_ref = "AISC 358-22 Table 6.4"
@@ -301,6 +486,192 @@ def compute_end_plate_yield_line_parameter(
         "de_le_s": de_le_s,
         "is_hardcoded": False,
     }
+
+
+def compute_effective_column_flange_stiffener_pitch(
+    *,
+    stiffener_pitch: Quantity,
+    spacing_limit: Quantity,
+    unit_system: UnitSystem,
+) -> Quantity:
+    validate_quantity_unit(stiffener_pitch, "length", unit_system, "geometry.psi")
+    validate_quantity_unit(spacing_limit, "length", unit_system, "yield_line_spacing_limit")
+    if stiffener_pitch.value <= 0.0:
+        raise ValueError("stiffener_pitch must be positive.")
+    if spacing_limit.value <= 0.0:
+        raise ValueError("spacing_limit must be positive.")
+    return Quantity(value=min(stiffener_pitch.value, spacing_limit.value), unit=stiffener_pitch.unit)
+
+
+def is_column_flange_stiffener_pitch_within_spacing_limit(
+    *,
+    stiffener_pitch: Quantity,
+    spacing_limit: Quantity,
+    unit_system: UnitSystem,
+) -> bool:
+    validate_quantity_unit(stiffener_pitch, "length", unit_system, "geometry.psi")
+    validate_quantity_unit(spacing_limit, "length", unit_system, "yield_line_spacing_limit")
+    return stiffener_pitch.value <= spacing_limit.value + 1e-9
+
+
+def compute_four_bolt_stiffened_column_flange_yield_line_parameter_value(
+    *,
+    bcf: Quantity,
+    g: Quantity,
+    h1: Quantity,
+    h2: Quantity,
+    pso: Quantity,
+    psi_effective: Quantity,
+    spacing_limit: Quantity,
+    unit_system: UnitSystem,
+) -> float:
+    for name, value in {
+        "bcf": bcf,
+        "g": g,
+        "h1": h1,
+        "h2": h2,
+        "pso": pso,
+        "psi_effective": psi_effective,
+        "spacing_limit": spacing_limit,
+    }.items():
+        validate_quantity_unit(value, "length", unit_system, name)
+        if value.value <= 0.0:
+            raise ValueError(f"{name} must be positive.")
+
+    return (
+        (bcf.value / 2.0)
+        * (
+            h2.value * ((1.0 / spacing_limit.value) + (1.0 / psi_effective.value))
+            + h1.value * ((1.0 / spacing_limit.value) + (1.0 / pso.value))
+        )
+        + (2.0 / g.value)
+        * (h2.value * (spacing_limit.value + psi_effective.value) + h1.value * (spacing_limit.value + pso.value))
+    )
+
+
+def compute_four_bolt_unstiffened_column_flange_yield_line_parameter_value(
+    *,
+    bcf: Quantity,
+    g: Quantity,
+    h1: Quantity,
+    h2: Quantity,
+    c: Quantity,
+    spacing_limit: Quantity,
+    unit_system: UnitSystem,
+) -> float:
+    for name, value in {
+        "bcf": bcf,
+        "g": g,
+        "h1": h1,
+        "h2": h2,
+        "c": c,
+        "spacing_limit": spacing_limit,
+    }.items():
+        validate_quantity_unit(value, "length", unit_system, name)
+        if value.value <= 0.0:
+            raise ValueError(f"{name} must be positive.")
+
+    return (
+        (bcf.value / 2.0) * (h2.value * (1.0 / spacing_limit.value) + h1.value * (1.0 / spacing_limit.value))
+        + (2.0 / g.value)
+        * (
+            h2.value * (spacing_limit.value + 3.0 * c.value / 4.0)
+            + h1.value * (spacing_limit.value + c.value / 4.0)
+            + (c.value**2) / 2.0
+        )
+        + g.value
+    )
+
+
+def compute_eight_bolt_stiffened_column_flange_yield_line_parameter_value(
+    *,
+    bcf: Quantity,
+    g: Quantity,
+    h1: Quantity,
+    h2: Quantity,
+    h3: Quantity,
+    h4: Quantity,
+    pso: Quantity,
+    psi_effective: Quantity,
+    pb: Quantity,
+    spacing_limit: Quantity,
+    unit_system: UnitSystem,
+) -> float:
+    for name, value in {
+        "bcf": bcf,
+        "g": g,
+        "h1": h1,
+        "h2": h2,
+        "h3": h3,
+        "h4": h4,
+        "pso": pso,
+        "psi_effective": psi_effective,
+        "pb": pb,
+        "spacing_limit": spacing_limit,
+    }.items():
+        validate_quantity_unit(value, "length", unit_system, name)
+        if value.value <= 0.0:
+            raise ValueError(f"{name} must be positive.")
+
+    return (
+        (bcf.value / 2.0)
+        * (
+            h1.value * (1.0 / spacing_limit.value)
+            + h2.value * (1.0 / pso.value)
+            + h3.value * (1.0 / psi_effective.value)
+            + h4.value * (1.0 / spacing_limit.value)
+        )
+        + (2.0 / g.value)
+        * (
+            h1.value * (spacing_limit.value + pb.value / 4.0)
+            + h2.value * (pso.value + 3.0 * pb.value / 4.0)
+            + h3.value * (psi_effective.value + pb.value / 4.0)
+            + h4.value * (spacing_limit.value + 3.0 * pb.value / 4.0)
+            + (pb.value**2) / 2.0
+        )
+        + g.value
+    )
+
+
+def compute_eight_bolt_unstiffened_column_flange_yield_line_parameter_value(
+    *,
+    bcf: Quantity,
+    g: Quantity,
+    h1: Quantity,
+    h2: Quantity,
+    h3: Quantity,
+    h4: Quantity,
+    c: Quantity,
+    pb: Quantity,
+    spacing_limit: Quantity,
+    unit_system: UnitSystem,
+) -> float:
+    for name, value in {
+        "bcf": bcf,
+        "g": g,
+        "h1": h1,
+        "h2": h2,
+        "h3": h3,
+        "h4": h4,
+        "c": c,
+        "pb": pb,
+        "spacing_limit": spacing_limit,
+    }.items():
+        validate_quantity_unit(value, "length", unit_system, name)
+        if value.value <= 0.0:
+            raise ValueError(f"{name} must be positive.")
+
+    return (
+        (bcf.value / 2.0) * (h1.value * (1.0 / spacing_limit.value) + h4.value * (1.0 / spacing_limit.value))
+        + (2.0 / g.value)
+        * (
+            h1.value * (pb.value + c.value / 2.0 + spacing_limit.value)
+            + h2.value * (pb.value / 2.0 + c.value / 4.0)
+            + h3.value * (pb.value / 2.0 + c.value / 2.0)
+            + h4.value * spacing_limit.value
+        )
+        + g.value / 2.0
+    )
 
 
 def compute_column_flange_yield_line_parameter(
@@ -331,7 +702,11 @@ def compute_column_flange_yield_line_parameter(
         if value.value <= 0.0:
             raise ValueError(f"{name} must be positive.")
 
-    s = Quantity(value=0.5 * math.sqrt(bcf.value * g.value), unit=bcf.unit)
+    s = compute_column_beam_clearance_threshold(
+        column_flange_width=bcf,
+        bolt_gage=g,
+        unit_system=unit_system,
+    )
     case_ref = "N/A"
 
     if connection_type in {"bueep_4e", "bseep_4es"}:
@@ -340,30 +715,48 @@ def compute_column_flange_yield_line_parameter(
                 raise ValueError("Stiffened four-bolt column flange requires pso and psi.")
             validate_quantity_unit(pso, "length", unit_system, "pso")
             validate_quantity_unit(psi, "length", unit_system, "psi")
-            psi_eff = Quantity(value=min(psi.value, s.value), unit=psi.unit)
-            y_value = (
-                (bcf.value / 2.0)
-                * (
-                    h2.value * ((1.0 / s.value) + (1.0 / psi_eff.value))
-                    + h1.value * ((1.0 / s.value) + (1.0 / pso.value))
-                )
-                + (2.0 / g.value) * (h2.value * (s.value + psi_eff.value) + h1.value * (s.value + pso.value))
+            psi_eff = compute_effective_column_flange_stiffener_pitch(
+                stiffener_pitch=psi,
+                spacing_limit=s,
+                unit_system=unit_system,
+            )
+            y_value = compute_four_bolt_stiffened_column_flange_yield_line_parameter_value(
+                bcf=bcf,
+                g=g,
+                h1=h1,
+                h2=h2,
+                pso=pso,
+                psi_effective=psi_eff,
+                spacing_limit=s,
+                unit_system=unit_system,
             )
             table_ref = "AISC 358-22 Table 6.5"
             formula_text = (
                 "Y_cs = bcf/2*[h2*(1/s + 1/psi) + h1*(1/s + 1/pso)] + "
                 "(2/g)*[h2*(s + psi) + h1*(s + pso)]"
             )
-            case_ref = "Case 1 (psi <= s)" if psi.value <= s.value + 1e-9 else "Case 2 (psi > s)"
+            case_ref = (
+                "Case 1 (psi <= s)"
+                if is_column_flange_stiffener_pitch_within_spacing_limit(
+                    stiffener_pitch=psi,
+                    spacing_limit=s,
+                    unit_system=unit_system,
+                )
+                else "Case 2 (psi > s)"
+            )
             metadata = {"pso": pso.model_dump(), "psi_input": psi.model_dump(), "psi_effective": psi_eff.model_dump()}
         else:
             if c is None:
                 raise ValueError("Unstiffened four-bolt column flange requires c.")
             validate_quantity_unit(c, "length", unit_system, "c")
-            y_value = (
-                (bcf.value / 2.0) * (h2.value * (1.0 / s.value) + h1.value * (1.0 / s.value))
-                + (2.0 / g.value) * (h2.value * (s.value + 3.0 * c.value / 4.0) + h1.value * (s.value + c.value / 4.0) + (c.value**2) / 2.0)
-                + g.value
+            y_value = compute_four_bolt_unstiffened_column_flange_yield_line_parameter_value(
+                bcf=bcf,
+                g=g,
+                h1=h1,
+                h2=h2,
+                c=c,
+                spacing_limit=s,
+                unit_system=unit_system,
             )
             table_ref = "AISC 358-22 Table 6.5"
             formula_text = (
@@ -382,46 +775,54 @@ def compute_column_flange_yield_line_parameter(
                 raise ValueError("Stiffened eight-bolt column flange requires pso and psi.")
             validate_quantity_unit(pso, "length", unit_system, "pso")
             validate_quantity_unit(psi, "length", unit_system, "psi")
-            psi_eff = Quantity(value=min(psi.value, s.value), unit=psi.unit)
-            y_value = (
-                (bcf.value / 2.0)
-                * (
-                    h1.value * (1.0 / s.value)
-                    + h2.value * (1.0 / pso.value)
-                    + h3.value * (1.0 / psi_eff.value)
-                    + h4.value * (1.0 / s.value)
-                )
-                + (2.0 / g.value)
-                * (
-                    h1.value * (s.value + pb.value / 4.0)
-                    + h2.value * (pso.value + 3.0 * pb.value / 4.0)
-                    + h3.value * (psi_eff.value + pb.value / 4.0)
-                    + h4.value * (s.value + 3.0 * pb.value / 4.0)
-                    + (pb.value**2) / 2.0
-                )
-                + g.value
+            psi_eff = compute_effective_column_flange_stiffener_pitch(
+                stiffener_pitch=psi,
+                spacing_limit=s,
+                unit_system=unit_system,
+            )
+            y_value = compute_eight_bolt_stiffened_column_flange_yield_line_parameter_value(
+                bcf=bcf,
+                g=g,
+                h1=h1,
+                h2=h2,
+                h3=h3,
+                h4=h4,
+                pso=pso,
+                psi_effective=psi_eff,
+                pb=pb,
+                spacing_limit=s,
+                unit_system=unit_system,
             )
             table_ref = "AISC 358-22 Table 6.6"
             formula_text = (
                 "Y_cs = bcf/2*[h1*(1/s) + h2*(1/pso) + h3*(1/psi) + h4*(1/s)] + "
                 "(2/g)*[h1*(s + pb/4) + h2*(pso + 3pb/4) + h3*(psi + pb/4) + h4*(s + 3pb/4) + pb^2/2] + g"
             )
-            case_ref = "Case 1 (psi <= s)" if psi.value <= s.value + 1e-9 else "Case 2 (psi > s)"
+            case_ref = (
+                "Case 1 (psi <= s)"
+                if is_column_flange_stiffener_pitch_within_spacing_limit(
+                    stiffener_pitch=psi,
+                    spacing_limit=s,
+                    unit_system=unit_system,
+                )
+                else "Case 2 (psi > s)"
+            )
             metadata = {"pso": pso.model_dump(), "psi_input": psi.model_dump(), "psi_effective": psi_eff.model_dump(), "pb": pb.model_dump()}
         else:
             if c is None:
                 raise ValueError("Unstiffened eight-bolt column flange requires c.")
             validate_quantity_unit(c, "length", unit_system, "c")
-            y_value = (
-                (bcf.value / 2.0) * (h1.value * (1.0 / s.value) + h4.value * (1.0 / s.value))
-                + (2.0 / g.value)
-                * (
-                    h1.value * (pb.value + c.value / 2.0 + s.value)
-                    + h2.value * (pb.value / 2.0 + c.value / 4.0)
-                    + h3.value * (pb.value / 2.0 + c.value / 2.0)
-                    + h4.value * s.value
-                )
-                + g.value / 2.0
+            y_value = compute_eight_bolt_unstiffened_column_flange_yield_line_parameter_value(
+                bcf=bcf,
+                g=g,
+                h1=h1,
+                h2=h2,
+                h3=h3,
+                h4=h4,
+                c=c,
+                pb=pb,
+                spacing_limit=s,
+                unit_system=unit_system,
             )
             table_ref = "AISC 358-22 Table 6.6"
             formula_text = (
@@ -740,6 +1141,150 @@ def compute_minimum_stiffener_length(stiffener_height: Quantity, unit_system: Un
         value=stiffener_height.value / math.tan(math.radians(30.0)),
         unit=stiffener_height.unit,
     )
+
+
+def compute_detail_stiffener_length_from_height(stiffener_height: Quantity, unit_system: UnitSystem) -> Quantity:
+    length = compute_minimum_stiffener_length(stiffener_height, unit_system)
+    if unit_system == UnitSystem.SI and length.unit == "mm":
+        return Quantity(value=math.ceil(length.value / 10.0) * 10.0, unit=length.unit)
+    return length
+
+
+def compute_stiffener_height_from_end_plate_geometry(
+    *,
+    pfo: Quantity,
+    de: Quantity,
+    pb: Quantity | None,
+    unit_system: UnitSystem,
+) -> Quantity:
+    validate_quantity_unit(pfo, "length", unit_system, "geometry.pfo")
+    validate_quantity_unit(de, "length", unit_system, "geometry.de")
+    if pb is not None:
+        validate_quantity_unit(pb, "length", unit_system, "geometry.pb")
+    pb_value = pb.value if pb is not None else 0.0
+    return Quantity(value=pfo.value + de.value + pb_value, unit=pfo.unit)
+
+
+def compute_end_plate_height_from_geometry(
+    *,
+    beam_depth: Quantity,
+    pfo: Quantity,
+    de: Quantity,
+    unit_system: UnitSystem,
+) -> Quantity:
+    validate_quantity_unit(beam_depth, "length", unit_system, "sections.beam_depth")
+    validate_quantity_unit(pfo, "length", unit_system, "geometry.pfo")
+    validate_quantity_unit(de, "length", unit_system, "geometry.de")
+    return Quantity(value=beam_depth.value + 2.0 * pfo.value + 2.0 * de.value, unit=beam_depth.unit)
+
+
+def compute_stiffener_slenderness_ratio(
+    *,
+    stiffener_height: Quantity,
+    stiffener_thickness: Quantity,
+    unit_system: UnitSystem,
+) -> float:
+    validate_quantity_unit(stiffener_height, "length", unit_system, "geometry.stiffener_height")
+    validate_quantity_unit(stiffener_thickness, "length", unit_system, "geometry.stiffener_thickness")
+    return stiffener_height.value / stiffener_thickness.value
+
+
+def compute_minimum_stiffener_bolt_gage(
+    *,
+    minimum_edge_distance: Quantity,
+    stiffener_thickness: Quantity,
+    unit_system: UnitSystem,
+) -> Quantity:
+    validate_quantity_unit(minimum_edge_distance, "length", unit_system, "minimum_edge_distance")
+    validate_quantity_unit(stiffener_thickness, "length", unit_system, "geometry.stiffener_thickness")
+    return Quantity(
+        value=2.0 * minimum_edge_distance.value + stiffener_thickness.value,
+        unit=minimum_edge_distance.unit,
+    )
+
+
+def compute_minimum_column_end_distance_to_beam_flange(
+    *,
+    pfo: Quantity,
+    de: Quantity,
+    margin: Quantity,
+    pb: Quantity | None,
+    unit_system: UnitSystem,
+) -> Quantity:
+    validate_quantity_unit(pfo, "length", unit_system, "geometry.pfo")
+    validate_quantity_unit(de, "length", unit_system, "geometry.de")
+    validate_quantity_unit(margin, "length", unit_system, "column_end_distance_margin")
+    if pb is not None:
+        validate_quantity_unit(pb, "length", unit_system, "geometry.pb")
+    pb_value = pb.value if pb is not None else 0.0
+    return Quantity(value=pfo.value + de.value + pb_value + margin.value, unit=pfo.unit)
+
+
+def compute_column_beam_clearance_threshold(
+    *,
+    column_flange_width: Quantity,
+    bolt_gage: Quantity,
+    unit_system: UnitSystem,
+) -> Quantity:
+    validate_quantity_unit(column_flange_width, "length", unit_system, "sections.column_flange_width")
+    validate_quantity_unit(bolt_gage, "length", unit_system, "geometry.bolt_gage")
+    return Quantity(
+        value=0.5 * math.sqrt(column_flange_width.value * bolt_gage.value),
+        unit=column_flange_width.unit,
+    )
+
+
+def compute_column_beam_clearance_distance(
+    *,
+    column_end_distance_to_beam_flange: Quantity,
+    pfo: Quantity,
+    pb: Quantity | None,
+    unit_system: UnitSystem,
+) -> Quantity:
+    validate_quantity_unit(
+        column_end_distance_to_beam_flange,
+        "length",
+        unit_system,
+        "geometry.column_end_distance_to_beam_flange",
+    )
+    validate_quantity_unit(pfo, "length", unit_system, "geometry.pfo")
+    if pb is not None:
+        validate_quantity_unit(pb, "length", unit_system, "geometry.pb")
+    pb_value = pb.value if pb is not None else 0.0
+    return Quantity(
+        value=column_end_distance_to_beam_flange.value - pfo.value - pb_value,
+        unit=column_end_distance_to_beam_flange.unit,
+    )
+
+
+def compute_end_plate_yield_line_h_terms(
+    *,
+    connection_type: str,
+    beam_depth: Quantity,
+    beam_flange_thickness: Quantity,
+    pfo: Quantity,
+    pfi: Quantity,
+    pb: Quantity | None,
+    unit_system: UnitSystem,
+) -> dict[str, Quantity | None]:
+    validate_quantity_unit(beam_depth, "length", unit_system, "sections.beam_depth")
+    validate_quantity_unit(beam_flange_thickness, "length", unit_system, "sections.beam_flange_thickness")
+    validate_quantity_unit(pfo, "length", unit_system, "geometry.pfo")
+    validate_quantity_unit(pfi, "length", unit_system, "geometry.pfi")
+    if connection_type == "bseep_8es":
+        if pb is None:
+            raise ValueError("geometry.pb is required for bseep_8es prequalification checks.")
+        validate_quantity_unit(pb, "length", unit_system, "geometry.pb")
+        h1 = Quantity(value=beam_depth.value - 0.5 * beam_flange_thickness.value + pfo.value + pb.value, unit=beam_depth.unit)
+        h2 = Quantity(value=beam_depth.value - 0.5 * beam_flange_thickness.value + pfo.value, unit=beam_depth.unit)
+        h3 = Quantity(value=beam_depth.value - 1.5 * beam_flange_thickness.value - pfi.value, unit=beam_depth.unit)
+        h4 = Quantity(value=beam_depth.value - 1.5 * beam_flange_thickness.value - pfi.value - pb.value, unit=beam_depth.unit)
+    else:
+        h1 = Quantity(value=beam_depth.value - 0.5 * beam_flange_thickness.value + pfo.value, unit=beam_depth.unit)
+        h2 = Quantity(value=beam_depth.value - 1.5 * beam_flange_thickness.value - pfi.value, unit=beam_depth.unit)
+        h3 = None
+        h4 = None
+    return {"h1": h1, "h2": h2, "h3": h3, "h4": h4}
 
 
 def compute_required_stiffener_thickness(

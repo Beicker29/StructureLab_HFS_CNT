@@ -108,6 +108,8 @@
           "w_w8_col": null,
           "t_w8_col": null,
           "nl_w8_col": null,
+          "L_gap_w8_col": null,
+          "L_w8_col": null,
           "Encr_w8_col": null,
           "Encr_w8_col_fuente": null,
           "kds_w8_col": 1.0,
@@ -118,6 +120,10 @@
           "nl_w9_col": null,
           "L_gap_w9_col": null,
           "kds_w9_col": null,
+          "L_w9_col": {
+            "value": 0.0,
+            "unit": "mm"
+          },
           "gap_dp_col": {
             "value": 0.0,
             "unit": "mm"
@@ -140,6 +146,13 @@
           "nl_w7_col": 1,
           "nfilas_w7_col": 1,
           "ncolumna_w7_col": 1,
+          "d_hole_w7_col": null,
+          "sh_w7_col": null,
+          "sv_w7_col": null,
+          "t_part_w7_col": {
+            "value": 15.9,
+            "unit": "mm"
+          },
           "tipo_wdp_plug": "plug",
           "t_wdp_plug": {
             "value": 8.0,
@@ -160,6 +173,34 @@
           "L_gap_w1_vgizq": null,
           "L_gap_w2_vgder": null,
           "L_gap_w2_vgizq": null,
+          "tipo_w1_vgder": "CJP",
+          "tipo_w1_vgizq": "CJP",
+          "w_w1_vgder": {
+            "value": 9.525,
+            "unit": "mm"
+          },
+          "w_w1_vgizq": {
+            "value": 9.525,
+            "unit": "mm"
+          },
+          "nl_w1_vgder": 2,
+          "nl_w1_vgizq": 2,
+          "kds_w1_vgder": 1.0,
+          "kds_w1_vgizq": 1.0,
+          "tipo_w2_vgder": "CJP",
+          "tipo_w2_vgizq": "CJP",
+          "w_w2_vgder": {
+            "value": 9.525,
+            "unit": "mm"
+          },
+          "w_w2_vgizq": {
+            "value": 9.525,
+            "unit": "mm"
+          },
+          "nl_w2_vgder": 2,
+          "nl_w2_vgizq": 2,
+          "kds_w2_vgder": 1.0,
+          "kds_w2_vgizq": 1.0,
           "bolt_tightening_type": "pretensioned",
           "bolt_fabrication_standard": "ASTM A490",
           "end_plate_width_bp": {
@@ -200,10 +241,10 @@
           },
           "beam_connection_sides": "both_sides",
           "t_dp_col": {
-            "value": 12.7,
+            "value": 22.6,
             "unit": "mm"
           },
-          "n_dp_col": 0,
+          "n_dp_col": 1,
           "extended_dp_col": false,
           "doubler_plate_enabled": false,
           "beam_clear_span_length_der": {
@@ -403,6 +444,13 @@
             "unit": "mm"
           },
           "L_w6_col_formula": "L_w6_col = L2_pc_col - 2*(L_gap_w6_col)",
+          "L_w8_col": null,
+          "L_w8_col_formula": "L_w8_col = h_dp_col - 2*(L_gap_w8_col)",
+          "L_w9_col": {
+            "value": 0.0,
+            "unit": "mm"
+          },
+          "L_w9_col_formula": "L_w9_col = b_dp_col - 2*(L_gap_w9_col) si usar_weld_9_col=true; L_w9_col = 0 si usar_weld_9_col=false",
           "j34_lookup": {
             "db_in": 1.0,
             "table_row": "db=1.0 in",
@@ -671,7 +719,7 @@
             {
               "step": "1",
               "id": "beam_izq.bolt_gage_g_ge_3db",
-              "scope": "beam_izq",
+              "scope": "end_plate_izq",
               "clause": "Section 6.3 / Table 6.1",
               "description": "Bolt gage minimum spacing (left beam)",
               "calculated_symbol": "g_b_vgizq",
@@ -839,7 +887,7 @@
             {
               "step": "1",
               "id": "beam_der.bolt_gage_g_ge_3db",
-              "scope": "beam_der",
+              "scope": "end_plate_der",
               "clause": "Section 6.3 / Table 6.1",
               "description": "Bolt gage minimum spacing (right beam)",
               "calculated_symbol": "g_b_vgder",
@@ -1143,7 +1191,7 @@
               "clause": "AISC 341-22w E3.6e.2",
               "description": "Espesor individual minimo del alma de columna",
               "calculated_symbol": "tw_col",
-              "limit_symbol": "(dz_dp_col + wz_dp_col)/90; si use_weld_7_col=false: dz_dp_col=d_col-2*tf_col, wz_dp_col=max{d_<lado>-2*tf_<lado>}; si use_weld_7_col=true: dz_dp_col=h_dp_col/nfilas_w7_col, wz_dp_col=b_dp_col/ncolumna_w7_col",
+              "limit_symbol": "(dz_dp_col + wz_dp_col)/90; si use_weld_7_col=false: dz_dp_col=d_col-2*tf_col, wz_dp_col=max{d_lado-2*tf_lado}; si use_weld_7_col=true: dz_dp_col=h_dp_col/(nfilas_w7_col + 1), wz_dp_col=b_dp_col/(ncolumna_w7_col + 1)",
               "calculated": {
                 "value": 22.6,
                 "unit": "mm"
@@ -1189,6 +1237,31 @@
             },
             {
               "step": "1",
+              "id": "section_6_3.end_plate_horizontal_edge_distance_ge_emin_der",
+              "scope": "end_plate_der",
+              "clause": "Section 6.3 / Table 6.1 + AISC 360 Table J3.4",
+              "description": "Horizontal edge distance from plate edge to bolt line (right beam)",
+              "calculated_symbol": "deh_pe_vgder",
+              "limit_symbol": "emin",
+              "calculated": {
+                "value": 62.5,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 31.75,
+                "unit": "mm"
+              },
+              "comparison": "ge",
+              "comparison_text": ">=",
+              "margin": {
+                "value": 30.75,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
               "id": "section_6_3.end_plate_width_dual_limit_izq",
               "scope": "end_plate_izq",
               "clause": "Section 6.3 / Table 6.1",
@@ -1212,6 +1285,31 @@
                 "value": 253.0,
                 "unit": "mm"
               }
+            },
+            {
+              "step": "1",
+              "id": "section_6_3.end_plate_horizontal_edge_distance_ge_emin_izq",
+              "scope": "end_plate_izq",
+              "clause": "Section 6.3 / Table 6.1 + AISC 360 Table J3.4",
+              "description": "Horizontal edge distance from plate edge to bolt line (left beam)",
+              "calculated_symbol": "deh_pe_vgizq",
+              "limit_symbol": "emin",
+              "calculated": {
+                "value": 65.0,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 31.75,
+                "unit": "mm"
+              },
+              "comparison": "ge",
+              "comparison_text": ">=",
+              "margin": {
+                "value": 33.25,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
             },
             {
               "step": "1",
@@ -1702,7 +1800,7 @@
             {
               "step": "1",
               "id": "table_6_1.edge_de_ge_emin_der",
-              "scope": "table_6_1_der",
+              "scope": "end_plate_der",
               "clause": "Table 6.1 + AISC 360 Table J3.4",
               "description": "Edge distance at de (right beam)",
               "calculated_symbol": "de_pe_vgder",
@@ -1726,88 +1824,174 @@
             },
             {
               "step": "1",
-              "id": "table_6_1.edge_pfo_ge_emin_der",
-              "scope": "table_6_1_der",
-              "clause": "Table 6.1 + AISC 360 Table J3.4",
-              "description": "Outside bolt-row distance limits (right beam)",
-              "calculated_symbol": "pfo_pe_vgder - pso_pe_vgder",
-              "limit_symbol": "compound",
-              "comparison": "compound",
-              "comparison_text": "compound",
-              "verification_text": "pso_pe_vgder = pfo_pe_vgder + 0.5*tf_vgder - 0.5*t_pc_col; pso_pe_vgder >= emin; pfo_pe_vgder <= 140 mm; pfo_pe_vgder >= 44 mm",
+              "id": "table_6_1.edge_de_le_emax_der",
+              "scope": "end_plate_der",
+              "clause": "Table 6.1 + AISC 360-22 J3.6",
+              "description": "Maximum edge distance at de (right beam)",
+              "calculated_symbol": "de_pe_vgder",
+              "limit_symbol": "emax_j36",
               "calculated": {
                 "value": 55.0,
                 "unit": "mm"
               },
-              "status": "PASS",
-              "result": "OK",
-              "minimum": {
-                "value": 44.449999999999996,
+              "limit": {
+                "value": 150.0,
                 "unit": "mm"
               },
-              "maximum": {
-                "value": 139.7,
-                "unit": "mm"
-              }
-            },
-            {
-              "step": "1",
-              "id": "table_6_1.edge_pfi_ge_emin_der",
-              "scope": "table_6_1_der",
-              "clause": "Table 6.1 + AISC 360 Table J3.4",
-              "description": "Inside bolt-row distance limits (right beam)",
-              "calculated_symbol": "pfi_pe_vgder - psi_pe_vgder",
-              "limit_symbol": "compound",
-              "comparison": "compound",
-              "comparison_text": "compound",
-              "verification_text": "pfi_pe_vgder >= emin; pfi_pe_vgder <= 140 mm; pfi_pe_vgder >= 44 mm; psi_pe_vgder = pfi_pe_vgder + 0.5*tf_vgder - 0.5*t_pc_col; psi_pe_vgder > 0",
-              "calculated": {
-                "value": 55.0,
-                "unit": "mm"
-              },
-              "status": "PASS",
-              "result": "OK",
-              "minimum": {
-                "value": 44.449999999999996,
-                "unit": "mm"
-              },
-              "maximum": {
-                "value": 139.7,
-                "unit": "mm"
-              }
-            },
-            {
-              "step": "1",
-              "id": "table_6_1.tbf.range_der",
-              "scope": "table_6_1_der",
-              "clause": "Table 6.1",
-              "description": "Beam flange thickness limits (right beam)",
-              "calculated_symbol": "tf_vgder",
-              "limit_symbol": "[tf_vgder_min, tf_vgder_max]",
-              "calculated": {
-                "value": 17.3,
-                "unit": "mm"
-              },
-              "minimum": {
-                "value": 9.524999999999999,
-                "unit": "mm"
-              },
-              "maximum": {
-                "value": 19.049999999999997,
-                "unit": "mm"
-              },
-              "comparison": "range",
-              "comparison_text": "in",
-              "margin_to_min": {
-                "value": 7.775000000000002,
-                "unit": "mm"
-              },
-              "margin_to_max": {
-                "value": 1.7499999999999964,
-                "unit": "mm"
-              },
+              "comparison": "le",
+              "comparison_text": "<=",
               "margin": {
-                "value": 1.7499999999999964,
+                "value": 95.0,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "table_6_1.edge_pfo_ge_pfo_min_der",
+              "scope": "end_plate_der",
+              "clause": "Table 6.1 + AISC 360 Table J3.4",
+              "description": "Outside bolt-row distance minimum (right beam)",
+              "calculated_symbol": "pfo_pe_vgder",
+              "limit_symbol": "max(pfo_pe_vgder_min, emin)",
+              "calculated": {
+                "value": 55.0,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 44.449999999999996,
+                "unit": "mm"
+              },
+              "comparison": "ge",
+              "comparison_text": ">=",
+              "margin": {
+                "value": 10.550000000000004,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "table_6_1.edge_pfo_le_emax_der",
+              "scope": "end_plate_der",
+              "clause": "Table 6.1 + AISC 360-22 J3.6",
+              "description": "Outside bolt-row distance maximum (right beam)",
+              "calculated_symbol": "pfo_pe_vgder",
+              "limit_symbol": "min(pfo_pe_vgder_max, emax_j36)",
+              "calculated": {
+                "value": 55.0,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 139.7,
+                "unit": "mm"
+              },
+              "comparison": "le",
+              "comparison_text": "<=",
+              "margin": {
+                "value": 84.69999999999999,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "table_6_1.edge_pso_ge_emin_der",
+              "scope": "column",
+              "clause": "Table 6.1 + AISC 360 Table J3.4",
+              "description": "Outside adjusted edge distance minimum (right beam)",
+              "calculated_symbol": "pso_pe_vgder",
+              "limit_symbol": "emin",
+              "calculated": {
+                "value": 55.699999999999996,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 31.75,
+                "unit": "mm"
+              },
+              "comparison": "ge",
+              "comparison_text": ">=",
+              "margin": {
+                "value": 23.949999999999996,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "table_6_1.edge_pso_le_emax_der",
+              "scope": "column",
+              "clause": "AISC 360-22 J3.6",
+              "description": "Outside adjusted edge distance maximum (right beam)",
+              "calculated_symbol": "pso_pe_vgder",
+              "limit_symbol": "emax_j36",
+              "calculated": {
+                "value": 55.699999999999996,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 150.0,
+                "unit": "mm"
+              },
+              "comparison": "le",
+              "comparison_text": "<=",
+              "margin": {
+                "value": 94.30000000000001,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "table_6_1.edge_pfi_ge_pfi_min_der",
+              "scope": "end_plate_der",
+              "clause": "Table 6.1 + AISC 360 Table J3.4",
+              "description": "Inside bolt-row distance minimum (right beam)",
+              "calculated_symbol": "pfi_pe_vgder",
+              "limit_symbol": "max(pfi_pe_vgder_min, emin)",
+              "calculated": {
+                "value": 55.0,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 44.449999999999996,
+                "unit": "mm"
+              },
+              "comparison": "ge",
+              "comparison_text": ">=",
+              "margin": {
+                "value": 10.550000000000004,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "table_6_1.edge_pfi_le_emax_der",
+              "scope": "end_plate_der",
+              "clause": "Table 6.1 + AISC 360-22 J3.6",
+              "description": "Inside bolt-row distance maximum (right beam)",
+              "calculated_symbol": "pfi_pe_vgder",
+              "limit_symbol": "min(pfi_pe_vgder_max, emax_j36)",
+              "calculated": {
+                "value": 55.0,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 139.7,
+                "unit": "mm"
+              },
+              "comparison": "le",
+              "comparison_text": "<=",
+              "margin": {
+                "value": 84.69999999999999,
                 "unit": "mm"
               },
               "status": "PASS",
@@ -1816,7 +2000,7 @@
             {
               "step": "1",
               "id": "table_6_1.bbf.range_der",
-              "scope": "table_6_1_der",
+              "scope": "beam_der",
               "clause": "Table 6.1",
               "description": "Beam flange width limits (right beam)",
               "calculated_symbol": "bf_vgder",
@@ -1853,7 +2037,7 @@
             {
               "step": "1",
               "id": "table_6_1.d.range_der",
-              "scope": "table_6_1_der",
+              "scope": "beam_der",
               "clause": "Table 6.1",
               "description": "Connecting beam depth limits (right beam)",
               "calculated_symbol": "d_vgder",
@@ -1890,7 +2074,7 @@
             {
               "step": "1",
               "id": "table_6_1.tp.range_der",
-              "scope": "table_6_1_der",
+              "scope": "end_plate_der",
               "clause": "Table 6.1",
               "description": "End-plate thickness limits (right beam)",
               "calculated_symbol": "tpe_vgder",
@@ -1926,34 +2110,47 @@
             },
             {
               "step": "1",
-              "id": "table_6_1.g.range_der",
-              "scope": "table_6_1_der",
-              "clause": "Table 6.1",
-              "description": "Horizontal bolt spacing limits (right beam)",
+              "id": "table_6_1.g.ge_min_der",
+              "scope": "end_plate_der",
+              "clause": "Table 6.1 + AISC 360 Table J3.3 (compute_minimum_bolt_spacing_j33)",
+              "description": "Horizontal bolt spacing minimum (right beam)",
               "calculated_symbol": "g_b_vgder",
-              "limit_symbol": "[g_b_vgder_min, g_b_vgder_max]",
+              "limit_symbol": "max(g_b_vgder_min, 3db_j33)",
               "calculated": {
                 "value": 135.0,
                 "unit": "mm"
               },
-              "minimum": {
+              "limit": {
                 "value": 82.55,
                 "unit": "mm"
               },
-              "maximum": {
-                "value": 152.39999999999998,
-                "unit": "mm"
-              },
-              "comparison": "range",
-              "comparison_text": "in",
-              "margin_to_min": {
+              "comparison": "ge",
+              "comparison_text": ">=",
+              "margin": {
                 "value": 52.45,
                 "unit": "mm"
               },
-              "margin_to_max": {
-                "value": 17.399999999999977,
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "table_6_1.g.le_max_der",
+              "scope": "end_plate_der",
+              "clause": "Table 6.1 + AISC 360-22 J3.6 (compute_maximum_bolt_spacing_j36)",
+              "description": "Horizontal bolt spacing maximum (right beam)",
+              "calculated_symbol": "g_b_vgder",
+              "limit_symbol": "min(g_b_vgder_max, smax_j36)",
+              "calculated": {
+                "value": 135.0,
                 "unit": "mm"
               },
+              "limit": {
+                "value": 152.39999999999998,
+                "unit": "mm"
+              },
+              "comparison": "le",
+              "comparison_text": "<=",
               "margin": {
                 "value": 17.399999999999977,
                 "unit": "mm"
@@ -1964,7 +2161,7 @@
             {
               "step": "1",
               "id": "table_6_1.edge_de_ge_emin_izq",
-              "scope": "table_6_1_izq",
+              "scope": "end_plate_izq",
               "clause": "Table 6.1 + AISC 360 Table J3.4",
               "description": "Edge distance at de (left beam)",
               "calculated_symbol": "de_pe_vgizq",
@@ -1988,88 +2185,174 @@
             },
             {
               "step": "1",
-              "id": "table_6_1.edge_pfo_ge_emin_izq",
-              "scope": "table_6_1_izq",
-              "clause": "Table 6.1 + AISC 360 Table J3.4",
-              "description": "Outside bolt-row distance limits (left beam)",
-              "calculated_symbol": "pfo_pe_vgizq - pso_pe_vgizq",
-              "limit_symbol": "compound",
-              "comparison": "compound",
-              "comparison_text": "compound",
-              "verification_text": "pso_pe_vgizq = pfo_pe_vgizq + 0.5*tf_vgizq - 0.5*t_pc_col; pso_pe_vgizq >= emin; pfo_pe_vgizq <= 140 mm; pfo_pe_vgizq >= 44 mm",
+              "id": "table_6_1.edge_de_le_emax_izq",
+              "scope": "end_plate_izq",
+              "clause": "Table 6.1 + AISC 360-22 J3.6",
+              "description": "Maximum edge distance at de (left beam)",
+              "calculated_symbol": "de_pe_vgizq",
+              "limit_symbol": "emax_j36",
               "calculated": {
-                "value": 50.0,
+                "value": 60.0,
                 "unit": "mm"
               },
-              "status": "PASS",
-              "result": "OK",
-              "minimum": {
-                "value": 44.449999999999996,
+              "limit": {
+                "value": 150.0,
                 "unit": "mm"
               },
-              "maximum": {
-                "value": 139.7,
-                "unit": "mm"
-              }
-            },
-            {
-              "step": "1",
-              "id": "table_6_1.edge_pfi_ge_emin_izq",
-              "scope": "table_6_1_izq",
-              "clause": "Table 6.1 + AISC 360 Table J3.4",
-              "description": "Inside bolt-row distance limits (left beam)",
-              "calculated_symbol": "pfi_pe_vgizq - psi_pe_vgizq",
-              "limit_symbol": "compound",
-              "comparison": "compound",
-              "comparison_text": "compound",
-              "verification_text": "pfi_pe_vgizq >= emin; pfi_pe_vgizq <= 140 mm; pfi_pe_vgizq >= 44 mm; psi_pe_vgizq = pfi_pe_vgizq + 0.5*tf_vgizq - 0.5*t_pc_col; psi_pe_vgizq > 0",
-              "calculated": {
-                "value": 50.0,
-                "unit": "mm"
-              },
-              "status": "PASS",
-              "result": "OK",
-              "minimum": {
-                "value": 44.449999999999996,
-                "unit": "mm"
-              },
-              "maximum": {
-                "value": 139.7,
-                "unit": "mm"
-              }
-            },
-            {
-              "step": "1",
-              "id": "table_6_1.tbf.range_izq",
-              "scope": "table_6_1_izq",
-              "clause": "Table 6.1",
-              "description": "Beam flange thickness limits (left beam)",
-              "calculated_symbol": "tf_vgizq",
-              "limit_symbol": "[tf_vgizq_min, tf_vgizq_max]",
-              "calculated": {
-                "value": 17.3,
-                "unit": "mm"
-              },
-              "minimum": {
-                "value": 9.524999999999999,
-                "unit": "mm"
-              },
-              "maximum": {
-                "value": 19.049999999999997,
-                "unit": "mm"
-              },
-              "comparison": "range",
-              "comparison_text": "in",
-              "margin_to_min": {
-                "value": 7.775000000000002,
-                "unit": "mm"
-              },
-              "margin_to_max": {
-                "value": 1.7499999999999964,
-                "unit": "mm"
-              },
+              "comparison": "le",
+              "comparison_text": "<=",
               "margin": {
-                "value": 1.7499999999999964,
+                "value": 90.0,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "table_6_1.edge_pfo_ge_pfo_min_izq",
+              "scope": "end_plate_izq",
+              "clause": "Table 6.1 + AISC 360 Table J3.4",
+              "description": "Outside bolt-row distance minimum (left beam)",
+              "calculated_symbol": "pfo_pe_vgizq",
+              "limit_symbol": "max(pfo_pe_vgizq_min, emin)",
+              "calculated": {
+                "value": 50.0,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 44.449999999999996,
+                "unit": "mm"
+              },
+              "comparison": "ge",
+              "comparison_text": ">=",
+              "margin": {
+                "value": 5.550000000000004,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "table_6_1.edge_pfo_le_emax_izq",
+              "scope": "end_plate_izq",
+              "clause": "Table 6.1 + AISC 360-22 J3.6",
+              "description": "Outside bolt-row distance maximum (left beam)",
+              "calculated_symbol": "pfo_pe_vgizq",
+              "limit_symbol": "min(pfo_pe_vgizq_max, emax_j36)",
+              "calculated": {
+                "value": 50.0,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 139.7,
+                "unit": "mm"
+              },
+              "comparison": "le",
+              "comparison_text": "<=",
+              "margin": {
+                "value": 89.69999999999999,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "table_6_1.edge_pso_ge_emin_izq",
+              "scope": "column",
+              "clause": "Table 6.1 + AISC 360 Table J3.4",
+              "description": "Outside adjusted edge distance minimum (left beam)",
+              "calculated_symbol": "pso_pe_vgizq",
+              "limit_symbol": "emin",
+              "calculated": {
+                "value": 50.699999999999996,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 31.75,
+                "unit": "mm"
+              },
+              "comparison": "ge",
+              "comparison_text": ">=",
+              "margin": {
+                "value": 18.949999999999996,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "table_6_1.edge_pso_le_emax_izq",
+              "scope": "column",
+              "clause": "AISC 360-22 J3.6",
+              "description": "Outside adjusted edge distance maximum (left beam)",
+              "calculated_symbol": "pso_pe_vgizq",
+              "limit_symbol": "emax_j36",
+              "calculated": {
+                "value": 50.699999999999996,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 150.0,
+                "unit": "mm"
+              },
+              "comparison": "le",
+              "comparison_text": "<=",
+              "margin": {
+                "value": 99.30000000000001,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "table_6_1.edge_pfi_ge_pfi_min_izq",
+              "scope": "end_plate_izq",
+              "clause": "Table 6.1 + AISC 360 Table J3.4",
+              "description": "Inside bolt-row distance minimum (left beam)",
+              "calculated_symbol": "pfi_pe_vgizq",
+              "limit_symbol": "max(pfi_pe_vgizq_min, emin)",
+              "calculated": {
+                "value": 50.0,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 44.449999999999996,
+                "unit": "mm"
+              },
+              "comparison": "ge",
+              "comparison_text": ">=",
+              "margin": {
+                "value": 5.550000000000004,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "table_6_1.edge_pfi_le_emax_izq",
+              "scope": "end_plate_izq",
+              "clause": "Table 6.1 + AISC 360-22 J3.6",
+              "description": "Inside bolt-row distance maximum (left beam)",
+              "calculated_symbol": "pfi_pe_vgizq",
+              "limit_symbol": "min(pfi_pe_vgizq_max, emax_j36)",
+              "calculated": {
+                "value": 50.0,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 139.7,
+                "unit": "mm"
+              },
+              "comparison": "le",
+              "comparison_text": "<=",
+              "margin": {
+                "value": 89.69999999999999,
                 "unit": "mm"
               },
               "status": "PASS",
@@ -2078,7 +2361,7 @@
             {
               "step": "1",
               "id": "table_6_1.bbf.range_izq",
-              "scope": "table_6_1_izq",
+              "scope": "beam_izq",
               "clause": "Table 6.1",
               "description": "Beam flange width limits (left beam)",
               "calculated_symbol": "bf_vgizq",
@@ -2115,7 +2398,7 @@
             {
               "step": "1",
               "id": "table_6_1.d.range_izq",
-              "scope": "table_6_1_izq",
+              "scope": "beam_izq",
               "clause": "Table 6.1",
               "description": "Connecting beam depth limits (left beam)",
               "calculated_symbol": "d_vgizq",
@@ -2152,7 +2435,7 @@
             {
               "step": "1",
               "id": "table_6_1.tp.range_izq",
-              "scope": "table_6_1_izq",
+              "scope": "end_plate_izq",
               "clause": "Table 6.1",
               "description": "End-plate thickness limits (left beam)",
               "calculated_symbol": "tpe_vgizq",
@@ -2188,34 +2471,47 @@
             },
             {
               "step": "1",
-              "id": "table_6_1.g.range_izq",
-              "scope": "table_6_1_izq",
-              "clause": "Table 6.1",
-              "description": "Horizontal bolt spacing limits (left beam)",
+              "id": "table_6_1.g.ge_min_izq",
+              "scope": "end_plate_izq",
+              "clause": "Table 6.1 + AISC 360 Table J3.3 (compute_minimum_bolt_spacing_j33)",
+              "description": "Horizontal bolt spacing minimum (left beam)",
               "calculated_symbol": "g_b_vgizq",
-              "limit_symbol": "[g_b_vgizq_min, g_b_vgizq_max]",
+              "limit_symbol": "max(g_b_vgizq_min, 3db_j33)",
               "calculated": {
                 "value": 140.0,
                 "unit": "mm"
               },
-              "minimum": {
+              "limit": {
                 "value": 82.55,
                 "unit": "mm"
               },
-              "maximum": {
-                "value": 152.39999999999998,
-                "unit": "mm"
-              },
-              "comparison": "range",
-              "comparison_text": "in",
-              "margin_to_min": {
+              "comparison": "ge",
+              "comparison_text": ">=",
+              "margin": {
                 "value": 57.45,
                 "unit": "mm"
               },
-              "margin_to_max": {
-                "value": 12.399999999999977,
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "table_6_1.g.le_max_izq",
+              "scope": "end_plate_izq",
+              "clause": "Table 6.1 + AISC 360-22 J3.6 (compute_maximum_bolt_spacing_j36)",
+              "description": "Horizontal bolt spacing maximum (left beam)",
+              "calculated_symbol": "g_b_vgizq",
+              "limit_symbol": "min(g_b_vgizq_max, smax_j36)",
+              "calculated": {
+                "value": 140.0,
                 "unit": "mm"
               },
+              "limit": {
+                "value": 152.39999999999998,
+                "unit": "mm"
+              },
+              "comparison": "le",
+              "comparison_text": "<=",
               "margin": {
                 "value": 12.399999999999977,
                 "unit": "mm"
@@ -2293,7 +2589,7 @@
             {
               "step": "1",
               "id": "beam_izq.bolt_gage_g_ge_3db",
-              "scope": "beam_izq",
+              "scope": "end_plate_izq",
               "clause": "Section 6.3 / Table 6.1",
               "description": "Bolt gage minimum spacing (left beam)",
               "calculated_symbol": "g_b_vgizq",
@@ -2461,7 +2757,7 @@
             {
               "step": "1",
               "id": "beam_der.bolt_gage_g_ge_3db",
-              "scope": "beam_der",
+              "scope": "end_plate_der",
               "clause": "Section 6.3 / Table 6.1",
               "description": "Bolt gage minimum spacing (right beam)",
               "calculated_symbol": "g_b_vgder",
@@ -2765,7 +3061,7 @@
               "clause": "AISC 341-22w E3.6e.2",
               "description": "Espesor individual minimo del alma de columna",
               "calculated_symbol": "tw_col",
-              "limit_symbol": "(dz_dp_col + wz_dp_col)/90; si use_weld_7_col=false: dz_dp_col=d_col-2*tf_col, wz_dp_col=max{d_<lado>-2*tf_<lado>}; si use_weld_7_col=true: dz_dp_col=h_dp_col/nfilas_w7_col, wz_dp_col=b_dp_col/ncolumna_w7_col",
+              "limit_symbol": "(dz_dp_col + wz_dp_col)/90; si use_weld_7_col=false: dz_dp_col=d_col-2*tf_col, wz_dp_col=max{d_lado-2*tf_lado}; si use_weld_7_col=true: dz_dp_col=h_dp_col/(nfilas_w7_col + 1), wz_dp_col=b_dp_col/(ncolumna_w7_col + 1)",
               "calculated": {
                 "value": 22.6,
                 "unit": "mm"
@@ -2811,6 +3107,31 @@
             },
             {
               "step": "1",
+              "id": "section_6_3.end_plate_horizontal_edge_distance_ge_emin_der",
+              "scope": "end_plate_der",
+              "clause": "Section 6.3 / Table 6.1 + AISC 360 Table J3.4",
+              "description": "Horizontal edge distance from plate edge to bolt line (right beam)",
+              "calculated_symbol": "deh_pe_vgder",
+              "limit_symbol": "emin",
+              "calculated": {
+                "value": 62.5,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 31.75,
+                "unit": "mm"
+              },
+              "comparison": "ge",
+              "comparison_text": ">=",
+              "margin": {
+                "value": 30.75,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
               "id": "section_6_3.end_plate_width_dual_limit_izq",
               "scope": "end_plate_izq",
               "clause": "Section 6.3 / Table 6.1",
@@ -2834,6 +3155,31 @@
                 "value": 253.0,
                 "unit": "mm"
               }
+            },
+            {
+              "step": "1",
+              "id": "section_6_3.end_plate_horizontal_edge_distance_ge_emin_izq",
+              "scope": "end_plate_izq",
+              "clause": "Section 6.3 / Table 6.1 + AISC 360 Table J3.4",
+              "description": "Horizontal edge distance from plate edge to bolt line (left beam)",
+              "calculated_symbol": "deh_pe_vgizq",
+              "limit_symbol": "emin",
+              "calculated": {
+                "value": 65.0,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 31.75,
+                "unit": "mm"
+              },
+              "comparison": "ge",
+              "comparison_text": ">=",
+              "margin": {
+                "value": 33.25,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
             },
             {
               "step": "1",
@@ -3324,7 +3670,7 @@
             {
               "step": "1",
               "id": "table_6_1.edge_de_ge_emin_der",
-              "scope": "table_6_1_der",
+              "scope": "end_plate_der",
               "clause": "Table 6.1 + AISC 360 Table J3.4",
               "description": "Edge distance at de (right beam)",
               "calculated_symbol": "de_pe_vgder",
@@ -3348,88 +3694,174 @@
             },
             {
               "step": "1",
-              "id": "table_6_1.edge_pfo_ge_emin_der",
-              "scope": "table_6_1_der",
-              "clause": "Table 6.1 + AISC 360 Table J3.4",
-              "description": "Outside bolt-row distance limits (right beam)",
-              "calculated_symbol": "pfo_pe_vgder - pso_pe_vgder",
-              "limit_symbol": "compound",
-              "comparison": "compound",
-              "comparison_text": "compound",
-              "verification_text": "pso_pe_vgder = pfo_pe_vgder + 0.5*tf_vgder - 0.5*t_pc_col; pso_pe_vgder >= emin; pfo_pe_vgder <= 140 mm; pfo_pe_vgder >= 44 mm",
+              "id": "table_6_1.edge_de_le_emax_der",
+              "scope": "end_plate_der",
+              "clause": "Table 6.1 + AISC 360-22 J3.6",
+              "description": "Maximum edge distance at de (right beam)",
+              "calculated_symbol": "de_pe_vgder",
+              "limit_symbol": "emax_j36",
               "calculated": {
                 "value": 55.0,
                 "unit": "mm"
               },
-              "status": "PASS",
-              "result": "OK",
-              "minimum": {
-                "value": 44.449999999999996,
+              "limit": {
+                "value": 150.0,
                 "unit": "mm"
               },
-              "maximum": {
-                "value": 139.7,
-                "unit": "mm"
-              }
-            },
-            {
-              "step": "1",
-              "id": "table_6_1.edge_pfi_ge_emin_der",
-              "scope": "table_6_1_der",
-              "clause": "Table 6.1 + AISC 360 Table J3.4",
-              "description": "Inside bolt-row distance limits (right beam)",
-              "calculated_symbol": "pfi_pe_vgder - psi_pe_vgder",
-              "limit_symbol": "compound",
-              "comparison": "compound",
-              "comparison_text": "compound",
-              "verification_text": "pfi_pe_vgder >= emin; pfi_pe_vgder <= 140 mm; pfi_pe_vgder >= 44 mm; psi_pe_vgder = pfi_pe_vgder + 0.5*tf_vgder - 0.5*t_pc_col; psi_pe_vgder > 0",
-              "calculated": {
-                "value": 55.0,
-                "unit": "mm"
-              },
-              "status": "PASS",
-              "result": "OK",
-              "minimum": {
-                "value": 44.449999999999996,
-                "unit": "mm"
-              },
-              "maximum": {
-                "value": 139.7,
-                "unit": "mm"
-              }
-            },
-            {
-              "step": "1",
-              "id": "table_6_1.tbf.range_der",
-              "scope": "table_6_1_der",
-              "clause": "Table 6.1",
-              "description": "Beam flange thickness limits (right beam)",
-              "calculated_symbol": "tf_vgder",
-              "limit_symbol": "[tf_vgder_min, tf_vgder_max]",
-              "calculated": {
-                "value": 17.3,
-                "unit": "mm"
-              },
-              "minimum": {
-                "value": 9.524999999999999,
-                "unit": "mm"
-              },
-              "maximum": {
-                "value": 19.049999999999997,
-                "unit": "mm"
-              },
-              "comparison": "range",
-              "comparison_text": "in",
-              "margin_to_min": {
-                "value": 7.775000000000002,
-                "unit": "mm"
-              },
-              "margin_to_max": {
-                "value": 1.7499999999999964,
-                "unit": "mm"
-              },
+              "comparison": "le",
+              "comparison_text": "<=",
               "margin": {
-                "value": 1.7499999999999964,
+                "value": 95.0,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "table_6_1.edge_pfo_ge_pfo_min_der",
+              "scope": "end_plate_der",
+              "clause": "Table 6.1 + AISC 360 Table J3.4",
+              "description": "Outside bolt-row distance minimum (right beam)",
+              "calculated_symbol": "pfo_pe_vgder",
+              "limit_symbol": "max(pfo_pe_vgder_min, emin)",
+              "calculated": {
+                "value": 55.0,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 44.449999999999996,
+                "unit": "mm"
+              },
+              "comparison": "ge",
+              "comparison_text": ">=",
+              "margin": {
+                "value": 10.550000000000004,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "table_6_1.edge_pfo_le_emax_der",
+              "scope": "end_plate_der",
+              "clause": "Table 6.1 + AISC 360-22 J3.6",
+              "description": "Outside bolt-row distance maximum (right beam)",
+              "calculated_symbol": "pfo_pe_vgder",
+              "limit_symbol": "min(pfo_pe_vgder_max, emax_j36)",
+              "calculated": {
+                "value": 55.0,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 139.7,
+                "unit": "mm"
+              },
+              "comparison": "le",
+              "comparison_text": "<=",
+              "margin": {
+                "value": 84.69999999999999,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "table_6_1.edge_pso_ge_emin_der",
+              "scope": "column",
+              "clause": "Table 6.1 + AISC 360 Table J3.4",
+              "description": "Outside adjusted edge distance minimum (right beam)",
+              "calculated_symbol": "pso_pe_vgder",
+              "limit_symbol": "emin",
+              "calculated": {
+                "value": 55.699999999999996,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 31.75,
+                "unit": "mm"
+              },
+              "comparison": "ge",
+              "comparison_text": ">=",
+              "margin": {
+                "value": 23.949999999999996,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "table_6_1.edge_pso_le_emax_der",
+              "scope": "column",
+              "clause": "AISC 360-22 J3.6",
+              "description": "Outside adjusted edge distance maximum (right beam)",
+              "calculated_symbol": "pso_pe_vgder",
+              "limit_symbol": "emax_j36",
+              "calculated": {
+                "value": 55.699999999999996,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 150.0,
+                "unit": "mm"
+              },
+              "comparison": "le",
+              "comparison_text": "<=",
+              "margin": {
+                "value": 94.30000000000001,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "table_6_1.edge_pfi_ge_pfi_min_der",
+              "scope": "end_plate_der",
+              "clause": "Table 6.1 + AISC 360 Table J3.4",
+              "description": "Inside bolt-row distance minimum (right beam)",
+              "calculated_symbol": "pfi_pe_vgder",
+              "limit_symbol": "max(pfi_pe_vgder_min, emin)",
+              "calculated": {
+                "value": 55.0,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 44.449999999999996,
+                "unit": "mm"
+              },
+              "comparison": "ge",
+              "comparison_text": ">=",
+              "margin": {
+                "value": 10.550000000000004,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "table_6_1.edge_pfi_le_emax_der",
+              "scope": "end_plate_der",
+              "clause": "Table 6.1 + AISC 360-22 J3.6",
+              "description": "Inside bolt-row distance maximum (right beam)",
+              "calculated_symbol": "pfi_pe_vgder",
+              "limit_symbol": "min(pfi_pe_vgder_max, emax_j36)",
+              "calculated": {
+                "value": 55.0,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 139.7,
+                "unit": "mm"
+              },
+              "comparison": "le",
+              "comparison_text": "<=",
+              "margin": {
+                "value": 84.69999999999999,
                 "unit": "mm"
               },
               "status": "PASS",
@@ -3438,7 +3870,7 @@
             {
               "step": "1",
               "id": "table_6_1.bbf.range_der",
-              "scope": "table_6_1_der",
+              "scope": "beam_der",
               "clause": "Table 6.1",
               "description": "Beam flange width limits (right beam)",
               "calculated_symbol": "bf_vgder",
@@ -3475,7 +3907,7 @@
             {
               "step": "1",
               "id": "table_6_1.d.range_der",
-              "scope": "table_6_1_der",
+              "scope": "beam_der",
               "clause": "Table 6.1",
               "description": "Connecting beam depth limits (right beam)",
               "calculated_symbol": "d_vgder",
@@ -3512,7 +3944,7 @@
             {
               "step": "1",
               "id": "table_6_1.tp.range_der",
-              "scope": "table_6_1_der",
+              "scope": "end_plate_der",
               "clause": "Table 6.1",
               "description": "End-plate thickness limits (right beam)",
               "calculated_symbol": "tpe_vgder",
@@ -3548,34 +3980,47 @@
             },
             {
               "step": "1",
-              "id": "table_6_1.g.range_der",
-              "scope": "table_6_1_der",
-              "clause": "Table 6.1",
-              "description": "Horizontal bolt spacing limits (right beam)",
+              "id": "table_6_1.g.ge_min_der",
+              "scope": "end_plate_der",
+              "clause": "Table 6.1 + AISC 360 Table J3.3 (compute_minimum_bolt_spacing_j33)",
+              "description": "Horizontal bolt spacing minimum (right beam)",
               "calculated_symbol": "g_b_vgder",
-              "limit_symbol": "[g_b_vgder_min, g_b_vgder_max]",
+              "limit_symbol": "max(g_b_vgder_min, 3db_j33)",
               "calculated": {
                 "value": 135.0,
                 "unit": "mm"
               },
-              "minimum": {
+              "limit": {
                 "value": 82.55,
                 "unit": "mm"
               },
-              "maximum": {
-                "value": 152.39999999999998,
-                "unit": "mm"
-              },
-              "comparison": "range",
-              "comparison_text": "in",
-              "margin_to_min": {
+              "comparison": "ge",
+              "comparison_text": ">=",
+              "margin": {
                 "value": 52.45,
                 "unit": "mm"
               },
-              "margin_to_max": {
-                "value": 17.399999999999977,
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "table_6_1.g.le_max_der",
+              "scope": "end_plate_der",
+              "clause": "Table 6.1 + AISC 360-22 J3.6 (compute_maximum_bolt_spacing_j36)",
+              "description": "Horizontal bolt spacing maximum (right beam)",
+              "calculated_symbol": "g_b_vgder",
+              "limit_symbol": "min(g_b_vgder_max, smax_j36)",
+              "calculated": {
+                "value": 135.0,
                 "unit": "mm"
               },
+              "limit": {
+                "value": 152.39999999999998,
+                "unit": "mm"
+              },
+              "comparison": "le",
+              "comparison_text": "<=",
               "margin": {
                 "value": 17.399999999999977,
                 "unit": "mm"
@@ -3586,7 +4031,7 @@
             {
               "step": "1",
               "id": "table_6_1.edge_de_ge_emin_izq",
-              "scope": "table_6_1_izq",
+              "scope": "end_plate_izq",
               "clause": "Table 6.1 + AISC 360 Table J3.4",
               "description": "Edge distance at de (left beam)",
               "calculated_symbol": "de_pe_vgizq",
@@ -3610,88 +4055,174 @@
             },
             {
               "step": "1",
-              "id": "table_6_1.edge_pfo_ge_emin_izq",
-              "scope": "table_6_1_izq",
-              "clause": "Table 6.1 + AISC 360 Table J3.4",
-              "description": "Outside bolt-row distance limits (left beam)",
-              "calculated_symbol": "pfo_pe_vgizq - pso_pe_vgizq",
-              "limit_symbol": "compound",
-              "comparison": "compound",
-              "comparison_text": "compound",
-              "verification_text": "pso_pe_vgizq = pfo_pe_vgizq + 0.5*tf_vgizq - 0.5*t_pc_col; pso_pe_vgizq >= emin; pfo_pe_vgizq <= 140 mm; pfo_pe_vgizq >= 44 mm",
+              "id": "table_6_1.edge_de_le_emax_izq",
+              "scope": "end_plate_izq",
+              "clause": "Table 6.1 + AISC 360-22 J3.6",
+              "description": "Maximum edge distance at de (left beam)",
+              "calculated_symbol": "de_pe_vgizq",
+              "limit_symbol": "emax_j36",
               "calculated": {
-                "value": 50.0,
+                "value": 60.0,
                 "unit": "mm"
               },
-              "status": "PASS",
-              "result": "OK",
-              "minimum": {
-                "value": 44.449999999999996,
+              "limit": {
+                "value": 150.0,
                 "unit": "mm"
               },
-              "maximum": {
-                "value": 139.7,
-                "unit": "mm"
-              }
-            },
-            {
-              "step": "1",
-              "id": "table_6_1.edge_pfi_ge_emin_izq",
-              "scope": "table_6_1_izq",
-              "clause": "Table 6.1 + AISC 360 Table J3.4",
-              "description": "Inside bolt-row distance limits (left beam)",
-              "calculated_symbol": "pfi_pe_vgizq - psi_pe_vgizq",
-              "limit_symbol": "compound",
-              "comparison": "compound",
-              "comparison_text": "compound",
-              "verification_text": "pfi_pe_vgizq >= emin; pfi_pe_vgizq <= 140 mm; pfi_pe_vgizq >= 44 mm; psi_pe_vgizq = pfi_pe_vgizq + 0.5*tf_vgizq - 0.5*t_pc_col; psi_pe_vgizq > 0",
-              "calculated": {
-                "value": 50.0,
-                "unit": "mm"
-              },
-              "status": "PASS",
-              "result": "OK",
-              "minimum": {
-                "value": 44.449999999999996,
-                "unit": "mm"
-              },
-              "maximum": {
-                "value": 139.7,
-                "unit": "mm"
-              }
-            },
-            {
-              "step": "1",
-              "id": "table_6_1.tbf.range_izq",
-              "scope": "table_6_1_izq",
-              "clause": "Table 6.1",
-              "description": "Beam flange thickness limits (left beam)",
-              "calculated_symbol": "tf_vgizq",
-              "limit_symbol": "[tf_vgizq_min, tf_vgizq_max]",
-              "calculated": {
-                "value": 17.3,
-                "unit": "mm"
-              },
-              "minimum": {
-                "value": 9.524999999999999,
-                "unit": "mm"
-              },
-              "maximum": {
-                "value": 19.049999999999997,
-                "unit": "mm"
-              },
-              "comparison": "range",
-              "comparison_text": "in",
-              "margin_to_min": {
-                "value": 7.775000000000002,
-                "unit": "mm"
-              },
-              "margin_to_max": {
-                "value": 1.7499999999999964,
-                "unit": "mm"
-              },
+              "comparison": "le",
+              "comparison_text": "<=",
               "margin": {
-                "value": 1.7499999999999964,
+                "value": 90.0,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "table_6_1.edge_pfo_ge_pfo_min_izq",
+              "scope": "end_plate_izq",
+              "clause": "Table 6.1 + AISC 360 Table J3.4",
+              "description": "Outside bolt-row distance minimum (left beam)",
+              "calculated_symbol": "pfo_pe_vgizq",
+              "limit_symbol": "max(pfo_pe_vgizq_min, emin)",
+              "calculated": {
+                "value": 50.0,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 44.449999999999996,
+                "unit": "mm"
+              },
+              "comparison": "ge",
+              "comparison_text": ">=",
+              "margin": {
+                "value": 5.550000000000004,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "table_6_1.edge_pfo_le_emax_izq",
+              "scope": "end_plate_izq",
+              "clause": "Table 6.1 + AISC 360-22 J3.6",
+              "description": "Outside bolt-row distance maximum (left beam)",
+              "calculated_symbol": "pfo_pe_vgizq",
+              "limit_symbol": "min(pfo_pe_vgizq_max, emax_j36)",
+              "calculated": {
+                "value": 50.0,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 139.7,
+                "unit": "mm"
+              },
+              "comparison": "le",
+              "comparison_text": "<=",
+              "margin": {
+                "value": 89.69999999999999,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "table_6_1.edge_pso_ge_emin_izq",
+              "scope": "column",
+              "clause": "Table 6.1 + AISC 360 Table J3.4",
+              "description": "Outside adjusted edge distance minimum (left beam)",
+              "calculated_symbol": "pso_pe_vgizq",
+              "limit_symbol": "emin",
+              "calculated": {
+                "value": 50.699999999999996,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 31.75,
+                "unit": "mm"
+              },
+              "comparison": "ge",
+              "comparison_text": ">=",
+              "margin": {
+                "value": 18.949999999999996,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "table_6_1.edge_pso_le_emax_izq",
+              "scope": "column",
+              "clause": "AISC 360-22 J3.6",
+              "description": "Outside adjusted edge distance maximum (left beam)",
+              "calculated_symbol": "pso_pe_vgizq",
+              "limit_symbol": "emax_j36",
+              "calculated": {
+                "value": 50.699999999999996,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 150.0,
+                "unit": "mm"
+              },
+              "comparison": "le",
+              "comparison_text": "<=",
+              "margin": {
+                "value": 99.30000000000001,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "table_6_1.edge_pfi_ge_pfi_min_izq",
+              "scope": "end_plate_izq",
+              "clause": "Table 6.1 + AISC 360 Table J3.4",
+              "description": "Inside bolt-row distance minimum (left beam)",
+              "calculated_symbol": "pfi_pe_vgizq",
+              "limit_symbol": "max(pfi_pe_vgizq_min, emin)",
+              "calculated": {
+                "value": 50.0,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 44.449999999999996,
+                "unit": "mm"
+              },
+              "comparison": "ge",
+              "comparison_text": ">=",
+              "margin": {
+                "value": 5.550000000000004,
+                "unit": "mm"
+              },
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "table_6_1.edge_pfi_le_emax_izq",
+              "scope": "end_plate_izq",
+              "clause": "Table 6.1 + AISC 360-22 J3.6",
+              "description": "Inside bolt-row distance maximum (left beam)",
+              "calculated_symbol": "pfi_pe_vgizq",
+              "limit_symbol": "min(pfi_pe_vgizq_max, emax_j36)",
+              "calculated": {
+                "value": 50.0,
+                "unit": "mm"
+              },
+              "limit": {
+                "value": 139.7,
+                "unit": "mm"
+              },
+              "comparison": "le",
+              "comparison_text": "<=",
+              "margin": {
+                "value": 89.69999999999999,
                 "unit": "mm"
               },
               "status": "PASS",
@@ -3700,7 +4231,7 @@
             {
               "step": "1",
               "id": "table_6_1.bbf.range_izq",
-              "scope": "table_6_1_izq",
+              "scope": "beam_izq",
               "clause": "Table 6.1",
               "description": "Beam flange width limits (left beam)",
               "calculated_symbol": "bf_vgizq",
@@ -3737,7 +4268,7 @@
             {
               "step": "1",
               "id": "table_6_1.d.range_izq",
-              "scope": "table_6_1_izq",
+              "scope": "beam_izq",
               "clause": "Table 6.1",
               "description": "Connecting beam depth limits (left beam)",
               "calculated_symbol": "d_vgizq",
@@ -3774,7 +4305,7 @@
             {
               "step": "1",
               "id": "table_6_1.tp.range_izq",
-              "scope": "table_6_1_izq",
+              "scope": "end_plate_izq",
               "clause": "Table 6.1",
               "description": "End-plate thickness limits (left beam)",
               "calculated_symbol": "tpe_vgizq",
@@ -3810,34 +4341,47 @@
             },
             {
               "step": "1",
-              "id": "table_6_1.g.range_izq",
-              "scope": "table_6_1_izq",
-              "clause": "Table 6.1",
-              "description": "Horizontal bolt spacing limits (left beam)",
+              "id": "table_6_1.g.ge_min_izq",
+              "scope": "end_plate_izq",
+              "clause": "Table 6.1 + AISC 360 Table J3.3 (compute_minimum_bolt_spacing_j33)",
+              "description": "Horizontal bolt spacing minimum (left beam)",
               "calculated_symbol": "g_b_vgizq",
-              "limit_symbol": "[g_b_vgizq_min, g_b_vgizq_max]",
+              "limit_symbol": "max(g_b_vgizq_min, 3db_j33)",
               "calculated": {
                 "value": 140.0,
                 "unit": "mm"
               },
-              "minimum": {
+              "limit": {
                 "value": 82.55,
                 "unit": "mm"
               },
-              "maximum": {
-                "value": 152.39999999999998,
-                "unit": "mm"
-              },
-              "comparison": "range",
-              "comparison_text": "in",
-              "margin_to_min": {
+              "comparison": "ge",
+              "comparison_text": ">=",
+              "margin": {
                 "value": 57.45,
                 "unit": "mm"
               },
-              "margin_to_max": {
-                "value": 12.399999999999977,
+              "status": "PASS",
+              "result": "OK"
+            },
+            {
+              "step": "1",
+              "id": "table_6_1.g.le_max_izq",
+              "scope": "end_plate_izq",
+              "clause": "Table 6.1 + AISC 360-22 J3.6 (compute_maximum_bolt_spacing_j36)",
+              "description": "Horizontal bolt spacing maximum (left beam)",
+              "calculated_symbol": "g_b_vgizq",
+              "limit_symbol": "min(g_b_vgizq_max, smax_j36)",
+              "calculated": {
+                "value": 140.0,
                 "unit": "mm"
               },
+              "limit": {
+                "value": 152.39999999999998,
+                "unit": "mm"
+              },
+              "comparison": "le",
+              "comparison_text": "<=",
               "margin": {
                 "value": 12.399999999999977,
                 "unit": "mm"
@@ -4124,10 +4668,10 @@
         "unit": "kN"
       },
       "capacity": {
-        "value": 1335.4812,
+        "value": 2376.5256,
         "unit": "kN"
       },
-      "dcr": -0.6245884907637267,
+      "dcr": -0.3509855678185544,
       "status": "PASS",
       "calculation_memory": {
         "inputs": {
@@ -4193,12 +4737,17 @@
             "unit": "mm"
           },
           "t_dp_col": {
-            "value": 12.7,
+            "value": 22.6,
+            "unit": "mm"
+          },
+          "n_dp_col": 1,
+          "t_dp_total_col": {
+            "value": 22.6,
             "unit": "mm"
           },
           "use_weld_7_col": false,
           "tw_wpz_effective_col": {
-            "value": 12.7,
+            "value": 22.6,
             "unit": "mm"
           },
           "rn1_wpz_v2_col": {
@@ -4206,7 +4755,7 @@
             "unit": "kN"
           },
           "rn2_wpz_v2_col": {
-            "value": 1335.4812,
+            "value": 2376.5256,
             "unit": "kN"
           },
           "bcf_col": {
@@ -4306,7 +4855,7 @@
         "intermediates": {
           "alpha_pr_over_py": 0.0,
           "panel_factor": 1.0,
-          "rn_nominal_wpzs_col": 1335.4812,
+          "rn_nominal_wpzs_col": 2376.5256,
           "package_wpzs": "a",
           "eq_case_wpzs": "J10-9",
           "sum_mbe_over_hb_plus_ht_formula": "Vc2_col = sum_Mbe_col/(hb_col + ht_col)",
@@ -4328,13 +4877,13 @@
           "phi_wpzs": 1.0,
           "alpha": 1.0
         },
-        "equation": "Rn1_wpz_v2_col = 0.60*Fy_col*d_col*tw_col; Rn2_wpz_v2_col = 0.60*Fy_col*d_col*t_dp_col; Rn_wpz_v2_col = min{Rn1_wpz_v2_col, Rn2_wpz_v2_col} (J10-9)",
+        "equation": "Rn1_wpz_v2_col = 0.60*Fy_col*d_col*tw_col; Rn2_wpz_v2_col = 0.60*Fy_col*d_col*(n_dp_col*t_dp_col); Rn_wpz_v2_col = min{Rn1_wpz_v2_col, Rn2_wpz_v2_col} (J10-9)",
         "units_trace": {
           "demand": "kN",
           "capacity": "kN"
         },
         "final_capacity": {
-          "value": 1335.4812,
+          "value": 2376.5256,
           "unit": "kN"
         }
       },
@@ -4452,10 +5001,11 @@
             "value": 470.0,
             "unit": "MPa"
           },
-          "fnt_b_vgizq": {
-            "value": 780.0,
+          "fnv_b_vgizq": {
+            "value": 470.0,
             "unit": "MPa"
           },
+          "thread_b_vgizq": "N",
           "connection_type": "bseep_4es"
         },
         "intermediates": {
@@ -4568,153 +5118,6 @@
       "notes": null
     },
     {
-      "name": "bseep_4es Step 7.2.1 end-plate shear yielding (left)",
-      "rule_id": "AISC358.06.7.bseep_4es.step7_2_1_end_plate_shear_yielding_vgizq",
-      "clause": "Chapter 6 / Section 6.7.1 Step 7.2.1 + Eq. (6.7-10)",
-      "source_document": "AISC 358-22",
-      "demand": {
-        "value": 1311.9873944017975,
-        "unit": "kN"
-      },
-      "capacity": {
-        "value": 1419.606,
-        "unit": "kN"
-      },
-      "dcr": 0.9241912153103027,
-      "status": "PASS",
-      "calculation_memory": {
-        "inputs": {
-          "mf_vgizq_critico": {
-            "value": 1547357.93295748,
-            "unit": "kN-mm"
-          },
-          "mf_source": "max(Mf_vgizq_max, Mf_vgizq_min)",
-          "mf_computed": {
-            "value": 1547357.93295748,
-            "unit": "kN-mm"
-          },
-          "d_vgizq": {
-            "value": 607.0,
-            "unit": "mm"
-          },
-          "tf_vgizq": {
-            "value": 17.3,
-            "unit": "mm"
-          },
-          "bpe_vgizq": {
-            "value": 270.0,
-            "unit": "mm"
-          },
-          "tpe_vgizq": {
-            "value": 25.4,
-            "unit": "mm"
-          },
-          "fyp_pe_vgizq": {
-            "value": 345.0,
-            "unit": "MPa"
-          }
-        },
-        "intermediates": {
-          "z_vgizq": 589.7,
-          "ru_pe_v1_vgizq": 1419.606,
-          "phi_rn_pe_v1_vgizq": 1419.606
-        },
-        "design_factors": {
-          "phi": 1.0
-        },
-        "equation": "Ru_pe_v1_vgizq = Mf_vgizq_critico / (2*(d_vgizq - tf_vgizq)); phi*Rn_pe_v1_vgizq = phi * 0.6 * Fyp_pe_vgizq * bpe_vgizq * tpe_vgizq (AISC 358-22 Eq. 6.7-10)",
-        "units_trace": {
-          "ru_pe_v1_vgizq": "kN",
-          "phi_rn_pe_v1_vgizq": "kN"
-        },
-        "final_capacity": {
-          "value": 1419.606,
-          "unit": "kN"
-        }
-      },
-      "notes": null
-    },
-    {
-      "name": "bseep_4es Step 7.2.2 end-plate shear rupture (left)",
-      "rule_id": "AISC358.06.7.bseep_4es.step7_2_2_end_plate_shear_rupture_vgizq",
-      "clause": "Chapter 6 / Section 6.7.1 Step 7.2.2 + Eq. (6.7-12)",
-      "source_document": "AISC 358-22",
-      "demand": {
-        "value": 1311.9873944017975,
-        "unit": "kN"
-      },
-      "capacity": {
-        "value": 1294.00173,
-        "unit": "kN"
-      },
-      "dcr": 1.013899258389552,
-      "status": "FAIL",
-      "calculation_memory": {
-        "inputs": {
-          "ru_pe_m3_vgizq": {
-            "value": 1547357.93295748,
-            "unit": "kN-mm"
-          },
-          "mf_source": "max(Mf_vgizq_max, Mf_vgizq_min)",
-          "mf_computed": {
-            "value": 1547357.93295748,
-            "unit": "kN-mm"
-          },
-          "d_vgizq": {
-            "value": 607.0,
-            "unit": "mm"
-          },
-          "tf_vgizq": {
-            "value": 17.3,
-            "unit": "mm"
-          },
-          "bpe_vgizq": {
-            "value": 270.0,
-            "unit": "mm"
-          },
-          "tpe_vgizq": {
-            "value": 25.4,
-            "unit": "mm"
-          },
-          "fup_pe_vgizq": {
-            "value": 450.0,
-            "unit": "MPa"
-          },
-          "db": {
-            "value": 25.4,
-            "unit": "mm"
-          },
-          "dh_pe_vgizq": {
-            "value": 28.575,
-            "unit": "mm"
-          }
-        },
-        "intermediates": {
-          "z_vgizq": 589.7,
-          "net_width": 209.65,
-          "nominal_shear": 1437.7797,
-          "design_shear": 1294.00173,
-          "phi_n": 0.9,
-          "edge_allowance": 1.6,
-          "db_in": 1.0,
-          "hole_add_in": 0.125
-        },
-        "design_factors": {
-          "phi": 0.9
-        },
-        "equation": "Rn_pe_v2_vgizq = Ru_pe_m3_vgizq / (2*(d_vgizq - tf_vgizq)); phi*Rn_pe_v2_vgizq = phi * 0.6 * Fup_pe_vgizq * tpe_vgizq * (bpe_vgizq - 2*(dh_pe_vgizq + 1.6 mm)) (AISC 358-22 Eq. 6.7-12)",
-        "units_trace": {
-          "rn_pe_v2_vgizq": "kN",
-          "phi_rn_pe_v2_vgizq": "kN"
-        },
-        "final_capacity": {
-          "value": 1294.00173,
-          "unit": "kN"
-        }
-      },
-      "notes": null
-    },
-    {
       "name": "bseep_4es Step 7.3.1 end-plate hole tearout (left)",
       "rule_id": "AISC358.06.7.bseep_4es.step7_3_1_end_plate_hole_tearout_vgizq",
       "clause": "Chapter 6 / Section 7.3.1 + AISC 360-22 J3.11(a)",
@@ -4777,6 +5180,7 @@
           "dh": 28.575,
           "db": 25.4,
           "db_in": 1.0,
+          "table_case": "db=1.0 in",
           "hole_add_in": 0.125,
           "ru_pe_v2_vgizq": 128.53142519685036,
           "nominal_strength": 1216.9520999999995,
@@ -5371,10 +5775,11 @@
             "value": 470.0,
             "unit": "MPa"
           },
-          "fnt_b_vgder": {
-            "value": 780.0,
+          "fnv_b_vgder": {
+            "value": 470.0,
             "unit": "MPa"
           },
+          "thread_b_vgder": "N",
           "connection_type": "bseep_4es"
         },
         "intermediates": {
@@ -5487,153 +5892,6 @@
       "notes": null
     },
     {
-      "name": "bseep_4es Step 7.2.1 end-plate shear yielding (right)",
-      "rule_id": "AISC358.06.7.bseep_4es.step7_2_1_end_plate_shear_yielding_vgder",
-      "clause": "Chapter 6 / Section 6.7.1 Step 7.2.1 + Eq. (6.7-10)",
-      "source_document": "AISC 358-22",
-      "demand": {
-        "value": 1418.31766863399,
-        "unit": "kN"
-      },
-      "capacity": {
-        "value": 1367.028,
-        "unit": "kN"
-      },
-      "dcr": 1.0375191061441242,
-      "status": "FAIL",
-      "calculation_memory": {
-        "inputs": {
-          "mf_vgder_critico": {
-            "value": 1261451.7344830707,
-            "unit": "kN-mm"
-          },
-          "mf_source": "max(Mf_vgder_max, Mf_vgder_min)",
-          "mf_computed": {
-            "value": 1261451.7344830707,
-            "unit": "kN-mm"
-          },
-          "d_vgder": {
-            "value": 462.0,
-            "unit": "mm"
-          },
-          "tf_vgder": {
-            "value": 17.3,
-            "unit": "mm"
-          },
-          "bpe_vgder": {
-            "value": 260.0,
-            "unit": "mm"
-          },
-          "tpe_vgder": {
-            "value": 25.4,
-            "unit": "mm"
-          },
-          "fyp_pe_vgder": {
-            "value": 345.0,
-            "unit": "MPa"
-          }
-        },
-        "intermediates": {
-          "z_vgder": 444.7,
-          "ru_pe_v1_vgder": 1367.028,
-          "phi_rn_pe_v1_vgder": 1367.028
-        },
-        "design_factors": {
-          "phi": 1.0
-        },
-        "equation": "Ru_pe_v1_vgder = Mf_vgder_critico / (2*(d_vgder - tf_vgder)); phi*Rn_pe_v1_vgder = phi * 0.6 * Fyp_pe_vgder * bpe_vgder * tpe_vgder (AISC 358-22 Eq. 6.7-10)",
-        "units_trace": {
-          "ru_pe_v1_vgizq": "kN",
-          "phi_rn_pe_v1_vgizq": "kN"
-        },
-        "final_capacity": {
-          "value": 1367.028,
-          "unit": "kN"
-        }
-      },
-      "notes": null
-    },
-    {
-      "name": "bseep_4es Step 7.2.2 end-plate shear rupture (right)",
-      "rule_id": "AISC358.06.7.bseep_4es.step7_2_2_end_plate_shear_rupture_vgder",
-      "clause": "Chapter 6 / Section 6.7.1 Step 7.2.2 + Eq. (6.7-12)",
-      "source_document": "AISC 358-22",
-      "demand": {
-        "value": 1418.31766863399,
-        "unit": "kN"
-      },
-      "capacity": {
-        "value": 1232.27973,
-        "unit": "kN"
-      },
-      "dcr": 1.1509705419190739,
-      "status": "FAIL",
-      "calculation_memory": {
-        "inputs": {
-          "ru_pe_m3_vgder": {
-            "value": 1261451.7344830707,
-            "unit": "kN-mm"
-          },
-          "mf_source": "max(Mf_vgder_max, Mf_vgder_min)",
-          "mf_computed": {
-            "value": 1261451.7344830707,
-            "unit": "kN-mm"
-          },
-          "d_vgder": {
-            "value": 462.0,
-            "unit": "mm"
-          },
-          "tf_vgder": {
-            "value": 17.3,
-            "unit": "mm"
-          },
-          "bpe_vgder": {
-            "value": 260.0,
-            "unit": "mm"
-          },
-          "tpe_vgder": {
-            "value": 25.4,
-            "unit": "mm"
-          },
-          "fup_pe_vgder": {
-            "value": 450.0,
-            "unit": "MPa"
-          },
-          "db": {
-            "value": 25.4,
-            "unit": "mm"
-          },
-          "dh_pe_vgder": {
-            "value": 28.575,
-            "unit": "mm"
-          }
-        },
-        "intermediates": {
-          "z_vgder": 444.7,
-          "net_width": 199.65,
-          "nominal_shear": 1369.1997,
-          "design_shear": 1232.27973,
-          "phi_n": 0.9,
-          "edge_allowance": 1.6,
-          "db_in": 1.0,
-          "hole_add_in": 0.125
-        },
-        "design_factors": {
-          "phi": 0.9
-        },
-        "equation": "Rn_pe_v2_vgder = Ru_pe_m3_vgder / (2*(d_vgder - tf_vgder)); phi*Rn_pe_v2_vgder = phi * 0.6 * Fup_pe_vgder * tpe_vgder * (bpe_vgder - 2*(dh_pe_vgder + 1.6 mm)) (AISC 358-22 Eq. 6.7-12)",
-        "units_trace": {
-          "rn_pe_v2_vgizq": "kN",
-          "phi_rn_pe_v2_vgizq": "kN"
-        },
-        "final_capacity": {
-          "value": 1232.27973,
-          "unit": "kN"
-        }
-      },
-      "notes": null
-    },
-    {
       "name": "bseep_4es Step 7.3.1 end-plate hole tearout (right)",
       "rule_id": "AISC358.06.7.bseep_4es.step7_3_1_end_plate_hole_tearout_vgder",
       "clause": "Chapter 6 / Section 7.3.1 + AISC 360-22 J3.11(a)",
@@ -5696,6 +5954,7 @@
           "dh": 28.575,
           "db": 25.4,
           "db_in": 1.0,
+          "table_case": "db=1.0 in",
           "hole_add_in": 0.125,
           "ru_pe_v2_vgder": 106.69585679133857,
           "nominal_strength": 1354.1120999999998,
@@ -6587,8 +6846,8 @@
   ],
   "errors": [],
   "summary": {
-    "pass_count": 28,
-    "fail_count": 8,
+    "pass_count": 27,
+    "fail_count": 5,
     "error_count": 0,
     "not_implemented_count": 2,
     "worst_dcr": 1.9936507972639428

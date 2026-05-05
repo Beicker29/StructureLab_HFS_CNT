@@ -1,0 +1,27 @@
+{
+  "classification": "observed_baseline",
+  "case_name": "case_004_bseep_4es_split_inputs",
+  "source_input": "examples/moment_prequalified/case_004_bseep_4es_split_inputs",
+  "classification_reason": "Comportamiento actual regenerado despues de corregir la normalizacion legacy de doubler plate desactivado. No esta validado por ingenieria como approved.",
+  "generated_at": "2026-05-04T16:56:38.9630679-05:00",
+  "commit": "b900c9b80e503b70851e536330c37068c671a599",
+  "python": "Python 3.12.10",
+  "package": "steel-connections-engine 0.1.0",
+  "generation_command": ".\\.venv\\Scripts\\python.exe -m src.steel_connections.run examples/moment_prequalified/case_004_bseep_4es_split_inputs tests\\golden\\observed_baseline",
+  "generated_files": [
+    "tests/golden/observed_baseline/case_004_bseep_4es_split_inputs/detailed.json",
+    "tests/golden/observed_baseline/case_004_bseep_4es_split_inputs/memory.md"
+  ],
+  "global_status": "ERROR",
+  "checks": 34,
+  "status_counts": {
+    "PASS": 27,
+    "FAIL": 5,
+    "NOT_IMPLEMENTED": 2
+  },
+  "worst_dcr": 1.9936507972639428,
+  "known_limitations": [
+    "El estado global ERROR proviene de checks NOT_IMPLEMENTED, no de un error de ejecucion WPZS/doubler plate.",
+    "Este baseline sirve para detectar cambios futuros, pero no prueba aprobacion tecnica de ingenieria."
+  ]
+}
