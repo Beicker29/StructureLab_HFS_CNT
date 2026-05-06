@@ -70,6 +70,26 @@ Fuente canonica: `src/steel_connections/codes/engineering/common`.
   - `Rn = 0.60*Fu*Anv`
   - `phi*Rn = phi_n*Rn`
 
+`compute_block_shear_strength_j45(material_fu, material_fy, net_shear_area_anv, gross_shear_area_agv, net_tension_area_ant, ubs_factor, phi_n, unit_system)`
+
+- Calcula resistencia a bloque de cortante del elemento, AISC 360-22 J4-5:
+  - `Rn_1 = 0.60*Fu*Anv + Ubs*Fu*Ant`
+  - `Rn_2 = 0.60*Fy*Agv + Ubs*Fu*Ant`
+  - `Rn = min(Rn_1, Rn_2)`
+  - `phi*Rn = phi_n*Rn`
+
+`compute_element_tension_rupture_strength_j41b(material_fu, effective_net_area_ae, phi_n, unit_system)`
+
+- Calcula resistencia a rotura por traccion del elemento conectado, AISC 360-22 J4.1(b), Eq. J4-2:
+  - `Rn = Fu*Ae`
+  - `phi*Rn = phi_n*Rn`
+
+`compute_element_tension_yielding_strength_j41a(material_fy, gross_tension_area_agt, phi_n, unit_system)`
+
+- Calcula resistencia a fluencia por traccion del elemento conectado, AISC 360-22 J4.1(a), Eq. J4-1:
+  - `Rn = Fy*Ag`
+  - `phi*Rn = phi_n*Rn`
+
 ## 3) Limites de precalificacion EP (Tabla 6.1)
 
 `compute_limites_precalificacion_conexion_tipo_ep(connection_type, unit_system)`

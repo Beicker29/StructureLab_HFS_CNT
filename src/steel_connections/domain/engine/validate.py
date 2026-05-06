@@ -1445,6 +1445,16 @@ def _normalize_fully_restrained_splice_payload(payload: dict[str, Any]) -> dict[
                 "deformation_at_bolt_hole_service_load_is_design",
                 "deformacion_agujero_servicio_es_criterio_diseno",
             ),
+            "Ubs_web_v2_vg": _first_present(
+                pernos_web,
+                "Ubs_web_v2_vg",
+                "ubs_web_v2_vg",
+            ),
+            "Ubs_web_v3_vg": _first_present(
+                pernos_web,
+                "Ubs_web_v3_vg",
+                "ubs_web_v3_vg",
+            ),
             "n_blt_flange_x": _first_present(pernos_flange, "n_blt_flange_x", "nb2_x"),
             "n_blt_flange_z": _first_present(pernos_flange, "n_blt_flange_z", "nb2_z"),
             "p_blt_flange": _first_present(pernos_flange, "p_blt_flange", "S2_x"),

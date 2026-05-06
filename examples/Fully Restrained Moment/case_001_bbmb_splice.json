@@ -50,6 +50,8 @@
     "thread_blt_web": "N",
     "type_tight_blt_web": "pretensioned",
     "deformation_at_bolt_hole_service_load_is_design": true,
+    "Ubs_web_v2_vg": 0.5,
+    "Ubs_web_v3_vg": 0.5,
     "n_blt_web_x": 1,
     "n_blt_web_y": 6,
     "g_blt_web": {

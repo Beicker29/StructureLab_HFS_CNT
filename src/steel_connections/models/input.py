@@ -1034,6 +1034,8 @@ class BeamBeamMomentBoltedGeometry(StrictModel):
     Le_blt_web_y2: Quantity
     type_tight_blt_web: str | None = None
     svc_hole_deformation_design_web: bool = False
+    Ubs_web_v2_vg: float = 1.0
+    Ubs_web_v3_vg: float = 1.0
     n_blt_flange_x: int
     n_blt_flange_z: int
     p_blt_flange: Quantity
@@ -1123,6 +1125,13 @@ class BeamBeamMomentBoltedGeometry(StrictModel):
         raise ValueError(
             "svc_hole_deformation_design_web must be boolean (or true/false text)."
         )
+
+    @field_validator("Ubs_web_v2_vg", "Ubs_web_v3_vg")
+    @classmethod
+    def validate_ubs_web_factor(cls, value: float) -> float:
+        if value <= 0.0:
+            raise ValueError("geometry.Ubs_web_v2_vg/Ubs_web_v3_vg must be > 0.")
+        return value
 
     @field_validator("type_hole_plt_web", "type_hole_plt_flange")
     @classmethod
