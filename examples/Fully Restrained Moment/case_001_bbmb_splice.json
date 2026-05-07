@@ -87,6 +87,7 @@
     "desc_blt_flange": "Grupo 120",
     "thread_blt_flange": "N",
     "type_tight_blt_flange": "pretensioned",
+    "deformation_at_bolt_hole_service_load_is_design": true,
     "n_blt_flange_x": 4,
     "n_blt_flange_z": 1,
     "p_blt_flange": {

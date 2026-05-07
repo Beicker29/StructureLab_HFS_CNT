@@ -27,7 +27,7 @@ Comando ejecutado:
 Resultado:
 
 ```text
-178 passed
+183 passed
 ```
 
 Golden approved verificados sin diferencias:

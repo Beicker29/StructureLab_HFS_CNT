@@ -174,7 +174,30 @@ Fuente canonica: `src/steel_connections/codes/engineering/common`.
   - `Rn = Fy*Znet`
   - `phi*Rn = phi_n*Rn`
 
-## 9) Inventario canonico (exportado en `engineering/common`)
+## 9) Platinas de continuidad
+
+`compute_plate_compression_buckling_strength(material_fy, plate_width_b1, plate_thickness_t, unbraced_length_lp, plate_count_n, unit_system, phi=0.9, k_factor=0.65)`
+
+- Calcula la resistencia a compresion por pandeo de flexion usada en memoria `24.2.1`:
+  - `r = 0.29*t`
+  - `KL/r = K*Lp/r`
+  - `Fe = pi^2*E/(KL/r)^2`
+  - `Fcr = Fy`, `0.658^(Fy/Fe)*Fy` o `0.877*Fe` segun esbeltez
+  - `phi*Rn = phi*Fcr*b1*t*n`
+- Preserva la formula legacy validada para conexiones precalificadas y evita duplicarla dentro de reportes.
+
+## 10) Interaccion de fuerzas combinadas en platina
+
+`compute_plate_combined_force_interaction(dcr_plt_m1_web, dcr_plt_v3_web, dcr_plt_v2_web, dcr_plt_p3_minus_web)`
+
+- Calcula dos casos de interaccion para la platina de alma en `splice`:
+  - `DCR_case_1 = DCR_plt_m1_web + (DCR_plt_v3_web)^2 + (DCR_plt_v2_web)^4`
+  - `DCR_case_2 = DCR_plt_m1_web + (DCR_plt_p3(-)_web)^2 + (DCR_plt_v2_web)^4`
+- Devuelve el valor gobernante:
+  - `DCR_plt_Fcomb_web = max(DCR_case_1, DCR_case_2)`
+- Incluye caso controlante y verificacion de cumplimiento (`<= 1.0`).
+
+## 11) Inventario canonico (exportado en `engineering/common`)
 
 Listado sincronizado con `src/steel_connections/codes/engineering/common/__init__.py`:
 
@@ -194,6 +217,8 @@ Listado sincronizado con `src/steel_connections/codes/engineering/common/__init_
 - `compute_rectangular_bar_flexural_yielding_strength_f111`
 - `compute_rectangular_bar_ltb_strength_f112`
 - `compute_rectangular_bar_net_flexural_rupture_strength_j55`
+- `compute_plate_compression_buckling_strength`
+- `compute_plate_combined_force_interaction`
 - `compute_bolt_hole_dimensions_j33`
 - `compute_minimum_bolt_spacing_j33`
 - `compute_minimum_edge_distance_standard_hole_j34`

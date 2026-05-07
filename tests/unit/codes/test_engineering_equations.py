@@ -14,6 +14,9 @@ from steel_connections.codes.engineering.common.bolts import (
     compute_spacing_requirements_j33,
     compute_standard_hole_diameter_j33,
 )
+from steel_connections.codes.engineering.common.continuity_plate import (
+    compute_plate_compression_buckling_strength,
+)
 from steel_connections.codes.engineering.common.prequalified_ep import (
     compute_limites_precalificacion_conexion_tipo_ep,
 )
@@ -94,6 +97,43 @@ def test_compute_column_flange_local_bending_strength_and_dcr() -> None:
     )
     assert dcr["status"] == "PASS"
     assert math.isclose(dcr["dcr"], 0.5, rel_tol=1e-9)
+
+
+def test_compute_plate_compression_buckling_strength_matches_memory_24_2_1_case() -> None:
+    result = compute_plate_compression_buckling_strength(
+        material_fy=Quantity(value=345.0, unit="MPa"),
+        plate_width_b1=Quantity(value=130.0, unit="mm"),
+        plate_thickness_t=Quantity(value=15.9, unit="mm"),
+        unbraced_length_lp=Quantity(value=311.0, unit="mm"),
+        plate_count_n=2,
+        unit_system=UnitSystem.SI,
+        phi=0.9,
+        k_factor=0.65,
+    )
+
+    assert math.isclose(result["radius"].value, 4.611, rel_tol=1e-12)
+    assert math.isclose(result["klr"], 43.84081544133594, rel_tol=1e-12)
+    assert math.isclose(result["elastic_buckling_stress"].value, 1027.0048490699921, rel_tol=1e-12)
+    assert math.isclose(result["critical_stress"].value, 299.7478158898922, rel_tol=1e-12)
+    assert math.isclose(result["phi_rn"].value, 1115.2417237999327, rel_tol=1e-12)
+    assert result["critical_stress_equation"] == "Fcr_pc_col = 0.658^(Fy_pc_col/Fe_pc_col)*Fy_pc_col"
+
+
+def test_compute_plate_compression_buckling_strength_us_branch() -> None:
+    result = compute_plate_compression_buckling_strength(
+        material_fy=Quantity(value=50.0, unit="ksi"),
+        plate_width_b1=Quantity(value=5.0, unit="in"),
+        plate_thickness_t=Quantity(value=0.625, unit="in"),
+        unbraced_length_lp=Quantity(value=12.25, unit="in"),
+        plate_count_n=2,
+        unit_system=UnitSystem.US,
+        phi=0.9,
+        k_factor=0.65,
+    )
+
+    assert result["phi_rn"].unit == "kip"
+    assert result["elastic_modulus"].unit == "ksi"
+    assert result["critical_stress"].value > 0.0
 
 
 def test_compute_protected_zone_length_uses_single_reusable_expression() -> None:

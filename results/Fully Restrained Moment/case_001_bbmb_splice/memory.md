@@ -552,9 +552,9 @@ Propiedades organizadas por ambito.
 - 🟢 `2.4` `PLATINA_2`: total=12, cumple=12, no_cumple=0, numerales_no_cumplen=ninguno
 - 🟢 `2.5` `PERNOS_2`: total=2, cumple=2, no_cumple=0, numerales_no_cumplen=ninguno
 
-## Paso 3 - Metodo ICR/Elastic para grupo de pernos 1
+## Paso 3 - Metodo ICR/Elastic
 
-### 3.1 Metodo ICR/Elastic
+### 3.1 Metodo ICR/Elastic para pernos 1 del alma de la viga
 
 - Metodo seleccionado: `icr`
 - Clausula: `Documento: Steel Construction Manual AISC 16th edition 2023 | Seccion: Part 7 DESIGN CONSIDERATIONS FOR BOLTS - Instantaneous Center of Rotation Method`
@@ -569,6 +569,10 @@ Propiedades organizadas por ambito.
 - Ru_web_v2_max_vg: `Ru_1_blt_web_v2 = -9.28 kip`
 - Ru_web_v3_max_vg: `Ru_4_blt_web_v3 = -10.88 kip`
 - Coeficiente Cu (ICR): `4.92`
+
+### 3.2 Metodo ICR/Elastic para pernos 2 del ala de la viga
+
+Pendiente de implementacion para pernos 2 del ala de la viga.
 
 ## Paso 4 - Revisión de resistencia de la viga
 
@@ -739,6 +743,30 @@ Propiedades organizadas por ambito.
 - Ru4_web_v3_vg = Pu_sp*alpha_Pu_web: `0 kN`
 - DCR4_web_v3_vg: `0`
 - Resultado: 🟢 Cumple
+
+### 4.3 Revisión de capacidad a tracción en el ala en direccion 3
+
+#### 4.3.1. ELR #1: Desgarramiento en la perforacion del perno
+
+- Clausula: `Documento: AISC 360-22 | Seccion: J3.11a.(b) (DRY: compute_bolt_hole_tearout_strength_j36)`
+- Ecuaciones: `lc_flange_p3_vg = min(p_blt_flange - dh.2, Le_blt_flange_x1 - 0.5*dh.2); Rn1_flange_p3_vg = C*lc_flange_p3_vg*tf_vg*Fu_vg; phi*Rn1_flange_p3_vg = phi_pr*Rn1_flange_p3_vg; Ru1_flange_p3(+)_vg = (1- alpha_Pu_web)*Pu_sp + Mu3_sp/(d_vg - tf_vg), si < 0 -> 0; DCR1_flange_p3_vg = Ru1_flange_p3(+)_vg/phi*Rn1_flange_p3_vg`
+- Fu_vg: `450 MPa`
+- tf_vg: `10.8 mm`
+- p_blt_flange: `60 mm`
+- Le_blt_flange_x1: `50 mm`
+- dh.2: `20.64 mm`
+- lc_flange_p3_vg: `39.36 mm`
+- C: `1.2`
+- phi_pr: `0.75`
+- Rn1_flange_p3_vg: `229.56 kN`
+- phi*Rn1_flange_p3_vg: `172.17 kN`
+- alpha_Pu_web: `0`
+- Pu_sp: `66.99 kN`
+- Mu3_sp: `450 kN-m`
+- d_vg: `450 mm`
+- Ru1_flange_p3(+)_vg: `1091.58 kN`
+- DCR1_flange_p3_vg: `6.34`
+- Resultado: 🔴 No cumple
 
 ## Paso 5 - Revisión de resistencia de la platina 1 de alma
 
@@ -955,7 +983,31 @@ Propiedades organizadas por ambito.
 - DCR4_plt_v3_web: `0`
 - Resultado: 🟢 Cumple
 
-### 5.3 Revisión de capacidad a compresión en la platina 1 de alma en direccion 3
+### 5.3 Revisión de capacidad a compresión en la platina 1 de alma
+
+#### 5.3.1. ELR #1: Pandeo por flexión en la platina 1 de alma
+
+- Clausula: `Documento: AISC 360-22 | Seccion: E3 y J4.4 (DRY: compute_plate_compression_buckling_strength)`
+- Ecuaciones: `Lp_plt_p3(-)_web = min(gap_sp + 2*Le_blt_web_x1, g_blt_web); Ru1_plt_p3(-)_web = alpha_Pu_web*Pu_sp; phi*Rn1_plt_p3(-)_web = phi*Fcr_plt_p3(-)_web*H_plt_web*t_plt_web*n_plt_web; DCR1_plt_p3(-)_web = Ru1_plt_p3(-)_web/phi*Rn1_plt_p3(-)_web`
+- Fy_plt_web: `250 MPa`
+- H_plt_web: `431 mm`
+- t_plt_web: `9.5 mm`
+- Lp_plt_p3(-)_web: `76.2 mm`
+- n_plt_web: `1`
+- phi_no_ductil: `0.9`
+- K: `0.65`
+- r_plt_p3(-)_web: `2.75 mm`
+- KL_r_plt_p3(-)_web: `17.98`
+- Fe_plt_p3(-)_web: `6107.12 MPa`
+- Fcr_plt_p3(-)_web: `250 MPa`
+- Ecuacion Fcr usada: `Fcr_pc_col = Fy_pc_col`
+- Ag_plt_p3(-)_web: `4094.5 mm2`
+- phi*Rn1_plt_p3(-)_web: `921.26 kN`
+- Pu_sp: `66.99 kN`
+- alpha_Pu_web: `0`
+- Ru1_plt_p3(-)_web: `0 kN`
+- DCR1_plt_p3(-)_web: `0`
+- Resultado: 🟢 Cumple
 
 ### 5.4 Revisión de capacidad a flexión en la platina 1 de alma alrededor de 1
 
@@ -1036,3 +1088,19 @@ Propiedades organizadas por ambito.
 - Ru3_plt_m1_web = Vu2_sp*ex_blt_web - alpha_Pu_web*Pu_sp*ey_blt_web: `19.05 kN-m`
 - DCR3_plt_m1_web: `0.2`
 - Resultado: 🟢 Cumple
+
+### 5.5 Revisión de capacidad bajo al accion de fuerzas combinadas en la platina 1 de alma
+
+#### 5.5.1. ELR #1: Interaccion entre cargas en la platina 1 de alma
+
+- Clausula: `Documento: Criterio de interaccion solicitado por usuario (DRY: compute_plate_combined_force_interaction)`
+- Ecuaciones: `DCR_case_1 = DCR_plt_m1_web + (DCR_plt_v3_web)^2 + (DCR_plt_v2_web)^4; DCR_case_2 = DCR_plt_m1_web + (DCR_plt_p3(-)_web)^2 + (DCR_plt_v2_web)^4; DCR_plt_Fcomb_web = max(DCR_case_1, DCR_case_2)`
+- DCR_plt_v2_web (max de 5.1): `0.94`
+- DCR_plt_v3_web (max de 5.2): `0.54`
+- DCR_plt_p3(-)_web (max de 5.3): `0`
+- DCR_plt_m1_web (max de 5.4): `0.21`
+- DCR_case_1: `1.28`
+- DCR_case_2: `0.99`
+- Caso controlante: `Caso 1`
+- DCR_plt_Fcomb_web: `1.28`
+- Resultado: 🔴 No cumple

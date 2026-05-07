@@ -64,6 +64,7 @@ Fuente oficial de nomenclatura: [`/VARIABLES_SPLICE_NAMING.txt`](/D:/Users/byoma
 - `Le_blt_flange_z2`
 - `Le_blt_flange_z3`
 - `type_tight_blt_flange` (`snug_tight`, `pretensioned`, `slip_critical`)
+- `svc_hole_deformation_design_flange` (bool; alias de entrada: `deformation_at_bolt_hole_service_load_is_design`)
 
 Variables derivadas (no input):
 - `Le_blt_web_y3 = 0.5*(d_vg - (n_blt_web_y-1)*p_blt_web)`

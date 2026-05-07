@@ -3,6 +3,8 @@ from __future__ import annotations
 import math
 
 from steel_connections.codes.engineering.common import (
+    compute_plate_compression_buckling_strength,
+    compute_plate_combined_force_interaction,
     compute_bolt_hole_bearing_strength_j36,
     compute_bolt_hole_tearout_strength_j36,
     compute_max_spacing_and_edge_distance_limits_j36,
@@ -352,7 +354,9 @@ def run_step1_viga_detailing(case: BeamBeamMomentBoltedCase, rule_binding: objec
         raise ValueError("Incompatible units in lc_blt_web_y = p_blt_web - dh.1.")
     lc_blt_web_y = Quantity(value=s1y.value - dh_web.value, unit=s1y.unit)
     svc_hole_deformation_design_web = bool(case.geometry.svc_hole_deformation_design_web)
+    svc_hole_deformation_design_flange = bool(case.geometry.svc_hole_deformation_design_flange)
     phi_fragil_web = 0.75
+    phi_fragil_flange = float(case.design_factors.phi_pr)
     phi_rn1_web_v2_vg, tearout_web_inter = compute_bolt_hole_tearout_strength_j36(
         material_fu=fu_vg,
         clear_distance_lc=lc_blt_web_y,
@@ -452,6 +456,55 @@ def run_step1_viga_detailing(case: BeamBeamMomentBoltedCase, rule_binding: objec
     ):
         dcr1_web_v3_vg = abs(ru1_web_v3_vg.value) / phi_rn1_web_v3_vg.value
         result1_web_v3_vg = "PASS" if dcr1_web_v3_vg <= 1.0 else "FAIL"
+
+    # Flange tension tearout in direction 3 (AISC 360-22 J3.11a.(b), DRY function).
+    if fu_vg is None:
+        raise ValueError("Unable to resolve Fu_vg for splice flange tearout calculation.")
+    if not (s2x.unit == dh_flange.unit == le2_x1.unit == dvg_catalog.unit == tf_catalog.unit):
+        raise ValueError(
+            "Incompatible units for flange tearout check in direction 3."
+        )
+    lc_flange_p3_vg = Quantity(
+        value=min(
+            s2x.value - dh_flange.value,
+            le2_x1.value - 0.5 * dh_flange.value,
+        ),
+        unit=s2x.unit,
+    )
+    phi_rn1_flange_p3_vg, tearout_flange_p3_inter = compute_bolt_hole_tearout_strength_j36(
+        material_fu=fu_vg,
+        clear_distance_lc=lc_flange_p3_vg,
+        connected_thickness_t=tf_catalog,
+        n_critical_bolts=1,
+        phi_n=phi_fragil_flange,
+        unit_system=case.units_system,
+        deformation_at_service_is_design_consideration=svc_hole_deformation_design_flange,
+    )
+    rn1_flange_p3_vg = tearout_flange_p3_inter.get("rn1_ind")
+    force_unit = "kip" if case.units_system == UnitSystem.US else "kN"
+    pu_base = case.loads.Pu_sp.value
+    if case.units_system == UnitSystem.SI and case.loads.Pu_sp.unit == "N":
+        pu_base = case.loads.Pu_sp.value / 1000.0
+    if case.units_system == UnitSystem.US and case.loads.Pu_sp.unit == "lb":
+        pu_base = case.loads.Pu_sp.value / 1000.0
+    mu3_base = case.loads.Mu3_sp.value
+    if case.units_system == UnitSystem.SI and case.loads.Mu3_sp.unit == "N-mm":
+        mu3_base = case.loads.Mu3_sp.value / 1000.0
+    if case.units_system == UnitSystem.US and case.loads.Mu3_sp.unit == "lb-in":
+        mu3_base = case.loads.Mu3_sp.value / 1000.0
+    ru1_flange_p3_raw = (1.0 - case.loads.alpha_Pu_web) * pu_base + mu3_base / (dvg_catalog.value - tf_catalog.value)
+    if ru1_flange_p3_raw < 0.0:
+        ru1_flange_p3_raw = 0.0
+    ru1_flange_p3_vg = Quantity(value=ru1_flange_p3_raw, unit=force_unit)
+    dcr1_flange_p3_vg: float | None = None
+    result1_flange_p3_vg = "FAIL"
+    if (
+        isinstance(phi_rn1_flange_p3_vg, Quantity)
+        and ru1_flange_p3_vg.unit == phi_rn1_flange_p3_vg.unit
+        and abs(phi_rn1_flange_p3_vg.value) > 1e-12
+    ):
+        dcr1_flange_p3_vg = abs(ru1_flange_p3_vg.value) / phi_rn1_flange_p3_vg.value
+        result1_flange_p3_vg = "PASS" if dcr1_flange_p3_vg <= 1.0 else "FAIL"
 
     # Hole bearing (aplatamiento) per J3-6a/J3-6b at one critical bolt.
     phi_rn2_web_v2_vg, bearing_web_inter = compute_bolt_hole_bearing_strength_j36(
@@ -911,11 +964,15 @@ def run_step1_viga_detailing(case: BeamBeamMomentBoltedCase, rule_binding: objec
     ):
         dcr4_plt_v3_web = abs(ru4_plt_v3_web.value) / phi_rn4_plt_v3_web.value
         result4_plt_v3_web = "PASS" if dcr4_plt_v3_web <= 1.0 else "FAIL"
-    # Plate 1 flexural yielding around axis 1 (AISC 360-22 F11.1).
+    # Plate 1 compression buckling under axial compression in web plate (DRY helper).
     if not (alpha.unit == le1_x1.unit == s1x.unit):
         raise ValueError("Incompatible units for ex_blt_web computation in splice flexural checks.")
     ex_blt_web = Quantity(
         value=alpha.value + 2.0 * le1_x1.value + (case.geometry.n_blt_web_x - 1) * s1x.value,
+        unit=alpha.unit,
+    )
+    lp_plt_p3_minus_web = Quantity(
+        value=min(alpha.value + 2.0 * le1_x1.value, s1x.value),
         unit=alpha.unit,
     )
     ey_blt_web = case.loads.ey_blt_web
@@ -923,6 +980,49 @@ def run_step1_viga_detailing(case: BeamBeamMomentBoltedCase, rule_binding: objec
         ey_blt_web = Quantity(value=0.0, unit=ex_blt_web.unit)
     if ey_blt_web.unit != ex_blt_web.unit:
         raise ValueError("Incompatible units between ey_blt_web and ex_blt_web in splice flexural checks.")
+    phi_no_ductil_flex = 0.9
+    phi_rn1_plt_p3_minus_web: Quantity | None = None
+    ru1_plt_p3_minus_web: Quantity | None = None
+    dcr1_plt_p3_minus_web: float | None = None
+    result1_plt_p3_minus_web = "FAIL"
+    pminus_plt1_inter: dict[str, object] = {}
+    ru1_p3_minus_value = case.loads.alpha_Pu_web * case.loads.Pu_sp.value if case.loads.Pu_sp.value < 0.0 else 0.0
+    ru1_plt_p3_minus_web = Quantity(
+        value=ru1_p3_minus_value,
+        unit=case.loads.Pu_sp.unit,
+    )
+    try:
+        pminus_plt1_inter = compute_plate_compression_buckling_strength(
+            material_fy=fy_plt_web,
+            plate_width_b1=hp1,
+            plate_thickness_t=t_plt_web,
+            unbraced_length_lp=lp_plt_p3_minus_web,
+            plate_count_n=1,
+            unit_system=case.units_system,
+            phi=phi_no_ductil_flex,
+            k_factor=0.65,
+        )
+    except ValueError:
+        pminus_plt1_inter = {}
+    phi_rn1_plt_p3_minus_web_q = pminus_plt1_inter.get("phi_rn")
+    if isinstance(phi_rn1_plt_p3_minus_web_q, Quantity):
+        phi_rn1_plt_p3_minus_web = phi_rn1_plt_p3_minus_web_q
+    ru_for_dcr = ru1_plt_p3_minus_web
+    if isinstance(ru_for_dcr, Quantity) and isinstance(phi_rn1_plt_p3_minus_web, Quantity):
+        if ru_for_dcr.unit != phi_rn1_plt_p3_minus_web.unit:
+            if ru_for_dcr.unit == "N" and phi_rn1_plt_p3_minus_web.unit == "kN":
+                ru_for_dcr = Quantity(value=ru_for_dcr.value / 1000.0, unit="kN")
+            elif ru_for_dcr.unit == "kN" and phi_rn1_plt_p3_minus_web.unit == "N":
+                ru_for_dcr = Quantity(value=ru_for_dcr.value * 1000.0, unit="N")
+            elif ru_for_dcr.unit == "lb" and phi_rn1_plt_p3_minus_web.unit == "kip":
+                ru_for_dcr = Quantity(value=ru_for_dcr.value / 1000.0, unit="kip")
+            elif ru_for_dcr.unit == "kip" and phi_rn1_plt_p3_minus_web.unit == "lb":
+                ru_for_dcr = Quantity(value=ru_for_dcr.value * 1000.0, unit="lb")
+        if ru_for_dcr.unit == phi_rn1_plt_p3_minus_web.unit and abs(phi_rn1_plt_p3_minus_web.value) > 1e-12:
+            dcr1_plt_p3_minus_web = abs(ru_for_dcr.value) / phi_rn1_plt_p3_minus_web.value
+            result1_plt_p3_minus_web = "PASS" if dcr1_plt_p3_minus_web <= 1.0 else "FAIL"
+
+    # Plate 1 flexural yielding around axis 1 (AISC 360-22 F11.1).
     h_plt_web = hp1
     section_modulus_unit = "in3" if case.units_system == UnitSystem.US else "mm3"
     z_plt_m1_web = Quantity(
@@ -933,7 +1033,6 @@ def run_step1_viga_detailing(case: BeamBeamMomentBoltedCase, rule_binding: objec
         value=t_plt_web.value * (h_plt_web.value ** 2) / 6.0,
         unit=section_modulus_unit,
     )
-    phi_no_ductil_flex = 0.9
     phi_rn1_plt_m1_web, flex_yield_plt1_inter = compute_rectangular_bar_flexural_yielding_strength_f111(
         material_fy=fy_plt_web,
         plastic_section_modulus_z=z_plt_m1_web,
@@ -1041,6 +1140,7 @@ def run_step1_viga_detailing(case: BeamBeamMomentBoltedCase, rule_binding: objec
     ):
         dcr3_plt_m1_web = abs(ru3_plt_m1_web.value) / phi_rn3_plt_m1_web.value
         result3_plt_m1_web = "PASS" if dcr3_plt_m1_web <= 1.0 else "FAIL"
+
     # Plate 1 shear yielding in v2 (AISC 360-22 J4.2(a), DRY function).
     phi_ductil_plt = 1.0
     agv5_plt_v2_web = Quantity(
@@ -1069,6 +1169,41 @@ def run_step1_viga_detailing(case: BeamBeamMomentBoltedCase, rule_binding: objec
     ):
         dcr5_plt_v2_web = abs(ru5_plt_v2_web.value) / phi_rn5_plt_v2_web.value
         result5_plt_v2_web = "PASS" if dcr5_plt_v2_web <= 1.0 else "FAIL"
+
+    def _max_dcr(*values: float | None) -> float:
+        valid = [float(v) for v in values if isinstance(v, (int, float))]
+        if not valid:
+            return 0.0
+        return max(valid)
+
+    dcr_plt_v2_web = _max_dcr(
+        dcr2_plt_v2_web,
+        dcr4_plt_v2_web,
+        dcr5_plt_v2_web,
+        dcr6_plt_v2_web,
+    )
+    dcr_plt_v3_web = _max_dcr(
+        dcr2_plt_v3_web,
+        dcr3_plt_v3_web,
+        dcr4_plt_v3_web,
+    )
+    dcr_plt_p3_minus_web = _max_dcr(dcr1_plt_p3_minus_web)
+    dcr_plt_m1_web = _max_dcr(
+        dcr1_plt_m1_web,
+        dcr2_plt_m1_web,
+        dcr3_plt_m1_web,
+    )
+    fcomb_plt1_inter = compute_plate_combined_force_interaction(
+        dcr_plt_m1_web=dcr_plt_m1_web,
+        dcr_plt_v3_web=dcr_plt_v3_web,
+        dcr_plt_v2_web=dcr_plt_v2_web,
+        dcr_plt_p3_minus_web=dcr_plt_p3_minus_web,
+    )
+    dcr_case_1_plt_fcomb_web = float(fcomb_plt1_inter.get("dcr_case_1", 0.0))
+    dcr_case_2_plt_fcomb_web = float(fcomb_plt1_inter.get("dcr_case_2", 0.0))
+    dcr_plt_fcomb_web = float(fcomb_plt1_inter.get("dcr_fcomb", 0.0))
+    fcomb_controlling_case = str(fcomb_plt1_inter.get("controlling_case", "Caso 1"))
+    result_plt_fcomb_web = "PASS" if bool(fcomb_plt1_inter.get("passes", False)) else "FAIL"
 
     # J3.6 max spacing / edge distance (DRY common functions)
     t_web = Quantity(
@@ -2258,6 +2393,55 @@ def run_step1_viga_detailing(case: BeamBeamMomentBoltedCase, rule_binding: objec
                     "reference": "AISC 360-22 J3.11a.(b) (DRY: compute_bolt_hole_tearout_strength_j36)",
                 },
                 {
+                    "id": "bbmb_splice.step4.flange_tension_tearout_v3_note",
+                    "scope": "viga",
+                    "description": "Revision de resistencia por desgarramiento en la perforacion del perno del ala en direccion 3",
+                    "clause": "AISC 360-22 J3.11a.(b)",
+                    "fu_vg_var": "Fu_vg",
+                    "fu_vg": fu_vg.model_dump(),
+                    "tf_vg_var": "tf_vg",
+                    "tf_vg": tf_catalog.model_dump(),
+                    "p_blt_flange_var": "p_blt_flange",
+                    "p_blt_flange": s2x.model_dump(),
+                    "le_blt_flange_x1_var": "Le_blt_flange_x1",
+                    "le_blt_flange_x1": le2_x1.model_dump(),
+                    "dh_2_var": "dh.2",
+                    "dh_2": dh_flange.model_dump(),
+                    "lc_flange_p3_vg_var": "lc_flange_p3_vg",
+                    "lc_flange_p3_vg_formula": "lc_flange_p3_vg = min(p_blt_flange - dh.2, Le_blt_flange_x1 - 0.5*dh.2)",
+                    "lc_flange_p3_vg": lc_flange_p3_vg.model_dump(),
+                    "svc_hole_deformation_design_flange_var": "deformation_at_bolt_hole_service_load_is_design",
+                    "svc_hole_deformation_design_flange": svc_hole_deformation_design_flange,
+                    "rn1_flange_p3_vg_var": "Rn1_flange_p3_vg",
+                    "rn1_flange_p3_vg_formula": (
+                        "Rn1_flange_p3_vg = 1.2*lc_flange_p3_vg*tf_vg*Fu_vg"
+                        if svc_hole_deformation_design_flange
+                        else "Rn1_flange_p3_vg = 1.5*lc_flange_p3_vg*tf_vg*Fu_vg"
+                    ),
+                    "rn1_flange_p3_vg": rn1_flange_p3_vg.model_dump() if isinstance(rn1_flange_p3_vg, Quantity) else None,
+                    "phi_pr_var": "phi_pr",
+                    "phi_pr": phi_fragil_flange,
+                    "phi_rn1_flange_p3_vg_var": "phi*Rn1_flange_p3_vg",
+                    "phi_rn1_flange_p3_vg_formula": "phi*Rn1_flange_p3_vg = phi_pr*Rn1_flange_p3_vg",
+                    "phi_rn1_flange_p3_vg": phi_rn1_flange_p3_vg.model_dump() if isinstance(phi_rn1_flange_p3_vg, Quantity) else None,
+                    "alpha_pu_web_var": "alpha_Pu_web",
+                    "alpha_pu_web": case.loads.alpha_Pu_web,
+                    "pu_sp_var": "Pu_sp",
+                    "pu_sp": case.loads.Pu_sp.model_dump(),
+                    "mu3_sp_var": "Mu3_sp",
+                    "mu3_sp": case.loads.Mu3_sp.model_dump(),
+                    "d_vg_var": "d_vg",
+                    "d_vg": dvg_catalog.model_dump(),
+                    "ru1_flange_p3_vg_var": "Ru1_flange_p3(+)_vg",
+                    "ru1_flange_p3_vg_formula": "Ru1_flange_p3(+)_vg = (1- alpha_Pu_web)*Pu_sp + Mu3_sp/(d_vg - tf_vg); si <0 -> 0",
+                    "ru1_flange_p3_vg": ru1_flange_p3_vg.model_dump(),
+                    "dcr1_flange_p3_vg_var": "DCR1_flange_p3_vg",
+                    "dcr1_flange_p3_vg": dcr1_flange_p3_vg,
+                    "result1_flange_p3_vg": result1_flange_p3_vg,
+                    "coefficient": tearout_flange_p3_inter.get("coefficient"),
+                    "reference": "AISC 360-22 J3.11a.(b) (DRY: compute_bolt_hole_tearout_strength_j36)",
+                },
+                {
                     "id": "bbmb_splice.step4.web_bearing_note",
                     "scope": "viga",
                     "description": "Revision de resistencia por aplatamiento en perforacion de perno critico en alma",
@@ -2763,6 +2947,70 @@ def run_step1_viga_detailing(case: BeamBeamMomentBoltedCase, rule_binding: objec
                     "reference": "AISC 360-22 J4.1(b) (DRY: compute_element_tension_rupture_strength_j41b)",
                 },
                 {
+                    "id": "bbmb_splice.step5.plt1_web_comp_buckling_p3_minus_note",
+                    "scope": "platina_1",
+                    "description": "Revision de resistencia por pandeo en compresion por flexion en platina 1 de alma",
+                    "clause": "AISC 360-22 E3 y J4.4 (formulacion DRY)",
+                    "fy_plt_web_var": "Fy_plt_web",
+                    "fy_plt_web": fy_plt_web.model_dump() if isinstance(fy_plt_web, Quantity) else None,
+                    "h_plt_web_var": "H_plt_web",
+                    "h_plt_web": hp1.model_dump(),
+                    "t_plt_web_var": "t_plt_web",
+                    "t_plt_web": t_plt_web.model_dump(),
+                    "gap_sp_var": "gap_sp",
+                    "gap_sp": alpha.model_dump(),
+                    "le_blt_web_x1_var": "Le_blt_web_x1",
+                    "le_blt_web_x1": le1_x1.model_dump(),
+                    "g_blt_web_var": "g_blt_web",
+                    "g_blt_web": s1x.model_dump(),
+                    "lp_plt_p3_minus_web_var": "Lp_plt_p3(-)_web",
+                    "lp_plt_p3_minus_web_formula": "Lp_plt_p3(-)_web = min(gap_sp + 2*Le_blt_web_x1, g_blt_web)",
+                    "lp_plt_p3_minus_web": lp_plt_p3_minus_web.model_dump(),
+                    "plate_count_n_var": "n_plt_web",
+                    "plate_count_n": 1,
+                    "phi_no_ductil_var": "phi_no_ductil",
+                    "phi_no_ductil": phi_no_ductil_flex,
+                    "k_factor_var": "K",
+                    "k_factor": 0.65,
+                    "radius_var": "r_plt_p3(-)_web",
+                    "radius": pminus_plt1_inter.get("radius").model_dump()
+                    if isinstance(pminus_plt1_inter.get("radius"), Quantity)
+                    else None,
+                    "klr_var": "KL_r_plt_p3(-)_web",
+                    "klr": pminus_plt1_inter.get("klr"),
+                    "fe_var": "Fe_plt_p3(-)_web",
+                    "fe": pminus_plt1_inter.get("elastic_buckling_stress").model_dump()
+                    if isinstance(pminus_plt1_inter.get("elastic_buckling_stress"), Quantity)
+                    else None,
+                    "fcr_var": "Fcr_plt_p3(-)_web",
+                    "fcr": pminus_plt1_inter.get("critical_stress").model_dump()
+                    if isinstance(pminus_plt1_inter.get("critical_stress"), Quantity)
+                    else None,
+                    "fcr_equation": pminus_plt1_inter.get("critical_stress_equation"),
+                    "area_gross_var": "Ag_plt_p3(-)_web",
+                    "area_gross": pminus_plt1_inter.get("gross_area").model_dump()
+                    if isinstance(pminus_plt1_inter.get("gross_area"), Quantity)
+                    else None,
+                    "phi_rn1_plt_p3_minus_web_var": "phi*Rn1_plt_p3(-)_web",
+                    "phi_rn1_plt_p3_minus_web_formula": "phi*Rn1_plt_p3(-)_web = phi*Fcr_plt_p3(-)_web*H_plt_web*t_plt_web*n_plt_web",
+                    "phi_rn1_plt_p3_minus_web": phi_rn1_plt_p3_minus_web.model_dump()
+                    if isinstance(phi_rn1_plt_p3_minus_web, Quantity)
+                    else None,
+                    "pu_sp_var": "Pu_sp",
+                    "pu_sp": case.loads.Pu_sp.model_dump(),
+                    "alpha_pu_web_var": "alpha_Pu_web",
+                    "alpha_pu_web": case.loads.alpha_Pu_web,
+                    "ru1_plt_p3_minus_web_var": "Ru1_plt_p3(-)_web",
+                    "ru1_plt_p3_minus_web_formula": "Ru1_plt_p3(-)_web = si Pu_sp < 0 -> alpha_Pu_web*Pu_sp; si Pu_sp >= 0 -> 0",
+                    "ru1_plt_p3_minus_web": ru1_plt_p3_minus_web.model_dump()
+                    if isinstance(ru1_plt_p3_minus_web, Quantity)
+                    else None,
+                    "dcr1_plt_p3_minus_web_var": "DCR1_plt_p3(-)_web",
+                    "dcr1_plt_p3_minus_web": dcr1_plt_p3_minus_web,
+                    "result1_plt_p3_minus_web": result1_plt_p3_minus_web,
+                    "reference": "DRY: compute_plate_compression_buckling_strength",
+                },
+                {
                     "id": "bbmb_splice.step5.plt1_web_flex_yielding_m1_note",
                     "scope": "platina_1",
                     "description": "Revision de resistencia por fluencia a flexion en platina 1 de alma alrededor de 1",
@@ -2921,6 +3169,32 @@ def run_step1_viga_detailing(case: BeamBeamMomentBoltedCase, rule_binding: objec
                     "dcr3_plt_m1_web": dcr3_plt_m1_web,
                     "result3_plt_m1_web": result3_plt_m1_web,
                     "reference": "AISC 360-22 J5.5 (DRY: compute_rectangular_bar_net_flexural_rupture_strength_j55)",
+                },
+                {
+                    "id": "bbmb_splice.step5.plt1_web_combined_forces_note",
+                    "scope": "platina_1",
+                    "description": "Revision de capacidad bajo accion de fuerzas combinadas en la platina 1 de alma",
+                    "clause": "Criterio de interaccion solicitado por usuario (DRY)",
+                    "dcr_plt_v2_web_var": "DCR_plt_v2_web",
+                    "dcr_plt_v2_web": dcr_plt_v2_web,
+                    "dcr_plt_v3_web_var": "DCR_plt_v3_web",
+                    "dcr_plt_v3_web": dcr_plt_v3_web,
+                    "dcr_plt_p3_minus_web_var": "DCR_plt_p3(-)_web",
+                    "dcr_plt_p3_minus_web": dcr_plt_p3_minus_web,
+                    "dcr_plt_m1_web_var": "DCR_plt_m1_web",
+                    "dcr_plt_m1_web": dcr_plt_m1_web,
+                    "dcr_case_1_var": "DCR_case_1",
+                    "dcr_case_1_formula": "DCR_case_1 = DCR_plt_m1_web + (DCR_plt_v3_web)^2 + (DCR_plt_v2_web)^4",
+                    "dcr_case_1": dcr_case_1_plt_fcomb_web,
+                    "dcr_case_2_var": "DCR_case_2",
+                    "dcr_case_2_formula": "DCR_case_2 = DCR_plt_m1_web + (DCR_plt_p3(-)_web)^2 + (DCR_plt_v2_web)^4",
+                    "dcr_case_2": dcr_case_2_plt_fcomb_web,
+                    "dcr_plt_fcomb_web_var": "DCR_plt_Fcomb_web",
+                    "dcr_plt_fcomb_web_formula": "DCR_plt_Fcomb_web = max(DCR_case_1, DCR_case_2)",
+                    "dcr_plt_fcomb_web": dcr_plt_fcomb_web,
+                    "controlling_case": fcomb_controlling_case,
+                    "result_plt_fcomb_web": result_plt_fcomb_web,
+                    "reference": "DRY: compute_plate_combined_force_interaction",
                 },
                 {
                     "id": "bbmb_splice.step5.plt1_web_shear_yielding_v2_note",

@@ -5,6 +5,7 @@ import re
 from pathlib import Path
 from typing import Any
 
+from steel_connections.codes.engineering.common import compute_plate_compression_buckling_strength
 from steel_connections.codes.engineering.flexure import (
     compute_column_flange_local_bending_strength,
     compute_dcr,
@@ -2648,16 +2649,18 @@ def _render_splice_step_1_notes(notes: list[dict], *, allowed_scopes: set[str] |
     return "\n".join(lines)
 
 
-def _render_splice_step_2_method_block(step2: dict | None, *, chapter_number: int | None = None) -> str:
-    heading = "### Punto 2 - Metodo ICR/Elastic"
-    if chapter_number is not None:
-        heading = f"### {chapter_number}.1 Metodo ICR/Elastic"
+def _render_splice_step_2_method_block(
+    step2: dict | None,
+    *,
+    heading: str = "### Punto 2 - Metodo ICR/Elastic",
+    no_results_text: str = "Sin resultados de metodo ICR/Elastic para este caso.",
+) -> str:
     if not isinstance(step2, dict):
         return "\n".join(
             [
                 heading,
                 "",
-                "Sin resultados de metodo ICR/Elastic para este caso.",
+                no_results_text,
                 "",
             ]
         )
@@ -3380,11 +3383,23 @@ def _render_fully_restrained_splice_outline(rows_viga: list[dict], notes_viga: l
     lines.extend(
         [
             "",
-            "## Paso 3 - Metodo ICR/Elastic para grupo de pernos 1",
+            "## Paso 3 - Metodo ICR/Elastic",
             "",
         ]
     )
-    lines.append(_render_splice_step_2_method_block(step2_pernos1, chapter_number=3))
+    lines.append(
+        _render_splice_step_2_method_block(
+            step2_pernos1,
+            heading="### 3.1 Metodo ICR/Elastic para pernos 1 del alma de la viga",
+        )
+    )
+    lines.append(
+        _render_splice_step_2_method_block(
+            None,
+            heading="### 3.2 Metodo ICR/Elastic para pernos 2 del ala de la viga",
+            no_results_text="Pendiente de implementacion para pernos 2 del ala de la viga.",
+        )
+    )
     tearout_note = notes_by_id_scope.get(("bbmb_splice.step4.web_tearout_note", "VIGA"), {})
     plt1_tearout_v2_note = notes_by_id_scope.get(("bbmb_splice.step5.plt1_web_tearout_v2_note", "PLATINA_1"), {})
     plt1_bearing_v2_note = notes_by_id_scope.get(("bbmb_splice.step5.plt1_web_bearing_v2_note", "PLATINA_1"), {})
@@ -3394,12 +3409,15 @@ def _render_fully_restrained_splice_outline(rows_viga: list[dict], notes_viga: l
     plt1_block_shear_v3_note = notes_by_id_scope.get(("bbmb_splice.step5.plt1_web_block_shear_v3_note", "PLATINA_1"), {})
     plt1_tension_yielding_v3_note = notes_by_id_scope.get(("bbmb_splice.step5.plt1_web_tension_yielding_v3_note", "PLATINA_1"), {})
     plt1_tension_rupture_v3_note = notes_by_id_scope.get(("bbmb_splice.step5.plt1_web_tension_rupture_v3_note", "PLATINA_1"), {})
+    plt1_comp_buckling_p3_minus_note = notes_by_id_scope.get(("bbmb_splice.step5.plt1_web_comp_buckling_p3_minus_note", "PLATINA_1"), {})
     plt1_flex_yielding_m1_note = notes_by_id_scope.get(("bbmb_splice.step5.plt1_web_flex_yielding_m1_note", "PLATINA_1"), {})
     plt1_ltb_m1_note = notes_by_id_scope.get(("bbmb_splice.step5.plt1_web_ltb_m1_note", "PLATINA_1"), {})
     plt1_flex_rupture_m1_note = notes_by_id_scope.get(("bbmb_splice.step5.plt1_web_flex_rupture_m1_note", "PLATINA_1"), {})
+    plt1_combined_forces_note = notes_by_id_scope.get(("bbmb_splice.step5.plt1_web_combined_forces_note", "PLATINA_1"), {})
     plt1_shear_yielding_v2_note = notes_by_id_scope.get(("bbmb_splice.step5.plt1_web_shear_yielding_v2_note", "PLATINA_1"), {})
     plt1_shear_rupture_v2_note = notes_by_id_scope.get(("bbmb_splice.step5.plt1_web_shear_rupture_v2_note", "PLATINA_1"), {})
     tearout_v3_note = notes_by_id_scope.get(("bbmb_splice.step4.web_tearout_v3_note", "VIGA"), {})
+    flange_tearout_v3_note = notes_by_id_scope.get(("bbmb_splice.step4.flange_tension_tearout_v3_note", "VIGA"), {})
     bearing_note = notes_by_id_scope.get(("bbmb_splice.step4.web_bearing_note", "VIGA"), {})
     bearing_v3_note = notes_by_id_scope.get(("bbmb_splice.step4.web_bearing_v3_note", "VIGA"), {})
     tension_rupture_v3_note = notes_by_id_scope.get(("bbmb_splice.step4.web_tension_rupture_v3_note", "VIGA"), {})
@@ -3696,7 +3714,35 @@ def _render_fully_restrained_splice_outline(rows_viga: list[dict], notes_viga: l
         plt1_tension_rupture_v3_result = _render_result_label("PASS" if dcr4_plt_v3_num <= 1.0 else "FAIL")
     except (TypeError, ValueError):
         pass
-    # 5.3.1 plate 1 flexural yielding around axis 1
+    # 5.3.1 plate 1 compression buckling (only for Pu_sp < 0)
+    ru1_plt_p3_minus_web_q = _as_quantity(plt1_comp_buckling_p3_minus_note.get("ru1_plt_p3_minus_web"))
+    phi_rn1_plt_p3_minus_web_q = _as_quantity(plt1_comp_buckling_p3_minus_note.get("phi_rn1_plt_p3_minus_web"))
+    ru1_plt_p3_minus_web_disp = _convert_ru_to_capacity_unit(ru1_plt_p3_minus_web_q, phi_rn1_plt_p3_minus_web_q)
+    ru1_plt_p3_minus_web_abs_disp: Quantity | None = None
+    if isinstance(ru1_plt_p3_minus_web_disp, Quantity):
+        ru1_plt_p3_minus_web_abs_disp = Quantity(
+            value=abs(ru1_plt_p3_minus_web_disp.value),
+            unit=ru1_plt_p3_minus_web_disp.unit,
+        )
+    dcr1_plt_p3_minus_web_disp = _format_text(plt1_comp_buckling_p3_minus_note.get("dcr1_plt_p3_minus_web"))
+    if (
+        isinstance(ru1_plt_p3_minus_web_disp, Quantity)
+        and isinstance(phi_rn1_plt_p3_minus_web_q, Quantity)
+        and ru1_plt_p3_minus_web_disp.unit == phi_rn1_plt_p3_minus_web_q.unit
+        and abs(phi_rn1_plt_p3_minus_web_q.value) > 1e-12
+    ):
+        dcr1_plt_p3_minus_web_disp = _format_decimal(
+            abs(ru1_plt_p3_minus_web_disp.value) / phi_rn1_plt_p3_minus_web_q.value
+        )
+    plt1_comp_buckling_p3_minus_result = _render_result_label(
+        plt1_comp_buckling_p3_minus_note.get("result1_plt_p3_minus_web")
+    )
+    try:
+        dcr1_p3_minus_num = float(dcr1_plt_p3_minus_web_disp)
+        plt1_comp_buckling_p3_minus_result = _render_result_label("PASS" if dcr1_p3_minus_num <= 1.0 else "FAIL")
+    except (TypeError, ValueError):
+        pass
+    # 5.3.2 plate 1 flexural yielding around axis 1
     ru1_plt_m1_web_q = _as_quantity(plt1_flex_yielding_m1_note.get("ru1_plt_m1_web"))
     phi_mn1_plt_m1_web_q = _as_quantity(plt1_flex_yielding_m1_note.get("phi_mn1_plt_m1_web"))
     ru1_plt_m1_web_disp = _convert_ru_to_capacity_unit(ru1_plt_m1_web_q, phi_mn1_plt_m1_web_q)
@@ -3717,7 +3763,7 @@ def _render_fully_restrained_splice_outline(rows_viga: list[dict], notes_viga: l
         plt1_flex_yielding_m1_result = _render_result_label("PASS" if dcr1_plt_m1_num <= 1.0 else "FAIL")
     except (TypeError, ValueError):
         pass
-    # 5.3.2 plate 1 LTB around axis 1
+    # 5.3.3 plate 1 LTB around axis 1
     ru2_plt_m1_web_q = _as_quantity(plt1_ltb_m1_note.get("ru2_plt_m1_web"))
     phi_mn2_plt_m1_web_q = _as_quantity(plt1_ltb_m1_note.get("phi_mn2_plt_m1_web"))
     ru2_plt_m1_web_disp = _convert_ru_to_capacity_unit(ru2_plt_m1_web_q, phi_mn2_plt_m1_web_q)
@@ -3738,7 +3784,7 @@ def _render_fully_restrained_splice_outline(rows_viga: list[dict], notes_viga: l
         plt1_ltb_m1_result = _render_result_label("PASS" if dcr2_plt_m1_num <= 1.0 else "FAIL")
     except (TypeError, ValueError):
         pass
-    # 5.3.3 plate 1 flexural rupture around axis 1
+    # 5.3.4 plate 1 flexural rupture around axis 1
     ru3_plt_m1_web_q = _as_quantity(plt1_flex_rupture_m1_note.get("ru3_plt_m1_web"))
     phi_rn3_plt_m1_web_q = _as_quantity(plt1_flex_rupture_m1_note.get("phi_rn3_plt_m1_web"))
     ru3_plt_m1_web_disp = _convert_ru_to_capacity_unit(ru3_plt_m1_web_q, phi_rn3_plt_m1_web_q)
@@ -3757,6 +3803,57 @@ def _render_fully_restrained_splice_outline(rows_viga: list[dict], notes_viga: l
     try:
         dcr3_plt_m1_num = float(dcr3_plt_m1_web_disp)
         plt1_flex_rupture_m1_result = _render_result_label("PASS" if dcr3_plt_m1_num <= 1.0 else "FAIL")
+    except (TypeError, ValueError):
+        pass
+    def _safe_float(raw: object) -> float | None:
+        try:
+            return float(raw)
+        except (TypeError, ValueError):
+            return None
+
+    dcr_v2_values = [
+        _safe_float(dcr1_plt_v2_web_disp),
+        _safe_float(dcr2_plt_v2_web_disp),
+        _safe_float(dcr3_plt_v2_v3_web_disp),
+        _safe_float(dcr4_plt_v2_web_disp),
+        _safe_float(dcr5_plt_v2_web_disp),
+        _safe_float(dcr6_plt_v2_web_disp),
+    ]
+    dcr_v3_values = [
+        _safe_float(dcr1_plt_v3_web_disp),
+        _safe_float(dcr2_plt_v3_web_disp),
+        _safe_float(dcr3_plt_v3_web_disp),
+        _safe_float(dcr4_plt_v3_web_disp),
+    ]
+    dcr_m1_values = [
+        _safe_float(dcr1_plt_m1_web_disp),
+        _safe_float(dcr2_plt_m1_web_disp),
+        _safe_float(dcr3_plt_m1_web_disp),
+    ]
+    dcr_p3_minus_value = _safe_float(dcr1_plt_p3_minus_web_disp)
+
+    dcr_plt_v2_web_num = max((v for v in dcr_v2_values if v is not None), default=0.0)
+    dcr_plt_v3_web_num = max((v for v in dcr_v3_values if v is not None), default=0.0)
+    dcr_plt_m1_web_num = max((v for v in dcr_m1_values if v is not None), default=0.0)
+    dcr_plt_p3_minus_web_num = dcr_p3_minus_value if dcr_p3_minus_value is not None else 0.0
+
+    dcr_case_1_plt_fcomb_web_num = dcr_plt_m1_web_num + (dcr_plt_v3_web_num**2.0) + (dcr_plt_v2_web_num**4.0)
+    dcr_case_2_plt_fcomb_web_num = (
+        dcr_plt_m1_web_num + (dcr_plt_p3_minus_web_num**2.0) + (dcr_plt_v2_web_num**4.0)
+    )
+    dcr_plt_fcomb_web_num = max(dcr_case_1_plt_fcomb_web_num, dcr_case_2_plt_fcomb_web_num)
+
+    dcr_plt_v2_web_disp = _format_decimal(dcr_plt_v2_web_num)
+    dcr_plt_v3_web_disp = _format_decimal(dcr_plt_v3_web_num)
+    dcr_plt_p3_minus_web_disp = _format_decimal(dcr_plt_p3_minus_web_num)
+    dcr_plt_m1_web_disp = _format_decimal(dcr_plt_m1_web_num)
+    dcr_case_1_plt_fcomb_web_disp = _format_decimal(dcr_case_1_plt_fcomb_web_num)
+    dcr_case_2_plt_fcomb_web_disp = _format_decimal(dcr_case_2_plt_fcomb_web_num)
+    dcr_plt_fcomb_web_disp = _format_decimal(dcr_plt_fcomb_web_num)
+    plt1_combined_forces_result = _render_result_label(plt1_combined_forces_note.get("result_plt_fcomb_web"))
+    try:
+        dcr_fcomb_num = float(dcr_plt_fcomb_web_disp)
+        plt1_combined_forces_result = _render_result_label("PASS" if dcr_fcomb_num <= 1.0 else "FAIL")
     except (TypeError, ValueError):
         pass
     # 4.2.1 tearout metrics in v3 direction
@@ -3819,6 +3916,30 @@ def _render_fully_restrained_splice_outline(rows_viga: list[dict], notes_viga: l
     try:
         dcr4_v3_num = float(dcr4_web_v3_vg_disp)
         block_shear_v3_result = _render_result_label("PASS" if dcr4_v3_num <= 1.0 else "FAIL")
+    except (TypeError, ValueError):
+        pass
+    # 4.3.1 flange tearout in direction 3
+    ru1_flange_p3_vg_q = _as_quantity(flange_tearout_v3_note.get("ru1_flange_p3_vg"))
+    phi_rn1_flange_p3_vg_q = _as_quantity(flange_tearout_v3_note.get("phi_rn1_flange_p3_vg"))
+    ru1_flange_p3_vg_disp = _convert_ru_to_capacity_unit(ru1_flange_p3_vg_q, phi_rn1_flange_p3_vg_q)
+    ru1_flange_p3_vg_abs_disp: Quantity | None = None
+    if isinstance(ru1_flange_p3_vg_disp, Quantity):
+        ru1_flange_p3_vg_abs_disp = Quantity(
+            value=abs(ru1_flange_p3_vg_disp.value),
+            unit=ru1_flange_p3_vg_disp.unit,
+        )
+    dcr1_flange_p3_vg_disp = _format_text(flange_tearout_v3_note.get("dcr1_flange_p3_vg"))
+    if (
+        isinstance(ru1_flange_p3_vg_disp, Quantity)
+        and isinstance(phi_rn1_flange_p3_vg_q, Quantity)
+        and ru1_flange_p3_vg_disp.unit == phi_rn1_flange_p3_vg_q.unit
+        and abs(phi_rn1_flange_p3_vg_q.value) > 1e-12
+    ):
+        dcr1_flange_p3_vg_disp = _format_decimal(abs(ru1_flange_p3_vg_disp.value) / phi_rn1_flange_p3_vg_q.value)
+    flange_tearout_v3_result = _render_result_label(flange_tearout_v3_note.get("result1_flange_p3_vg"))
+    try:
+        dcr_flange_num = float(dcr1_flange_p3_vg_disp)
+        flange_tearout_v3_result = _render_result_label("PASS" if dcr_flange_num <= 1.0 else "FAIL")
     except (TypeError, ValueError):
         pass
     # 4.1.2 bearing (aplatamiento) metrics
@@ -4137,6 +4258,36 @@ def _render_fully_restrained_splice_outline(rows_viga: list[dict], notes_viga: l
             f"- DCR4_web_v3_vg: `{dcr4_web_v3_vg_disp}`",
             f"- Resultado: {block_shear_v3_result}",
             "",
+            "### 4.3 Revisión de capacidad a tracción en el ala en direccion 3",
+            "",
+            "#### 4.3.1. ELR #1: Desgarramiento en la perforacion del perno",
+            "",
+            "- Clausula: `Documento: AISC 360-22 | Seccion: J3.11a.(b) (DRY: compute_bolt_hole_tearout_strength_j36)`",
+            (
+                "- Ecuaciones: `lc_flange_p3_vg = min(p_blt_flange - dh.2, Le_blt_flange_x1 - 0.5*dh.2); "
+                "Rn1_flange_p3_vg = C*lc_flange_p3_vg*tf_vg*Fu_vg; "
+                "phi*Rn1_flange_p3_vg = phi_pr*Rn1_flange_p3_vg; "
+                "Ru1_flange_p3(+)_vg = (1- alpha_Pu_web)*Pu_sp + Mu3_sp/(d_vg - tf_vg), si < 0 -> 0; "
+                "DCR1_flange_p3_vg = Ru1_flange_p3(+)_vg/phi*Rn1_flange_p3_vg`"
+            ),
+            f"- Fu_vg: `{_format_quantity(flange_tearout_v3_note.get('fu_vg'))}`",
+            f"- tf_vg: `{_format_quantity(flange_tearout_v3_note.get('tf_vg'))}`",
+            f"- p_blt_flange: `{_format_quantity(flange_tearout_v3_note.get('p_blt_flange'))}`",
+            f"- Le_blt_flange_x1: `{_format_quantity(flange_tearout_v3_note.get('le_blt_flange_x1'))}`",
+            f"- dh.2: `{_format_quantity(flange_tearout_v3_note.get('dh_2'))}`",
+            f"- lc_flange_p3_vg: `{_format_quantity(flange_tearout_v3_note.get('lc_flange_p3_vg'))}`",
+            f"- C: `{_format_text(flange_tearout_v3_note.get('coefficient'))}`",
+            f"- phi_pr: `{_format_text(flange_tearout_v3_note.get('phi_pr'))}`",
+            f"- Rn1_flange_p3_vg: `{_format_quantity(flange_tearout_v3_note.get('rn1_flange_p3_vg'))}`",
+            f"- phi*Rn1_flange_p3_vg: `{_format_quantity(flange_tearout_v3_note.get('phi_rn1_flange_p3_vg'))}`",
+            f"- alpha_Pu_web: `{_format_text(flange_tearout_v3_note.get('alpha_pu_web'))}`",
+            f"- Pu_sp: `{_format_quantity(flange_tearout_v3_note.get('pu_sp'))}`",
+            f"- Mu3_sp: `{_format_quantity(flange_tearout_v3_note.get('mu3_sp'))}`",
+            f"- d_vg: `{_format_quantity(flange_tearout_v3_note.get('d_vg'))}`",
+            f"- Ru1_flange_p3(+)_vg: `{_format_quantity(ru1_flange_p3_vg_abs_disp.model_dump() if isinstance(ru1_flange_p3_vg_abs_disp, Quantity) else None)}`",
+            f"- DCR1_flange_p3_vg: `{dcr1_flange_p3_vg_disp}`",
+            f"- Resultado: {flange_tearout_v3_result}",
+            "",
             "## Paso 5 - Revisión de resistencia de la platina 1 de alma",
             "",
             "### 5.1 Revisión de capacidad a cortante en la platina 1 de alma en direccion 2",
@@ -4418,9 +4569,38 @@ def _render_fully_restrained_splice_outline(rows_viga: list[dict], notes_viga: l
             f"- DCR4_plt_v3_web: `{dcr4_plt_v3_web_disp}`",
             f"- Resultado: {plt1_tension_rupture_v3_result}",
             "",
-            "### 5.3 Revisión de capacidad a compresion en la platina 1 de alma en direccion 3",
+            "### 5.3 Revisión de capacidad a compresión en la platina 1 de alma",
             "",
-            "### 5.4 Revisión de capacidad a flexion en la platina 1 de alma alrededor de 1",
+            "#### 5.3.1. ELR #1: Pandeo por flexion en la platina 1 de alma",
+            "",
+            "- Clausula: `Documento: AISC 360-22 | Seccion: E3 y J4.4 (DRY: compute_plate_compression_buckling_strength)`",
+            (
+                "- Ecuaciones: `Lp_plt_p3(-)_web = min(gap_sp + 2*Le_blt_web_x1, g_blt_web); "
+                "Ru1_plt_p3(-)_web = alpha_Pu_web*Pu_sp; "
+                "phi*Rn1_plt_p3(-)_web = phi*Fcr_plt_p3(-)_web*H_plt_web*t_plt_web*n_plt_web; "
+                "DCR1_plt_p3(-)_web = Ru1_plt_p3(-)_web/phi*Rn1_plt_p3(-)_web`"
+            ),
+            f"- Fy_plt_web: `{_format_quantity(plt1_comp_buckling_p3_minus_note.get('fy_plt_web'))}`",
+            f"- H_plt_web: `{_format_quantity(plt1_comp_buckling_p3_minus_note.get('h_plt_web'))}`",
+            f"- t_plt_web: `{_format_quantity(plt1_comp_buckling_p3_minus_note.get('t_plt_web'))}`",
+            f"- Lp_plt_p3(-)_web: `{_format_quantity(plt1_comp_buckling_p3_minus_note.get('lp_plt_p3_minus_web'))}`",
+            f"- n_plt_web: `{_format_text(plt1_comp_buckling_p3_minus_note.get('plate_count_n'))}`",
+            f"- phi_no_ductil: `{_format_text(plt1_comp_buckling_p3_minus_note.get('phi_no_ductil'))}`",
+            f"- K: `{_format_text(plt1_comp_buckling_p3_minus_note.get('k_factor'))}`",
+            f"- r_plt_p3(-)_web: `{_format_quantity(plt1_comp_buckling_p3_minus_note.get('radius'))}`",
+            f"- KL_r_plt_p3(-)_web: `{_format_text(plt1_comp_buckling_p3_minus_note.get('klr'))}`",
+            f"- Fe_plt_p3(-)_web: `{_format_quantity(plt1_comp_buckling_p3_minus_note.get('fe'))}`",
+            f"- Fcr_plt_p3(-)_web: `{_format_quantity(plt1_comp_buckling_p3_minus_note.get('fcr'))}`",
+            f"- Ecuacion Fcr usada: `{_format_text(plt1_comp_buckling_p3_minus_note.get('fcr_equation'))}`",
+            f"- Ag_plt_p3(-)_web: `{_format_quantity(plt1_comp_buckling_p3_minus_note.get('area_gross'))}`",
+            f"- phi*Rn1_plt_p3(-)_web: `{_format_quantity(plt1_comp_buckling_p3_minus_note.get('phi_rn1_plt_p3_minus_web'))}`",
+            f"- Pu_sp: `{_format_quantity(plt1_comp_buckling_p3_minus_note.get('pu_sp'))}`",
+            f"- alpha_Pu_web: `{_format_text(plt1_comp_buckling_p3_minus_note.get('alpha_pu_web'))}`",
+            f"- Ru1_plt_p3(-)_web: `{_format_quantity(ru1_plt_p3_minus_web_abs_disp.model_dump() if isinstance(ru1_plt_p3_minus_web_abs_disp, Quantity) else None)}`",
+            f"- DCR1_plt_p3(-)_web: `{dcr1_plt_p3_minus_web_disp}`",
+            f"- Resultado: {plt1_comp_buckling_p3_minus_result}",
+            "",
+            "### 5.4 Revisión de capacidad a flexión en la platina 1 de alma alrededor de 1",
             "",
             "#### 5.4.1. ELR #1: Fluencia por flexion en la platina 1 de alma",
             "",
@@ -4522,6 +4702,26 @@ def _render_fully_restrained_splice_outline(rows_viga: list[dict], notes_viga: l
             f"- Ru3_plt_m1_web = Vu2_sp*ex_blt_web - alpha_Pu_web*Pu_sp*ey_blt_web: `{_format_quantity(ru3_plt_m1_web_abs_disp.model_dump() if isinstance(ru3_plt_m1_web_abs_disp, Quantity) else None)}`",
             f"- DCR3_plt_m1_web: `{dcr3_plt_m1_web_disp}`",
             f"- Resultado: {plt1_flex_rupture_m1_result}",
+            "",
+            "### 5.5 Revisión de capacidad bajo al accion de fuerzas combinadas en la platina 1 de alma",
+            "",
+            "#### 5.5.1. ELR #1: Interaccion entre cargas en la platina 1 de alma",
+            "",
+            "- Clausula: `Documento: Criterio de interaccion solicitado por usuario (DRY: compute_plate_combined_force_interaction)`",
+            (
+                "- Ecuaciones: `DCR_case_1 = DCR_plt_m1_web + (DCR_plt_v3_web)^2 + (DCR_plt_v2_web)^4; "
+                "DCR_case_2 = DCR_plt_m1_web + (DCR_plt_p3(-)_web)^2 + (DCR_plt_v2_web)^4; "
+                "DCR_plt_Fcomb_web = max(DCR_case_1, DCR_case_2)`"
+            ),
+            f"- DCR_plt_v2_web (max de 5.1): `{dcr_plt_v2_web_disp}`",
+            f"- DCR_plt_v3_web (max de 5.2): `{dcr_plt_v3_web_disp}`",
+            f"- DCR_plt_p3(-)_web (max de 5.3): `{dcr_plt_p3_minus_web_disp}`",
+            f"- DCR_plt_m1_web (max de 5.4): `{dcr_plt_m1_web_disp}`",
+            f"- DCR_case_1: `{dcr_case_1_plt_fcomb_web_disp}`",
+            f"- DCR_case_2: `{dcr_case_2_plt_fcomb_web_disp}`",
+            f"- Caso controlante: `{'Caso 1' if dcr_case_1_plt_fcomb_web_num >= dcr_case_2_plt_fcomb_web_num else 'Caso 2'}`",
+            f"- DCR_plt_Fcomb_web: `{dcr_plt_fcomb_web_disp}`",
+            f"- Resultado: {plt1_combined_forces_result}",
             "",
         ]
     )
@@ -6732,39 +6932,26 @@ def render_memory_markdown(result: DetailedRunResult) -> str:
                         lp_pc_col_q = Quantity(value=l2_val, unit=unit_l)
 
                 if isinstance(lp_pc_col_q, Quantity) and lp_pc_col_q.unit == t_pc_q.unit:
-                    r_val = 0.29 * t_pc_q.value
-                    if r_val > 0:
-                        r_pc_col_q = Quantity(value=r_val, unit=t_pc_q.unit)
-                        klr_pc_col = (k_pc * lp_pc_col_q.value) / r_pc_col_q.value
-
-                if klr_pc_col is not None and klr_pc_col > 0:
-                    if unit_system_pc == UnitSystem.SI:
-                        e_pc_val = 200000.0  # MPa
-                        e_pc_unit = "MPa"
-                    else:
-                        e_pc_val = 29000.0  # ksi
-                        e_pc_unit = "ksi"
-                    e_pc_col_q = Quantity(value=e_pc_val, unit=e_pc_unit)
-                    e_over_fy = e_pc_val / fy_pc_col_q.value if fy_pc_col_q.value > 0 else None
-                    if e_over_fy is not None and e_over_fy > 0:
-                        fe_val = (math.pi ** 2) * e_pc_val / (klr_pc_col ** 2)
-                        fe_pc_col_q = Quantity(value=fe_val, unit=e_pc_unit)
-                        klr_limit_2 = 4.71 * math.sqrt(e_over_fy)
-                        if klr_pc_col <= 25.0:
-                            fcr_val = fy_pc_col_q.value
-                        elif klr_pc_col <= klr_limit_2:
-                            fcr_val = (0.658 ** (fy_pc_col_q.value / fe_val)) * fy_pc_col_q.value
-                        else:
-                            fcr_val = 0.877 * fe_val
-                        fcr_pc_col_q = Quantity(value=fcr_val, unit=e_pc_unit)
-
-                if isinstance(fcr_pc_col_q, Quantity):
-                    if unit_system_pc == UnitSystem.SI and fcr_pc_col_q.unit == "MPa" and b1_pc_q.unit == "mm":
-                        rn_n_pminus = fcr_pc_col_q.value * b1_pc_q.value * t_pc_q.value * n_pc_col_val
-                        phi_rn_pc_pminus_col_q = Quantity(value=phi_pc * rn_n_pminus / 1000.0, unit="kN")
-                    elif unit_system_pc == UnitSystem.US and fcr_pc_col_q.unit == "ksi" and b1_pc_q.unit == "in":
-                        rn_kip_pminus = fcr_pc_col_q.value * b1_pc_q.value * t_pc_q.value * n_pc_col_val
-                        phi_rn_pc_pminus_col_q = Quantity(value=phi_pc * rn_kip_pminus, unit="kip")
+                    try:
+                        pminus_strength = compute_plate_compression_buckling_strength(
+                            material_fy=fy_pc_col_q,
+                            plate_width_b1=b1_pc_q,
+                            plate_thickness_t=t_pc_q,
+                            unbraced_length_lp=lp_pc_col_q,
+                            plate_count_n=n_pc_col_val,
+                            unit_system=unit_system_pc,
+                            phi=phi_pc,
+                            k_factor=k_pc,
+                        )
+                    except ValueError:
+                        pminus_strength = {}
+                    r_pc_col_q = pminus_strength.get("radius")
+                    klr_pc_col = pminus_strength.get("klr")
+                    e_pc_col_q = pminus_strength.get("elastic_modulus")
+                    fe_pc_col_q = pminus_strength.get("elastic_buckling_stress")
+                    fcr_pc_col_q = pminus_strength.get("critical_stress")
+                    phi_rn_pc_pminus_col_q = pminus_strength.get("phi_rn")
+                    eq_fcr_used = str(pminus_strength.get("critical_stress_equation", eq_fcr_used))
 
             ru_pc_pminus_col_q = ru_pc_col_q
             if isinstance(ru_pc_pminus_col_q, Quantity) and isinstance(phi_rn_pc_pminus_col_q, Quantity):
@@ -6772,20 +6959,6 @@ def render_memory_markdown(result: DetailedRunResult) -> str:
                 if phi_rn_pminus_conv is not None and phi_rn_pminus_conv.value > 0:
                     dcr_pc_pminus_col = ru_pc_pminus_col_q.value / phi_rn_pminus_conv.value
                     result_pc_pminus_col = "Cumple" if dcr_pc_pminus_col <= 1.0 else "No cumple"
-
-            if isinstance(klr_pc_col, float) and isinstance(fy_pc_col_q, Quantity):
-                if klr_pc_col <= 25.0:
-                    eq_fcr_used = "Fcr_pc_col = Fy_pc_col"
-                elif (
-                    isinstance(e_pc_col_q, Quantity)
-                    and isinstance(fe_pc_col_q, Quantity)
-                    and fy_pc_col_q.value > 0
-                    and e_pc_col_q.value > 0
-                    and klr_pc_col <= 4.71 * math.sqrt(e_pc_col_q.value / fy_pc_col_q.value)
-                ):
-                    eq_fcr_used = "Fcr_pc_col = 0.658^(Fy_pc_col/Fe_pc_col)*Fy_pc_col"
-                else:
-                    eq_fcr_used = "Fcr_pc_col = 0.877*Fe_pc_col"
 
             # Shear (V2) on continuity-plate web per user request:
             # Ru_pc_v2_col = Ru_pc_p+_col_vgder + Ru_pc_p+_col_vgizq

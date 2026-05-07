@@ -1482,6 +1482,12 @@ def _normalize_fully_restrained_splice_payload(payload: dict[str, Any]) -> dict[
                 "type_tight_blt_flange",
                 "bolt_tightening_type",
             ),
+            "svc_hole_deformation_design_flange": _first_present(
+                pernos_flange,
+                "svc_hole_deformation_design_flange",
+                "deformation_at_bolt_hole_service_load_is_design",
+                "deformacion_agujero_servicio_es_criterio_diseno",
+            ),
         }
     )
 

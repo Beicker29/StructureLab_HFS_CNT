@@ -32,6 +32,8 @@ from .bolts import compute_spacing_requirements_j33
 from .bolts import compute_entering_tightening_clearance_table_7_15
 from .bolts import compute_max_spacing_and_edge_distance_limits_j36
 from .bolts import compute_maximum_bolt_spacing_j36
+from .continuity_plate import compute_plate_compression_buckling_strength
+from .interactions import compute_plate_combined_force_interaction
 from .prequalified_ep import compute_limites_precalificacion_conexion_tipo_ep
 from .utilization import compute_dcr_ratio
 
@@ -64,6 +66,8 @@ __all__ = [
     "compute_entering_tightening_clearance_table_7_15",
     "compute_max_spacing_and_edge_distance_limits_j36",
     "compute_maximum_bolt_spacing_j36",
+    "compute_plate_compression_buckling_strength",
+    "compute_plate_combined_force_interaction",
     "compute_limites_precalificacion_conexion_tipo_ep",
     "compute_dcr_ratio",
     "solve_bolt_group_method",

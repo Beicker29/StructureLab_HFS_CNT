@@ -1621,6 +1621,87 @@
               "reference": "AISC 360-22 J3.11a.(b) (DRY: compute_bolt_hole_tearout_strength_j36)"
             },
             {
+              "id": "bbmb_splice.step4.flange_tension_tearout_v3_note",
+              "scope": "viga",
+              "description": "Revision de resistencia por desgarramiento en la perforacion del perno del ala en direccion 3",
+              "clause": "AISC 360-22 J3.11a.(b)",
+              "fu_vg_var": "Fu_vg",
+              "fu_vg": {
+                "value": 450.0,
+                "unit": "MPa"
+              },
+              "tf_vg_var": "tf_vg",
+              "tf_vg": {
+                "value": 10.8,
+                "unit": "mm"
+              },
+              "p_blt_flange_var": "p_blt_flange",
+              "p_blt_flange": {
+                "value": 60.0,
+                "unit": "mm"
+              },
+              "le_blt_flange_x1_var": "Le_blt_flange_x1",
+              "le_blt_flange_x1": {
+                "value": 50.0,
+                "unit": "mm"
+              },
+              "dh_2_var": "dh.2",
+              "dh_2": {
+                "value": 20.6375,
+                "unit": "mm"
+              },
+              "lc_flange_p3_vg_var": "lc_flange_p3_vg",
+              "lc_flange_p3_vg_formula": "lc_flange_p3_vg = min(p_blt_flange - dh.2, Le_blt_flange_x1 - 0.5*dh.2)",
+              "lc_flange_p3_vg": {
+                "value": 39.3625,
+                "unit": "mm"
+              },
+              "svc_hole_deformation_design_flange_var": "deformation_at_bolt_hole_service_load_is_design",
+              "svc_hole_deformation_design_flange": true,
+              "rn1_flange_p3_vg_var": "Rn1_flange_p3_vg",
+              "rn1_flange_p3_vg_formula": "Rn1_flange_p3_vg = 1.2*lc_flange_p3_vg*tf_vg*Fu_vg",
+              "rn1_flange_p3_vg": {
+                "value": 229.5621,
+                "unit": "kN"
+              },
+              "phi_pr_var": "phi_pr",
+              "phi_pr": 0.75,
+              "phi_rn1_flange_p3_vg_var": "phi*Rn1_flange_p3_vg",
+              "phi_rn1_flange_p3_vg_formula": "phi*Rn1_flange_p3_vg = phi_pr*Rn1_flange_p3_vg",
+              "phi_rn1_flange_p3_vg": {
+                "value": 172.171575,
+                "unit": "kN"
+              },
+              "alpha_pu_web_var": "alpha_Pu_web",
+              "alpha_pu_web": 0.0,
+              "pu_sp_var": "Pu_sp",
+              "pu_sp": {
+                "value": 66.987298,
+                "unit": "kN"
+              },
+              "mu3_sp_var": "Mu3_sp",
+              "mu3_sp": {
+                "value": 450000.0,
+                "unit": "kN-mm"
+              },
+              "d_vg_var": "d_vg",
+              "d_vg": {
+                "value": 450.0,
+                "unit": "mm"
+              },
+              "ru1_flange_p3_vg_var": "Ru1_flange_p3(+)_vg",
+              "ru1_flange_p3_vg_formula": "Ru1_flange_p3(+)_vg = (1- alpha_Pu_web)*Pu_sp + Mu3_sp/(d_vg - tf_vg); si <0 -> 0",
+              "ru1_flange_p3_vg": {
+                "value": 1091.5774619344263,
+                "unit": "kN"
+              },
+              "dcr1_flange_p3_vg_var": "DCR1_flange_p3_vg",
+              "dcr1_flange_p3_vg": 6.340056202276283,
+              "result1_flange_p3_vg": "FAIL",
+              "coefficient": 1.2,
+              "reference": "AISC 360-22 J3.11a.(b) (DRY: compute_bolt_hole_tearout_strength_j36)"
+            },
+            {
               "id": "bbmb_splice.step4.web_bearing_note",
               "scope": "viga",
               "description": "Revision de resistencia por aplatamiento en perforacion de perno critico en alma",
@@ -2428,6 +2509,100 @@
               "reference": "AISC 360-22 J4.1(b) (DRY: compute_element_tension_rupture_strength_j41b)"
             },
             {
+              "id": "bbmb_splice.step5.plt1_web_comp_buckling_p3_minus_note",
+              "scope": "platina_1",
+              "description": "Revision de resistencia por pandeo en compresion por flexion en platina 1 de alma",
+              "clause": "AISC 360-22 E3 y J4.4 (formulacion DRY)",
+              "fy_plt_web_var": "Fy_plt_web",
+              "fy_plt_web": {
+                "value": 250.0,
+                "unit": "MPa"
+              },
+              "h_plt_web_var": "H_plt_web",
+              "h_plt_web": {
+                "value": 431.0,
+                "unit": "mm"
+              },
+              "t_plt_web_var": "t_plt_web",
+              "t_plt_web": {
+                "value": 9.5,
+                "unit": "mm"
+              },
+              "gap_sp_var": "gap_sp",
+              "gap_sp": {
+                "value": 25.4,
+                "unit": "mm"
+              },
+              "le_blt_web_x1_var": "Le_blt_web_x1",
+              "le_blt_web_x1": {
+                "value": 25.4,
+                "unit": "mm"
+              },
+              "g_blt_web_var": "g_blt_web",
+              "g_blt_web": {
+                "value": 76.2,
+                "unit": "mm"
+              },
+              "lp_plt_p3_minus_web_var": "Lp_plt_p3(-)_web",
+              "lp_plt_p3_minus_web_formula": "Lp_plt_p3(-)_web = min(gap_sp + 2*Le_blt_web_x1, g_blt_web)",
+              "lp_plt_p3_minus_web": {
+                "value": 76.19999999999999,
+                "unit": "mm"
+              },
+              "plate_count_n_var": "n_plt_web",
+              "plate_count_n": 1,
+              "phi_no_ductil_var": "phi_no_ductil",
+              "phi_no_ductil": 0.9,
+              "k_factor_var": "K",
+              "k_factor": 0.65,
+              "radius_var": "r_plt_p3(-)_web",
+              "radius": {
+                "value": 2.755,
+                "unit": "mm"
+              },
+              "klr_var": "KL_r_plt_p3(-)_web",
+              "klr": 17.978221415607983,
+              "fe_var": "Fe_plt_p3(-)_web",
+              "fe": {
+                "value": 6107.117719760032,
+                "unit": "MPa"
+              },
+              "fcr_var": "Fcr_plt_p3(-)_web",
+              "fcr": {
+                "value": 250.0,
+                "unit": "MPa"
+              },
+              "fcr_equation": "Fcr_pc_col = Fy_pc_col",
+              "area_gross_var": "Ag_plt_p3(-)_web",
+              "area_gross": {
+                "value": 4094.5,
+                "unit": "mm2"
+              },
+              "phi_rn1_plt_p3_minus_web_var": "phi*Rn1_plt_p3(-)_web",
+              "phi_rn1_plt_p3_minus_web_formula": "phi*Rn1_plt_p3(-)_web = phi*Fcr_plt_p3(-)_web*H_plt_web*t_plt_web*n_plt_web",
+              "phi_rn1_plt_p3_minus_web": {
+                "value": 921.2625,
+                "unit": "kN"
+              },
+              "pu_sp_var": "Pu_sp",
+              "pu_sp": {
+                "value": 66.987298,
+                "unit": "kN"
+              },
+              "alpha_pu_web_var": "alpha_Pu_web",
+              "alpha_pu_web": 0.0,
+              "ru1_plt_p3_minus_web_var": "Ru1_plt_p3(-)_web",
+              "ru1_plt_p3_minus_web_formula": "Ru1_plt_p3(-)_web = si Pu_sp < 0 -> alpha_Pu_web*Pu_sp; si Pu_sp >= 0 -> 0",
+              "ru1_plt_p3_minus_web": {
+                "value": 0.0,
+                "unit": "kN"
+              },
+              "dcr1_plt_p3_minus_web_var": "DCR1_plt_p3(-)_web",
+              "dcr1_plt_p3_minus_web": 0.0,
+              "result1_plt_p3_minus_web": "PASS",
+              "reference": "DRY: compute_plate_compression_buckling_strength"
+            },
+            {
               "id": "bbmb_splice.step5.plt1_web_flex_yielding_m1_note",
               "scope": "platina_1",
               "description": "Revision de resistencia por fluencia a flexion en platina 1 de alma alrededor de 1",
@@ -2718,6 +2893,32 @@
               "dcr3_plt_m1_web": 0.2011497139542177,
               "result3_plt_m1_web": "PASS",
               "reference": "AISC 360-22 J5.5 (DRY: compute_rectangular_bar_net_flexural_rupture_strength_j55)"
+            },
+            {
+              "id": "bbmb_splice.step5.plt1_web_combined_forces_note",
+              "scope": "platina_1",
+              "description": "Revision de capacidad bajo accion de fuerzas combinadas en la platina 1 de alma",
+              "clause": "Criterio de interaccion solicitado por usuario (DRY)",
+              "dcr_plt_v2_web_var": "DCR_plt_v2_web",
+              "dcr_plt_v2_web": 2.302343785974122,
+              "dcr_plt_v3_web_var": "DCR_plt_v3_web",
+              "dcr_plt_v3_web": 0.0,
+              "dcr_plt_p3_minus_web_var": "DCR_plt_p3(-)_web",
+              "dcr_plt_p3_minus_web": 0.0,
+              "dcr_plt_m1_web_var": "DCR_plt_m1_web",
+              "dcr_plt_m1_web": 0.2062995309341816,
+              "dcr_case_1_var": "DCR_case_1",
+              "dcr_case_1_formula": "DCR_case_1 = DCR_plt_m1_web + (DCR_plt_v3_web)^2 + (DCR_plt_v2_web)^4",
+              "dcr_case_1": 28.304641383584382,
+              "dcr_case_2_var": "DCR_case_2",
+              "dcr_case_2_formula": "DCR_case_2 = DCR_plt_m1_web + (DCR_plt_p3(-)_web)^2 + (DCR_plt_v2_web)^4",
+              "dcr_case_2": 28.304641383584382,
+              "dcr_plt_fcomb_web_var": "DCR_plt_Fcomb_web",
+              "dcr_plt_fcomb_web_formula": "DCR_plt_Fcomb_web = max(DCR_case_1, DCR_case_2)",
+              "dcr_plt_fcomb_web": 28.304641383584382,
+              "controlling_case": "Caso 1",
+              "result_plt_fcomb_web": "FAIL",
+              "reference": "DRY: compute_plate_combined_force_interaction"
             },
             {
               "id": "bbmb_splice.step5.plt1_web_shear_yielding_v2_note",
