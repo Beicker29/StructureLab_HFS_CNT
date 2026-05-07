@@ -21,11 +21,15 @@ from .shear import compute_element_shear_rupture_strength_j43
 from .shear import compute_block_shear_strength_j45
 from .shear import compute_element_tension_rupture_strength_j41b
 from .shear import compute_element_tension_yielding_strength_j41a
+from .shear import compute_rectangular_bar_flexural_yielding_strength_f111
+from .shear import compute_rectangular_bar_net_flexural_rupture_strength_j55
+from .shear import compute_rectangular_bar_ltb_strength_f112
 from .bolts import compute_bolt_hole_dimensions_j33
 from .bolts import compute_minimum_bolt_spacing_j33
 from .bolts import compute_minimum_edge_distance_standard_hole_j34
 from .bolts import compute_standard_hole_diameter_j33
 from .bolts import compute_spacing_requirements_j33
+from .bolts import compute_entering_tightening_clearance_table_7_15
 from .bolts import compute_max_spacing_and_edge_distance_limits_j36
 from .bolts import compute_maximum_bolt_spacing_j36
 from .prequalified_ep import compute_limites_precalificacion_conexion_tipo_ep
@@ -49,11 +53,15 @@ __all__ = [
     "compute_block_shear_strength_j45",
     "compute_element_tension_rupture_strength_j41b",
     "compute_element_tension_yielding_strength_j41a",
+    "compute_rectangular_bar_flexural_yielding_strength_f111",
+    "compute_rectangular_bar_net_flexural_rupture_strength_j55",
+    "compute_rectangular_bar_ltb_strength_f112",
     "compute_bolt_hole_dimensions_j33",
     "compute_minimum_bolt_spacing_j33",
     "compute_minimum_edge_distance_standard_hole_j34",
     "compute_standard_hole_diameter_j33",
     "compute_spacing_requirements_j33",
+    "compute_entering_tightening_clearance_table_7_15",
     "compute_max_spacing_and_edge_distance_limits_j36",
     "compute_maximum_bolt_spacing_j36",
     "compute_limites_precalificacion_conexion_tipo_ep",

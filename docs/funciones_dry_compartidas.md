@@ -32,6 +32,17 @@ Fuente canonica: `src/steel_connections/codes/engineering/common`.
 
 - Devuelve distancia minima al borde `Le_min` para agujero estandar (Tabla J3.4), con metadatos de fila usada.
 
+`compute_entering_tightening_clearance_table_7_15(bolt_diameter, unit_system)`
+
+- Devuelve clearances de constructibilidad de la Tabla 7-15 del Steel Construction Manual:
+  - `H1`, `H2`, `C1`, `C2`, `C3_circular`, `C3_clipped`
+- Para `bbmb_splice`, estos valores se toman del catalogo `data/sections.xlsx`, hoja `Perno`,
+  asociados al perno de entrada (`shape + descripcion + norma`) via `get_bolt_section_properties`.
+
+`get_minimum_staggered_pitch_from_f(width_across_flats, unit_system)` *(lookup de catalogo compartido)*
+
+- Devuelve `Pmin` desde `data/sections.xlsx`, hoja `F_Perno`, a partir de `F` (width across flats) en pulgadas.
+
 `compute_max_spacing_and_edge_distance_limits_j36(thinner_part_thickness, unit_system, is_unpainted_weathering_exposed)`
 
 - Devuelve limites maximos de separacion y borde para J3.6 (regular/corrosivo).
@@ -142,6 +153,61 @@ Fuente canonica: `src/steel_connections/codes/engineering/common`.
 
 `BoltGroupSolverOptions`
 - Configuracion comun de solucion (`tolerance`, `max_iterations`, `icr_law`).
+
+## 8) Flexion de barras rectangulares
+
+`compute_rectangular_bar_flexural_yielding_strength_f111(material_fy, plastic_section_modulus_z, elastic_section_modulus_sx, phi_n, unit_system)`
+
+- Fluencia por flexion (AISC 360-22 F11.1):
+  - `Mn = min(Fy*Z, 1.5*Fy*Sx)`
+  - `phi*Mn = phi_n*Mn`
+
+`compute_rectangular_bar_ltb_strength_f112(material_fy, modulus_e, unbraced_length_lb, bar_depth_d, bar_thickness_t, elastic_section_modulus_sx, plastic_moment_mp, cb_factor, phi_n, unit_system)`
+
+- Pandeo lateral-torsional (AISC 360-22 F11.2), casos (a), (b), (c) con limite por `Mp`.
+
+`compute_rectangular_bar_net_flexural_rupture_strength_j55(material_fy, plate_thickness_tp, plate_height_h, hole_plus_allowance_d_prime, edge_e1, edge_e2, spacing_s, bolt_rows_n, phi_n, unit_system)`
+
+- Rotura por flexion neta para barra rectangular perforada (AISC 360-22 J5.5):
+  - `h = e1 + (n-1)*s + e2`
+  - `Znet = tp*h^2/4 - d'*tp*sum(|e1 + i*s - h/2|)`
+  - `Rn = Fy*Znet`
+  - `phi*Rn = phi_n*Rn`
+
+## 9) Inventario canonico (exportado en `engineering/common`)
+
+Listado sincronizado con `src/steel_connections/codes/engineering/common/__init__.py`:
+
+- `build_bolt_group_geometry`
+- `build_in_plane_load`
+- `build_in_plane_load_from_explicit_eccentricity`
+- `build_rectangular_bolt_pattern`
+- `compute_bolt_tension_rupture_capacity_per_bolt`
+- `compute_bolt_shear_rupture_capacity_per_bolt`
+- `compute_bolt_hole_tearout_strength_j36`
+- `compute_bolt_hole_bearing_strength_j36`
+- `compute_element_shear_yielding_strength_j42a`
+- `compute_element_shear_rupture_strength_j43`
+- `compute_block_shear_strength_j45`
+- `compute_element_tension_rupture_strength_j41b`
+- `compute_element_tension_yielding_strength_j41a`
+- `compute_rectangular_bar_flexural_yielding_strength_f111`
+- `compute_rectangular_bar_ltb_strength_f112`
+- `compute_rectangular_bar_net_flexural_rupture_strength_j55`
+- `compute_bolt_hole_dimensions_j33`
+- `compute_minimum_bolt_spacing_j33`
+- `compute_minimum_edge_distance_standard_hole_j34`
+- `compute_standard_hole_diameter_j33`
+- `compute_spacing_requirements_j33`
+- `compute_entering_tightening_clearance_table_7_15`
+- `compute_max_spacing_and_edge_distance_limits_j36`
+- `compute_maximum_bolt_spacing_j36`
+- `compute_limites_precalificacion_conexion_tipo_ep`
+- `compute_dcr_ratio`
+- `solve_bolt_group_method`
+- `solve_elastic_superposition`
+- `solve_elastic_center_of_rotation`
+- `solve_instant_center_of_rotation`
 
 ## Nota de uso
 

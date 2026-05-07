@@ -62,12 +62,12 @@ Propiedades organizadas por ambito.
 - Rango del indice: `k = 0, 1, ..., n_blt_flange_x - 1`
 - Coordenadas en direccion X para pernos de aleta (x_k_blt_flange): `k=0: 50 mm; k=1: 110 mm; k=2: 170 mm; k=3: 230 mm`
 - Numero de pernos en na mitad de aleta en direccion Z de la aleta (n_blt_flange_z) (inp): `1`
-- Distancia de borde en direccion Z del grupo de pernos del ala (Le_blt_flange_z3) (inp): `30 mm`
-- Distancia complementaria de borde en aleta (Le_blt_flange_z4): `26.9 mm`
+- Distancia de borde en direccion Z del grupo de pernos del ala (Le_blt_flange_z3) (inp): `35 mm`
+- Distancia complementaria de borde en aleta (Le_blt_flange_z4): `21.9 mm`
 - Gage entre columnas de pernos del ala (g_blt_flange) (inp): `40 mm`
 - Tipo de perforacion por pernos grupo 2 ala (type_hole_flange) (inp): `standard`
-- Distancia util entre filas internas de pernos de aleta (g1_blt_flange): `92 mm`
-- Despeje horizontal entre grupos de pernos (F_blt_flange): `32.69 mm`
+- Distancia util entre filas internas de pernos de aleta (g1_blt_flange): `82 mm`
+- Despeje horizontal entre grupos de pernos (F_blt_flange): `27.69 mm`
 - Diametro de perforacion para pernos 2 (dh.2): `20.64 mm`
 
 #### 1.1.4 Formulas de cálculo
@@ -152,9 +152,9 @@ Propiedades organizadas por ambito.
 - Gage entre columnas de pernos del ala (g_plt_flange) (inp): `40 mm`
 - Distancia de borde interior 1 en direccion Z del ala (Le_plt_flange_z1) (inp): `30 mm`
 - Distancia de borde interior 2 en direccion Z del ala (Le_plt_flange_z2) (inp): `40 mm`
-- Distancia util entre filas internas de pernos de aleta (g1_plt_flange): `92 mm`
+- Distancia util entre filas internas de pernos de aleta (g1_plt_flange): `82 mm`
 - Longitud de platina de ala (L_plt_flange): `585.4 mm`
-- Ancho de platina de ala (B_plt_flange): `162 mm`
+- Ancho de platina de ala (B_plt_flange): `152 mm`
 - dh_plt_flange: `20.64 mm`
 
 #### 1.4.2 Formulas de cálculo
@@ -280,28 +280,28 @@ Propiedades organizadas por ambito.
 #### Chequeo 2.1.13 - Distancia minima a borde Le_blt_flange_z3 para agujero estandar (`Le_blt_flange_z3`)
 
 - Ámbito: `VIGA`
-- Verificacion: `Le_blt_flange_z3 >= max {Le_min, C1}; 30 mm >= 30.16 mm`
+- Verificacion: `Le_blt_flange_z3 >= max {Le_min, C1}; 35 mm >= 30.16 mm`
 - Clausula: `Documento: AISC 360-22 + Steel Construction Manual AISC 16th edition 2023 | Seccion: AISC 360-22 Tabla J3.4, J3.6 y Tabla 7-15 Entering and Tightening Clearance, in.`
-- Resultado: 🔴 No cumple
+- Resultado: 🟢 Cumple
 
 #### Chequeo 2.1.14 - Distancia maxima a borde Le_blt_flange_z3 (`Le_blt_flange_z3`)
 
 - Ámbito: `VIGA`
-- Verificacion: `Le_blt_flange_z3 <= Le_max; 30 mm <= 129.6 mm`
+- Verificacion: `Le_blt_flange_z3 <= Le_max; 35 mm <= 129.6 mm`
 - Clausula: `Documento: AISC 360-22 | Seccion: AISC 360-22 J3.6`
 - Resultado: 🟢 Cumple
 
 #### Chequeo 2.1.15 - Distancia minima a borde Le_blt_flange_z4 para agujero estandar (`Le_blt_flange_z4`)
 
 - Ámbito: `VIGA`
-- Verificacion: `Le_blt_flange_z4 >= max {Le_min, C1}; 26.9 mm >= 30.16 mm`
+- Verificacion: `Le_blt_flange_z4 >= max {Le_min, C1}; 21.9 mm >= 30.16 mm`
 - Clausula: `Documento: AISC 360-22 + Steel Construction Manual AISC 16th edition 2023 | Seccion: AISC 360-22 Tabla J3.4, J3.6 y Tabla 7-15 Entering and Tightening Clearance, in.`
 - Resultado: 🔴 No cumple
 
 #### Chequeo 2.1.16 - Distancia maxima a borde Le_blt_flange_z4 (`Le_blt_flange_z4`)
 
 - Ámbito: `VIGA`
-- Verificacion: `Le_blt_flange_z4 <= Le_max; 26.9 mm <= 129.6 mm`
+- Verificacion: `Le_blt_flange_z4 <= Le_max; 21.9 mm <= 129.6 mm`
 - Clausula: `Documento: AISC 360-22 | Seccion: AISC 360-22 J3.6`
 - Resultado: 🟢 Cumple
 
@@ -322,21 +322,21 @@ Propiedades organizadas por ambito.
 #### Chequeo 2.1.19 - Separacion minima entre pernos del ala en direccion Z (g1) (`g1_blt_flange`)
 
 - Ámbito: `VIGA`
-- Verificacion: `g1_blt_flange >= max {2*C1, Smin}; 92 mm >= 60.32 mm`
+- Verificacion: `g1_blt_flange >= max {2*C1, Smin}; 82 mm >= 60.32 mm`
 - Clausula: `Documento: AISC 360-22 + Steel Construction Manual AISC 16th edition 2023 | Seccion: AISC 360-22 J3.3, J3.6 y Tabla 7-15 Entering and Tightening Clearance, in.`
 - Resultado: 🟢 Cumple
 
 #### Chequeo 2.1.20 - Separacion maxima entre pernos del ala en direccion Z (g1) (`g1_blt_flange`)
 
 - Ámbito: `VIGA`
-- Verificacion: `g1_blt_flange <= Smax; 92 mm <= 259.2 mm`
+- Verificacion: `g1_blt_flange <= Smax; 82 mm <= 259.2 mm`
 - Clausula: `Documento: AISC 360-22 | Seccion: AISC 360-22 J3.6`
 - Resultado: 🟢 Cumple
 
 #### Chequeo 2.1.21 - Distancia minima a borde Le_blt_flange_z4 por constructibilidad (C3) (`Le_blt_flange_z4`)
 
 - Ámbito: `VIGA`
-- Verificacion: `Le_blt_flange_z4 >= C3; 26.9 mm >= 19.05 mm`
+- Verificacion: `Le_blt_flange_z4 >= C3; 21.9 mm >= 19.05 mm`
 - Clausula: `Documento: AISC 360-22 + Steel Construction Manual AISC 16th edition 2023 | Seccion: AISC 360-22 J3.6 y Tabla 7-15 Entering and Tightening Clearance, in.`
 - Resultado: 🟢 Cumple
 
@@ -347,12 +347,12 @@ Propiedades organizadas por ambito.
 - Clausula: `Documento: AISC 360-22 + Steel Construction Manual AISC 16th edition 2023 | Seccion: AISC 360-22 J3.6 y Tabla 7-15 Entering and Tightening Clearance, in.`
 - Resultado: 🔴 No cumple
 
-#### Chequeo 2.1.23 - Despeje horizontal F_blt_flange y separacion escalonada minima entre pernos (`F_blt_flange`)
+#### Chequeo 2.1.23 - Despeje horizontal F_blt_flange y separacion escalonada minima entre pernos (`Pmin_blt`)
 
 - Ámbito: `VIGA`
-- Verificacion: `F_blt_flange >= C1_max; 32.69 mm >= 30.16 mm`
+- Verificacion: `F_blt_flange < C1_max; 27.69 mm < 30.16 mm; Pmin_blt = min{|x_j_blt_web - x_k_blt_flange|} = 24.60 mm; Pmin_blt >= P; 24.60 mm >= 41.27 mm; lista=|x_0-x_0|=24.60 mm, |x_0-x_1|=84.60 mm, |x_0-x_2|=144.60 mm, |x_0-x_3|=204.60 mm`
 - Clausula: `Documento: AISC 360-22 + Steel Construction Manual AISC 16th edition 2023 | Seccion: AISC 360-22 J3.6 y Tabla 7-15 Entering and Tightening Clearance, in. (Aligned + Staggered Bolts)`
-- Resultado: 🟢 Cumple
+- Resultado: 🔴 No cumple
 
 ### 2.2 Ámbito `PLATINA_1`
 
@@ -517,14 +517,14 @@ Propiedades organizadas por ambito.
 #### Chequeo 2.4.11 - Separacion minima entre pernos de platina de ala en direccion Z entre filas internas (`g1_plt_flange`)
 
 - Ámbito: `PLATINA_2`
-- Verificacion: `g1_plt_flange >= Smin; 92 mm >= 57.15 mm`
+- Verificacion: `g1_plt_flange >= Smin; 82 mm >= 57.15 mm`
 - Clausula: `Documento: AISC 360-22 | Seccion: AISC 360-22 J3.3`
 - Resultado: 🟢 Cumple
 
 #### Chequeo 2.4.12 - Separacion maxima entre pernos de platina de ala en direccion Z entre filas internas (`g1_plt_flange`)
 
 - Ámbito: `PLATINA_2`
-- Verificacion: `g1_plt_flange <= Smax; 92 mm <= 300 mm`
+- Verificacion: `g1_plt_flange <= Smax; 82 mm <= 300 mm`
 - Clausula: `Documento: AISC 360-22 | Seccion: AISC 360-22 J3.6`
 - Resultado: 🟢 Cumple
 
@@ -546,7 +546,7 @@ Propiedades organizadas por ambito.
 
 ### 2.6 Resumen de chequeos por ámbito
 
-- 🔴 `2.1` `VIGA`: total=23, cumple=17, no_cumple=6, numerales_no_cumplen=2.1.3, 2.1.7, 2.1.9, 2.1.13, 2.1.15, 2.1.22
+- 🔴 `2.1` `VIGA`: total=23, cumple=17, no_cumple=6, numerales_no_cumplen=2.1.3, 2.1.7, 2.1.9, 2.1.15, 2.1.22, 2.1.23
 - 🟢 `2.2` `PLATINA_1`: total=10, cumple=10, no_cumple=0, numerales_no_cumplen=ninguno
 - 🟢 `2.3` `PERNOS_1`: total=2, cumple=2, no_cumple=0, numerales_no_cumplen=ninguno
 - 🟢 `2.4` `PLATINA_2`: total=12, cumple=12, no_cumple=0, numerales_no_cumplen=ninguno
@@ -955,11 +955,9 @@ Propiedades organizadas por ambito.
 - DCR4_plt_v3_web: `0`
 - Resultado: 🟢 Cumple
 
-### 5.3 Revisión de capacidad a compresión en la platina 1 de alma en direccion 3
+### 5.3 Revisión de capacidad a flexión en la platina 1 de alma alrededor de 1
 
-### 5.4 Revisión de capacidad a flexión en la platina 1 de alma alrededor de 1
-
-#### 5.4.1. ELR #1: Fluencia por flexión en la platina 1 de alma
+#### 5.3.1. ELR #1: Fluencia por flexión en la platina 1 de alma
 
 - Clausula: `Documento: AISC 360-22 | Seccion: F11.1 (DRY: compute_rectangular_bar_flexural_yielding_strength_f111)`
 - Ecuaciones: `Z_plt_m1_web = t_plt_web*H_plt_web^2/4; S_plt_m1_web = t_plt_web*H_plt_web^2/6; Rn1_plt_m1_web = min(Fy_plt_web*Z_plt_m1_web, 1.5*Fy_plt_web*S_plt_m1_web); phi*Rn1_plt_m1_web = phi_no_ductil*Rn1_plt_m1_web; Ru1_plt_m1_web = Vu2_sp*ex_blt_web - alpha_Pu_web*Pu_sp*ey_blt_web; DCR1_plt_m1_web = Ru1_plt_m1_web/phi*Rn1_plt_m1_web`
@@ -980,7 +978,7 @@ Propiedades organizadas por ambito.
 - DCR1_plt_m1_web: `0.19`
 - Resultado: 🟢 Cumple
 
-#### 5.4.2. ELR #2: Pandeo lateral-torsional en la platina 1 de alma
+#### 5.3.2. ELR #2: Pandeo lateral-torsional en la platina 1 de alma
 
 - Clausula: `Documento: AISC 360-22 | Seccion: F11.2 (DRY: compute_rectangular_bar_ltb_strength_f112)`
 - Ecuaciones: `Z_plt_m1_web = t_plt_web*H_plt_web^2/4; S_plt_m1_web = t_plt_web*H_plt_web^2/6; Lb_plt_m1_web = max(2*Le_blt_web_x1 + gap_sp, g_plt_web); My_plt_m1_web = Fy_plt_web*S_plt_m1_web; Rn2_plt_m1_web = Mn_ltb(F11.2) <= Mp; phi*Rn2_plt_m1_web = phi_no_ductil*Rn2_plt_m1_web; Ru2_plt_m1_web = Vu2_sp*ex_blt_web - alpha_Pu_web*Pu_sp*ey_blt_web; DCR2_plt_m1_web = Ru2_plt_m1_web/phi*Rn2_plt_m1_web`
@@ -1010,7 +1008,7 @@ Propiedades organizadas por ambito.
 - DCR2_plt_m1_web: `0.21`
 - Resultado: 🟢 Cumple
 
-#### 5.4.3. ELR #3: Rotura por flexión en la platina 1 de alma
+#### 5.3.3. ELR #3: Rotura por flexión en la platina 1 de alma
 
 - Clausula: `Documento: AISC 360-22 | Seccion: J5.5 (DRY: compute_rectangular_bar_net_flexural_rupture_strength_j55)`
 - Ecuaciones: `h = e1 + (n - 1)*s + e2; Znet_plt_m1_web = tp*h^2/4 - d'*tp*sum_{i=0}^{n-1}|e1 + i*s - h/2|; Rn3_plt_m1_web = Fu_plt_web*Znet_plt_m1_web; phi*Rn3_plt_m1_web = phi_fragil*Rn3_plt_m1_web; Ru3_plt_m1_web = Vu2_sp*ex_blt_web - alpha_Pu_web*Pu_sp*ey_blt_web; DCR3_plt_m1_web = Ru3_plt_m1_web/phi*Rn3_plt_m1_web`

@@ -304,6 +304,128 @@ def compute_minimum_edge_distance_standard_hole_j34(
     return Quantity(value=edge_in * 25.4, unit="mm"), {"db_in": db_in, "table_row": matched_row, "in_to_mm": 25.4}
 
 
+def compute_entering_tightening_clearance_table_7_15(
+    *,
+    bolt_diameter: Quantity,
+    unit_system: UnitSystem,
+) -> dict[str, Quantity | float | str | bool]:
+    """Compute constructibility clearances from AISC Manual Table 7-15.
+
+    Returns aligned-bolts clearances: ``H1``, ``H2``, ``C1``, ``C2``, ``C3``
+    (circular and clipped). For 1/2 in diameter, Table 7-15 has no row in this
+    project workflow; the 5/8 in row is intentionally used as fallback.
+    """
+
+    db_in = _to_in(bolt_diameter, unit_system)
+    tol = 1e-3
+
+    # Table 7-15 (aligned bolts), in.
+    table_715_us: list[dict[str, float]] = [
+        {
+            "db_in": 0.625,  # 5/8
+            "h1_in": 25.0 / 64.0,
+            "h2_in": 1.25,
+            "c1_in": 1.0 + 3.0 / 16.0,
+            "c2_in": 11.0 / 16.0,
+            "c3_circular_in": 11.0 / 16.0,
+            "c3_clipped_in": 0.625,
+        },
+        {
+            "db_in": 0.75,
+            "h1_in": 15.0 / 32.0,
+            "h2_in": 1.375,
+            "c1_in": 1.0 + 3.0 / 16.0,
+            "c2_in": 0.75,
+            "c3_circular_in": 0.75,
+            "c3_clipped_in": 11.0 / 16.0,
+        },
+        {
+            "db_in": 0.875,
+            "h1_in": 35.0 / 64.0,
+            "h2_in": 1.5,
+            "c1_in": 1.25,
+            "c2_in": 0.875,
+            "c3_circular_in": 0.875,
+            "c3_clipped_in": 13.0 / 16.0,
+        },
+        {
+            "db_in": 1.0,
+            "h1_in": 39.0 / 64.0,
+            "h2_in": 1.75,
+            "c1_in": 1.375,
+            "c2_in": 15.0 / 16.0,
+            "c3_circular_in": 1.0,
+            "c3_clipped_in": 0.875,
+        },
+        {
+            "db_in": 1.125,
+            "h1_in": 11.0 / 16.0,
+            "h2_in": 2.0,
+            "c1_in": 1.5,
+            "c2_in": 1.0 + 1.0 / 16.0,
+            "c3_circular_in": 1.125,
+            "c3_clipped_in": 1.0,
+        },
+        {
+            "db_in": 1.25,
+            "h1_in": 25.0 / 32.0,
+            "h2_in": 2.0,
+            "c1_in": 1.0 + 13.0 / 16.0,
+            "c2_in": 1.125,
+            "c3_circular_in": 1.25,
+            "c3_clipped_in": 1.125,
+        },
+        {
+            "db_in": 1.375,
+            "h1_in": 27.0 / 32.0,
+            "h2_in": 2.25,
+            "c1_in": 1.0 + 7.0 / 8.0,
+            "c2_in": 1.25,
+            "c3_circular_in": 1.375,
+            "c3_clipped_in": 1.25,
+        },
+        {
+            "db_in": 1.5,
+            "h1_in": 15.0 / 16.0,
+            "h2_in": 2.25,
+            "c1_in": 2.0,
+            "c2_in": 1.0 + 5.0 / 16.0,
+            "c3_circular_in": 1.5,
+            "c3_clipped_in": 1.0 + 3.0 / 8.0,
+        },
+    ]
+
+    selected: dict[str, float] | None = None
+    fallback_used = False
+    for row in table_715_us:
+        if abs(db_in - row["db_in"]) <= tol:
+            selected = row
+            break
+
+    if selected is None and db_in <= (0.5 + tol):
+        # Project rule requested by user: use 5/8 in values for 1/2 in bolts.
+        selected = table_715_us[0]
+        fallback_used = True
+
+    if selected is None:
+        raise ValueError(
+            "Bolt nominal diameter is not supported by Table 7-15 lookup and is not eligible for 1/2->5/8 fallback."
+        )
+
+    return {
+        "db_in": db_in,
+        "selected_row_db_in": selected["db_in"],
+        "fallback_half_to_five_eighth_used": fallback_used,
+        "reference": "Steel Construction Manual AISC 16th edition 2023, Table 7-15",
+        "h1": _from_in(selected["h1_in"], unit_system),
+        "h2": _from_in(selected["h2_in"], unit_system),
+        "c1": _from_in(selected["c1_in"], unit_system),
+        "c2": _from_in(selected["c2_in"], unit_system),
+        "c3_circular": _from_in(selected["c3_circular_in"], unit_system),
+        "c3_clipped": _from_in(selected["c3_clipped_in"], unit_system),
+    }
+
+
 def compute_bolt_tension_rupture_capacity_per_bolt(
     *,
     bolt_diameter: Quantity,

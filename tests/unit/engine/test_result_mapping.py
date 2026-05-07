@@ -18,6 +18,10 @@ APPROVED_CASES = [
         "examples/Fully Restrained Moment/case_001_bbmb_splice.json",
         Path("tests/golden/approved/case_001_bbmb_splice/detailed.json"),
     ),
+    (
+        "examples/Fully Restrained Moment/case_001_bbmb_splice_test_f_floor.json",
+        Path("tests/golden/approved/case_001_bbmb_splice_test_f_floor/detailed.json"),
+    ),
 ]
 
 

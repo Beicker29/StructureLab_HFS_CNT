@@ -74,6 +74,24 @@ def _format_scalar_with_unit(value: object, unit: str) -> str:
     return f"{_format_decimal(numeric)} {rendered_unit}"
 
 
+def _format_indexed_quantity_series(value: object, *, index_key: str = "j", quantity_key: str = "x") -> str:
+    if not isinstance(value, list):
+        return "n/a"
+    parts: list[str] = []
+    for idx, item in enumerate(value):
+        if isinstance(item, dict):
+            j_raw = item.get(index_key, idx)
+            q_raw = item.get(quantity_key, item)
+        else:
+            j_raw = idx
+            q_raw = item
+        q_text = _format_quantity(q_raw)
+        if q_text == "n/a":
+            continue
+        parts.append(f"{index_key}={_format_text(j_raw)}: {q_text}")
+    return "; ".join(parts) if parts else "n/a"
+
+
 def _as_quantity(value: object) -> Quantity | None:
     if not isinstance(value, dict):
         return None
@@ -2707,7 +2725,7 @@ def _render_splice_step_2_method_block(step2: dict | None, *, chapter_number: in
         "",
         f"- Metodo seleccionado: `{method}`",
         "- Clausula: `Documento: Steel Construction Manual AISC 16th edition 2023 | Seccion: Part 7 DESIGN CONSIDERATIONS FOR BOLTS - Instantaneous Center of Rotation Method`",
-        "- Ecuaciones: `ex_blt_web = gap_sp + 2*Le_blt_web_x1 + (n_blt_web_x - 1)*g_blt_web; Muz_blt_web = Vu2_sp*ex_blt_web - Pu_sp*ey_blt_web`",
+        "- Ecuaciones: `ex_blt_web = gap_sp + 2*Le_blt_web_x1 + (n_blt_web_x - 1)*g_blt_web; Muz_blt_web = Vu2_sp*ex_blt_web - alpha_Pu_web*Pu_sp*ey_blt_web`",
         f"- Pu_sp: `{px}`",
         f"- Vu2_sp: `{py}`",
         f"- ex_blt_web: `{ex}`",
@@ -2762,6 +2780,7 @@ def _render_fully_restrained_splice_outline(rows_viga: list[dict], notes_viga: l
                         f"- Tipo de acero de viga ({_format_text(note.get('steel_vg_var'))}) (inp): `{_format_text(note.get('steel_vg'))}`",
                         f"- Condicion superficial del ala ({_format_text(note.get('cond_sup_vg_var'))}) (inp): `{_format_text(note.get('cond_sup_vg'))}`",
                         f"- Condicion ambiental ala ({_format_text(note.get('cond_amb_vg_var'))}) (inp): `{_format_text(note.get('cond_amb_vg'))}`",
+                        f"- Seleccion C3 para constructibilidad ({_format_text(note.get('c3_clearance_type_var'))}) (inp): `{_format_text(note.get('c3_clearance_type'))}`",
                         f"- Fluencia de viga ({_format_text(note.get('fy_vg_var'))}): `{_format_quantity(note.get('fy_vg'))}`",
                         f"- Resistencia ultima de viga ({_format_text(note.get('fu_vg_var'))}): `{_format_quantity(note.get('fu_vg'))}`",
                         f"- Modulo elastico de viga ({_format_text(note.get('e_vg_var'))}): `{_format_quantity(note.get('e_vg'))}`",
@@ -2785,6 +2804,9 @@ def _render_fully_restrained_splice_outline(rows_viga: list[dict], notes_viga: l
                         f"- Numero de pernos en direccion X del alma ({_format_text(note.get('n1x_var'))}) (inp): `{_format_text(note.get('n1x'))}`",
                         f"- Separacion horizontal entre columnas de pernos del alma ({_format_text(note.get('s1x_var'))}) (inp): `{_format_quantity(note.get('s1x'))}`",
                         f"- Distancia de borde en direccion X del grupo de pernos del alma ({_format_text(note.get('le1x1_var'))}) (inp): `{_format_quantity(note.get('le1x1'))}`",
+                        f"- Ecuacion coordenadas X de pernos del alma: `{_format_text(note.get('xj_blt_web_formula'))}`",
+                        f"- Rango del indice: `{_format_text(note.get('xj_blt_web_j_range'))}`",
+                        f"- Coordenadas en direccion X para pernos del alma ({_format_text(note.get('xj_blt_web_var'))}): `{_format_indexed_quantity_series(note.get('xj_blt_web_values'))}`",
                         f"- Distancia de borde ajustada ({_format_text(note.get('le1x1_prime_var'))}): `{_format_quantity(note.get('le1x1_prime'))}`",
                         f"- Numero de pernos en direccion Y del alma ({_format_text(note.get('n1y_var'))}) (inp): `{_format_text(note.get('n1y'))}`",
                         f"- Separacion vertical entre filas de pernos del alma ({_format_text(note.get('s1y_var'))}) (inp): `{_format_quantity(note.get('s1y'))}`",
@@ -2798,12 +2820,16 @@ def _render_fully_restrained_splice_outline(rows_viga: list[dict], notes_viga: l
                         f"- Numero de pernos en direccion X del ala ({_format_text(note.get('n2x_var'))}) (inp): `{_format_text(note.get('n2x'))}`",
                         f"- Separacion entre filas de pernos del ala ({_format_text(note.get('s2x_var'))}) (inp): `{_format_quantity(note.get('s2x'))}`",
                         f"- Distancia de borde en direccion X del grupo de pernos del ala ({_format_text(note.get('le2x1_var'))}) (inp): `{_format_quantity(note.get('le2x1'))}`",
+                        f"- Ecuacion coordenadas X de pernos de aleta: `{_format_text(note.get('xk_blt_flange_formula'))}`",
+                        f"- Rango del indice: `{_format_text(note.get('xk_blt_flange_k_range'))}`",
+                        f"- Coordenadas en direccion X para pernos de aleta ({_format_text(note.get('xk_blt_flange_var'))}): `{_format_indexed_quantity_series(note.get('xk_blt_flange_values'), index_key='k', quantity_key='x')}`",
                         f"- Numero de pernos en na mitad de aleta en direccion Z de la aleta ({_format_text(note.get('n2z_var'))}) (inp): `{_format_text(note.get('n2z'))}`",
                         f"- Distancia de borde en direccion Z del grupo de pernos del ala ({_format_text(note.get('le2z3_var'))}) (inp): `{_format_quantity(note.get('le2z3'))}`",
                         f"- Distancia complementaria de borde en aleta ({_format_text(note.get('le2z4_var'))}): `{_format_quantity(note.get('le2z4'))}`",
                         f"- Gage entre columnas de pernos del ala ({_format_text(note.get('s2z1_var'))}) (inp): `{_format_quantity(note.get('s2z1'))}`",
                         f"- Tipo de perforacion por pernos grupo 2 ala ({_format_text(note.get('type_hole_flange_var'))}) (inp): `{_format_text(note.get('type_hole_flange'))}`",
                         f"- Distancia util entre filas internas de pernos de aleta ({_format_text(note.get('g1_blt_flange_var'))}): `{_format_quantity(note.get('g1_blt_flange'))}`",
+                        f"- Despeje horizontal entre grupos de pernos ({_format_text(note.get('f_blt_flange_var'))}): `{_format_quantity(note.get('f_blt_flange'))}`",
                         f"- Diametro de perforacion para pernos 2 (dh.2): `{_format_quantity(note.get('dh_2'))}`",
                         "",
                         f"#### 1.{section_offset}.4 Formulas de calculo",
@@ -2811,7 +2837,9 @@ def _render_fully_restrained_splice_outline(rows_viga: list[dict], notes_viga: l
                         f"- Formula ajuste distancia de borde: `{_format_text(note.get('le1x1_prime_formula'))}`",
                         "- Formula distancia vertical borde ala/pernos alma: `Le_blt_web_y3 = 0.5*(d_vg - (n_blt_web_y - 1)*p_blt_web)`",
                         f"- Formula distancia neta respecto a kdet en alma: `{_format_text(note.get('le1y3_1_formula'))}`",
+                        f"- Formula coordenadas X pernos de aleta: `{_format_text(note.get('xk_blt_flange_formula'))}`",
                         f"- Formula distancia util entre filas internas de pernos de aleta: `{_format_text(note.get('g1_blt_flange_formula'))}`",
+                        f"- Formula despeje horizontal entre grupos de pernos: `{_format_text(note.get('f_blt_flange_formula'))}`",
                         f"- Formula distancia complementaria de borde en aleta: `{_format_text(note.get('le2z4_formula'))}`",
                         "",
                     ]
@@ -3089,6 +3117,9 @@ def _render_fully_restrained_splice_outline(rows_viga: list[dict], notes_viga: l
     le_blt_web_y31_rows = [
         item for item in all_rows if str(item.get("calculated_symbol", "")).strip() == "Le_blt_web_y3.1"
     ]
+    le_blt_web_y31_rows = [
+        item for item in le_blt_web_y31_rows if "(C3)" not in _translate_text_es(item.get("description"))
+    ]
     le_blt_web_y31_rows.sort(key=lambda r: 0 if str(r.get("comparison_text", "")).strip() == ">=" else 1)
     p_blt_flange_rows = [
         item
@@ -3112,7 +3143,27 @@ def _render_fully_restrained_splice_outline(rows_viga: list[dict], notes_viga: l
     le_blt_flange_z4_rows = [
         item for item in all_rows if str(item.get("calculated_symbol", "")).strip() == "Le_blt_flange_z4"
     ]
+    le_blt_flange_z4_rows = [
+        item for item in le_blt_flange_z4_rows if "(C3)" not in _translate_text_es(item.get("description"))
+    ]
     le_blt_flange_z4_rows.sort(key=lambda r: 0 if str(r.get("comparison_text", "")).strip() == ">=" else 1)
+    le_blt_flange_z4_c3_rows = [
+        item
+        for item in all_rows
+        if str(item.get("calculated_symbol", "")).strip() == "Le_blt_flange_z4"
+        and "(C3)" in _translate_text_es(item.get("description"))
+    ]
+    le_blt_web_y31_c3_rows = [
+        item
+        for item in all_rows
+        if str(item.get("calculated_symbol", "")).strip() == "Le_blt_web_y3.1"
+        and "(C3)" in _translate_text_es(item.get("description"))
+    ]
+    f_blt_flange_rows = [
+        item
+        for item in all_rows
+        if "Despeje horizontal F_blt_flange" in _translate_text_es(item.get("description"))
+    ]
     g_blt_flange_rows = [
         item
         for item in all_rows
@@ -3195,6 +3246,9 @@ def _render_fully_restrained_splice_outline(rows_viga: list[dict], notes_viga: l
         + le_blt_flange_z4_rows[:2]
         + g_blt_flange_rows[:2]
         + g1_blt_flange_rows[:2]
+        + le_blt_flange_z4_c3_rows[:1]
+        + le_blt_web_y31_c3_rows[:1]
+        + f_blt_flange_rows[:1]
     )
 
     def _render_simple_check(
@@ -3218,7 +3272,10 @@ def _render_fully_restrained_splice_outline(rows_viga: list[dict], notes_viga: l
             item.get("source_document"),
             item.get("rule_id"),
         )
-        if comparison_mode == "in_set":
+        verification_override = _format_text(item.get("verification_override"))
+        if verification_override != "n/a":
+            verification = verification_override
+        elif comparison_mode == "in_set":
             calculated_text = _format_text(item.get("calculated_text"))
             allowed_values = item.get("allowed_values")
             allowed = ", ".join(str(v) for v in allowed_values) if isinstance(allowed_values, list) else limit_symbol
@@ -3337,6 +3394,9 @@ def _render_fully_restrained_splice_outline(rows_viga: list[dict], notes_viga: l
     plt1_block_shear_v3_note = notes_by_id_scope.get(("bbmb_splice.step5.plt1_web_block_shear_v3_note", "PLATINA_1"), {})
     plt1_tension_yielding_v3_note = notes_by_id_scope.get(("bbmb_splice.step5.plt1_web_tension_yielding_v3_note", "PLATINA_1"), {})
     plt1_tension_rupture_v3_note = notes_by_id_scope.get(("bbmb_splice.step5.plt1_web_tension_rupture_v3_note", "PLATINA_1"), {})
+    plt1_flex_yielding_m1_note = notes_by_id_scope.get(("bbmb_splice.step5.plt1_web_flex_yielding_m1_note", "PLATINA_1"), {})
+    plt1_ltb_m1_note = notes_by_id_scope.get(("bbmb_splice.step5.plt1_web_ltb_m1_note", "PLATINA_1"), {})
+    plt1_flex_rupture_m1_note = notes_by_id_scope.get(("bbmb_splice.step5.plt1_web_flex_rupture_m1_note", "PLATINA_1"), {})
     plt1_shear_yielding_v2_note = notes_by_id_scope.get(("bbmb_splice.step5.plt1_web_shear_yielding_v2_note", "PLATINA_1"), {})
     plt1_shear_rupture_v2_note = notes_by_id_scope.get(("bbmb_splice.step5.plt1_web_shear_rupture_v2_note", "PLATINA_1"), {})
     tearout_v3_note = notes_by_id_scope.get(("bbmb_splice.step4.web_tearout_v3_note", "VIGA"), {})
@@ -3636,6 +3696,69 @@ def _render_fully_restrained_splice_outline(rows_viga: list[dict], notes_viga: l
         plt1_tension_rupture_v3_result = _render_result_label("PASS" if dcr4_plt_v3_num <= 1.0 else "FAIL")
     except (TypeError, ValueError):
         pass
+    # 5.3.1 plate 1 flexural yielding around axis 1
+    ru1_plt_m1_web_q = _as_quantity(plt1_flex_yielding_m1_note.get("ru1_plt_m1_web"))
+    phi_mn1_plt_m1_web_q = _as_quantity(plt1_flex_yielding_m1_note.get("phi_mn1_plt_m1_web"))
+    ru1_plt_m1_web_disp = _convert_ru_to_capacity_unit(ru1_plt_m1_web_q, phi_mn1_plt_m1_web_q)
+    ru1_plt_m1_web_abs_disp: Quantity | None = None
+    if isinstance(ru1_plt_m1_web_disp, Quantity):
+        ru1_plt_m1_web_abs_disp = Quantity(value=abs(ru1_plt_m1_web_disp.value), unit=ru1_plt_m1_web_disp.unit)
+    dcr1_plt_m1_web_disp = _format_text(plt1_flex_yielding_m1_note.get("dcr1_plt_m1_web"))
+    if (
+        isinstance(ru1_plt_m1_web_disp, Quantity)
+        and isinstance(phi_mn1_plt_m1_web_q, Quantity)
+        and ru1_plt_m1_web_disp.unit == phi_mn1_plt_m1_web_q.unit
+        and abs(phi_mn1_plt_m1_web_q.value) > 1e-12
+    ):
+        dcr1_plt_m1_web_disp = _format_decimal(abs(ru1_plt_m1_web_disp.value) / phi_mn1_plt_m1_web_q.value)
+    plt1_flex_yielding_m1_result = _render_result_label(plt1_flex_yielding_m1_note.get("result1_plt_m1_web"))
+    try:
+        dcr1_plt_m1_num = float(dcr1_plt_m1_web_disp)
+        plt1_flex_yielding_m1_result = _render_result_label("PASS" if dcr1_plt_m1_num <= 1.0 else "FAIL")
+    except (TypeError, ValueError):
+        pass
+    # 5.3.2 plate 1 LTB around axis 1
+    ru2_plt_m1_web_q = _as_quantity(plt1_ltb_m1_note.get("ru2_plt_m1_web"))
+    phi_mn2_plt_m1_web_q = _as_quantity(plt1_ltb_m1_note.get("phi_mn2_plt_m1_web"))
+    ru2_plt_m1_web_disp = _convert_ru_to_capacity_unit(ru2_plt_m1_web_q, phi_mn2_plt_m1_web_q)
+    ru2_plt_m1_web_abs_disp: Quantity | None = None
+    if isinstance(ru2_plt_m1_web_disp, Quantity):
+        ru2_plt_m1_web_abs_disp = Quantity(value=abs(ru2_plt_m1_web_disp.value), unit=ru2_plt_m1_web_disp.unit)
+    dcr2_plt_m1_web_disp = _format_text(plt1_ltb_m1_note.get("dcr2_plt_m1_web"))
+    if (
+        isinstance(ru2_plt_m1_web_disp, Quantity)
+        and isinstance(phi_mn2_plt_m1_web_q, Quantity)
+        and ru2_plt_m1_web_disp.unit == phi_mn2_plt_m1_web_q.unit
+        and abs(phi_mn2_plt_m1_web_q.value) > 1e-12
+    ):
+        dcr2_plt_m1_web_disp = _format_decimal(abs(ru2_plt_m1_web_disp.value) / phi_mn2_plt_m1_web_q.value)
+    plt1_ltb_m1_result = _render_result_label(plt1_ltb_m1_note.get("result2_plt_m1_web"))
+    try:
+        dcr2_plt_m1_num = float(dcr2_plt_m1_web_disp)
+        plt1_ltb_m1_result = _render_result_label("PASS" if dcr2_plt_m1_num <= 1.0 else "FAIL")
+    except (TypeError, ValueError):
+        pass
+    # 5.3.3 plate 1 flexural rupture around axis 1
+    ru3_plt_m1_web_q = _as_quantity(plt1_flex_rupture_m1_note.get("ru3_plt_m1_web"))
+    phi_rn3_plt_m1_web_q = _as_quantity(plt1_flex_rupture_m1_note.get("phi_rn3_plt_m1_web"))
+    ru3_plt_m1_web_disp = _convert_ru_to_capacity_unit(ru3_plt_m1_web_q, phi_rn3_plt_m1_web_q)
+    ru3_plt_m1_web_abs_disp: Quantity | None = None
+    if isinstance(ru3_plt_m1_web_disp, Quantity):
+        ru3_plt_m1_web_abs_disp = Quantity(value=abs(ru3_plt_m1_web_disp.value), unit=ru3_plt_m1_web_disp.unit)
+    dcr3_plt_m1_web_disp = _format_text(plt1_flex_rupture_m1_note.get("dcr3_plt_m1_web"))
+    if (
+        isinstance(ru3_plt_m1_web_disp, Quantity)
+        and isinstance(phi_rn3_plt_m1_web_q, Quantity)
+        and ru3_plt_m1_web_disp.unit == phi_rn3_plt_m1_web_q.unit
+        and abs(phi_rn3_plt_m1_web_q.value) > 1e-12
+    ):
+        dcr3_plt_m1_web_disp = _format_decimal(abs(ru3_plt_m1_web_disp.value) / phi_rn3_plt_m1_web_q.value)
+    plt1_flex_rupture_m1_result = _render_result_label(plt1_flex_rupture_m1_note.get("result3_plt_m1_web"))
+    try:
+        dcr3_plt_m1_num = float(dcr3_plt_m1_web_disp)
+        plt1_flex_rupture_m1_result = _render_result_label("PASS" if dcr3_plt_m1_num <= 1.0 else "FAIL")
+    except (TypeError, ValueError):
+        pass
     # 4.2.1 tearout metrics in v3 direction
     phi_rn1_web_v3_q = _as_quantity(tearout_v3_note.get("phi_rn1_web_v3_vg"))
     ru1_web_v3_vg_disp = _convert_ru_to_capacity_unit(ru_web_v3_max_vg_q, phi_rn1_web_v3_q)
@@ -3814,7 +3937,7 @@ def _render_fully_restrained_splice_outline(rows_viga: list[dict], notes_viga: l
             f"- DCR1_web_v2_vg: `{dcr1_web_v2_vg_disp}`",
             f"- Resultado: {tearout_result}",
             "",
-            "#### 4.1.2. ELR #2: Aplatamiento en la perforacion del perno",
+            "#### 4.1.2. ELR #2: Aplastamiento en la perforacion del perno",
             "",
             "- Clausula: `Documento: AISC 360-22 | Seccion: J3.11a.(a)`",
             (
@@ -4295,7 +4418,110 @@ def _render_fully_restrained_splice_outline(rows_viga: list[dict], notes_viga: l
             f"- DCR4_plt_v3_web: `{dcr4_plt_v3_web_disp}`",
             f"- Resultado: {plt1_tension_rupture_v3_result}",
             "",
-            "### 5.3 Revisión de capacidad a flexion en la platina 1 de alma alrededor de 1",
+            "### 5.3 Revisión de capacidad a compresion en la platina 1 de alma en direccion 3",
+            "",
+            "### 5.4 Revisión de capacidad a flexion en la platina 1 de alma alrededor de 1",
+            "",
+            "#### 5.4.1. ELR #1: Fluencia por flexion en la platina 1 de alma",
+            "",
+            "- Clausula: `Documento: AISC 360-22 | Seccion: F11.1 (DRY: compute_rectangular_bar_flexural_yielding_strength_f111)`",
+            (
+                "- Ecuaciones: `Z_plt_m1_web = t_plt_web*H_plt_web^2/4; "
+                "S_plt_m1_web = t_plt_web*H_plt_web^2/6; "
+                "Rn1_plt_m1_web = min(Fy_plt_web*Z_plt_m1_web, 1.5*Fy_plt_web*S_plt_m1_web); "
+                "phi*Rn1_plt_m1_web = phi_no_ductil*Rn1_plt_m1_web; "
+                "Ru1_plt_m1_web = Vu2_sp*ex_blt_web - alpha_Pu_web*Pu_sp*ey_blt_web; "
+                "DCR1_plt_m1_web = Ru1_plt_m1_web/phi*Rn1_plt_m1_web`"
+            ),
+            f"- Fy_plt_web: `{_format_quantity(plt1_flex_yielding_m1_note.get('fy_plt_web'))}`",
+            f"- t_plt_web: `{_format_quantity(plt1_flex_yielding_m1_note.get('t_plt_web'))}`",
+            f"- H_plt_web: `{_format_quantity(plt1_flex_yielding_m1_note.get('h_plt_web'))}`",
+            f"- Z_plt_m1_web: `{_format_quantity(plt1_flex_yielding_m1_note.get('z_plt_m1_web'))}`",
+            f"- S_plt_m1_web: `{_format_quantity(plt1_flex_yielding_m1_note.get('s_plt_m1_web'))}`",
+            f"- ex_blt_web: `{_format_quantity(plt1_flex_yielding_m1_note.get('ex_blt_web'))}`",
+            f"- ey_blt_web: `{_format_quantity(plt1_flex_yielding_m1_note.get('ey_blt_web'))}`",
+            f"- phi_no_ductil: `{_format_text(plt1_flex_yielding_m1_note.get('phi_no_ductil'))}`",
+            f"- Rn1_plt_m1_web: `{_format_quantity(plt1_flex_yielding_m1_note.get('mn1_plt_m1_web'))}`",
+            f"- phi*Rn1_plt_m1_web: `{_format_quantity(plt1_flex_yielding_m1_note.get('phi_mn1_plt_m1_web'))}`",
+            f"- Vu2_sp: `{_format_quantity(plt1_flex_yielding_m1_note.get('vu2_sp'))}`",
+            f"- Pu_sp: `{_format_quantity(plt1_flex_yielding_m1_note.get('pu_sp'))}`",
+            f"- alpha_Pu_web: `{_format_text(plt1_flex_yielding_m1_note.get('alpha_pu_web'))}`",
+            f"- Ru1_plt_m1_web: `{_format_quantity(ru1_plt_m1_web_abs_disp.model_dump() if isinstance(ru1_plt_m1_web_abs_disp, Quantity) else None)}`",
+            f"- DCR1_plt_m1_web: `{dcr1_plt_m1_web_disp}`",
+            f"- Resultado: {plt1_flex_yielding_m1_result}",
+            "",
+            "#### 5.4.2. ELR #2: Pandeo lateral-torsional en la platina 1 de alma",
+            "",
+            "- Clausula: `Documento: AISC 360-22 | Seccion: F11.2 (DRY: compute_rectangular_bar_ltb_strength_f112)`",
+            (
+                "- Ecuaciones: `Z_plt_m1_web = t_plt_web*H_plt_web^2/4; "
+                "S_plt_m1_web = t_plt_web*H_plt_web^2/6; "
+                "Lb_plt_m1_web = max(2*Le_blt_web_x1 + gap_sp, g_plt_web); "
+                "My_plt_m1_web = Fy_plt_web*S_plt_m1_web; "
+                "Rn2_plt_m1_web = Mn_ltb(F11.2) <= Mp; "
+                "phi*Rn2_plt_m1_web = phi_no_ductil*Rn2_plt_m1_web; "
+                "Ru2_plt_m1_web = Vu2_sp*ex_blt_web - alpha_Pu_web*Pu_sp*ey_blt_web; "
+                "DCR2_plt_m1_web = Ru2_plt_m1_web/phi*Rn2_plt_m1_web`"
+            ),
+            f"- Fy_plt_web: `{_format_quantity(plt1_ltb_m1_note.get('fy_plt_web'))}`",
+            f"- E_plt_web: `{_format_quantity(plt1_ltb_m1_note.get('e_plt_web'))}`",
+            f"- t_plt_web: `{_format_quantity(plt1_ltb_m1_note.get('t_plt_web'))}`",
+            f"- H_plt_web: `{_format_quantity(plt1_ltb_m1_note.get('h_plt_web'))}`",
+            f"- Z_plt_m1_web: `{_format_quantity(plt1_ltb_m1_note.get('z_plt_m1_web'))}`",
+            f"- S_plt_m1_web: `{_format_quantity(plt1_ltb_m1_note.get('s_plt_m1_web'))}`",
+            f"- Lb_plt_m1_web: `{_format_quantity(plt1_ltb_m1_note.get('lb_plt_m1_web'))}`",
+            f"- My_plt_m1_web: `{_format_quantity(plt1_ltb_m1_note.get('my_plt_m1_web'))}`",
+            f"- Cb_plt_m1_web (inp): `{_format_text(plt1_ltb_m1_note.get('cb_plt_m1_web'))}`",
+            f"- ltb_case_id: `{_format_text(plt1_ltb_m1_note.get('ltb_case_id'))}`",
+            f"- Lb*d/t^2: `{_format_text(plt1_ltb_m1_note.get('lb_d_over_t2'))}`",
+            f"- 0.08E/Fy: `{_format_text(plt1_ltb_m1_note.get('limit_a_0p08e_over_fy'))}`",
+            f"- 1.9E/Fy: `{_format_text(plt1_ltb_m1_note.get('limit_b_1p9e_over_fy'))}`",
+            f"- Fcr: `{_format_quantity(plt1_ltb_m1_note.get('fcr'))}`",
+            f"- phi_no_ductil: `{_format_text(plt1_ltb_m1_note.get('phi_no_ductil'))}`",
+            f"- Rn2_plt_m1_web: `{_format_quantity(plt1_ltb_m1_note.get('mn2_plt_m1_web'))}`",
+            f"- phi*Rn2_plt_m1_web: `{_format_quantity(plt1_ltb_m1_note.get('phi_mn2_plt_m1_web'))}`",
+            f"- ex_blt_web: `{_format_quantity(plt1_ltb_m1_note.get('ex_blt_web'))}`",
+            f"- ey_blt_web: `{_format_quantity(plt1_ltb_m1_note.get('ey_blt_web'))}`",
+            f"- Vu2_sp: `{_format_quantity(plt1_ltb_m1_note.get('vu2_sp'))}`",
+            f"- Pu_sp: `{_format_quantity(plt1_ltb_m1_note.get('pu_sp'))}`",
+            f"- alpha_Pu_web: `{_format_text(plt1_ltb_m1_note.get('alpha_pu_web'))}`",
+            f"- Ru2_plt_m1_web: `{_format_quantity(ru2_plt_m1_web_abs_disp.model_dump() if isinstance(ru2_plt_m1_web_abs_disp, Quantity) else None)}`",
+            f"- DCR2_plt_m1_web: `{dcr2_plt_m1_web_disp}`",
+            f"- Resultado: {plt1_ltb_m1_result}",
+            "",
+            "#### 5.4.3. ELR #3: Rotura por flexion en la platina 1 de alma",
+            "",
+            "- Clausula: `Documento: AISC 360-22 | Seccion: J5.5 (DRY: compute_rectangular_bar_net_flexural_rupture_strength_j55)`",
+            (
+                "- Ecuaciones: `h = e1 + (n - 1)*s + e2; "
+                "Znet_plt_m1_web = tp*h^2/4 - d'*tp*sum_{i=0}^{n-1}|e1 + i*s - h/2|; "
+                "Rn3_plt_m1_web = Fu_plt_web*Znet_plt_m1_web; "
+                "phi*Rn3_plt_m1_web = phi_fragil*Rn3_plt_m1_web; "
+                "Ru3_plt_m1_web = Vu2_sp*ex_blt_web - alpha_Pu_web*Pu_sp*ey_blt_web; "
+                "DCR3_plt_m1_web = Ru3_plt_m1_web/phi*Rn3_plt_m1_web`"
+            ),
+            f"- Fu_plt_web: `{_format_quantity(plt1_flex_rupture_m1_note.get('fu_plt_web'))}`",
+            f"- tp = t_plt_web: `{_format_quantity(plt1_flex_rupture_m1_note.get('tp_plt_m1_web'))}`",
+            f"- h = H_plt_web: `{_format_quantity(plt1_flex_rupture_m1_note.get('h_plt_m1_web'))}`",
+            f"- d' = dh.1 + 1.80mm: `{_format_quantity(plt1_flex_rupture_m1_note.get('d_prime_plt_m1_web'))}`",
+            f"- e1 = Le_plt_web_y1: `{_format_quantity(plt1_flex_rupture_m1_note.get('e1_plt_m1_web'))}`",
+            f"- e2 = Le_plt_web_y2: `{_format_quantity(plt1_flex_rupture_m1_note.get('e2_plt_m1_web'))}`",
+            f"- s = p_plt_web: `{_format_quantity(plt1_flex_rupture_m1_note.get('s_plt_m1_web'))}`",
+            f"- n = n_plt_web_y: `{_format_text(plt1_flex_rupture_m1_note.get('n_plt_web_y'))}`",
+            f"- h calculado: `{_format_quantity(plt1_flex_rupture_m1_note.get('h_calc_plt_m1_web'))}`",
+            f"- sum_abs: `{_format_quantity(plt1_flex_rupture_m1_note.get('sum_abs_plt_m1_web'))}`",
+            f"- Znet_plt_m1_web: `{_format_quantity(plt1_flex_rupture_m1_note.get('z_net_plt_m1_web'))}`",
+            f"- phi_fragil: `{_format_text(plt1_flex_rupture_m1_note.get('phi_fragil'))}`",
+            f"- Rn3_plt_m1_web: `{_format_quantity(plt1_flex_rupture_m1_note.get('rn3_plt_m1_web'))}`",
+            f"- phi*Rn3_plt_m1_web: `{_format_quantity(plt1_flex_rupture_m1_note.get('phi_rn3_plt_m1_web'))}`",
+            f"- ex_blt_web: `{_format_quantity(plt1_flex_rupture_m1_note.get('ex_blt_web'))}`",
+            f"- ey_blt_web: `{_format_quantity(plt1_flex_rupture_m1_note.get('ey_blt_web'))}`",
+            f"- Vu2_sp: `{_format_quantity(plt1_flex_rupture_m1_note.get('vu2_sp'))}`",
+            f"- Pu_sp: `{_format_quantity(plt1_flex_rupture_m1_note.get('pu_sp'))}`",
+            f"- alpha_Pu_web: `{_format_text(plt1_flex_rupture_m1_note.get('alpha_pu_web'))}`",
+            f"- Ru3_plt_m1_web = Vu2_sp*ex_blt_web - alpha_Pu_web*Pu_sp*ey_blt_web: `{_format_quantity(ru3_plt_m1_web_abs_disp.model_dump() if isinstance(ru3_plt_m1_web_abs_disp, Quantity) else None)}`",
+            f"- DCR3_plt_m1_web: `{dcr3_plt_m1_web_disp}`",
+            f"- Resultado: {plt1_flex_rupture_m1_result}",
             "",
         ]
     )
@@ -8193,7 +8419,7 @@ def render_splice_methods_table_markdown(result: DetailedRunResult) -> str:
         ["Ix_blt_web", "sum((y_i_blt_web-y_cg_blt_web)^2)", _num(ix_in2), "in2"],
         ["Iy_blt_web", "sum((x_i_blt_web-x_cg_blt_web)^2)", _num(iy_in2), "in2"],
         ["J_blt_web", "Ix_blt_web + Iy_blt_web", _num(ip_in2), "in2"],
-        ["Muz_blt_web", "Vu2_sp*ex_blt_web - Pu_sp*ey_blt_web", _num(mz_kip_in), "kip-in"],
+        ["Muz_blt_web", "Vu2_sp*ex_blt_web - alpha_Pu_web*Pu_sp*ey_blt_web", _num(mz_kip_in), "kip-in"],
         [
             "dmax_blt_web",
             "max(sqrt((x_i_blt_web-x_cg_blt_web)^2+(y_i_blt_web-y_cg_blt_web)^2))",
@@ -8487,7 +8713,7 @@ def render_splice_methods_table_markdown(result: DetailedRunResult) -> str:
 
     lines.extend(
         [
-            "- Ecuacion base: `Muz_blt_web = Vu2_sp*ex_blt_web - Pu_sp*ey_blt_web`",
+            "- Ecuacion base: `Muz_blt_web = Vu2_sp*ex_blt_web - alpha_Pu_web*Pu_sp*ey_blt_web`",
             f"- Pu_sp: `{_format_text(px.get('value'))} {_format_text(px.get('unit'))}` (origen: `loads.Pu_sp`)",
             f"- Vu2_sp: `{_format_text(py.get('value'))} {_format_text(py.get('unit'))}` (origen: `loads.Vu2_sp`)",
             f"- ex_blt_web: `{_format_text(ex.get('value'))} {_format_text(ex.get('unit'))}` (origen: `formula splice`)",

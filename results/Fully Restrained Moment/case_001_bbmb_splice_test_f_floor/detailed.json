@@ -75,7 +75,7 @@
             "unit": "mm"
           },
           "Le_blt_flange_z3": {
-            "value": 30.0,
+            "value": 35.0,
             "unit": "mm"
           },
           "T_vg": {
@@ -570,7 +570,7 @@
               "comparison": "simple",
               "comparison_text": ">=",
               "calculated": {
-                "value": 92.0,
+                "value": 82.0,
                 "unit": "mm"
               },
               "limit": {
@@ -588,7 +588,7 @@
               "comparison": "simple",
               "comparison_text": "<=",
               "calculated": {
-                "value": 92.0,
+                "value": 82.0,
                 "unit": "mm"
               },
               "limit": {
@@ -864,7 +864,7 @@
               "comparison": "simple",
               "comparison_text": ">=",
               "calculated": {
-                "value": 30.0,
+                "value": 35.0,
                 "unit": "mm"
               },
               "limit": {
@@ -872,7 +872,7 @@
                 "unit": "mm"
               },
               "clause": "AISC 360-22 Tabla J3.4, J3.6 y Table 7-15 Entering and Tightening Clearance, in.",
-              "result": "FAIL",
+              "result": "PASS",
               "source_document": "AISC 360-22 + Steel Construction Manual AISC 16th edition 2023"
             },
             {
@@ -883,7 +883,7 @@
               "comparison": "simple",
               "comparison_text": "<=",
               "calculated": {
-                "value": 30.0,
+                "value": 35.0,
                 "unit": "mm"
               },
               "limit": {
@@ -901,7 +901,7 @@
               "comparison": "simple",
               "comparison_text": ">=",
               "calculated": {
-                "value": 26.9,
+                "value": 21.9,
                 "unit": "mm"
               },
               "limit": {
@@ -920,7 +920,7 @@
               "comparison": "simple",
               "comparison_text": "<=",
               "calculated": {
-                "value": 26.9,
+                "value": 21.9,
                 "unit": "mm"
               },
               "limit": {
@@ -938,7 +938,7 @@
               "comparison": "simple",
               "comparison_text": ">=",
               "calculated": {
-                "value": 92.0,
+                "value": 82.0,
                 "unit": "mm"
               },
               "limit": {
@@ -957,7 +957,7 @@
               "comparison": "simple",
               "comparison_text": "<=",
               "calculated": {
-                "value": 92.0,
+                "value": 82.0,
                 "unit": "mm"
               },
               "limit": {
@@ -975,7 +975,7 @@
               "comparison": "simple",
               "comparison_text": ">=",
               "calculated": {
-                "value": 26.9,
+                "value": 21.9,
                 "unit": "mm"
               },
               "limit": {
@@ -1008,22 +1008,22 @@
             {
               "scope": "viga",
               "description": "Despeje horizontal F_blt_flange y separacion escalonada minima entre pernos",
-              "calculated_symbol": "F_blt_flange",
-              "limit_symbol": "C1_max",
+              "calculated_symbol": "Pmin_blt",
+              "limit_symbol": "P",
               "comparison": "custom",
               "comparison_text": ">=",
               "calculated": {
-                "value": 32.69,
+                "value": 24.6,
                 "unit": "mm"
               },
               "limit": {
-                "value": 30.162499999999998,
+                "value": 41.275,
                 "unit": "mm"
               },
               "clause": "AISC 360-22 J3.6 y Table 7-15 Entering and Tightening Clearance, in. (Aligned + Staggered Bolts)",
               "source_document": "AISC 360-22 + Steel Construction Manual AISC 16th edition 2023",
-              "verification_override": "F_blt_flange >= C1_max; 32.69 mm >= 30.16 mm",
-              "result": "PASS"
+              "verification_override": "F_blt_flange < C1_max; 27.69 mm < 30.16 mm; Pmin_blt = min{|x_j_blt_web - x_k_blt_flange|} = 24.60 mm; Pmin_blt >= P; 24.60 mm >= 41.27 mm; lista=|x_0-x_0|=24.60 mm, |x_0-x_1|=84.60 mm, |x_0-x_2|=144.60 mm, |x_0-x_3|=204.60 mm",
+              "result": "FAIL"
             },
             {
               "scope": "platina_1",
@@ -1051,7 +1051,7 @@
               "comparison": "simple",
               "comparison_text": "<=",
               "calculated": {
-                "value": 162.0,
+                "value": 152.0,
                 "unit": "mm"
               },
               "limit": {
@@ -1059,7 +1059,7 @@
                 "unit": "mm"
               },
               "clause": "Criterio de detallado solicitado por usuario",
-              "result": "FAIL"
+              "result": "PASS"
             },
             {
               "scope": "viga",
@@ -1289,19 +1289,19 @@
               "le2z4_var": "Le_blt_flange_z4",
               "le2z4_formula": "Le_blt_flange_z4 = 0.5*bfdet_vg - (Le_blt_flange_z3 + k1_vg + (n_blt_flange_z - 1)*g_blt_flange)",
               "le2z4": {
-                "value": 26.9,
+                "value": 21.9,
                 "unit": "mm"
               },
               "g1_blt_flange_var": "g1_blt_flange",
               "g1_blt_flange_formula": "g1_blt_flange = bf_vg - 2*(Le_blt_flange_z3 + (n_blt_flange_z - 1)*g_blt_flange)",
               "g1_blt_flange": {
-                "value": 92.0,
+                "value": 82.0,
                 "unit": "mm"
               },
               "f_blt_flange_var": "F_blt_flange",
               "f_blt_flange_formula": "F_blt_flange = 0.5*g1_blt_flange - 0.5*tw_vg - t_plt_web",
               "f_blt_flange": {
-                "value": 32.69,
+                "value": 27.689999999999998,
                 "unit": "mm"
               },
               "n2x_var": "n_blt_flange_x",
@@ -1353,7 +1353,7 @@
               "n2z": 1,
               "le2z3_var": "Le_blt_flange_z3",
               "le2z3": {
-                "value": 30.0,
+                "value": 35.0,
                 "unit": "mm"
               },
               "s2z1_var": "g_blt_flange",
@@ -3182,12 +3182,12 @@
               },
               "le_blt_flange_z3_var": "Le_blt_flange_z3",
               "le_blt_flange_z3": {
-                "value": 30.0,
+                "value": 35.0,
                 "unit": "mm"
               },
               "g1_blt_flange_var": "g1_blt_flange",
               "g1_blt_flange": {
-                "value": 92.0,
+                "value": 82.0,
                 "unit": "mm"
               },
               "l_plt_flange_var": "L_plt_flange",
@@ -3197,12 +3197,12 @@
               },
               "b_plt_flange_var": "B_plt_flange",
               "b_plt_flange": {
-                "value": 162.0,
+                "value": 152.0,
                 "unit": "mm"
               },
               "bp2_formula": "B_plt_flange = Le_blt_flange_z1 + Le_blt_flange_z2 + 2*(n_blt_flange_z - 1)*g_blt_flange + g1_blt_flange",
               "bp2_calc": {
-                "value": 162.0,
+                "value": 152.0,
                 "unit": "mm"
               },
               "lp2_formula": "L_plt_flange = 2*(Le_blt_flange_x1 + (n_blt_flange_x - 1)*p_blt_flange + Le_blt_flange_x2) + gap_sp",

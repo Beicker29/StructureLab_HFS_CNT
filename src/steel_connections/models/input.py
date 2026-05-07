@@ -1016,6 +1016,7 @@ class BeamBeamMomentBoltedGeometry(StrictModel):
     tol_L_vg: Quantity
     cond_sup_vg: str | None = None
     cond_amb_vg: str | None = None
+    c3_clearance_type: str = "circular"
     t_plt_web: Quantity
     type_hole_plt_web: str
     cond_sup_plt_web: str | None = None
@@ -1036,6 +1037,7 @@ class BeamBeamMomentBoltedGeometry(StrictModel):
     svc_hole_deformation_design_web: bool = False
     Ubs_web_v2_vg: float = 1.0
     Ubs_web_v3_vg: float = 1.0
+    Cb_plt_m1_web: float = 1.0
     n_blt_flange_x: int
     n_blt_flange_z: int
     p_blt_flange: Quantity
@@ -1095,6 +1097,16 @@ class BeamBeamMomentBoltedGeometry(StrictModel):
             "Atmospheric condition must be 'corrosive'/'corrosiva' or 'non_corrosive'/'no corrosiva'."
         )
 
+    @field_validator("c3_clearance_type")
+    @classmethod
+    def normalize_c3_clearance_type(cls, value: str) -> str:
+        normalized = value.strip().lower().replace("-", "_").replace(" ", "_")
+        if normalized in {"circular", "circulo", "circular_hole"}:
+            return "circular"
+        if normalized in {"clipped", "clip", "recortado"}:
+            return "clipped"
+        raise ValueError("geometry.c3_clearance_type must be 'circular' or 'clipped'.")
+
     @field_validator("type_tight_blt_web", "type_tight_blt_flange")
     @classmethod
     def normalize_bolt_tightening_type(cls, value: str | None) -> str | None:
@@ -1131,6 +1143,13 @@ class BeamBeamMomentBoltedGeometry(StrictModel):
     def validate_ubs_web_factor(cls, value: float) -> float:
         if value <= 0.0:
             raise ValueError("geometry.Ubs_web_v2_vg/Ubs_web_v3_vg must be > 0.")
+        return value
+
+    @field_validator("Cb_plt_m1_web")
+    @classmethod
+    def validate_cb_plt_m1_web(cls, value: float) -> float:
+        if value <= 0.0:
+            raise ValueError("geometry.Cb_plt_m1_web must be > 0.")
         return value
 
     @field_validator("type_hole_plt_web", "type_hole_plt_flange")

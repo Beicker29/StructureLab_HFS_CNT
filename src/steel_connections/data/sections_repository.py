@@ -59,6 +59,30 @@ def _cell_value(cell: ET.Element, shared_strings: list[str]) -> str | float | No
         return raw_value
 
 
+def _as_float_or_fraction(value: object) -> float | None:
+    if value is None:
+        return None
+    if isinstance(value, (int, float)):
+        return float(value)
+    text = str(value).strip()
+    if not text:
+        return None
+    try:
+        return float(text)
+    except ValueError:
+        pass
+    if "/" in text:
+        parts = text.split("/")
+        if len(parts) == 2:
+            num_txt = parts[0].strip()
+            den_txt = parts[1].strip()
+            try:
+                return float(num_txt) / float(den_txt)
+            except (TypeError, ValueError, ZeroDivisionError):
+                return None
+    return None
+
+
 @lru_cache(maxsize=1)
 def _load_sections_index() -> dict[str, dict[str, float]]:
     path = _repo_root() / "data" / "sections.xlsx"
@@ -334,29 +358,34 @@ def _load_bolt_sections_index() -> dict[str, list[dict[str, float | str]]]:
         flats_in_raw = normalized.get("width across flats (f) [in]")
         head_d_in_raw = normalized.get("head diameter (d) [in]")
         head_h_in_raw = normalized.get("height (h1) [in]")
+        socket_dia_in_raw = normalized.get("socket dia.")
+        h1_table_in_raw = normalized.get("h1")
+        h2_table_in_raw = normalized.get("h2")
+        c1_in_raw = normalized.get("c1")
+        c2_in_raw = normalized.get("c2")
+        c3_circular_in_raw = normalized.get("c3 circular")
+        c3_clipped_in_raw = normalized.get("c3 clipped")
 
-        try:
-            diameter_in = float(diameter_in_raw) if diameter_in_raw is not None else None
-        except (TypeError, ValueError):
-            diameter_in = None
+        diameter_in = _as_float_or_fraction(diameter_in_raw)
         if diameter_in is None:
             continue
-
-        def _as_float(value: object) -> float | None:
-            try:
-                return float(value) if value is not None else None
-            except (TypeError, ValueError):
-                return None
 
         record = {
             "shape": shape,
             "classification": classification,
             "fabrication_standard": standard,
             "diameter_in": diameter_in,
-            "length_in": _as_float(length_in_raw) or 0.0,
-            "width_across_flats_in": _as_float(flats_in_raw) or 0.0,
-            "head_diameter_in": _as_float(head_d_in_raw) or 0.0,
-            "head_height_in": _as_float(head_h_in_raw) or 0.0,
+            "length_in": _as_float_or_fraction(length_in_raw) or 0.0,
+            "width_across_flats_in": _as_float_or_fraction(flats_in_raw) or 0.0,
+            "head_diameter_in": _as_float_or_fraction(head_d_in_raw) or 0.0,
+            "head_height_in": _as_float_or_fraction(head_h_in_raw) or 0.0,
+            "socket_dia_in": _as_float_or_fraction(socket_dia_in_raw) or 0.0,
+            "h1_table_715_in": _as_float_or_fraction(h1_table_in_raw) or 0.0,
+            "h2_table_715_in": _as_float_or_fraction(h2_table_in_raw) or 0.0,
+            "c1_table_715_in": _as_float_or_fraction(c1_in_raw) or 0.0,
+            "c2_table_715_in": _as_float_or_fraction(c2_in_raw) or 0.0,
+            "c3_circular_table_715_in": _as_float_or_fraction(c3_circular_in_raw) or 0.0,
+            "c3_clipped_table_715_in": _as_float_or_fraction(c3_clipped_in_raw) or 0.0,
         }
         index.setdefault(shape, []).append(record)
 
@@ -372,6 +401,89 @@ def _load_bolt_sections_index() -> dict[str, list[dict[str, float | str]]]:
             )
         )
     return index
+
+
+@lru_cache(maxsize=1)
+def _load_f_perno_index() -> list[tuple[float, float]]:
+    rows = read_sheet_rows(xlsx_path=_repo_root() / "data" / "sections.xlsx", sheet_name="F_Perno")
+    pairs: list[tuple[float, float]] = []
+    for row in rows:
+        normalized = {normalize_text(k): v for k, v in row.items()}
+        f_in = _as_float_or_fraction(normalized.get("f [in]"))
+        p_in = _as_float_or_fraction(normalized.get("p [in]"))
+        if f_in is None or p_in is None:
+            continue
+        pairs.append((f_in, p_in))
+    pairs.sort(key=lambda item: item[0])
+    return pairs
+
+
+def get_minimum_staggered_pitch_from_f(
+    *,
+    f_clearance: Quantity,
+    unit_system: UnitSystem,
+) -> dict[str, Quantity | float]:
+    """Get minimum staggered bolt spacing ``P`` from sheet ``F_Perno``.
+
+    The lookup is exact on ``F`` values stored in the workbook (inches), using
+    a small tolerance for floating-point comparisons.
+    """
+
+    if f_clearance.unit not in {"in", "mm"}:
+        raise StructuredEngineException(
+            StructuredError(
+                error_code=ErrorCode.VALIDATION_ERROR,
+                stage=Stage.VALIDATE,
+                rule_id=None,
+                missing_fields=["f_clearance"],
+                message=(
+                    "F clearance must use 'in' or 'mm' units to query "
+                    "data/sections.xlsx sheet 'F_Perno'."
+                ),
+                source_document="data/sections.xlsx",
+            )
+        )
+
+    f_in = f_clearance.value if f_clearance.unit == "in" else f_clearance.value / 25.4
+    table = _load_f_perno_index()
+    if not table:
+        raise StructuredEngineException(
+            StructuredError(
+                error_code=ErrorCode.VALIDATION_ERROR,
+                stage=Stage.VALIDATE,
+                rule_id=None,
+                missing_fields=["data/sections.xlsx", "sheet:F_Perno"],
+                message="No valid rows were loaded from data/sections.xlsx sheet 'F_Perno'.",
+                source_document="data/sections.xlsx",
+            )
+        )
+
+    # Use floor-table lookup (most conservative available P for the interval).
+    # If F is below the first tabulated value, use the first row.
+    # If F is above the last tabulated value with P, use that last row.
+    non_null = [(f_val, p_val) for f_val, p_val in table if p_val is not None]
+    if not non_null:
+        raise StructuredEngineException(
+            StructuredError(
+                error_code=ErrorCode.VALIDATION_ERROR,
+                stage=Stage.VALIDATE,
+                rule_id=None,
+                missing_fields=["sheet:F_Perno"],
+                message="Sheet 'F_Perno' does not contain valid (F,P) pairs.",
+                source_document="data/sections.xlsx",
+            )
+        )
+    selected = non_null[0]
+    for f_val, p_val in non_null:
+        if f_val <= f_in:
+            selected = (f_val, p_val)
+        else:
+            break
+    f_selected_in, p_in = selected
+    p_quantity = Quantity(value=p_in, unit="in")
+    if unit_system == UnitSystem.SI:
+        p_quantity = Quantity(value=p_in * 25.4, unit="mm")
+    return {"f_in": f_in, "f_selected_in": f_selected_in, "p_min": p_quantity}
 
 
 def get_bolt_section_properties(
@@ -438,6 +550,13 @@ def get_bolt_section_properties(
         "width_across_flats": _in_to_length_unit(float(selected["width_across_flats_in"]), unit_system),
         "head_diameter": _in_to_length_unit(float(selected["head_diameter_in"]), unit_system),
         "head_height": _in_to_length_unit(float(selected["head_height_in"]), unit_system),
+        "socket_diameter_table_715": _in_to_length_unit(float(selected["socket_dia_in"]), unit_system),
+        "h1_table_715": _in_to_length_unit(float(selected["h1_table_715_in"]), unit_system),
+        "h2_table_715": _in_to_length_unit(float(selected["h2_table_715_in"]), unit_system),
+        "c1_table_715": _in_to_length_unit(float(selected["c1_table_715_in"]), unit_system),
+        "c2_table_715": _in_to_length_unit(float(selected["c2_table_715_in"]), unit_system),
+        "c3_circular_table_715": _in_to_length_unit(float(selected["c3_circular_table_715_in"]), unit_system),
+        "c3_clipped_table_715": _in_to_length_unit(float(selected["c3_clipped_table_715_in"]), unit_system),
     }
 
 
