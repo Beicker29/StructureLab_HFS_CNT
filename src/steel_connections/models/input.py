@@ -1046,9 +1046,10 @@ class BeamBeamMomentBoltedGeometry(StrictModel):
     Le_blt_flange_x2: Quantity
     Le_blt_flange_z1: Quantity
     Le_blt_flange_z2: Quantity
-    Le_blt_flange_z3: Quantity
     type_tight_blt_flange: str | None = None
     svc_hole_deformation_design_flange: bool = False
+    Ubs_flange_v3_vg: float = 1.0
+    Ubs_flange_v1_vg: float = 1.0
 
     @field_validator("n_blt_web_x", "n_blt_web_y", "n_blt_flange_x", "n_blt_flange_z")
     @classmethod
@@ -1139,11 +1140,13 @@ class BeamBeamMomentBoltedGeometry(StrictModel):
             "svc_hole_deformation_design_web/svc_hole_deformation_design_flange must be boolean (or true/false text)."
         )
 
-    @field_validator("Ubs_web_v2_vg", "Ubs_web_v3_vg")
+    @field_validator("Ubs_web_v2_vg", "Ubs_web_v3_vg", "Ubs_flange_v3_vg", "Ubs_flange_v1_vg")
     @classmethod
     def validate_ubs_web_factor(cls, value: float) -> float:
         if value <= 0.0:
-            raise ValueError("geometry.Ubs_web_v2_vg/Ubs_web_v3_vg must be > 0.")
+            raise ValueError(
+                "geometry.Ubs_web_v2_vg/Ubs_web_v3_vg/Ubs_flange_v3_vg/Ubs_flange_v1_vg must be > 0."
+            )
         return value
 
     @field_validator("Cb_plt_m1_web")
@@ -1210,6 +1213,12 @@ class BeamBeamMomentBoltedDesignFactors(StrictModel):
         if not (0.0 < value <= 1.0):
             raise ValueError("Resistance factor phi must be in (0, 1].")
         return value
+
+
+class BeamBeamMomentBoltedMemberCapacity(StrictModel):
+    phiPnc: Quantity
+    phiMn3: Quantity
+    phiMn2: Quantity
 
 
 class BeamBeamMomentBoltedICRSettings(StrictModel):
@@ -1317,6 +1326,7 @@ class BeamBeamMomentBoltedCase(CaseBase):
     geometry: BeamBeamMomentBoltedGeometry
     loads: BeamBeamMomentBoltedLoads
     design_factors: BeamBeamMomentBoltedDesignFactors
+    capacidad_miembro: BeamBeamMomentBoltedMemberCapacity | None = None
     procedure: BeamBeamMomentBoltedProcedure | None = None
 
     @model_validator(mode="after")
@@ -1347,7 +1357,6 @@ class BeamBeamMomentBoltedCase(CaseBase):
             "Le_blt_flange_x2",
             "Le_blt_flange_z1",
             "Le_blt_flange_z2",
-            "Le_blt_flange_z3",
         ):
             value = getattr(self.geometry, field_name)
             if value is not None:
@@ -1387,6 +1396,21 @@ class BeamBeamMomentBoltedCase(CaseBase):
                     f"Invalid unit at 'loads.{field_name}'. "
                     f"Expected '{expected_moment_unit}' for {self.units_system.value}."
                 )
+        if self.capacidad_miembro is not None:
+            validate_quantity_unit(
+                self.capacidad_miembro.phiPnc,
+                "force",
+                self.units_system,
+                "capacidad_miembro.phiPnc",
+            )
+            expected_member_moment_unit = "kip-ft" if self.units_system == UnitSystem.US else "kN-m"
+            for field_name in ("phiMn3", "phiMn2"):
+                value = getattr(self.capacidad_miembro, field_name)
+                if value.unit != expected_member_moment_unit:
+                    raise ValueError(
+                        f"Invalid unit at 'capacidad_miembro.{field_name}'. "
+                        f"Expected '{expected_member_moment_unit}' for {self.units_system.value}."
+                    )
         if self.procedure is not None and self.procedure.rult_1_kip is not None:
             if self.procedure.rult_1_kip.unit != "kip":
                 raise ValueError("Invalid unit at 'procedure.rult_1_kip'. Expected 'kip'.")

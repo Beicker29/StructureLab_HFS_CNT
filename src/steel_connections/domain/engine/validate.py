@@ -1370,6 +1370,32 @@ def _normalize_fully_restrained_splice_payload(payload: dict[str, Any]) -> dict[
         loads_copy.pop("ez_blt_flange", None)
         return loads_copy
 
+    def _normalize_splice_member_capacity_aliases(
+        capacity_obj: dict[str, Any] | None,
+    ) -> dict[str, Any] | None:
+        if not isinstance(capacity_obj, dict):
+            return capacity_obj
+        capacity_copy = deepcopy(capacity_obj)
+        if "phiPnc" not in capacity_copy:
+            alias_value = _first_present(capacity_copy, "ϕPnc", "φPnc")
+            if alias_value is not None:
+                capacity_copy["phiPnc"] = alias_value
+        if "phiMn3" not in capacity_copy:
+            alias_value = _first_present(capacity_copy, "ϕMn3", "φMn3")
+            if alias_value is not None:
+                capacity_copy["phiMn3"] = alias_value
+        if "phiMn2" not in capacity_copy:
+            alias_value = _first_present(capacity_copy, "ϕMn2", "φMn2")
+            if alias_value is not None:
+                capacity_copy["phiMn2"] = alias_value
+        capacity_copy.pop("ϕPnc", None)
+        capacity_copy.pop("φPnc", None)
+        capacity_copy.pop("ϕMn3", None)
+        capacity_copy.pop("φMn3", None)
+        capacity_copy.pop("ϕMn2", None)
+        capacity_copy.pop("φMn2", None)
+        return capacity_copy
+
     # Canonical payload already present.
     if (
         isinstance(normalized.get("sections"), dict)
@@ -1381,6 +1407,9 @@ def _normalize_fully_restrained_splice_payload(payload: dict[str, Any]) -> dict[
         geometry.pop("Le_blt_web_y3", None)
         normalized["geometry"] = geometry
         normalized["loads"] = _normalize_splice_load_aliases(_first_dict(normalized, "loads", "cargas", "cargas_splice"))
+        normalized["capacidad_miembro"] = _normalize_splice_member_capacity_aliases(
+            _first_dict(normalized, "capacidad_miembro", "member_capacity")
+        )
         return normalized
 
     # Subdivision by scope (as defined in VARIABLES_SPLICE_NAMING.txt).
@@ -1403,6 +1432,9 @@ def _normalize_fully_restrained_splice_payload(payload: dict[str, Any]) -> dict[
         "bolts_flange",
     )
     loads = _normalize_splice_load_aliases(_first_dict(normalized, "loads", "cargas", "cargas_splice"))
+    member_capacity = _normalize_splice_member_capacity_aliases(
+        _first_dict(normalized, "capacidad_miembro", "member_capacity")
+    )
     design_factors = _first_dict(normalized, "design_factors", "factores_diseno")
     procedure = _first_dict(normalized, "procedure", "procedimiento")
 
@@ -1497,9 +1529,14 @@ def _normalize_fully_restrained_splice_payload(payload: dict[str, Any]) -> dict[
             "g_blt_flange": _first_present(pernos_flange, "g_blt_flange", "S2_z1"),
             "Le_blt_flange_x1": _first_present(pernos_flange, "Le_blt_flange_x1", "Le2_x1"),
             "Le_blt_flange_x2": _first_present(pernos_flange, "Le_blt_flange_x2", "Le2_x2"),
-            "Le_blt_flange_z1": _first_present(pernos_flange, "Le_blt_flange_z1", "Le2_z1"),
+            "Le_blt_flange_z1": _first_present(
+                pernos_flange,
+                "Le_blt_flange_z1",
+                "Le_blt_flange_z3",
+                "Le2_z1",
+                "Le2_z3",
+            ),
             "Le_blt_flange_z2": _first_present(pernos_flange, "Le_blt_flange_z2", "Le2_z2"),
-            "Le_blt_flange_z3": _first_present(pernos_flange, "Le_blt_flange_z3"),
             "type_tight_blt_flange": _first_present(
                 pernos_flange,
                 "type_tight_blt_flange",
@@ -1510,6 +1547,16 @@ def _normalize_fully_restrained_splice_payload(payload: dict[str, Any]) -> dict[
                 "svc_hole_deformation_design_flange",
                 "deformation_at_bolt_hole_service_load_is_design",
                 "deformacion_agujero_servicio_es_criterio_diseno",
+            ),
+            "Ubs_flange_v3_vg": _first_present(
+                pernos_flange,
+                "Ubs_flange_v3_vg",
+                "ubs_flange_v3_vg",
+            ),
+            "Ubs_flange_v1_vg": _first_present(
+                pernos_flange,
+                "Ubs_flange_v1_vg",
+                "ubs_flange_v1_vg",
             ),
         }
     )
@@ -1534,6 +1581,8 @@ def _normalize_fully_restrained_splice_payload(payload: dict[str, Any]) -> dict[
         top_payload["geometry"] = geometry
     if loads:
         top_payload["loads"] = loads
+    if member_capacity:
+        top_payload["capacidad_miembro"] = member_capacity
     if design_factors:
         top_payload["design_factors"] = design_factors
     if procedure:

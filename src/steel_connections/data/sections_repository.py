@@ -160,6 +160,7 @@ def _load_sections_index() -> dict[str, dict[str, float]]:
             idx_zx = header_map.get("zx")
             idx_a = header_map.get("a") or header_map.get("ag")
             idx_t_cap = header_map_exact.get("T")
+            idx_h_over_tw = header_map.get("h/tw")
 
             for row in row_elements[1:]:
                 row_values: dict[int, str | float | None] = {}
@@ -226,6 +227,14 @@ def _load_sections_index() -> dict[str, dict[str, float]]:
                     except (TypeError, ValueError):
                         t_cap_mm = None
 
+                h_over_tw: float | None = None
+                if idx_h_over_tw is not None:
+                    h_over_tw_raw = row_values.get(idx_h_over_tw)
+                    try:
+                        h_over_tw = float(h_over_tw_raw) if h_over_tw_raw is not None else None
+                    except (TypeError, ValueError):
+                        h_over_tw = None
+
                 if shape not in shapes:
                     record = {
                         "d_mm": d_mm,
@@ -243,6 +252,8 @@ def _load_sections_index() -> dict[str, dict[str, float]]:
                         record["ag_mm2"] = ag_mm2
                     if t_cap_mm is not None:
                         record["t_cap_mm"] = t_cap_mm
+                    if h_over_tw is not None:
+                        record["h_over_tw"] = h_over_tw
                     shapes[shape] = record
     finally:
         archive.close()
@@ -322,6 +333,9 @@ def get_shape_profile_properties(*, shape: str, unit_system: UnitSystem) -> dict
     t_cap_mm = shape_data.get("t_cap_mm")
     if t_cap_mm is not None:
         output["T"] = _mm_to_length_unit(float(t_cap_mm), unit_system)
+    h_over_tw = shape_data.get("h_over_tw")
+    if h_over_tw is not None:
+        output["h_over_tw"] = Quantity(value=float(h_over_tw), unit="ratio")
     return output
 
 

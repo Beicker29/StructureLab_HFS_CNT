@@ -5,6 +5,7 @@ import math
 from steel_connections.codes.engineering.common import (
     compute_plate_compression_buckling_strength,
     compute_plate_combined_force_interaction,
+    compute_member_combined_interaction_h11,
     compute_bolt_hole_bearing_strength_j36,
     compute_bolt_hole_tearout_strength_j36,
     compute_max_spacing_and_edge_distance_limits_j36,
@@ -18,6 +19,7 @@ from steel_connections.codes.engineering.common import (
     compute_element_tension_rupture_strength_j41b,
     compute_element_tension_yielding_strength_j41a,
     compute_rectangular_bar_flexural_yielding_strength_f111,
+    compute_member_flexural_rupture_with_tension_flange_holes_f131,
     compute_rectangular_bar_net_flexural_rupture_strength_j55,
     compute_rectangular_bar_ltb_strength_f112,
     compute_standard_hole_diameter_j33,
@@ -152,6 +154,7 @@ def run_step1_viga_detailing(case: BeamBeamMomentBoltedCase, rule_binding: objec
     bf_catalog = beam_props.get("bf")
     dvg_catalog = beam_props.get("d")
     ag_catalog = beam_props.get("ag")
+    h_over_tw_catalog = beam_props.get("h_over_tw")
     if (
         not isinstance(t_catalog, Quantity)
         or not isinstance(kdes_catalog, Quantity)
@@ -183,7 +186,6 @@ def run_step1_viga_detailing(case: BeamBeamMomentBoltedCase, rule_binding: objec
     le2_x2 = case.geometry.Le_blt_flange_x2
     le2_z1 = case.geometry.Le_blt_flange_z1
     le2_z2 = case.geometry.Le_blt_flange_z2
-    le2_z3 = case.geometry.Le_blt_flange_z3
     k1_catalog = beam_props.get("k1")
 
     if case.units_system.value == "SI":
@@ -207,7 +209,7 @@ def run_step1_viga_detailing(case: BeamBeamMomentBoltedCase, rule_binding: objec
     bp1_calc = 2.0 * (
         le1_x1.value + (case.geometry.n_blt_web_x - 1) * s1x.value + le1_x2.value
     ) + alpha.value
-    bp2_calc = bf_catalog.value - 2.0 * le2_z3.value + le2_z1.value + le2_z2.value
+    bp2_calc = bf_catalog.value - 2.0 * le2_z1.value + le2_z1.value + le2_z2.value
     lp2_calc = (
         2.0 * (le2_x1.value + (case.geometry.n_blt_flange_x - 1) * s2x.value + le2_x2.value) + alpha.value
     )
@@ -219,17 +221,17 @@ def run_step1_viga_detailing(case: BeamBeamMomentBoltedCase, rule_binding: objec
     le2_z4: Quantity | None = None
     if (
         isinstance(k1_catalog, Quantity)
-        and bf_catalog.unit == le2_z3.unit == k1_catalog.unit == s2z1.unit
+        and bf_catalog.unit == le2_z1.unit == k1_catalog.unit == s2z1.unit
     ):
         le2_z4 = Quantity(
             value=0.5 * bf_catalog.value
-            - (le2_z3.value + k1_catalog.value + (case.geometry.n_blt_flange_z - 1) * s2z1.value),
+            - (le2_z1.value + k1_catalog.value + (case.geometry.n_blt_flange_z - 1) * s2z1.value),
             unit=bf_catalog.unit,
         )
     g1_blt_flange: Quantity | None = None
-    if bf_catalog.unit == le2_z3.unit == s2z1.unit:
+    if bf_catalog.unit == le2_z1.unit == s2z1.unit:
         g1_blt_flange = Quantity(
-            value=bf_catalog.value - 2.0 * (le2_z3.value + (case.geometry.n_blt_flange_z - 1) * s2z1.value),
+            value=bf_catalog.value - 2.0 * (le2_z1.value + (case.geometry.n_blt_flange_z - 1) * s2z1.value),
             unit=bf_catalog.unit,
         )
     xj_blt_web_values: list[dict[str, object]] = []
@@ -350,6 +352,30 @@ def run_step1_viga_detailing(case: BeamBeamMomentBoltedCase, rule_binding: objec
 
     if fu_vg is None:
         raise ValueError("Unable to resolve Fu_vg for splice web bolt-hole tearout calculation.")
+
+    if not isinstance(fy_vg, Quantity):
+        raise ValueError("Unable to resolve Fy_vg for splice web slenderness check h/tw.")
+    if not isinstance(e_vg, Quantity):
+        raise ValueError("Unable to resolve E_vg for splice web slenderness check h/tw.")
+
+    if isinstance(h_over_tw_catalog, Quantity):
+        h_over_tw_vg = h_over_tw_catalog
+    else:
+        h_over_tw_vg = Quantity(value=dvg_catalog.value / tw_catalog.value, unit="ratio")
+
+    stress_ratio_e_over_fy: float | None = None
+    if e_vg.unit == fy_vg.unit:
+        stress_ratio_e_over_fy = e_vg.value / fy_vg.value
+    elif e_vg.unit == "MPa" and fy_vg.unit == "ksi":
+        stress_ratio_e_over_fy = e_vg.value / (fy_vg.value * 6.894757293168361)
+    elif e_vg.unit == "ksi" and fy_vg.unit == "MPa":
+        stress_ratio_e_over_fy = e_vg.value / (fy_vg.value / 6.894757293168361)
+    if stress_ratio_e_over_fy is None or stress_ratio_e_over_fy <= 0.0:
+        raise ValueError("Incompatible stress units for h/tw slenderness check in splice beam web.")
+    h_over_tw_limit = Quantity(
+        value=5.7 * math.sqrt(stress_ratio_e_over_fy),
+        unit="ratio",
+    )
     if s1y.unit != dh_web.unit:
         raise ValueError("Incompatible units in lc_blt_web_y = p_blt_web - dh.1.")
     lc_blt_web_y = Quantity(value=s1y.value - dh_web.value, unit=s1y.unit)
@@ -493,8 +519,6 @@ def run_step1_viga_detailing(case: BeamBeamMomentBoltedCase, rule_binding: objec
     if case.units_system == UnitSystem.US and case.loads.Mu3_sp.unit == "lb-in":
         mu3_base = case.loads.Mu3_sp.value / 1000.0
     ru1_flange_p3_raw = (1.0 - case.loads.alpha_Pu_web) * pu_base + mu3_base / (dvg_catalog.value - tf_catalog.value)
-    if ru1_flange_p3_raw < 0.0:
-        ru1_flange_p3_raw = 0.0
     ru1_flange_p3_vg = Quantity(value=ru1_flange_p3_raw, unit=force_unit)
     dcr1_flange_p3_vg: float | None = None
     result1_flange_p3_vg = "FAIL"
@@ -505,6 +529,199 @@ def run_step1_viga_detailing(case: BeamBeamMomentBoltedCase, rule_binding: objec
     ):
         dcr1_flange_p3_vg = abs(ru1_flange_p3_vg.value) / phi_rn1_flange_p3_vg.value
         result1_flange_p3_vg = "PASS" if dcr1_flange_p3_vg <= 1.0 else "FAIL"
+
+    # Flange tension hole bearing in direction 3 (AISC 360-22 J3.11a.(a), DRY function).
+    phi_rn2_flange_p3_vg, bearing_flange_p3_inter = compute_bolt_hole_bearing_strength_j36(
+        material_fu=fu_vg,
+        bolt_diameter_d=db_flange,
+        connected_thickness_t=tf_catalog,
+        phi_n=phi_fragil_flange,
+        unit_system=case.units_system,
+        deformation_at_service_is_design_consideration=svc_hole_deformation_design_flange,
+    )
+    rn2_flange_p3_vg = bearing_flange_p3_inter.get("rn2")
+    ru2_flange_p3_vg = Quantity(value=ru1_flange_p3_vg.value, unit=ru1_flange_p3_vg.unit)
+    dcr2_flange_p3_vg: float | None = None
+    result2_flange_p3_vg = "FAIL"
+    if (
+        isinstance(phi_rn2_flange_p3_vg, Quantity)
+        and ru2_flange_p3_vg.unit == phi_rn2_flange_p3_vg.unit
+        and abs(phi_rn2_flange_p3_vg.value) > 1e-12
+    ):
+        dcr2_flange_p3_vg = abs(ru2_flange_p3_vg.value) / phi_rn2_flange_p3_vg.value
+        result2_flange_p3_vg = "PASS" if dcr2_flange_p3_vg <= 1.0 else "FAIL"
+
+    # Flange shear tearout in direction 1 (AISC 360-22 J3.11a.(b), DRY function).
+    if not (s2z1.unit == le2_z1.unit == dh_flange.unit):
+        raise ValueError(
+            "Incompatible units for flange tearout check in direction 1."
+        )
+    if case.geometry.n_blt_flange_z >= 2:
+        lc_flange_v1_vg = Quantity(
+            value=min(
+                s2z1.value - dh_flange.value,
+                le2_z1.value - 0.5 * dh_flange.value,
+            ),
+            unit=s2z1.unit,
+        )
+        lc_flange_v1_vg_formula = (
+            "si n_blt_flange_z >= 2 -> lc_flange_v1_vg = min(g_blt_flange - dh.2, Le_blt_flange_z1 - 0.5*dh.2)"
+        )
+    else:
+        lc_flange_v1_vg = Quantity(
+            value=le2_z1.value - 0.5 * dh_flange.value,
+            unit=le2_z1.unit,
+        )
+        lc_flange_v1_vg_formula = (
+            "si n_blt_flange_z = 1 -> lc_flange_v1_vg = Le_blt_flange_z1 - 0.5*dh.2"
+        )
+    phi_rn1_flange_v1_vg, tearout_flange_v1_inter = compute_bolt_hole_tearout_strength_j36(
+        material_fu=fu_vg,
+        clear_distance_lc=lc_flange_v1_vg,
+        connected_thickness_t=tf_catalog,
+        n_critical_bolts=1,
+        phi_n=phi_fragil_flange,
+        unit_system=case.units_system,
+        deformation_at_service_is_design_consideration=svc_hole_deformation_design_flange,
+    )
+    rn1_flange_v1_vg = tearout_flange_v1_inter.get("rn1_ind")
+
+    # Flange block shear in direction 3 (AISC 360-22 J4.3, DRY J4-5 function), two project cases.
+    if fy_vg is None:
+        raise ValueError("Unable to resolve Fy_vg for splice flange block-shear calculation.")
+    if not isinstance(ag_catalog, Quantity):
+        raise ValueError("Unable to resolve A_g (ag) from beam catalog for splice flange block-shear calculation.")
+    hole_add_block_flange = 1.8 if case.units_system == UnitSystem.SI else (1.8 / 25.4)
+    dh2_plus = dh_flange.value + hole_add_block_flange
+    area_unit_flange = "in2" if case.units_system == UnitSystem.US else "mm2"
+
+    # Case 1
+    agt1_flange_v3_vg = Quantity(
+        value=2.0 * (le2_z1.value * tf_catalog.value),
+        unit=area_unit_flange,
+    )
+    ant1_flange_v3_vg = Quantity(
+        value=agt1_flange_v3_vg.value - 2.0 * tf_catalog.value * 0.5 * dh2_plus,
+        unit=area_unit_flange,
+    )
+    agv1_flange_v3_vg = Quantity(
+        value=2.0 * tf_catalog.value * (le2_x1.value + (case.geometry.n_blt_flange_x - 1) * s2x.value),
+        unit=area_unit_flange,
+    )
+    anv1_flange_v3_vg = Quantity(
+        value=agv1_flange_v3_vg.value - 2.0 * tf_catalog.value * (case.geometry.n_blt_flange_x - 0.5) * dh2_plus,
+        unit=area_unit_flange,
+    )
+    ubs_flange_v3_vg = float(case.geometry.Ubs_flange_v3_vg)
+    phi_rn4_case1_flange_p3_vg, block_shear_flange_case1_inter = compute_block_shear_strength_j45(
+        material_fu=fu_vg,
+        material_fy=fy_vg,
+        net_shear_area_anv=anv1_flange_v3_vg,
+        gross_shear_area_agv=agv1_flange_v3_vg,
+        net_tension_area_ant=ant1_flange_v3_vg,
+        ubs_factor=ubs_flange_v3_vg,
+        phi_n=phi_fragil_flange,
+        unit_system=case.units_system,
+    )
+    rn4_1_case1_flange_p3_vg = block_shear_flange_case1_inter.get("rn1")
+    rn4_2_case1_flange_p3_vg = block_shear_flange_case1_inter.get("rn2")
+    rn4_case1_flange_p3_vg = block_shear_flange_case1_inter.get("rn")
+
+    # Case 2
+    agt2_flange_v3_vg = Quantity(
+        value=0.5 * (ag_catalog.value - (dvg_catalog.value - 2.0 * kdes_catalog.value) * tw_catalog.value),
+        unit=area_unit_flange,
+    )
+    ant2_flange_v3_vg = Quantity(
+        value=agt2_flange_v3_vg.value - case.geometry.n_blt_flange_z * tf_catalog.value * dh2_plus,
+        unit=area_unit_flange,
+    )
+    agv2_flange_v3_vg = Quantity(
+        value=tw_catalog.value * (le2_x1.value + (case.geometry.n_blt_flange_x - 1) * s2x.value),
+        unit=area_unit_flange,
+    )
+    anv2_flange_v3_vg = Quantity(
+        value=agv2_flange_v3_vg.value,
+        unit=area_unit_flange,
+    )
+    ubs_flange_v1_vg = float(case.geometry.Ubs_flange_v1_vg)
+    phi_rn4_case2_flange_p3_vg, block_shear_flange_case2_inter = compute_block_shear_strength_j45(
+        material_fu=fu_vg,
+        material_fy=fy_vg,
+        net_shear_area_anv=anv2_flange_v3_vg,
+        gross_shear_area_agv=agv2_flange_v3_vg,
+        net_tension_area_ant=ant2_flange_v3_vg,
+        ubs_factor=ubs_flange_v1_vg,
+        phi_n=phi_fragil_flange,
+        unit_system=case.units_system,
+    )
+    rn4_1_case2_flange_p3_vg = block_shear_flange_case2_inter.get("rn1")
+    rn4_2_case2_flange_p3_vg = block_shear_flange_case2_inter.get("rn2")
+    rn4_case2_flange_p3_vg = block_shear_flange_case2_inter.get("rn")
+
+    # Envelope case
+    phi_rn4_flange_p3_vg: Quantity
+    controlling_case_flange_p3_vg: str
+    if phi_rn4_case1_flange_p3_vg.value <= phi_rn4_case2_flange_p3_vg.value:
+        phi_rn4_flange_p3_vg = phi_rn4_case1_flange_p3_vg
+        controlling_case_flange_p3_vg = "Caso 1"
+    else:
+        phi_rn4_flange_p3_vg = phi_rn4_case2_flange_p3_vg
+        controlling_case_flange_p3_vg = "Caso 2"
+    ru4_flange_p3_raw = (1.0 - case.loads.alpha_Pu_web) * pu_base + mu3_base / (dvg_catalog.value - tf_catalog.value)
+    if ru4_flange_p3_raw < 0.0:
+        ru4_flange_p3_raw = 0.0
+    ru4_flange_p3_vg = Quantity(value=ru4_flange_p3_raw, unit=force_unit)
+    dcr4_flange_p3_vg: float | None = None
+    result4_flange_p3_vg = "FAIL"
+    if (
+        ru4_flange_p3_vg.unit == phi_rn4_flange_p3_vg.unit
+        and abs(phi_rn4_flange_p3_vg.value) > 1e-12
+    ):
+        dcr4_flange_p3_vg = abs(ru4_flange_p3_vg.value) / phi_rn4_flange_p3_vg.value
+        result4_flange_p3_vg = "PASS" if dcr4_flange_p3_vg <= 1.0 else "FAIL"
+
+    # Beam flexural rupture with holes in tension flange (AISC 360-22 F13.1).
+    sx_catalog = beam_props.get("zx")
+    if not isinstance(sx_catalog, Quantity):
+        raise ValueError("Unable to resolve Sx_vg (using catalog zx) for splice beam flexural rupture check.")
+    if not (tf_catalog.unit == bf_catalog.unit == dh_flange.unit):
+        raise ValueError("Incompatible units for Afg_flange_m1_vg / Afn_flange_m1_vg calculation.")
+    hole_add_f13 = 1.8 if case.units_system == UnitSystem.SI else (1.8 / 25.4)
+    area_unit = "in2" if case.units_system == UnitSystem.US else "mm2"
+    afg_flange_m1_vg = Quantity(
+        value=tf_catalog.value * bf_catalog.value,
+        unit=area_unit,
+    )
+    afn_flange_m1_vg = Quantity(
+        value=afg_flange_m1_vg.value
+        - 2.0 * case.geometry.n_blt_flange_z * (dh_flange.value + hole_add_f13) * tf_catalog.value,
+        unit=area_unit,
+    )
+    phi_no_ductil_m1 = 0.9
+    phi_rn1_flange_m1_vg, flange_flex_rupture_m1_inter = compute_member_flexural_rupture_with_tension_flange_holes_f131(
+        material_fu=fu_vg,
+        material_fy=fy_vg,
+        net_tension_flange_area_afn=afn_flange_m1_vg,
+        gross_tension_flange_area_agf=afg_flange_m1_vg,
+        elastic_section_modulus_sx=sx_catalog,
+        phi_n=phi_no_ductil_m1,
+        unit_system=case.units_system,
+    )
+    rn1_flange_m1_vg = flange_flex_rupture_m1_inter.get("mn")
+    ru1_flange_m1_vg = case.loads.Mu3_sp
+    dcr1_flange_m1_vg: float | None = None
+    result1_flange_m1_vg = "FAIL"
+    limit_applies_flange_m1 = bool(flange_flex_rupture_m1_inter.get("tensile_rupture_limit_applies"))
+    if not limit_applies_flange_m1:
+        dcr1_flange_m1_vg = 0.0
+        result1_flange_m1_vg = "PASS"
+    elif (
+        ru1_flange_m1_vg.unit == phi_rn1_flange_m1_vg.unit
+        and abs(phi_rn1_flange_m1_vg.value) > 1e-12
+    ):
+        dcr1_flange_m1_vg = abs(ru1_flange_m1_vg.value) / phi_rn1_flange_m1_vg.value
+        result1_flange_m1_vg = "PASS" if dcr1_flange_m1_vg <= 1.0 else "FAIL"
 
     # Hole bearing (aplatamiento) per J3-6a/J3-6b at one critical bolt.
     phi_rn2_web_v2_vg, bearing_web_inter = compute_bolt_hole_bearing_strength_j36(
@@ -604,7 +821,7 @@ def run_step1_viga_detailing(case: BeamBeamMomentBoltedCase, rule_binding: objec
     )
     rn3_v3_vg = tension_rupture_v3_inter.get("rn")
     ru3_v3_vg = Quantity(
-        value=case.loads.Pu_sp.value * case.loads.alpha_Pu_web,
+        value=case.loads.Pu_sp.value,
         unit=case.loads.Pu_sp.unit,
     )
     dcr3_v3_vg: float | None = None
@@ -617,6 +834,50 @@ def run_step1_viga_detailing(case: BeamBeamMomentBoltedCase, rule_binding: objec
     ):
         dcr3_v3_vg = abs(ru3_v3_vg.value) / phi_rn3_v3_vg.value
         result3_v3_vg = "PASS" if dcr3_v3_vg <= 1.0 else "FAIL"
+
+    def _convert_moment_value_to_unit(value: Quantity, target_unit: str) -> float:
+        if value.unit == target_unit:
+            return value.value
+        conversions = {
+            ("kN-mm", "kN-m"): 1.0 / 1000.0,
+            ("kN-m", "kN-mm"): 1000.0,
+            ("kip-in", "kip-ft"): 1.0 / 12.0,
+            ("kip-ft", "kip-in"): 12.0,
+        }
+        factor = conversions.get((value.unit, target_unit))
+        if factor is None:
+            raise ValueError(f"Unsupported moment unit conversion: {value.unit} -> {target_unit}.")
+        return value.value * factor
+
+    # Beam combined-force interaction (AISC 360-22 H1-1a/H1-1b) using DRY shared function.
+    pr_over_pc_vg: float | None = None
+    mrx_over_mcx_vg: float | None = None
+    mry_over_mcy_vg = 0.0
+    mrx_over_mcx_mu3_term: float | None = None
+    dcr_fcomb_vg: float | None = None
+    h11_equation_used_vg: str | None = None
+    result_fcomb_vg = "NOT_AVAILABLE"
+    member_capacity = case.capacidad_miembro
+    if member_capacity is not None and abs(member_capacity.phiMn3.value) > 1e-12:
+        if case.loads.Pu_sp.value >= 0.0:
+            pr_over_pc_vg = float(dcr3_v3_vg) if isinstance(dcr3_v3_vg, (int, float)) else 0.0
+        elif abs(member_capacity.phiPnc.value) > 1e-12:
+            pr_over_pc_vg = case.loads.Pu_sp.value / member_capacity.phiPnc.value
+
+        mu3_in_phi_mn3_unit = _convert_moment_value_to_unit(case.loads.Mu3_sp, member_capacity.phiMn3.unit)
+        mrx_over_mcx_mu3_term = abs(mu3_in_phi_mn3_unit) / member_capacity.phiMn3.value
+        dcr_481 = float(dcr1_flange_m1_vg) if isinstance(dcr1_flange_m1_vg, (int, float)) else 0.0
+        mrx_over_mcx_vg = max(mrx_over_mcx_mu3_term, dcr_481)
+
+        if pr_over_pc_vg is not None:
+            member_h11_inter = compute_member_combined_interaction_h11(
+                pr_over_pc=pr_over_pc_vg,
+                mrx_over_mcx=mrx_over_mcx_vg,
+                mry_over_mcy=mry_over_mcy_vg,
+            )
+            dcr_fcomb_vg = float(member_h11_inter.get("dcr", 0.0))
+            h11_equation_used_vg = str(member_h11_inter.get("equation_used", "H1-1b"))
+            result_fcomb_vg = "PASS" if bool(member_h11_inter.get("passes", False)) else "FAIL"
     # Block shear in direction 3 (AISC 360-22w J4.3, using DRY J4-5 function).
     if fy_vg is None:
         raise ValueError("Unable to resolve Fy_vg for splice web block-shear calculation (v3).")
@@ -677,6 +938,12 @@ def run_step1_viga_detailing(case: BeamBeamMomentBoltedCase, rule_binding: objec
         phi=phi_fragil_web,
         unit_system=case.units_system,
     ) if isinstance(fnv_web, Quantity) else None
+    bolt_shear_flange = compute_bolt_shear_rupture_capacity_per_bolt(
+        bolt_diameter=db_flange,
+        bolt_fnv=fnv_flange if isinstance(fnv_flange, Quantity) else Quantity(value=0.0, unit="MPa" if case.units_system == UnitSystem.SI else "ksi"),
+        phi=phi_fragil_flange,
+        unit_system=case.units_system,
+    ) if isinstance(fnv_flange, Quantity) else None
     # Beam shear rupture (AISC 360-22 J4.3) with net shear area at web.
     av_web_v2_vg = Quantity(
         value=dvg_catalog.value * tw_catalog.value,
@@ -1297,7 +1564,7 @@ def run_step1_viga_detailing(case: BeamBeamMomentBoltedCase, rule_binding: objec
     le_blt_web_x1_min_combined = Quantity(value=max(le_min_web.value, c1_web.value), unit=le_min_web.unit)
     le_blt_web_y31_min_combined = Quantity(value=max(le_min_web.value, c1_web.value), unit=le_min_web.unit)
     le_blt_flange_x1_min_combined = Quantity(value=max(le_min_flange.value, c1_flange.value), unit=le_min_flange.unit)
-    le_blt_flange_z3_min_combined = Quantity(value=max(le_min_flange.value, c1_flange.value), unit=le_min_flange.unit)
+    le_blt_flange_z1_min_combined = Quantity(value=max(le_min_flange.value, c1_flange.value), unit=le_min_flange.unit)
     le_blt_flange_z4_min_combined = Quantity(value=max(le_min_flange.value, c1_flange.value), unit=le_min_flange.unit)
     g_blt_flange_min_constructive = Quantity(
         value=max(s_min_flange.value, two_c1_flange.value),
@@ -1896,26 +2163,26 @@ def run_step1_viga_detailing(case: BeamBeamMomentBoltedCase, rule_binding: objec
         ),
         _row(
             scope="pernos_2",
-            description="Distancia minima a borde Le_blt_flange_z3 para agujero estandar",
-            calculated_symbol="Le_blt_flange_z3",
+            description="Distancia minima a borde Le_blt_flange_z1 para agujero estandar",
+            calculated_symbol="Le_blt_flange_z1",
             limit_symbol="max {Le_min, C1}",
             comparison_text=">=",
-            calculated=le2_z3.model_dump(),
-            limit=le_blt_flange_z3_min_combined.model_dump(),
+            calculated=le2_z1.model_dump(),
+            limit=le_blt_flange_z1_min_combined.model_dump(),
             clause=combined_edge_clause,
             source_document=construct_source,
-            passed=le2_z3.value >= le_blt_flange_z3_min_combined.value,
+            passed=le2_z1.value >= le_blt_flange_z1_min_combined.value,
         ),
         _row(
             scope="pernos_2",
-            description="Distancia maxima a borde Le_blt_flange_z3",
-            calculated_symbol="Le_blt_flange_z3",
+            description="Distancia maxima a borde Le_blt_flange_z1",
+            calculated_symbol="Le_blt_flange_z1",
             limit_symbol="Le_max",
             comparison_text="<=",
-            calculated=le2_z3.model_dump(),
+            calculated=le2_z1.model_dump(),
             limit=lemax_flange.model_dump(),
             clause="AISC 360-22 J3.6",
-            passed=le2_z3.value <= lemax_flange.value,
+            passed=le2_z1.value <= lemax_flange.value,
         ),
         _row(
             scope="pernos_2",
@@ -1923,7 +2190,7 @@ def run_step1_viga_detailing(case: BeamBeamMomentBoltedCase, rule_binding: objec
             calculated_symbol="Le_blt_flange_z4",
             limit_symbol="max {Le_min, C1}",
             comparison_text=">=",
-            calculated=le2_z4.model_dump() if le2_z4 is not None else {"value": 0.0, "unit": le2_z3.unit},
+            calculated=le2_z4.model_dump() if le2_z4 is not None else {"value": 0.0, "unit": le2_z1.unit},
             limit=le_blt_flange_z4_min_combined.model_dump(),
             clause=combined_edge_clause,
             source_document=construct_source,
@@ -1935,7 +2202,7 @@ def run_step1_viga_detailing(case: BeamBeamMomentBoltedCase, rule_binding: objec
             calculated_symbol="Le_blt_flange_z4",
             limit_symbol="Le_max",
             comparison_text="<=",
-            calculated=le2_z4.model_dump() if le2_z4 is not None else {"value": 0.0, "unit": le2_z3.unit},
+            calculated=le2_z4.model_dump() if le2_z4 is not None else {"value": 0.0, "unit": le2_z1.unit},
             limit=lemax_flange.model_dump(),
             clause="AISC 360-22 J3.6",
             passed=(le2_z4 is not None and le2_z4.value <= lemax_flange.value),
@@ -1977,7 +2244,7 @@ def run_step1_viga_detailing(case: BeamBeamMomentBoltedCase, rule_binding: objec
             calculated_symbol="Le_blt_flange_z4",
             limit_symbol="C3",
             comparison_text=">=",
-            calculated=le2_z4.model_dump() if le2_z4 is not None else {"value": 0.0, "unit": le2_z3.unit},
+            calculated=le2_z4.model_dump() if le2_z4 is not None else {"value": 0.0, "unit": le2_z1.unit},
             limit=c3_flange.model_dump(),
             clause=construct_clause,
             source_document=construct_source,
@@ -2041,6 +2308,17 @@ def run_step1_viga_detailing(case: BeamBeamMomentBoltedCase, rule_binding: objec
             limit={"value": 1.0, "unit": "ratio"},
             clause="Criterio solicitado por usuario",
             passed=u1 is not None and u1 <= 1.0,
+        ),
+        _row(
+            scope="viga",
+            description="Alma de la viga no es esbelta",
+            calculated_symbol="h/tw",
+            limit_symbol="5.7*sqrt(E_vg/Fy_vg)",
+            comparison_text="<",
+            calculated=h_over_tw_vg.model_dump(),
+            limit=h_over_tw_limit.model_dump(),
+            clause="AISC 360-22 (criterio solicitado por usuario)",
+            passed=h_over_tw_vg.value < h_over_tw_limit.value,
         ),
     ]
 
@@ -2121,7 +2399,7 @@ def run_step1_viga_detailing(case: BeamBeamMomentBoltedCase, rule_binding: objec
             "Le_blt_flange_x2": le2_x2.model_dump(),
             "Le_blt_flange_z1": le2_z1.model_dump(),
             "Le_blt_flange_z2": le2_z2.model_dump(),
-            "Le_blt_flange_z3": le2_z3.model_dump(),
+            "Le_blt_flange_z1": le2_z1.model_dump(),
             "T_vg": t_catalog.model_dump(),
             "bf_vg": bf_catalog.model_dump(),
         },
@@ -2205,10 +2483,10 @@ def run_step1_viga_detailing(case: BeamBeamMomentBoltedCase, rule_binding: objec
                     "le1y3_1_formula": "Le_blt_web_y3.1 = Le_blt_web_y3 - kdet_vg",
                     "le1y3_1": le1_y3_1.model_dump() if le1_y3_1 is not None else None,
                     "le2z4_var": "Le_blt_flange_z4",
-                    "le2z4_formula": "Le_blt_flange_z4 = 0.5*bfdet_vg - (Le_blt_flange_z3 + k1_vg + (n_blt_flange_z - 1)*g_blt_flange)",
+                    "le2z4_formula": "Le_blt_flange_z4 = 0.5*bfdet_vg - (Le_blt_flange_z1 + k1_vg + (n_blt_flange_z - 1)*g_blt_flange)",
                     "le2z4": le2_z4.model_dump() if le2_z4 is not None else None,
                     "g1_blt_flange_var": "g1_blt_flange",
-                    "g1_blt_flange_formula": "g1_blt_flange = bf_vg - 2*(Le_blt_flange_z3 + (n_blt_flange_z - 1)*g_blt_flange)",
+                    "g1_blt_flange_formula": "g1_blt_flange = bf_vg - 2*(Le_blt_flange_z1 + (n_blt_flange_z - 1)*g_blt_flange)",
                     "g1_blt_flange": g1_blt_flange.model_dump() if g1_blt_flange is not None else None,
                     "f_blt_flange_var": "F_blt_flange",
                     "f_blt_flange_formula": "F_blt_flange = 0.5*g1_blt_flange - 0.5*tw_vg - t_plt_web",
@@ -2225,8 +2503,8 @@ def run_step1_viga_detailing(case: BeamBeamMomentBoltedCase, rule_binding: objec
                     "xk_blt_flange_values": xk_blt_flange_values,
                     "n2z_var": "n_blt_flange_z",
                     "n2z": case.geometry.n_blt_flange_z,
-                    "le2z3_var": "Le_blt_flange_z3",
-                    "le2z3": le2_z3.model_dump(),
+                    "le2z1_var": "Le_blt_flange_z1",
+                    "le2z1": le2_z1.model_dump(),
                     "s2z1_var": "g_blt_flange",
                     "s2z1": s2z1.model_dump(),
                     "type_hole_flange_var": "type_hole_flange",
@@ -2433,13 +2711,354 @@ def run_step1_viga_detailing(case: BeamBeamMomentBoltedCase, rule_binding: objec
                     "d_vg_var": "d_vg",
                     "d_vg": dvg_catalog.model_dump(),
                     "ru1_flange_p3_vg_var": "Ru1_flange_p3(+)_vg",
-                    "ru1_flange_p3_vg_formula": "Ru1_flange_p3(+)_vg = (1- alpha_Pu_web)*Pu_sp + Mu3_sp/(d_vg - tf_vg); si <0 -> 0",
+                    "ru1_flange_p3_vg_formula": "Ru1_flange_p3(+)_vg = (1- alpha_Pu_web)*Pu_sp + Mu3_sp/(d_vg - tf_vg)",
                     "ru1_flange_p3_vg": ru1_flange_p3_vg.model_dump(),
                     "dcr1_flange_p3_vg_var": "DCR1_flange_p3_vg",
                     "dcr1_flange_p3_vg": dcr1_flange_p3_vg,
                     "result1_flange_p3_vg": result1_flange_p3_vg,
                     "coefficient": tearout_flange_p3_inter.get("coefficient"),
                     "reference": "AISC 360-22 J3.11a.(b) (DRY: compute_bolt_hole_tearout_strength_j36)",
+                },
+                {
+                    "id": "bbmb_splice.step4.flange_shear_tearout_v1_note",
+                    "scope": "viga",
+                    "description": "Revision de resistencia por desgarramiento en la perforacion del perno del ala en direccion 1",
+                    "clause": "AISC 360-22 J3.11a.(b)",
+                    "fu_vg_var": "Fu_vg",
+                    "fu_vg": fu_vg.model_dump(),
+                    "tf_vg_var": "tf_vg",
+                    "tf_vg": tf_catalog.model_dump(),
+                    "g_blt_flange_var": "g_blt_flange",
+                    "g_blt_flange": s2z1.model_dump(),
+                    "n_blt_flange_z_var": "n_blt_flange_z",
+                    "n_blt_flange_z": case.geometry.n_blt_flange_z,
+                    "le_blt_flange_z1_var": "Le_blt_flange_z1",
+                    "le_blt_flange_z1": le2_z1.model_dump(),
+                    "dh_2_var": "dh.2",
+                    "dh_2": dh_flange.model_dump(),
+                    "lc_flange_v1_vg_var": "lc_flange_v1_vg",
+                    "lc_flange_v1_vg_formula": lc_flange_v1_vg_formula,
+                    "lc_flange_v1_vg": lc_flange_v1_vg.model_dump(),
+                    "svc_hole_deformation_design_flange_var": "deformation_at_bolt_hole_service_load_is_design",
+                    "svc_hole_deformation_design_flange": svc_hole_deformation_design_flange,
+                    "rn1_flange_v1_vg_var": "Rn1_flange_v1_vg",
+                    "rn1_flange_v1_vg_formula": (
+                        "Rn1_flange_v1_vg = 1.2*lc_flange_v1_vg*tf_vg*Fu_vg"
+                        if svc_hole_deformation_design_flange
+                        else "Rn1_flange_v1_vg = 1.5*lc_flange_v1_vg*tf_vg*Fu_vg"
+                    ),
+                    "rn1_flange_v1_vg": rn1_flange_v1_vg.model_dump() if isinstance(rn1_flange_v1_vg, Quantity) else None,
+                    "phi_pr_var": "phi_pr",
+                    "phi_pr": phi_fragil_flange,
+                    "phi_rn1_flange_v1_vg_var": "phi*Rn1_flange_v1_vg",
+                    "phi_rn1_flange_v1_vg_formula": "phi*Rn1_flange_v1_vg = phi_pr*Rn1_flange_v1_vg",
+                    "phi_rn1_flange_v1_vg": (
+                        phi_rn1_flange_v1_vg.model_dump() if isinstance(phi_rn1_flange_v1_vg, Quantity) else None
+                    ),
+                    "coefficient": tearout_flange_v1_inter.get("coefficient"),
+                    "reference": "AISC 360-22 J3.11a.(b) (DRY: compute_bolt_hole_tearout_strength_j36)",
+                },
+                {
+                    "id": "bbmb_splice.step4.flange_flexural_rupture_m1_note",
+                    "scope": "viga",
+                    "description": "Revision de resistencia por rotura a flexion en la viga (agujeros en ala traccionada)",
+                    "clause": "AISC 360-22 F13.1",
+                    "fu_vg_var": "Fu_vg",
+                    "fu_vg": fu_vg.model_dump(),
+                    "fy_vg_var": "Fy_vg",
+                    "fy_vg": fy_vg.model_dump() if isinstance(fy_vg, Quantity) else None,
+                    "tf_vg_var": "tf_vg",
+                    "tf_vg": tf_catalog.model_dump(),
+                    "bf_vg_var": "bf_vg",
+                    "bf_vg": bf_catalog.model_dump(),
+                    "n_blt_flange_z_var": "n_blt_flange_z",
+                    "n_blt_flange_z": case.geometry.n_blt_flange_z,
+                    "dh_2_var": "dh.2",
+                    "dh_2": dh_flange.model_dump(),
+                    "hole_add_var": "delta_hole",
+                    "hole_add": Quantity(value=hole_add_f13, unit=dh_flange.unit).model_dump(),
+                    "afg_flange_m1_vg_var": "Afg_flange_m1_vg",
+                    "afg_flange_m1_vg_formula": "Afg_flange_m1_vg = tf_vg*bf_vg",
+                    "afg_flange_m1_vg": afg_flange_m1_vg.model_dump(),
+                    "afn_flange_m1_vg_var": "Afn_flange_m1_vg",
+                    "afn_flange_m1_vg_formula": "Afn_flange_m1_vg = Afg_flange_m1_vg - 2*n_blt_flange_z*(dh.2 + 1.80mm)*tf_vg",
+                    "afn_flange_m1_vg": afn_flange_m1_vg.model_dump(),
+                    "sx_vg_var": "Sx_vg",
+                    "sx_vg_formula": "Sx_vg tomado del catalogo (usando zx)",
+                    "sx_vg": sx_catalog.model_dump(),
+                    "yf_var": "Yf",
+                    "yf": flange_flex_rupture_m1_inter.get("yf"),
+                    "fy_over_fu_var": "Fy/Fu",
+                    "fy_over_fu": flange_flex_rupture_m1_inter.get("fy_over_fu"),
+                    "lhs_fu_afn_var": "Fu*Afn",
+                    "lhs_fu_afn": (
+                        flange_flex_rupture_m1_inter.get("lhs_fu_afn").model_dump()
+                        if isinstance(flange_flex_rupture_m1_inter.get("lhs_fu_afn"), Quantity)
+                        else None
+                    ),
+                    "rhs_yf_fy_agf_var": "Yf*Fy*Agf",
+                    "rhs_yf_fy_agf": (
+                        flange_flex_rupture_m1_inter.get("rhs_yf_fy_agf").model_dump()
+                        if isinstance(flange_flex_rupture_m1_inter.get("rhs_yf_fy_agf"), Quantity)
+                        else None
+                    ),
+                    "limit_applies_var": "F13.1_aplica",
+                    "limit_applies": limit_applies_flange_m1,
+                    "phi_no_ductil_var": "phi_no_ductil",
+                    "phi_no_ductil": phi_no_ductil_m1,
+                    "rn1_flange_m1_vg_var": "Rn1_flange_m1_vg",
+                    "rn1_flange_m1_vg_formula": "Rn1_flange_m1_vg = (Fu_vg*Afn_flange_m1_vg/Afg_flange_m1_vg)*Sx_vg",
+                    "rn1_flange_m1_vg": rn1_flange_m1_vg.model_dump() if isinstance(rn1_flange_m1_vg, Quantity) else None,
+                    "phi_rn1_flange_m1_vg_var": "phi*Rn1_flange_m1_vg",
+                    "phi_rn1_flange_m1_vg_formula": "phi*Rn1_flange_m1_vg = phi_no_ductil*Rn1_flange_m1_vg",
+                    "phi_rn1_flange_m1_vg": phi_rn1_flange_m1_vg.model_dump(),
+                    "ru1_flange_m1_vg_var": "Ru1_flange_m1_vg",
+                    "ru1_flange_m1_vg_formula": "Ru1_flange_m1_vg = Mu3_sp",
+                    "mu3_sp_var": "Mu3_sp",
+                    "mu3_sp": case.loads.Mu3_sp.model_dump(),
+                    "ru1_flange_m1_vg": ru1_flange_m1_vg.model_dump(),
+                    "dcr1_flange_m1_vg_var": "DCR1_flange_m1_vg",
+                    "dcr1_flange_m1_vg": dcr1_flange_m1_vg,
+                    "result1_flange_m1_vg": result1_flange_m1_vg,
+                    "reference": "AISC 360-22 F13.1 (DRY: compute_member_flexural_rupture_with_tension_flange_holes_f131)",
+                },
+                {
+                    "id": "bbmb_splice.step4.viga_combined_forces_note",
+                    "scope": "viga",
+                    "description": "Revision de capacidad bajo la accion de fuerzas combinadas en la viga",
+                    "clause": "AISC 360-22 H1-1a/H1-1b",
+                    "pu_sp_var": "Pu_sp",
+                    "pu_sp": case.loads.Pu_sp.model_dump(),
+                    "phi_pnc_var": "phiPnc",
+                    "phi_pnc": (
+                        member_capacity.phiPnc.model_dump()
+                        if member_capacity is not None and isinstance(member_capacity.phiPnc, Quantity)
+                        else None
+                    ),
+                    "phi_mn3_var": "phiMn3",
+                    "phi_mn3": (
+                        member_capacity.phiMn3.model_dump()
+                        if member_capacity is not None and isinstance(member_capacity.phiMn3, Quantity)
+                        else None
+                    ),
+                    "phi_mn2_var": "phiMn2",
+                    "phi_mn2": (
+                        member_capacity.phiMn2.model_dump()
+                        if member_capacity is not None and isinstance(member_capacity.phiMn2, Quantity)
+                        else None
+                    ),
+                    "dcr_451_var": "DCR_4.5.1",
+                    "dcr_451": dcr3_v3_vg,
+                    "dcr_481_var": "DCR_4.8.1",
+                    "dcr_481": dcr1_flange_m1_vg,
+                    "mrx_from_mu3_var": "|Mu3_sp|/phiMn3",
+                    "mrx_from_mu3": mrx_over_mcx_mu3_term,
+                    "pr_over_pc_var": "Pr/(phiPc)",
+                    "pr_over_pc": pr_over_pc_vg,
+                    "mrx_over_mcx_var": "Mrx/Mcx",
+                    "mrx_over_mcx": mrx_over_mcx_vg,
+                    "mry_over_mcy_var": "Mry/Mcy",
+                    "mry_over_mcy": mry_over_mcy_vg,
+                    "equation_used": h11_equation_used_vg,
+                    "dcr_fcomb_vg_var": "DCR_Fcomb_vg",
+                    "dcr_fcomb_vg": dcr_fcomb_vg,
+                    "result_fcomb_vg": result_fcomb_vg,
+                    "reference": "AISC 360-22 H1.1 (DRY: compute_member_combined_interaction_h11)",
+                },
+                {
+                    "id": "bbmb_splice.step4.flange_tension_bearing_v3_note",
+                    "scope": "viga",
+                    "description": "Revision de resistencia por aplatamiento en la perforacion del perno del ala en direccion 3",
+                    "clause": "AISC 360-22 J3.11a.(a)",
+                    "fu_vg_var": "Fu_vg",
+                    "fu_vg": fu_vg.model_dump(),
+                    "tf_vg_var": "tf_vg",
+                    "tf_vg": tf_catalog.model_dump(),
+                    "db_blt_flange_var": "db_blt_flange",
+                    "db_blt_flange": db_flange.model_dump(),
+                    "svc_hole_deformation_design_flange_var": "deformation_at_bolt_hole_service_load_is_design",
+                    "svc_hole_deformation_design_flange": svc_hole_deformation_design_flange,
+                    "rn2_flange_p3_vg_var": "Rn2_flange_p3_vg",
+                    "rn2_flange_p3_vg_formula": (
+                        "Rn2_flange_p3_vg = 2.4*db_blt_flange*tf_vg*Fu_vg"
+                        if svc_hole_deformation_design_flange
+                        else "Rn2_flange_p3_vg = 3.0*db_blt_flange*tf_vg*Fu_vg"
+                    ),
+                    "rn2_flange_p3_vg": rn2_flange_p3_vg.model_dump() if isinstance(rn2_flange_p3_vg, Quantity) else None,
+                    "phi_pr_var": "phi_pr",
+                    "phi_pr": phi_fragil_flange,
+                    "phi_rn2_flange_p3_vg_var": "phi*Rn2_flange_p3_vg",
+                    "phi_rn2_flange_p3_vg_formula": "phi*Rn2_flange_p3_vg = phi_pr*Rn2_flange_p3_vg",
+                    "phi_rn2_flange_p3_vg": phi_rn2_flange_p3_vg.model_dump() if isinstance(phi_rn2_flange_p3_vg, Quantity) else None,
+                    "alpha_pu_web_var": "alpha_Pu_web",
+                    "alpha_pu_web": case.loads.alpha_Pu_web,
+                    "pu_sp_var": "Pu_sp",
+                    "pu_sp": case.loads.Pu_sp.model_dump(),
+                    "mu3_sp_var": "Mu3_sp",
+                    "mu3_sp": case.loads.Mu3_sp.model_dump(),
+                    "d_vg_var": "d_vg",
+                    "d_vg": dvg_catalog.model_dump(),
+                    "ru2_flange_p3_vg_var": "Ru2_flange_p3(+)_vg",
+                    "ru2_flange_p3_vg_formula": "Ru2_flange_p3(+)_vg = (1- alpha_Pu_web)*Pu_sp + Mu3_sp/(d_vg - tf_vg)",
+                    "ru2_flange_p3_vg": ru2_flange_p3_vg.model_dump(),
+                    "dcr2_flange_p3_vg_var": "DCR2_flange_p3_vg",
+                    "dcr2_flange_p3_vg": dcr2_flange_p3_vg,
+                    "result2_flange_p3_vg": result2_flange_p3_vg,
+                    "coefficient": bearing_flange_p3_inter.get("coefficient"),
+                    "reference": "AISC 360-22 J3.11a.(a) (DRY: compute_bolt_hole_bearing_strength_j36)",
+                },
+                {
+                    "id": "bbmb_splice.step4.flange_tension_bolt_shear_v3_note",
+                    "scope": "viga",
+                    "description": "Revision de resistencia por rotura a cortante en el perno del ala en direccion 3",
+                    "clause": "AISC 360-22 J3.7",
+                    "db_blt_flange_var": "db_blt_flange",
+                    "db_blt_flange": db_flange.model_dump(),
+                    "ab_blt_flange_var": "Ab_blt_flange",
+                    "ab_blt_flange": (
+                        bolt_shear_flange.get("bolt_area").model_dump()
+                        if isinstance(bolt_shear_flange, dict) and isinstance(bolt_shear_flange.get("bolt_area"), Quantity)
+                        else None
+                    ),
+                    "fnv_blt_flange_var": "Fnv_blt_flange",
+                    "fnv_blt_flange": fnv_flange.model_dump() if isinstance(fnv_flange, Quantity) else None,
+                    "phi_pr_var": "phi_pr",
+                    "phi_pr": phi_fragil_flange,
+                    "rn3_flange_p3_vg_var": "Rn3_flange_p3_vg",
+                    "rn3_flange_p3_vg_formula": "Rn3_flange_p3_vg = Ab_blt_flange*Fnv_blt_flange",
+                    "rn3_flange_p3_vg": (
+                        bolt_shear_flange.get("rnv_b").model_dump()
+                        if isinstance(bolt_shear_flange, dict) and isinstance(bolt_shear_flange.get("rnv_b"), Quantity)
+                        else None
+                    ),
+                    "phi_rn3_flange_p3_vg_var": "phi*Rn3_flange_p3_vg",
+                    "phi_rn3_flange_p3_vg_formula": "phi*Rn3_flange_p3_vg = phi_pr*Rn3_flange_p3_vg",
+                    "phi_rn3_flange_p3_vg": (
+                        bolt_shear_flange.get("phi_rnv_b").model_dump()
+                        if isinstance(bolt_shear_flange, dict) and isinstance(bolt_shear_flange.get("phi_rnv_b"), Quantity)
+                        else None
+                    ),
+                    "ru3_flange_p3_vg_var": "Ru3_flange_p3(+)_vg",
+                    "ru3_flange_p3_vg_formula": "Ru3_flange_p3(+)_vg = Ru_blt_2_flange_vg (tomado de 3.2)",
+                    "ru3_flange_p3_vg": ru2_flange_p3_vg.model_dump(),
+                    "dcr3_flange_p3_vg_var": "DCR3_flange_p3_vg",
+                    "dcr3_flange_p3_vg": (
+                        abs(ru2_flange_p3_vg.value) / bolt_shear_flange.get("phi_rnv_b").value
+                        if isinstance(bolt_shear_flange, dict)
+                        and isinstance(bolt_shear_flange.get("phi_rnv_b"), Quantity)
+                        and ru2_flange_p3_vg.unit == bolt_shear_flange.get("phi_rnv_b").unit
+                        and abs(bolt_shear_flange.get("phi_rnv_b").value) > 1e-12
+                        else None
+                    ),
+                    "result3_flange_p3_vg": (
+                        "PASS"
+                        if isinstance(bolt_shear_flange, dict)
+                        and isinstance(bolt_shear_flange.get("phi_rnv_b"), Quantity)
+                        and ru2_flange_p3_vg.unit == bolt_shear_flange.get("phi_rnv_b").unit
+                        and abs(bolt_shear_flange.get("phi_rnv_b").value) > 1e-12
+                        and abs(ru2_flange_p3_vg.value) / bolt_shear_flange.get("phi_rnv_b").value <= 1.0
+                        else "FAIL"
+                    ),
+                    "reference": "AISC 360-22 J3.7 (DRY: compute_bolt_shear_rupture_capacity_per_bolt)",
+                },
+                {
+                    "id": "bbmb_splice.step4.flange_tension_block_shear_v3_note",
+                    "scope": "viga",
+                    "description": "Revision de resistencia por bloque de cortante en ala de viga en direccion 3",
+                    "clause": "AISC 360-22 J4.3",
+                    "fu_vg_var": "Fu_vg",
+                    "fu_vg": fu_vg.model_dump(),
+                    "fy_vg_var": "Fy_vg",
+                    "fy_vg": fy_vg.model_dump() if isinstance(fy_vg, Quantity) else None,
+                    "tf_vg_var": "tf_vg",
+                    "tf_vg": tf_catalog.model_dump(),
+                    "tw_vg_var": "tw_vg",
+                    "tw_vg": tw_catalog.model_dump(),
+                    "d_vg_var": "d_vg",
+                    "d_vg": dvg_catalog.model_dump(),
+                    "kdes_vg_var": "kdes_vg",
+                    "kdes_vg": kdes_catalog.model_dump(),
+                    "a_g_var": "A_g",
+                    "a_g": ag_catalog.model_dump(),
+                    "n_blt_flange_x_var": "n_blt_flange_x",
+                    "n_blt_flange_x": case.geometry.n_blt_flange_x,
+                    "n_blt_flange_z_var": "n_blt_flange_z",
+                    "n_blt_flange_z": case.geometry.n_blt_flange_z,
+                    "p_blt_flange_var": "p_blt_flange",
+                    "p_blt_flange": s2x.model_dump(),
+                    "le_blt_flange_x1_var": "Le_blt_flange_x1",
+                    "le_blt_flange_x1": le2_x1.model_dump(),
+                    "le_blt_flange_z1_var": "Le_blt_flange_z1",
+                    "le_blt_flange_z1": le2_z1.model_dump(),
+                    "dh_2_var": "dh.2",
+                    "dh_2": dh_flange.model_dump(),
+                    "hole_add_var": "delta_hole",
+                    "hole_add": Quantity(value=hole_add_block_flange, unit=dh_flange.unit).model_dump(),
+                    "ubs_flange_v3_vg_var": "Ubs_flange_v3_vg",
+                    "ubs_flange_v3_vg": ubs_flange_v3_vg,
+                    "ubs_flange_v1_vg_var": "Ubs_flange_v1_vg",
+                    "ubs_flange_v1_vg": ubs_flange_v1_vg,
+                    "agt1_flange_v3_vg_var": "Agt1_flange_v3_vg",
+                    "agt1_flange_v3_vg_formula": "Agt1_flange_v3_vg = 2 * (Le_blt_flange_z1 * tf_vg)",
+                    "agt1_flange_v3_vg": agt1_flange_v3_vg.model_dump(),
+                    "ant1_flange_v3_vg_var": "Ant1_flange_v3_vg",
+                    "ant1_flange_v3_vg_formula": "Ant1_flange_v3_vg = Agt1_flange_v3_vg - 2 *tf_vg * 0.5 * (dh.2 +1.80mm)",
+                    "ant1_flange_v3_vg": ant1_flange_v3_vg.model_dump(),
+                    "agv1_flange_v3_vg_var": "Agv1_flange_v3_vg",
+                    "agv1_flange_v3_vg_formula": "Agv1_flange_v3_vg = 2 * tf_vg * ( Le_blt_flange_x1 + (n_blt_flange_x - 1)* p_blt_flange )",
+                    "agv1_flange_v3_vg": agv1_flange_v3_vg.model_dump(),
+                    "anv1_flange_v3_vg_var": "Anv1_flange_v3_vg",
+                    "anv1_flange_v3_vg_formula": "Anv1_flange_v3_vg = Agv1_flange_v3_vg - 2 *tf_vg * (n_blt_flange_x - 0.5) * (dh.2 +1.80mm)",
+                    "anv1_flange_v3_vg": anv1_flange_v3_vg.model_dump(),
+                    "rn4_1_case1_flange_p3_vg_var": "Rn4_1_case1_flange_p3_vg",
+                    "rn4_1_case1_flange_p3_vg": rn4_1_case1_flange_p3_vg.model_dump() if isinstance(rn4_1_case1_flange_p3_vg, Quantity) else None,
+                    "rn4_2_case1_flange_p3_vg_var": "Rn4_2_case1_flange_p3_vg",
+                    "rn4_2_case1_flange_p3_vg": rn4_2_case1_flange_p3_vg.model_dump() if isinstance(rn4_2_case1_flange_p3_vg, Quantity) else None,
+                    "rn4_case1_flange_p3_vg_var": "Rn4_case1_flange_p3_vg",
+                    "rn4_case1_flange_p3_vg": rn4_case1_flange_p3_vg.model_dump() if isinstance(rn4_case1_flange_p3_vg, Quantity) else None,
+                    "phi_rn4_case1_flange_p3_vg_var": "phi*Rn4_case1_flange_p3_vg",
+                    "phi_rn4_case1_flange_p3_vg": phi_rn4_case1_flange_p3_vg.model_dump(),
+                    "agt2_flange_v3_vg_var": "Agt2_flange_v3_vg",
+                    "agt2_flange_v3_vg_formula": "Agt2_flange_v3_vg = 0.5*(A_g - (d_vg - 2 *kdes_vg)*tw_vg)",
+                    "agt2_flange_v3_vg": agt2_flange_v3_vg.model_dump(),
+                    "ant2_flange_v3_vg_var": "Ant2_flange_v3_vg",
+                    "ant2_flange_v3_vg_formula": "Ant2_flange_v3_vg = Agt2_flange_v3_vg - n_blt_flange_z * tf_vg * (dh.2 +1.80mm)",
+                    "ant2_flange_v3_vg": ant2_flange_v3_vg.model_dump(),
+                    "agv2_flange_v3_vg_var": "Agv2_flange_v3_vg",
+                    "agv2_flange_v3_vg_formula": "Agv2_flange_v3_vg = tw_vg * ( Le_blt_flange_x1 + (n_blt_flange_x - 1)* p_blt_flange )",
+                    "agv2_flange_v3_vg": agv2_flange_v3_vg.model_dump(),
+                    "anv2_flange_v3_vg_var": "Anv2_flange_v3_vg",
+                    "anv2_flange_v3_vg_formula": "Anv2_flange_v3_vg = Agv2_flange_v3_vg",
+                    "anv2_flange_v3_vg": anv2_flange_v3_vg.model_dump(),
+                    "rn4_1_case2_flange_p3_vg_var": "Rn4_1_case2_flange_p3_vg",
+                    "rn4_1_case2_flange_p3_vg": rn4_1_case2_flange_p3_vg.model_dump() if isinstance(rn4_1_case2_flange_p3_vg, Quantity) else None,
+                    "rn4_2_case2_flange_p3_vg_var": "Rn4_2_case2_flange_p3_vg",
+                    "rn4_2_case2_flange_p3_vg": rn4_2_case2_flange_p3_vg.model_dump() if isinstance(rn4_2_case2_flange_p3_vg, Quantity) else None,
+                    "rn4_case2_flange_p3_vg_var": "Rn4_case2_flange_p3_vg",
+                    "rn4_case2_flange_p3_vg": rn4_case2_flange_p3_vg.model_dump() if isinstance(rn4_case2_flange_p3_vg, Quantity) else None,
+                    "phi_rn4_case2_flange_p3_vg_var": "phi*Rn4_case2_flange_p3_vg",
+                    "phi_rn4_case2_flange_p3_vg": phi_rn4_case2_flange_p3_vg.model_dump(),
+                    "phi_pr_var": "phi_pr",
+                    "phi_pr": phi_fragil_flange,
+                    "phi_rn4_flange_p3_vg_var": "phi*Rn4_flange_p3_vg",
+                    "phi_rn4_flange_p3_vg_formula": "phi*Rn4_flange_p3_vg = min(phi*Rn4_case1_flange_p3_vg, phi*Rn4_case2_flange_p3_vg)",
+                    "phi_rn4_flange_p3_vg": phi_rn4_flange_p3_vg.model_dump(),
+                    "controlling_case_flange_p3_vg_var": "Caso_control",
+                    "controlling_case_flange_p3_vg": controlling_case_flange_p3_vg,
+                    "alpha_pu_web_var": "alpha_Pu_web",
+                    "alpha_pu_web": case.loads.alpha_Pu_web,
+                    "pu_sp_var": "Pu_sp",
+                    "pu_sp": case.loads.Pu_sp.model_dump(),
+                    "mu3_sp_var": "Mu3_sp",
+                    "mu3_sp": case.loads.Mu3_sp.model_dump(),
+                    "ru4_flange_p3_vg_var": "Ru4_flange_p3(+)_vg",
+                    "ru4_flange_p3_vg_formula": "Ru4_flange_p3(+)_vg = (1- alpha_Pu_web ) * Pu_sp + Mu3_sp /(d_vg - tf_vg), si <0 entonces 0",
+                    "ru4_flange_p3_vg": ru4_flange_p3_vg.model_dump(),
+                    "dcr4_flange_p3_vg_var": "DCR4_flange_p3_vg",
+                    "dcr4_flange_p3_vg": dcr4_flange_p3_vg,
+                    "result4_flange_p3_vg": result4_flange_p3_vg,
+                    "reference_case1": "AISC 360-22 J4.3 (DRY: compute_block_shear_strength_j45)",
+                    "reference_case2": "AISC 360-22 J4.3 (DRY: compute_block_shear_strength_j45)",
                 },
                 {
                     "id": "bbmb_splice.step4.web_bearing_note",
@@ -2580,7 +3199,7 @@ def run_step1_viga_detailing(case: BeamBeamMomentBoltedCase, rule_binding: objec
                     "alpha_pu_web_var": "alpha_Pu_web",
                     "alpha_pu_web": case.loads.alpha_Pu_web,
                     "ru3_v3_vg_var": "Ru3_v3_vg",
-                    "ru3_v3_vg_formula": "Ru3_v3_vg = Pu_sp*alpha_Pu_web",
+                    "ru3_v3_vg_formula": "Ru3_v3_vg = Pu_sp",
                     "ru3_v3_vg": ru3_v3_vg.model_dump() if isinstance(ru3_v3_vg, Quantity) else None,
                     "dcr3_v3_vg_var": "DCR3_v3_vg",
                     "dcr3_v3_vg": dcr3_v3_vg,
@@ -3450,8 +4069,6 @@ def run_step1_viga_detailing(case: BeamBeamMomentBoltedCase, rule_binding: objec
                     "le_blt_flange_z1": le2_z1.model_dump(),
                     "le_blt_flange_z2_var": "Le_blt_flange_z2",
                     "le_blt_flange_z2": le2_z2.model_dump(),
-                    "le_blt_flange_z3_var": "Le_blt_flange_z3",
-                    "le_blt_flange_z3": le2_z3.model_dump(),
                     "g1_blt_flange_var": "g1_blt_flange",
                     "g1_blt_flange": g1_blt_flange.model_dump() if g1_blt_flange is not None else None,
                     "l_plt_flange_var": "L_plt_flange",
@@ -3574,7 +4191,7 @@ def run_step1_viga_detailing(case: BeamBeamMomentBoltedCase, rule_binding: objec
             "Le_blt_flange_x2": le2_x2.unit,
             "Le_blt_flange_z1": le2_z1.unit,
             "Le_blt_flange_z2": le2_z2.unit,
-            "Le_blt_flange_z3": le2_z3.unit,
+            "Le_blt_flange_z1": le2_z1.unit,
         },
         final_capacity=None,
     )

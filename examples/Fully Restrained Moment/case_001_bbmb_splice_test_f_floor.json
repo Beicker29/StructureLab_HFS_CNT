@@ -106,15 +106,11 @@
       "unit": "mm"
     },
     "Le_blt_flange_z1": {
-      "value": 30.0,
+      "value": 35.0,
       "unit": "mm"
     },
     "Le_blt_flange_z2": {
       "value": 40.0,
-      "unit": "mm"
-    },
-    "Le_blt_flange_z3": {
-      "value": 35.0,
       "unit": "mm"
     }
   },

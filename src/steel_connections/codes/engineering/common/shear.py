@@ -270,6 +270,84 @@ def compute_rectangular_bar_flexural_yielding_strength_f111(
     }
 
 
+def compute_member_flexural_rupture_with_tension_flange_holes_f131(
+    *,
+    material_fu: Quantity,
+    material_fy: Quantity,
+    net_tension_flange_area_afn: Quantity,
+    gross_tension_flange_area_agf: Quantity,
+    elastic_section_modulus_sx: Quantity,
+    phi_n: float,
+    unit_system: UnitSystem,
+) -> tuple[Quantity, dict[str, Quantity | float | str | bool]]:
+    """Compute F13.1 flexural rupture limit for members with holes in tension flange.
+
+    AISC 360-22 F13.1:
+    - ``Yf = 1.0`` if ``Fy/Fu <= 0.8`` else ``1.1``.
+    - If ``Fu*Afn >= Yf*Fy*Agf`` the tensile-rupture limit does not apply.
+    - Else, at hole location ``Mn <= (Fu*Afn/Agf)*Sx``.
+    - Design strength: ``phi*Mn = phi_n*Mn``.
+    """
+
+    validate_quantity_unit(material_fu, "stress", unit_system, "material_fu")
+    validate_quantity_unit(material_fy, "stress", unit_system, "material_fy")
+    validate_quantity_unit(net_tension_flange_area_afn, "area", unit_system, "net_tension_flange_area_afn")
+    validate_quantity_unit(gross_tension_flange_area_agf, "area", unit_system, "gross_tension_flange_area_agf")
+
+    if net_tension_flange_area_afn.unit != gross_tension_flange_area_agf.unit:
+        raise ValueError("net_tension_flange_area_afn and gross_tension_flange_area_agf must share area unit.")
+    if gross_tension_flange_area_agf.value <= 0.0:
+        raise ValueError("gross_tension_flange_area_agf must be > 0.")
+
+    expected_modulus_unit = "in3" if unit_system == UnitSystem.US else "mm3"
+    if elastic_section_modulus_sx.unit != expected_modulus_unit:
+        raise ValueError(
+            f"Invalid unit at 'elastic_section_modulus_sx'. Expected '{expected_modulus_unit}' for {unit_system.value}."
+        )
+
+    fy_over_fu = material_fy.value / material_fu.value
+    yf = 1.0 if fy_over_fu <= 0.8 else 1.1
+
+    lhs_fu_afn = material_fu.value * net_tension_flange_area_afn.value
+    rhs_yf_fy_agf = yf * material_fy.value * gross_tension_flange_area_agf.value
+    tensile_rupture_limit_applies = lhs_fu_afn < rhs_yf_fy_agf
+
+    mn_base = (lhs_fu_afn / gross_tension_flange_area_agf.value) * elastic_section_modulus_sx.value
+    phi_mn_base = phi_n * mn_base
+
+    if unit_system == UnitSystem.US:
+        mn = Quantity(value=mn_base, unit="kip-in")
+        phi_mn = Quantity(value=phi_mn_base, unit="kip-in")
+    else:
+        # SI: MPa * mm3 = N*mm
+        mn = Quantity(value=mn_base / 1000.0, unit="kN-mm")
+        phi_mn = Quantity(value=phi_mn_base / 1000.0, unit="kN-mm")
+
+    lhs_q = (
+        Quantity(value=lhs_fu_afn, unit="kip")
+        if unit_system == UnitSystem.US
+        else Quantity(value=lhs_fu_afn / 1000.0, unit="kN")
+    )
+    rhs_q = (
+        Quantity(value=rhs_yf_fy_agf, unit="kip")
+        if unit_system == UnitSystem.US
+        else Quantity(value=rhs_yf_fy_agf / 1000.0, unit="kN")
+    )
+
+    return phi_mn, {
+        "reference": "AISC 360-22 F13.1, Eq. F13-1",
+        "equation_nominal": "Mn = (Fu*Afn/Agf)*Sx",
+        "equation_design": "phi*Mn = phi_n*Mn",
+        "yf": yf,
+        "fy_over_fu": fy_over_fu,
+        "lhs_fu_afn": lhs_q,
+        "rhs_yf_fy_agf": rhs_q,
+        "tensile_rupture_limit_applies": tensile_rupture_limit_applies,
+        "mn": mn,
+        "phi_n": phi_n,
+    }
+
+
 def compute_rectangular_bar_net_flexural_rupture_strength_j55(
     *,
     material_fy: Quantity,

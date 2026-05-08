@@ -194,24 +194,22 @@ def _normalize_weld_type_step11(raw: object) -> str:
 def _render_result_label(raw_result: object) -> str:
     value = _format_text(raw_result).strip().upper()
     if value in {"OK", "PASS"}:
-        return "🟢 Cumple"
+        return f"{chr(0x1F7E2)} Cumple"
     if value in {"NOT_APPLICABLE", "NO_APLICA", "NO APLICA", "NA"}:
-        return "🟠 No aplica (cumple)"
+        return f"{chr(0x1F7E0)} No aplica (cumple)"
     if value in {"NO_OK", "FAIL", "ERROR", "NOT_IMPLEMENTED"}:
-        return "🔴 No cumple"
+        return f"{chr(0x1F534)} No cumple"
     return _format_text(raw_result)
-
 
 def _render_result_plain_es(raw_result: object) -> str:
     value = _format_text(raw_result).strip().upper()
     if value in {"OK", "PASS", "CUMPLE"}:
-        return "🟢 Cumple"
+        return f"{chr(0x1F7E2)} Cumple"
     if value in {"NOT_APPLICABLE", "NO_APLICA", "NO APLICA", "NA"}:
-        return "🟠 No aplica (cumple)"
+        return f"{chr(0x1F7E0)} No aplica (cumple)"
     if value in {"NO_OK", "FAIL", "ERROR", "NOT_IMPLEMENTED", "NO CUMPLE"}:
-        return "🔴 No cumple"
+        return f"{chr(0x1F534)} No cumple"
     return _format_text(raw_result)
-
 
 def _translate_text_es(raw_text: object) -> str:
     text = _format_text(raw_text)
@@ -259,15 +257,15 @@ def _translate_text_es(raw_text: object) -> str:
     for source, target in replacements.items():
         text = text.replace(source, target)
     text = (
-        text.replace("uniÃ³n", "union")
-        .replace("raÃ­z", "raiz")
-        .replace("crÃ­tica", "critica")
-        .replace("Ã¡", "a")
-        .replace("Ã©", "e")
-        .replace("Ã­", "i")
-        .replace("Ã³", "o")
-        .replace("Ãº", "u")
-        .replace("Ã±", "n")
+        text.replace("uniÃƒÆ’Ã‚Â³n", "union")
+        .replace("raÃƒÆ’Ã‚Â­z", "raiz")
+        .replace("crÃƒÆ’Ã‚Â­tica", "critica")
+        .replace("ÃƒÆ’Ã‚Â¡", "a")
+        .replace("ÃƒÆ’Ã‚Â©", "e")
+        .replace("ÃƒÆ’Ã‚Â­", "i")
+        .replace("ÃƒÆ’Ã‚Â³", "o")
+        .replace("ÃƒÆ’Ã‚Âº", "u")
+        .replace("ÃƒÆ’Ã‚Â±", "n")
         .replace("ratio", "adim")
     )
     return text
@@ -1064,46 +1062,70 @@ def _dedupe_markdown_headings(text: str) -> str:
 
 
 def _normalize_memory_spanish_labels(text: str) -> str:
-    heading_replacements = {
-        "Revision": "Revisión",
-        "revision": "revisión",
-        "Calculo": "Cálculo",
-        "calculo": "cálculo",
-        "tecnicas": "técnicas",
-        "tecnica": "técnica",
-        "geometricas": "geométricas",
-        "geometrica": "geométrica",
-        "mecanicas": "mecánicas",
-        "mecanica": "mecánica",
-        "precalificacion": "precalificación",
-        "maximo": "máximo",
-        "rotula": "rótula",
-        "plastica": "plástica",
-        "flexion": "flexión",
-        "traccion": "tracción",
-        "compresion": "compresión",
-        "conexion": "conexión",
-        "Ambito": "Ámbito",
-        "ambito": "ámbito",
-    }
-
-    def _apply_heading_accents(line: str) -> str:
-        updated = line
-        for old, new in heading_replacements.items():
-            updated = updated.replace(old, new)
-        return updated
+    heading_patterns = [
+        (r"\bRevision\b", "Revisi\u00f3n"),
+        (r"\brevision\b", "revisi\u00f3n"),
+        (r"\bCalculo\b", "C\u00e1lculo"),
+        (r"\bcalculo\b", "c\u00e1lculo"),
+        (r"\btecnicas\b", "t\u00e9cnicas"),
+        (r"\btecnica\b", "t\u00e9cnica"),
+        (r"\bgeometricas\b", "geom\u00e9tricas"),
+        (r"\bgeometrica\b", "geom\u00e9trica"),
+        (r"\bmecanicas\b", "mec\u00e1nicas"),
+        (r"\bmecanica\b", "mec\u00e1nica"),
+        (r"\bprecalificacion\b", "precalificaci\u00f3n"),
+        (r"\bmaximo\b", "m\u00e1ximo"),
+        (r"\brotula\b", "r\u00f3tula"),
+        (r"\bplastica\b", "pl\u00e1stica"),
+        (r"\bflexion\b", "flexi\u00f3n"),
+        (r"\btraccion\b", "tracci\u00f3n"),
+        (r"\bcompresion\b", "compresi\u00f3n"),
+        (r"\bconexion\b", "conexi\u00f3n"),
+        (r"\bAmbito\b", "\u00c1mbito"),
+        (r"\bambito\b", "\u00e1mbito"),
+    ]
 
     normalized_lines: list[str] = []
-    for line in text.splitlines():
-        if line.lstrip().startswith("#"):
-            line = _apply_heading_accents(line)
-        if line.startswith("- Ambito:"):
-            line = line.replace("- Ambito:", "- Ámbito:")
-        if line == "No hay notas tecnicas disponibles para este caso.":
-            line = "No hay notas técnicas disponibles para este caso."
-        normalized_lines.append(line)
-    return "\n".join(normalized_lines)
+    for raw_line in text.splitlines():
+        line = raw_line
+        for _ in range(3):
+            try:
+                candidate = line.encode("latin-1").decode("utf-8")
+            except UnicodeError:
+                break
+            if candidate == line:
+                break
+            line = candidate
 
+        if line.lstrip().startswith("#"):
+            for pattern, replacement in heading_patterns:
+                line = re.sub(pattern, replacement, line)
+        if line.startswith("- Ambito:"):
+            line = line.replace("- Ambito:", "- \u00c1mbito:")
+        if line == "No hay notas tecnicas disponibles para este caso.":
+            line = "No hay notas t\u00e9cnicas disponibles para este caso."
+        normalized_lines.append(line)
+    normalized = "\n".join(normalized_lines)
+    # Final deterministic cleanup for common mojibake fragments seen in reports.
+    mojibake_fixes = {
+        "RevisiÃƒÂ³n": "Revisión",
+        "revisiÃƒÂ³n": "revisión",
+        "RevisiÃ³n": "Revisión",
+        "revisiÃ³n": "revisión",
+        "tracciÃƒÂ³n": "tracción",
+        "tracciÃ³n": "tracción",
+        "compresiÃƒÂ³n": "compresión",
+        "compresiÃ³n": "compresión",
+        "flexiÃƒÂ³n": "flexión",
+        "flexiÃ³n": "flexión",
+        "ÃƒÂmbito": "Ámbito",
+        "Ãmbito": "Ámbito",
+        "ÃƒÂ¡mbito": "ámbito",
+        "Ã¡mbito": "ámbito",
+    }
+    for bad, good in mojibake_fixes.items():
+        normalized = normalized.replace(bad, good)
+    return normalized
 
 def _replace_first_step_heading_number(block: str, *, step_number: int) -> str:
     lines = block.splitlines()
@@ -1404,7 +1426,7 @@ def _render_step_notes_grouped_by_scope(notes: list[dict], *, chapter_number: in
     ordered_scopes = sorted(scope_order, key=_scope_sort_key)
     lines: list[str] = []
     for section_offset, scope in enumerate(ordered_scopes, start=1):
-        lines.append(f"### {chapter_number}.{section_offset} Ámbito `{scope}`")
+        lines.append(f"### {chapter_number}.{section_offset} ÃƒÂmbito `{scope}`")
         lines.append("")
         local_note_index = 1
         for item in grouped[scope]:
@@ -2177,7 +2199,7 @@ def _render_step_12_column_flange_local_bending(
         enabled_flag = enabled_raw
     elif isinstance(enabled_raw, str):
         normalized = enabled_raw.strip().lower()
-        if normalized in {"true", "si", "sí", "yes", "1"}:
+        if normalized in {"true", "si", "sÃƒÂ­", "yes", "1"}:
             enabled_flag = True
         elif normalized in {"false", "no", "0"}:
             enabled_flag = False
@@ -2972,7 +2994,7 @@ def _render_fully_restrained_splice_outline(
                         f"- Rango del indice: `{_format_text(note.get('xk_blt_flange_k_range'))}`",
                         f"- Coordenadas en direccion X para pernos de aleta ({_format_text(note.get('xk_blt_flange_var'))}): `{_format_indexed_quantity_series(note.get('xk_blt_flange_values'), index_key='k', quantity_key='x')}`",
                         f"- Numero de pernos en na mitad de aleta en direccion Z de la aleta ({_format_text(note.get('n2z_var'))}) (inp): `{_format_text(note.get('n2z'))}`",
-                        f"- Distancia de borde en direccion Z del grupo de pernos del ala ({_format_text(note.get('le2z3_var'))}) (inp): `{_format_quantity(note.get('le2z3'))}`",
+                        f"- Distancia de borde en direccion Z del grupo de pernos del ala ({_format_text(note.get('le2z1_var'))}) (inp): `{_format_quantity(note.get('le2z1'))}`",
                         f"- Distancia complementaria de borde en aleta ({_format_text(note.get('le2z4_var'))}): `{_format_quantity(note.get('le2z4'))}`",
                         f"- Gage entre columnas de pernos del ala ({_format_text(note.get('s2z1_var'))}) (inp): `{_format_quantity(note.get('s2z1'))}`",
                         f"- Tipo de perforacion por pernos grupo 2 ala ({_format_text(note.get('type_hole_flange_var'))}) (inp): `{_format_text(note.get('type_hole_flange'))}`",
@@ -3105,7 +3127,7 @@ def _render_fully_restrained_splice_outline(
                         "- Formula trazabilidad: `g_plt_flange = g_blt_flange`",
                         "- Formula trazabilidad: `Le_plt_flange_z1 = Le_blt_flange_z1`",
                         "- Formula trazabilidad: `Le_plt_flange_z2 = Le_blt_flange_z2`",
-                        "- Formula calculo: `g1_plt_flange = bf_vg - 2*(Le_blt_flange_z3 + (n_blt_flange_z - 1)*g_blt_flange)`",
+                        "- Formula calculo: `g1_plt_flange = bf_vg - 2*(Le_blt_flange_z1 + (n_blt_flange_z - 1)*g_blt_flange)`",
                         "- Formula trazabilidad: `g1_plt_flange = g1_blt_flange`",
                         f"- Formula B_plt_flange: `{_format_text(note_geom.get('bp2_formula'))}`",
                         f"- Formula L_plt_flange: `{_format_text(note_geom.get('lp2_formula'))}`",
@@ -3284,10 +3306,10 @@ def _render_fully_restrained_splice_outline(
         item for item in all_rows if str(item.get("calculated_symbol", "")).strip() == "Le_blt_flange_x1"
     ]
     le_blt_flange_x1_rows.sort(key=lambda r: 0 if str(r.get("comparison_text", "")).strip() == ">=" else 1)
-    le_blt_flange_z3_rows = [
-        item for item in all_rows if str(item.get("calculated_symbol", "")).strip() == "Le_blt_flange_z3"
+    le_blt_flange_z1_rows = [
+        item for item in all_rows if str(item.get("calculated_symbol", "")).strip() == "Le_blt_flange_z1"
     ]
-    le_blt_flange_z3_rows.sort(key=lambda r: 0 if str(r.get("comparison_text", "")).strip() == ">=" else 1)
+    le_blt_flange_z1_rows.sort(key=lambda r: 0 if str(r.get("comparison_text", "")).strip() == ">=" else 1)
     le_blt_flange_z4_rows = [
         item for item in all_rows if str(item.get("calculated_symbol", "")).strip() == "Le_blt_flange_z4"
     ]
@@ -3311,6 +3333,11 @@ def _render_fully_restrained_splice_outline(
         item
         for item in all_rows
         if "Despeje horizontal F_blt_flange" in _translate_text_es(item.get("description"))
+    ]
+    h_over_tw_rows = [
+        item
+        for item in all_rows
+        if str(item.get("calculated_symbol", "")).strip() == "h/tw"
     ]
     g_blt_flange_rows = [
         item
@@ -3390,13 +3417,14 @@ def _render_fully_restrained_splice_outline(
         + le_blt_web_y31_rows[:2]
         + p_blt_flange_rows[:2]
         + le_blt_flange_x1_rows[:2]
-        + le_blt_flange_z3_rows[:2]
+        + le_blt_flange_z1_rows[:2]
         + le_blt_flange_z4_rows[:2]
         + g_blt_flange_rows[:2]
         + g1_blt_flange_rows[:2]
         + le_blt_flange_z4_c3_rows[:1]
         + le_blt_web_y31_c3_rows[:1]
         + f_blt_flange_rows[:1]
+        + h_over_tw_rows[:1]
     )
 
     def _render_simple_check(
@@ -3455,7 +3483,7 @@ def _render_fully_restrained_splice_outline(
 
     scope_summary: list[dict[str, Any]] = []
     for section_offset, scope in enumerate(scope_template, start=1):
-        lines.append(f"### 2.{section_offset} Ámbito `{scope}`")
+        lines.append(f"### 2.{section_offset} ÃƒÂmbito `{scope}`")
         lines.append("")
         if section_offset == 1:
             items_for_scope: list[dict] = viga_rows_for_step2
@@ -3512,12 +3540,12 @@ def _render_fully_restrained_splice_outline(
             }
         )
 
-    lines.append(f"### 2.{len(scope_template)+1} Resumen de chequeos por ámbito")
+    lines.append(f"### 2.{len(scope_template)+1} Resumen de chequeos por ÃƒÂ¡mbito")
     lines.append("")
     for summary in scope_summary:
         fail_numerals = summary["fail_numerals"]
         fail_text = ", ".join(fail_numerals) if fail_numerals else "ninguno"
-        status_dot = "🟢" if summary["fail"] == 0 else "🔴"
+        status_dot = chr(0x1F7E2) if summary["fail"] == 0 else chr(0x1F534)
         lines.append(
             f"- {status_dot} "
             f"`2.{summary['section_offset']}` `{summary['scope']}`: "
@@ -3545,8 +3573,10 @@ def _render_fully_restrained_splice_outline(
             ex_symbol="e3_blt_web",
             ey_symbol="e2_blt_web",
             mz_symbol="Mu1_blt_web",
-            ru_v2_label="Ru_web_v3_max_vg",
-            ru_v3_label="Ru_web_v2_max_vg",
+            bolt_var_suffix="blt_1_web",
+            ru_label="Ru_blt_1_web_vg",
+            ru_v2_label="Ru_blt_1_web_v3_max_vg",
+            ru_v3_label="Ru_blt_1_web_v2_max_vg",
             ru_component_1_suffix="v3",
             ru_component_2_suffix="v2",
         )
@@ -3567,10 +3597,10 @@ def _render_fully_restrained_splice_outline(
             ex_symbol="e3_blt_flange",
             ey_symbol="e1_blt_flange",
             mz_symbol="Mu2_blt_flange",
-            bolt_var_suffix="blt_flange",
-            ru_label="Ru_flange_vg",
-            ru_v2_label="Ru_flange_v3_max_vg",
-            ru_v3_label="Ru_flange_v1_max_vg",
+            bolt_var_suffix="blt_2_flange",
+            ru_label="Ru_blt_2_flange_vg",
+            ru_v2_label="Ru_blt_2_flange_v3_max_vg",
+            ru_v3_label="Ru_blt_2_flange_v1_max_vg",
             ru_component_1_suffix="v3",
             ru_component_2_suffix="v1",
         )
@@ -3593,6 +3623,11 @@ def _render_fully_restrained_splice_outline(
     plt1_shear_rupture_v2_note = notes_by_id_scope.get(("bbmb_splice.step5.plt1_web_shear_rupture_v2_note", "PLATINA_1"), {})
     tearout_v3_note = notes_by_id_scope.get(("bbmb_splice.step4.web_tearout_v3_note", "VIGA"), {})
     flange_tearout_v3_note = notes_by_id_scope.get(("bbmb_splice.step4.flange_tension_tearout_v3_note", "VIGA"), {})
+    flange_tearout_v1_note = notes_by_id_scope.get(("bbmb_splice.step4.flange_shear_tearout_v1_note", "VIGA"), {})
+    flange_flex_rupture_m1_note = notes_by_id_scope.get(("bbmb_splice.step4.flange_flexural_rupture_m1_note", "VIGA"), {})
+    flange_bearing_v3_note = notes_by_id_scope.get(("bbmb_splice.step4.flange_tension_bearing_v3_note", "VIGA"), {})
+    flange_bolt_shear_v3_note = notes_by_id_scope.get(("bbmb_splice.step4.flange_tension_bolt_shear_v3_note", "VIGA"), {})
+    flange_block_shear_v3_note = notes_by_id_scope.get(("bbmb_splice.step4.flange_tension_block_shear_v3_note", "VIGA"), {})
     bearing_note = notes_by_id_scope.get(("bbmb_splice.step4.web_bearing_note", "VIGA"), {})
     bearing_v3_note = notes_by_id_scope.get(("bbmb_splice.step4.web_bearing_v3_note", "VIGA"), {})
     tension_rupture_v3_note = notes_by_id_scope.get(("bbmb_splice.step4.web_tension_rupture_v3_note", "VIGA"), {})
@@ -3600,6 +3635,7 @@ def _render_fully_restrained_splice_outline(
     bolt_shear_note = notes_by_id_scope.get(("bbmb_splice.step4.web_bolt_shear_rupture_note", "VIGA"), {})
     web_shear_rupture_note = notes_by_id_scope.get(("bbmb_splice.step4.web_shear_rupture_note", "VIGA"), {})
     web_block_shear_note = notes_by_id_scope.get(("bbmb_splice.step4.web_block_shear_note", "VIGA"), {})
+    viga_combined_forces_note = notes_by_id_scope.get(("bbmb_splice.step4.viga_combined_forces_note", "VIGA"), {})
     tearout_result = _render_result_label(tearout_note.get("result_web_tearout_v2_vg"))
     ru_web_v2_max_vg_q: Quantity | None = None
     ru_web_v3_max_vg_q: Quantity | None = None
@@ -4124,6 +4160,153 @@ def _render_fully_restrained_splice_outline(
         flange_tearout_v3_result = _render_result_label("PASS" if dcr_flange_num <= 1.0 else "FAIL")
     except (TypeError, ValueError):
         pass
+    # 4.3.2 flange bearing in direction 3
+    ru2_flange_p3_vg_q = (
+        Quantity(value=ru_flange_v3_max_kip, unit="kip")
+        if isinstance(ru_flange_v3_max_kip, float)
+        else _as_quantity(flange_bearing_v3_note.get("ru2_flange_p3_vg"))
+    )
+    phi_rn2_flange_p3_vg_q = _as_quantity(flange_bearing_v3_note.get("phi_rn2_flange_p3_vg"))
+    ru2_flange_p3_vg_disp = _convert_ru_to_capacity_unit(ru2_flange_p3_vg_q, phi_rn2_flange_p3_vg_q)
+    ru2_flange_p3_vg_abs_disp: Quantity | None = None
+    if isinstance(ru2_flange_p3_vg_disp, Quantity):
+        ru2_flange_p3_vg_abs_disp = Quantity(
+            value=abs(ru2_flange_p3_vg_disp.value),
+            unit=ru2_flange_p3_vg_disp.unit,
+        )
+    dcr2_flange_p3_vg_disp = _format_text(flange_bearing_v3_note.get("dcr2_flange_p3_vg"))
+    if (
+        isinstance(ru2_flange_p3_vg_disp, Quantity)
+        and isinstance(phi_rn2_flange_p3_vg_q, Quantity)
+        and ru2_flange_p3_vg_disp.unit == phi_rn2_flange_p3_vg_q.unit
+        and abs(phi_rn2_flange_p3_vg_q.value) > 1e-12
+    ):
+        dcr2_flange_p3_vg_disp = _format_decimal(abs(ru2_flange_p3_vg_disp.value) / phi_rn2_flange_p3_vg_q.value)
+    flange_bearing_v3_result = _render_result_label(flange_bearing_v3_note.get("result2_flange_p3_vg"))
+    try:
+        dcr_flange2_num = float(dcr2_flange_p3_vg_disp)
+        flange_bearing_v3_result = _render_result_label("PASS" if dcr_flange2_num <= 1.0 else "FAIL")
+    except (TypeError, ValueError):
+        pass
+    # 4.3.3 flange bolt shear rupture in direction 3
+    ru3_flange_p3_vg_q = (
+        Quantity(value=ru_flange_v3_max_kip, unit="kip")
+        if isinstance(ru_flange_v3_max_kip, float)
+        else _as_quantity(flange_bolt_shear_v3_note.get("ru3_flange_p3_vg"))
+    )
+    phi_rn3_flange_p3_vg_q = _as_quantity(flange_bolt_shear_v3_note.get("phi_rn3_flange_p3_vg"))
+    ru3_flange_p3_vg_disp = _convert_ru_to_capacity_unit(ru3_flange_p3_vg_q, phi_rn3_flange_p3_vg_q)
+    ru3_flange_p3_vg_abs_disp: Quantity | None = None
+    if isinstance(ru3_flange_p3_vg_disp, Quantity):
+        ru3_flange_p3_vg_abs_disp = Quantity(
+            value=abs(ru3_flange_p3_vg_disp.value),
+            unit=ru3_flange_p3_vg_disp.unit,
+        )
+    dcr3_flange_p3_vg_disp = _format_text(flange_bolt_shear_v3_note.get("dcr3_flange_p3_vg"))
+    if (
+        isinstance(ru3_flange_p3_vg_disp, Quantity)
+        and isinstance(phi_rn3_flange_p3_vg_q, Quantity)
+        and ru3_flange_p3_vg_disp.unit == phi_rn3_flange_p3_vg_q.unit
+        and abs(phi_rn3_flange_p3_vg_q.value) > 1e-12
+    ):
+        dcr3_flange_p3_vg_disp = _format_decimal(abs(ru3_flange_p3_vg_disp.value) / phi_rn3_flange_p3_vg_q.value)
+    flange_bolt_shear_v3_result = _render_result_label(flange_bolt_shear_v3_note.get("result3_flange_p3_vg"))
+    try:
+        dcr_flange3_num = float(dcr3_flange_p3_vg_disp)
+        flange_bolt_shear_v3_result = _render_result_label("PASS" if dcr_flange3_num <= 1.0 else "FAIL")
+    except (TypeError, ValueError):
+        pass
+    # 4.3.4 flange block shear in direction 3
+    ru4_flange_p3_vg_q = _as_quantity(flange_block_shear_v3_note.get("ru4_flange_p3_vg"))
+    phi_rn4_flange_p3_vg_q = _as_quantity(flange_block_shear_v3_note.get("phi_rn4_flange_p3_vg"))
+    ru4_flange_p3_vg_disp = _convert_ru_to_capacity_unit(ru4_flange_p3_vg_q, phi_rn4_flange_p3_vg_q)
+    ru4_flange_p3_vg_abs_disp: Quantity | None = None
+    if isinstance(ru4_flange_p3_vg_disp, Quantity):
+        ru4_flange_p3_vg_abs_disp = Quantity(
+            value=abs(ru4_flange_p3_vg_disp.value),
+            unit=ru4_flange_p3_vg_disp.unit,
+        )
+    dcr4_flange_p3_vg_disp = _format_text(flange_block_shear_v3_note.get("dcr4_flange_p3_vg"))
+    if (
+        isinstance(ru4_flange_p3_vg_disp, Quantity)
+        and isinstance(phi_rn4_flange_p3_vg_q, Quantity)
+        and ru4_flange_p3_vg_disp.unit == phi_rn4_flange_p3_vg_q.unit
+        and abs(phi_rn4_flange_p3_vg_q.value) > 1e-12
+    ):
+        dcr4_flange_p3_vg_disp = _format_decimal(abs(ru4_flange_p3_vg_disp.value) / phi_rn4_flange_p3_vg_q.value)
+    flange_block_shear_v3_result = _render_result_label(flange_block_shear_v3_note.get("result4_flange_p3_vg"))
+    try:
+        dcr_flange4_num = float(dcr4_flange_p3_vg_disp)
+        flange_block_shear_v3_result = _render_result_label("PASS" if dcr_flange4_num <= 1.0 else "FAIL")
+    except (TypeError, ValueError):
+        pass
+    # 4.4.1 flange tearout in direction 1
+    ru_flange_v1_max_kip = _extract_step2_component_max_kip(step2_pernos2, component_key="fy_kip")
+    ru1_flange_v1_vg_q = (
+        Quantity(value=ru_flange_v1_max_kip, unit="kip")
+        if isinstance(ru_flange_v1_max_kip, float)
+        else _as_quantity(flange_tearout_v1_note.get("ru1_flange_v1_vg"))
+    )
+    phi_rn1_flange_v1_vg_q = _as_quantity(flange_tearout_v1_note.get("phi_rn1_flange_v1_vg"))
+    ru1_flange_v1_vg_disp = _convert_ru_to_capacity_unit(ru1_flange_v1_vg_q, phi_rn1_flange_v1_vg_q)
+    ru1_flange_v1_vg_abs_disp: Quantity | None = None
+    if isinstance(ru1_flange_v1_vg_disp, Quantity):
+        ru1_flange_v1_vg_abs_disp = Quantity(
+            value=abs(ru1_flange_v1_vg_disp.value),
+            unit=ru1_flange_v1_vg_disp.unit,
+        )
+    dcr1_flange_v1_vg_disp = _format_text(flange_tearout_v1_note.get("dcr1_flange_v1_vg"))
+    if (
+        isinstance(ru1_flange_v1_vg_disp, Quantity)
+        and isinstance(phi_rn1_flange_v1_vg_q, Quantity)
+        and ru1_flange_v1_vg_disp.unit == phi_rn1_flange_v1_vg_q.unit
+        and abs(phi_rn1_flange_v1_vg_q.value) > 1e-12
+    ):
+        dcr1_flange_v1_vg_disp = _format_decimal(abs(ru1_flange_v1_vg_disp.value) / phi_rn1_flange_v1_vg_q.value)
+    flange_tearout_v1_result = _render_result_label(flange_tearout_v1_note.get("result1_flange_v1_vg"))
+    try:
+        dcr_flange_v1_num = float(dcr1_flange_v1_vg_disp)
+        flange_tearout_v1_result = _render_result_label("PASS" if dcr_flange_v1_num <= 1.0 else "FAIL")
+    except (TypeError, ValueError):
+        pass
+    # 4.8.1 flange flexural rupture in beam (F13.1)
+    ru1_flange_m1_vg_q = _as_quantity(flange_flex_rupture_m1_note.get("ru1_flange_m1_vg"))
+    phi_rn1_flange_m1_vg_q = _as_quantity(flange_flex_rupture_m1_note.get("phi_rn1_flange_m1_vg"))
+    ru1_flange_m1_vg_disp = _convert_ru_to_capacity_unit(ru1_flange_m1_vg_q, phi_rn1_flange_m1_vg_q)
+    ru1_flange_m1_vg_abs_disp: Quantity | None = None
+    if isinstance(ru1_flange_m1_vg_disp, Quantity):
+        ru1_flange_m1_vg_abs_disp = Quantity(
+            value=abs(ru1_flange_m1_vg_disp.value),
+            unit=ru1_flange_m1_vg_disp.unit,
+        )
+    dcr1_flange_m1_vg_disp = _format_text(flange_flex_rupture_m1_note.get("dcr1_flange_m1_vg"))
+    if (
+        isinstance(ru1_flange_m1_vg_disp, Quantity)
+        and isinstance(phi_rn1_flange_m1_vg_q, Quantity)
+        and ru1_flange_m1_vg_disp.unit == phi_rn1_flange_m1_vg_q.unit
+        and abs(phi_rn1_flange_m1_vg_q.value) > 1e-12
+    ):
+        dcr1_flange_m1_vg_disp = _format_decimal(abs(ru1_flange_m1_vg_disp.value) / phi_rn1_flange_m1_vg_q.value)
+    flange_flex_rupture_m1_result = _render_result_label(flange_flex_rupture_m1_note.get("result1_flange_m1_vg"))
+    try:
+        dcr_flange_m1_num = float(dcr1_flange_m1_vg_disp)
+        flange_flex_rupture_m1_result = _render_result_label("PASS" if dcr_flange_m1_num <= 1.0 else "FAIL")
+    except (TypeError, ValueError):
+        pass
+    pr_over_pc_vg_disp = _format_text(viga_combined_forces_note.get("pr_over_pc"))
+    mrx_over_mcx_vg_disp = _format_text(viga_combined_forces_note.get("mrx_over_mcx"))
+    mry_over_mcy_vg_disp = _format_text(viga_combined_forces_note.get("mry_over_mcy"))
+    mrx_from_mu3_disp = _format_text(viga_combined_forces_note.get("mrx_from_mu3"))
+    dcr_451_disp = _format_text(viga_combined_forces_note.get("dcr_451"))
+    dcr_481_disp = _format_text(viga_combined_forces_note.get("dcr_481"))
+    dcr_fcomb_vg_disp = _format_text(viga_combined_forces_note.get("dcr_fcomb_vg"))
+    viga_combined_forces_result = _render_result_label(viga_combined_forces_note.get("result_fcomb_vg"))
+    try:
+        dcr_fcomb_num = float(dcr_fcomb_vg_disp)
+        dcr_fcomb_vg_disp = _format_decimal(dcr_fcomb_num)
+        viga_combined_forces_result = _render_result_label("PASS" if dcr_fcomb_num <= 1.0 else "FAIL")
+    except (TypeError, ValueError):
+        pass
     # 4.1.2 bearing (aplatamiento) metrics
     phi_rn2_web_q = _as_quantity(bearing_note.get("phi_rn2_web_v2_vg"))
     ru2_web_v2_vg_disp = _convert_ru_to_capacity_unit(ru_web_vg_q, phi_rn2_web_q)
@@ -4214,9 +4397,9 @@ def _render_fully_restrained_splice_outline(
     lines.extend(
         [
             "",
-            "## Paso 4 - Revisión de resistencia de la viga",
+            "## Paso 4 - RevisiÃƒÂ³n de resistencia de la viga",
             "",
-            "### 4.1 Revisión de capacidad a cortante en el alma en direccion 2",
+            "### 4.1 RevisiÃƒÂ³n de capacidad a cortante en el alma en direccion 2",
             "",
             "#### 4.1.1. ELR #1: Desgarramiento en la perforacion del perno",
             "",
@@ -4277,29 +4460,6 @@ def _render_fully_restrained_splice_outline(
             f"- DCR3_web_v2-v3_vg: `{dcr3_web_v2_vg_disp}`",
             f"- Resultado: {bolt_shear_result}",
             "",
-            "#### 4.1.4. ELR #4: Rotura por cortante de la viga",
-            "",
-            "- Clausula: `Documento: AISC 360-22 | Seccion: J4.2(b) (DRY: compute_element_shear_rupture_strength_j43)`",
-            (
-                "- Ecuaciones: `A_vg = d_vg*tw_vg; "
-                "Anv_web_v2_vg = A_vg - n_blt_web_y*(dh.1+1.8mm)*tw_vg; "
-                "Rn4_web_v2_vg = 0.60*Fu_vg*Anv_web_v2_vg; "
-                "phi*Rn4_web_v2_vg = phi_fragil*Rn4_web_v2_vg; "
-                "DCR4_web_v2_vg = Ru4_web_v2_vg/phi*Rn4_web_v2_vg`"
-            ),
-            f"- Fu_vg: `{_format_quantity(web_shear_rupture_note.get('fu_vg'))}`",
-            f"- tw_vg: `{_format_quantity(web_shear_rupture_note.get('tw_vg'))}`",
-            f"- A_vg: `{_format_quantity(web_shear_rupture_note.get('a_vg'))}`",
-            f"- n_blt_web_y: `{_format_text(web_shear_rupture_note.get('n_blt_web_y'))}`",
-            f"- dh.1: `{_format_quantity(web_shear_rupture_note.get('dh_1'))}`",
-            f"- Anv_web_v2_vg: `{_format_quantity(web_shear_rupture_note.get('anv_web_v2_vg'))}`",
-            f"- phi_fragil: `{_format_text(web_shear_rupture_note.get('phi_fragil'))}`",
-            f"- Rn4_web_v2_vg: `{_format_quantity(web_shear_rupture_note.get('rn4_web_v2_vg'))}`",
-            f"- phi*Rn4_web_v2_vg: `{_format_quantity(web_shear_rupture_note.get('phi_rn4_web_v2_vg'))}`",
-            f"- Ru4_web_v2_vg = Vu2_sp: `{_format_quantity(ru4_web_v2_vg_abs_disp.model_dump() if isinstance(ru4_web_v2_vg_abs_disp, Quantity) else None)}`",
-            f"- DCR4_web_v2_vg: `{dcr4_web_v2_vg_disp}`",
-            f"- Resultado: {web_shear_rupture_result}",
-            "",
             "#### 4.1.5. ELR #5: Bloque de cortante en alma de viga",
             "",
             "- Clausula: `Documento: AISC 360-22w | Seccion: J4.3 (DRY: compute_block_shear_strength_j45)`",
@@ -4340,7 +4500,7 @@ def _render_fully_restrained_splice_outline(
             f"- DCR5_web_v2_vg: `{dcr5_web_v2_vg_disp}`",
             f"- Resultado: `{web_block_shear_result_text}`",
             "",
-            "### 4.2 Revisión de capacidad a traccion en el alma en direccion 3",
+            "### 4.2 RevisiÃƒÂ³n de capacidad a traccion en el alma en direccion 3",
             "",
             "#### 4.2.1. ELR #1: Desgarramiento en la perforacion del perno",
             "",
@@ -4364,41 +4524,6 @@ def _render_fully_restrained_splice_outline(
             f"- Ru1_web_v3_vg = Ru_web_v3_max_vg: `{_format_quantity(ru1_web_v3_vg_abs_disp.model_dump() if isinstance(ru1_web_v3_vg_abs_disp, Quantity) else None)}`",
             f"- DCR1_web_v3_vg: `{dcr1_web_v3_vg_disp}`",
             f"- Resultado: {tearout_v3_result}",
-            "",
-            "#### 4.2.2. ELR #2: Rotura por traccion de la viga",
-            "",
-            "- Clausula: `Documento: AISC 360-22 | Seccion: J4.1.(b)`",
-            (
-                "- Ecuaciones: `si 2*g_blt_web*(n_blt_web_x - 1)*sqrt(3)/3 + (n_blt_web_y - 1)*p_blt_web - n_blt_web_y*(dh.1 + 1.80mm) <= T_vg -> "
-                "Ant_v3_vg = tw_vg*(2*g_blt_web*(n_blt_web_x - 1)*sqrt(3)/3 + (n_blt_web_y - 1)*p_blt_web - n_blt_web_y*(dh.1 + 1.80mm)); "
-                "si no -> Ant_v3_vg = A_vg - n_blt_web_y*(dh.1 + 1.80mm)*tw_vg; "
-                "si n_blt_web_x <= 1 -> U_v3_vg = T_vg*tw_vg/A_vg; "
-                "si n_blt_web_x > 1 -> U_v3_vg = 1 - 0.5*tw_vg/(n_blt_web_x*g_blt_web); "
-                "Ae_v3_vg = Ant_v3_vg*U_v3_vg; "
-                "Rn3_v3_vg = Fu_vg*Ae_v3_vg; "
-                "phi*Rn3_v3_vg = phi_fragil*Rn3_v3_vg; "
-                "Ru3_v3_vg = Pu_sp*alpha_Pu_web; "
-                "DCR3_v3_vg = Ru3_v3_vg/phi*Rn3_v3_vg`"
-            ),
-            f"- Fu_vg: `{_format_quantity(tension_rupture_v3_note.get('fu_vg'))}`",
-            f"- T_vg: `{_format_quantity(tension_rupture_v3_note.get('t_vg'))}`",
-            f"- tw_vg: `{_format_quantity(tension_rupture_v3_note.get('tw_vg'))}`",
-            f"- A_vg: `{_format_quantity(tension_rupture_v3_note.get('a_vg'))}`",
-            f"- n_blt_web_y: `{_format_text(tension_rupture_v3_note.get('n_blt_web_y'))}`",
-            f"- dh.1: `{_format_quantity(tension_rupture_v3_note.get('dh_1'))}`",
-            f"- Ant_v3_vg: `{_format_quantity(tension_rupture_v3_note.get('ant_v3_vg'))}`",
-            f"- n_blt_web_x: `{_format_text(tension_rupture_v3_note.get('n_blt_web_x'))}`",
-            f"- g_blt_web: `{_format_quantity(tension_rupture_v3_note.get('g_blt_web'))}`",
-            f"- U_v3_vg: `{_format_text(tension_rupture_v3_note.get('u_v3_vg'))}`",
-            f"- Ae_v3_vg: `{_format_quantity(tension_rupture_v3_note.get('ae_v3_vg'))}`",
-            f"- phi_fragil: `{_format_text(tension_rupture_v3_note.get('phi_fragil'))}`",
-            f"- Rn3_v3_vg: `{_format_quantity(tension_rupture_v3_note.get('rn3_v3_vg'))}`",
-            f"- phi*Rn3_v3_vg: `{_format_quantity(tension_rupture_v3_note.get('phi_rn3_v3_vg'))}`",
-            f"- Pu_sp: `{_format_quantity(tension_rupture_v3_note.get('pu_sp'))}`",
-            f"- alpha_Pu_web: `{_format_text(tension_rupture_v3_note.get('alpha_pu_web'))}`",
-            f"- Ru3_v3_vg = Pu_sp*alpha_Pu_web: `{_format_quantity(ru3_v3_vg_abs_disp.model_dump() if isinstance(ru3_v3_vg_abs_disp, Quantity) else None)}`",
-            f"- DCR3_v3_vg: `{dcr3_v3_vg_disp}`",
-            f"- Resultado: {tension_rupture_v3_result}",
             "",
             "#### 4.2.3. ELR #3: Bloque de cortante en alma de viga",
             "",
@@ -4440,7 +4565,7 @@ def _render_fully_restrained_splice_outline(
             f"- DCR4_web_v3_vg: `{dcr4_web_v3_vg_disp}`",
             f"- Resultado: {block_shear_v3_result}",
             "",
-            "### 4.3 Revisión de capacidad a tracción en el ala en direccion 3",
+            "### 4.3 RevisiÃƒÂ³n de capacidad a tracciÃƒÂ³n en el ala en direccion 3",
             "",
             "#### 4.3.1. ELR #1: Desgarramiento en la perforacion del perno",
             "",
@@ -4470,9 +4595,252 @@ def _render_fully_restrained_splice_outline(
             f"- DCR1_flange_p3_vg: `{dcr1_flange_p3_vg_disp}`",
             f"- Resultado: {flange_tearout_v3_result}",
             "",
-            "## Paso 5 - Revisión de resistencia de la platina 1 de alma",
+            "#### 4.3.2. ELR #2: Aplastamiento en la perforacion del perno",
             "",
-            "### 5.1 Revisión de capacidad a cortante en la platina 1 de alma en direccion 2",
+            "- Clausula: `Documento: AISC 360-22 | Seccion: J3.11a.(a) (DRY: compute_bolt_hole_bearing_strength_j36)`",
+            (
+                "- Ecuaciones: `Rn2_flange_p3_vg = C*db_blt_flange*tf_vg*Fu_vg; "
+                "phi*Rn2_flange_p3_vg = phi_pr*Rn2_flange_p3_vg; "
+                "Ru2_flange_p3(+)_vg = Ru_blt_2_flange_vg (tomado de 3.2); "
+                "DCR2_flange_p3_vg = Ru2_flange_p3(+)_vg/phi*Rn2_flange_p3_vg`"
+            ),
+            f"- Fu_vg: `{_format_quantity(flange_bearing_v3_note.get('fu_vg'))}`",
+            f"- tf_vg: `{_format_quantity(flange_bearing_v3_note.get('tf_vg'))}`",
+            f"- db_blt_flange: `{_format_quantity(flange_bearing_v3_note.get('db_blt_flange'))}`",
+            f"- C: `{_format_text(flange_bearing_v3_note.get('coefficient'))}`",
+            f"- phi_pr: `{_format_text(flange_bearing_v3_note.get('phi_pr'))}`",
+            f"- Rn2_flange_p3_vg: `{_format_quantity(flange_bearing_v3_note.get('rn2_flange_p3_vg'))}`",
+            f"- phi*Rn2_flange_p3_vg: `{_format_quantity(flange_bearing_v3_note.get('phi_rn2_flange_p3_vg'))}`",
+            f"- Ru2_flange_p3(+)_vg: `{_format_quantity(ru2_flange_p3_vg_abs_disp.model_dump() if isinstance(ru2_flange_p3_vg_abs_disp, Quantity) else None)}`",
+            f"- DCR2_flange_p3_vg: `{dcr2_flange_p3_vg_disp}`",
+            f"- Resultado: {flange_bearing_v3_result}",
+            "",
+            "#### 4.3.3. ELR #3: Rotura por cortante en el perno",
+            "",
+            "- Clausula: `Documento: AISC 360-22 | Seccion: J3.7 (DRY: compute_bolt_shear_rupture_capacity_per_bolt)`",
+            (
+                "- Ecuaciones: `Rn3_flange_p3_vg = Ab_blt_flange*Fnv_blt_flange; "
+                "phi*Rn3_flange_p3_vg = phi_pr*Rn3_flange_p3_vg; "
+                "Ru3_flange_p3(+)_vg = Ru_blt_2_flange_vg (tomado de 3.2); "
+                "DCR3_flange_p3_vg = Ru3_flange_p3(+)_vg/phi*Rn3_flange_p3_vg`"
+            ),
+            f"- db_blt_flange: `{_format_quantity(flange_bolt_shear_v3_note.get('db_blt_flange'))}`",
+            f"- Ab_blt_flange: `{_format_quantity(flange_bolt_shear_v3_note.get('ab_blt_flange'))}`",
+            f"- Fnv_blt_flange: `{_format_quantity(flange_bolt_shear_v3_note.get('fnv_blt_flange'))}`",
+            f"- phi_pr: `{_format_text(flange_bolt_shear_v3_note.get('phi_pr'))}`",
+            f"- Rn3_flange_p3_vg: `{_format_quantity(flange_bolt_shear_v3_note.get('rn3_flange_p3_vg'))}`",
+            f"- phi*Rn3_flange_p3_vg: `{_format_quantity(flange_bolt_shear_v3_note.get('phi_rn3_flange_p3_vg'))}`",
+            f"- Ru3_flange_p3(+)_vg: `{_format_quantity(ru3_flange_p3_vg_abs_disp.model_dump() if isinstance(ru3_flange_p3_vg_abs_disp, Quantity) else None)}`",
+            f"- DCR3_flange_p3_vg: `{dcr3_flange_p3_vg_disp}`",
+            f"- Resultado: {flange_bolt_shear_v3_result}",
+            "",
+            "#### 4.3.4. ELR #4: Bloque de cortante en ala de viga",
+            "",
+            "- Clausula: `Documento: AISC 360-22 | Seccion: J4.3 (DRY: compute_block_shear_strength_j45)`",
+            (
+                "- Ecuaciones: `Caso 1 -> Agt1_flange_v3_vg = 2*(Le_blt_flange_z1*tf_vg); "
+                "Ant1_flange_v3_vg = Agt1_flange_v3_vg - 2*tf_vg*0.5*(dh.2 + 1.80mm); "
+                "Agv1_flange_v3_vg = 2*tf_vg*(Le_blt_flange_x1 + (n_blt_flange_x - 1)*p_blt_flange); "
+                "Anv1_flange_v3_vg = Agv1_flange_v3_vg - 2*tf_vg*(n_blt_flange_x - 0.5)*(dh.2 + 1.80mm); "
+                "Caso 2 -> Agt2_flange_v3_vg = 0.5*(A_g - (d_vg - 2*kdes_vg)*tw_vg); "
+                "Ant2_flange_v3_vg = Agt2_flange_v3_vg - n_blt_flange_z*tf_vg*(dh.2 + 1.80mm); "
+                "Agv2_flange_v3_vg = tw_vg*(Le_blt_flange_x1 + (n_blt_flange_x - 1)*p_blt_flange); "
+                "Anv2_flange_v3_vg = Agv2_flange_v3_vg; "
+                "phi*Rn4_flange_p3_vg = min(phi*Rn4_case1_flange_p3_vg, phi*Rn4_case2_flange_p3_vg); "
+                "Ru4_flange_p3(+)_vg = (1- alpha_Pu_web)*Pu_sp + Mu3_sp/(d_vg - tf_vg), si <0 entonces 0; "
+                "DCR4_flange_p3_vg = Ru4_flange_p3(+)_vg/phi*Rn4_flange_p3_vg`"
+            ),
+            f"- Fu_vg: `{_format_quantity(flange_block_shear_v3_note.get('fu_vg'))}`",
+            f"- Fy_vg: `{_format_quantity(flange_block_shear_v3_note.get('fy_vg'))}`",
+            f"- tf_vg: `{_format_quantity(flange_block_shear_v3_note.get('tf_vg'))}`",
+            f"- tw_vg: `{_format_quantity(flange_block_shear_v3_note.get('tw_vg'))}`",
+            f"- d_vg: `{_format_quantity(flange_block_shear_v3_note.get('d_vg'))}`",
+            f"- kdes_vg: `{_format_quantity(flange_block_shear_v3_note.get('kdes_vg'))}`",
+            f"- A_g: `{_format_quantity(flange_block_shear_v3_note.get('a_g'))}`",
+            f"- n_blt_flange_x: `{_format_text(flange_block_shear_v3_note.get('n_blt_flange_x'))}`",
+            f"- n_blt_flange_z: `{_format_text(flange_block_shear_v3_note.get('n_blt_flange_z'))}`",
+            f"- p_blt_flange: `{_format_quantity(flange_block_shear_v3_note.get('p_blt_flange'))}`",
+            f"- Le_blt_flange_x1: `{_format_quantity(flange_block_shear_v3_note.get('le_blt_flange_x1'))}`",
+            f"- Le_blt_flange_z1: `{_format_quantity(flange_block_shear_v3_note.get('le_blt_flange_z1'))}`",
+            f"- dh.2: `{_format_quantity(flange_block_shear_v3_note.get('dh_2'))}`",
+            f"- Ubs_flange_v3_vg (inp): `{_format_text(flange_block_shear_v3_note.get('ubs_flange_v3_vg'))}`",
+            f"- Ubs_flange_v1_vg (inp): `{_format_text(flange_block_shear_v3_note.get('ubs_flange_v1_vg'))}`",
+            f"- Agt1_flange_v3_vg: `{_format_quantity(flange_block_shear_v3_note.get('agt1_flange_v3_vg'))}`",
+            f"- Ant1_flange_v3_vg: `{_format_quantity(flange_block_shear_v3_note.get('ant1_flange_v3_vg'))}`",
+            f"- Agv1_flange_v3_vg: `{_format_quantity(flange_block_shear_v3_note.get('agv1_flange_v3_vg'))}`",
+            f"- Anv1_flange_v3_vg: `{_format_quantity(flange_block_shear_v3_note.get('anv1_flange_v3_vg'))}`",
+            f"- phi*Rn4_case1_flange_p3_vg: `{_format_quantity(flange_block_shear_v3_note.get('phi_rn4_case1_flange_p3_vg'))}`",
+            f"- Agt2_flange_v3_vg: `{_format_quantity(flange_block_shear_v3_note.get('agt2_flange_v3_vg'))}`",
+            f"- Ant2_flange_v3_vg: `{_format_quantity(flange_block_shear_v3_note.get('ant2_flange_v3_vg'))}`",
+            f"- Agv2_flange_v3_vg: `{_format_quantity(flange_block_shear_v3_note.get('agv2_flange_v3_vg'))}`",
+            f"- Anv2_flange_v3_vg: `{_format_quantity(flange_block_shear_v3_note.get('anv2_flange_v3_vg'))}`",
+            f"- phi*Rn4_case2_flange_p3_vg: `{_format_quantity(flange_block_shear_v3_note.get('phi_rn4_case2_flange_p3_vg'))}`",
+            f"- Caso control: `{_format_text(flange_block_shear_v3_note.get('controlling_case_flange_p3_vg'))}`",
+            f"- phi_pr: `{_format_text(flange_block_shear_v3_note.get('phi_pr'))}`",
+            f"- phi*Rn4_flange_p3_vg: `{_format_quantity(flange_block_shear_v3_note.get('phi_rn4_flange_p3_vg'))}`",
+            f"- Ru4_flange_p3(+)_vg: `{_format_quantity(ru4_flange_p3_vg_abs_disp.model_dump() if isinstance(ru4_flange_p3_vg_abs_disp, Quantity) else None)}`",
+            f"- DCR4_flange_p3_vg: `{dcr4_flange_p3_vg_disp}`",
+            f"- Resultado: {flange_block_shear_v3_result}",
+            "",
+            "### 4.4 RevisiÃ³n de capacidad a cortante en el ala en direcciÃ³n 1",
+            "",
+            "#### 4.4.1. ELR #1: Desgarramiento en la perforacion del perno",
+            "",
+            "- Clausula: `Documento: AISC 360-22 | Seccion: J3.11a.(b) (DRY: compute_bolt_hole_tearout_strength_j36)`",
+            (
+                "- Ecuaciones: `si n_blt_flange_z >= 2 -> lc_flange_v1_vg = min(g_blt_flange - dh.2, Le_blt_flange_z1 - 0.5*dh.2); "
+                "si n_blt_flange_z = 1 -> lc_flange_v1_vg = Le_blt_flange_z1 - 0.5*dh.2; "
+                "Rn1_flange_v1_vg = C*lc_flange_v1_vg*tf_vg*Fu_vg; "
+                "phi*Rn1_flange_v1_vg = phi_pr*Rn1_flange_v1_vg; "
+                "Ru1_flange_v1_vg = Ru_blt_2_flange_v1_max_vg (tomado de 3.2); "
+                "DCR1_flange_v1_vg = Ru1_flange_v1_vg/phi*Rn1_flange_v1_vg`"
+            ),
+            f"- Fu_vg: `{_format_quantity(flange_tearout_v1_note.get('fu_vg'))}`",
+            f"- tf_vg: `{_format_quantity(flange_tearout_v1_note.get('tf_vg'))}`",
+            f"- g_blt_flange: `{_format_quantity(flange_tearout_v1_note.get('g_blt_flange'))}`",
+            f"- n_blt_flange_z: `{_format_text(flange_tearout_v1_note.get('n_blt_flange_z'))}`",
+            f"- Le_blt_flange_z1: `{_format_quantity(flange_tearout_v1_note.get('le_blt_flange_z1'))}`",
+            f"- dh.2: `{_format_quantity(flange_tearout_v1_note.get('dh_2'))}`",
+            f"- lc_flange_v1_vg: `{_format_quantity(flange_tearout_v1_note.get('lc_flange_v1_vg'))}`",
+            f"- C: `{_format_text(flange_tearout_v1_note.get('coefficient'))}`",
+            f"- phi_pr: `{_format_text(flange_tearout_v1_note.get('phi_pr'))}`",
+            f"- Rn1_flange_v1_vg: `{_format_quantity(flange_tearout_v1_note.get('rn1_flange_v1_vg'))}`",
+            f"- phi*Rn1_flange_v1_vg: `{_format_quantity(flange_tearout_v1_note.get('phi_rn1_flange_v1_vg'))}`",
+            f"- Ru1_flange_v1_vg: `{_format_quantity(ru1_flange_v1_vg_abs_disp.model_dump() if isinstance(ru1_flange_v1_vg_abs_disp, Quantity) else None)}`",
+            f"- DCR1_flange_v1_vg: `{dcr1_flange_v1_vg_disp}`",
+            f"- Resultado: {flange_tearout_v1_result}",
+            "",
+            "### 4.5 RevisiÃ³n de capacidad a tracciÃ³n de la viga en direcciÃ³n 3",
+            "",
+            "#### 4.5.1. ELR #2: Rotura por traccion de la viga",
+            "",
+            "- Clausula: `Documento: AISC 360-22 | Seccion: J4.1.(b)`",
+            (
+                "- Ecuaciones: `si 2*g_blt_web*(n_blt_web_x - 1)*sqrt(3)/3 + (n_blt_web_y - 1)*p_blt_web - n_blt_web_y*(dh.1 + 1.80mm) <= T_vg -> "
+                "Ant_v3_vg = tw_vg*(2*g_blt_web*(n_blt_web_x - 1)*sqrt(3)/3 + (n_blt_web_y - 1)*p_blt_web - n_blt_web_y*(dh.1 + 1.80mm)); "
+                "si no -> Ant_v3_vg = A_vg - n_blt_web_y*(dh.1 + 1.80mm)*tw_vg; "
+                "si n_blt_web_x <= 1 -> U_v3_vg = T_vg*tw_vg/A_vg; "
+                "si n_blt_web_x > 1 -> U_v3_vg = 1 - 0.5*tw_vg/(n_blt_web_x*g_blt_web); "
+                "Ae_v3_vg = Ant_v3_vg*U_v3_vg; "
+                "Rn3_v3_vg = Fu_vg*Ae_v3_vg; "
+                "phi*Rn3_v3_vg = phi_fragil*Rn3_v3_vg; "
+                "Ru3_v3_vg = Pu_sp; "
+                "DCR3_v3_vg = Ru3_v3_vg/phi*Rn3_v3_vg`"
+            ),
+            f"- Fu_vg: `{_format_quantity(tension_rupture_v3_note.get('fu_vg'))}`",
+            f"- T_vg: `{_format_quantity(tension_rupture_v3_note.get('t_vg'))}`",
+            f"- tw_vg: `{_format_quantity(tension_rupture_v3_note.get('tw_vg'))}`",
+            f"- A_vg: `{_format_quantity(tension_rupture_v3_note.get('a_vg'))}`",
+            f"- n_blt_web_y: `{_format_text(tension_rupture_v3_note.get('n_blt_web_y'))}`",
+            f"- dh.1: `{_format_quantity(tension_rupture_v3_note.get('dh_1'))}`",
+            f"- Ant_v3_vg: `{_format_quantity(tension_rupture_v3_note.get('ant_v3_vg'))}`",
+            f"- n_blt_web_x: `{_format_text(tension_rupture_v3_note.get('n_blt_web_x'))}`",
+            f"- g_blt_web: `{_format_quantity(tension_rupture_v3_note.get('g_blt_web'))}`",
+            f"- U_v3_vg: `{_format_text(tension_rupture_v3_note.get('u_v3_vg'))}`",
+            f"- Ae_v3_vg: `{_format_quantity(tension_rupture_v3_note.get('ae_v3_vg'))}`",
+            f"- phi_fragil: `{_format_text(tension_rupture_v3_note.get('phi_fragil'))}`",
+            f"- Rn3_v3_vg: `{_format_quantity(tension_rupture_v3_note.get('rn3_v3_vg'))}`",
+            f"- phi*Rn3_v3_vg: `{_format_quantity(tension_rupture_v3_note.get('phi_rn3_v3_vg'))}`",
+            f"- Pu_sp: `{_format_quantity(tension_rupture_v3_note.get('pu_sp'))}`",
+            f"- Ru3_v3_vg = Pu_sp: `{_format_quantity(ru3_v3_vg_abs_disp.model_dump() if isinstance(ru3_v3_vg_abs_disp, Quantity) else None)}`",
+            f"- DCR3_v3_vg: `{dcr3_v3_vg_disp}`",
+            f"- Resultado: {tension_rupture_v3_result}",
+            "",
+            "",
+            "### 4.6 RevisiÃ³n de capacidad a cortante de la viga en direcciÃ³n 2",
+            "#### 4.6.1. ELR #4: Rotura por cortante de la viga",
+            "",
+            "- Clausula: `Documento: AISC 360-22 | Seccion: J4.2(b) (DRY: compute_element_shear_rupture_strength_j43)`",
+            (
+                "- Ecuaciones: `A_vg = d_vg*tw_vg; "
+                "Anv_v2_vg = A_vg - n_blt_web_y*(dh.1+1.8mm)*tw_vg; "
+                "Rn1_v2_vg = 0.60*Fu_vg*Anv_v2_vg; "
+                "phi*Rn1_v2_vg = phi_fragil*Rn1_v2_vg; "
+                "DCR1_v2_vg = Ru1_v2_vg/phi*Rn1_v2_vg`"
+            ),
+            f"- Fu_vg: `{_format_quantity(web_shear_rupture_note.get('fu_vg'))}`",
+            f"- tw_vg: `{_format_quantity(web_shear_rupture_note.get('tw_vg'))}`",
+            f"- A_vg: `{_format_quantity(web_shear_rupture_note.get('a_vg'))}`",
+            f"- n_blt_web_y: `{_format_text(web_shear_rupture_note.get('n_blt_web_y'))}`",
+            f"- dh.1: `{_format_quantity(web_shear_rupture_note.get('dh_1'))}`",
+            f"- Anv_v2_vg: `{_format_quantity(web_shear_rupture_note.get('anv_web_v2_vg'))}`",
+            f"- phi_fragil: `{_format_text(web_shear_rupture_note.get('phi_fragil'))}`",
+            f"- Rn1_v2_vg: `{_format_quantity(web_shear_rupture_note.get('rn4_web_v2_vg'))}`",
+            f"- phi*Rn1_v2_vg: `{_format_quantity(web_shear_rupture_note.get('phi_rn4_web_v2_vg'))}`",
+            f"- Ru1_v2_vg = Vu2_sp: `{_format_quantity(ru4_web_v2_vg_abs_disp.model_dump() if isinstance(ru4_web_v2_vg_abs_disp, Quantity) else None)}`",
+            f"- DCR1_v2_vg: `{dcr4_web_v2_vg_disp}`",
+            f"- Resultado: {web_shear_rupture_result}",
+            "",
+            "### 4.7 RevisiÃ³n de capacidad a cortante de la viga en direcciÃ³n 1",
+            "",
+            "- Pendiente de desarrollo en esta versiÃ³n.",
+            "",
+            "### 4.8 RevisiÃ³n de capacidad a flexiÃ³n de la viga en direcciÃ³n 1",
+            "",
+            "#### 4.8.1. ELR #1: Rotura por flexion",
+            "",
+            "- Clausula: `Documento: AISC 360-22 | Seccion: F13.1 (DRY: compute_member_flexural_rupture_with_tension_flange_holes_f131)`",
+            (
+                "- Ecuaciones: `Afg_m1_vg = tf_vg*bf_vg; "
+                "Afn_m1_vg = Afg_m1_vg - 2*n_blt_flange_z*(dh.2 + 1.80mm)*tf_vg; "
+                "Yf = 1.0 si Fy/Fu <= 0.8, 1.1 en otro caso; "
+                "si Fu*Afn >= Yf*Fy*Agf -> limite F13.1 no aplica; "
+                "si Fu*Afn < Yf*Fy*Agf -> Rn1_m1_vg = (Fu_vg*Afn_m1_vg/Afg_m1_vg)*Sx_vg; "
+                "phi*Rn1_m1_vg = phi_no_ductil*Rn1_m1_vg; "
+                "Ru1_m1_vg = Mu3_sp; "
+                "DCR1_m1_vg = Ru1_m1_vg/phi*Rn1_m1_vg`"
+            ),
+            f"- Fu_vg: `{_format_quantity(flange_flex_rupture_m1_note.get('fu_vg'))}`",
+            f"- Fy_vg: `{_format_quantity(flange_flex_rupture_m1_note.get('fy_vg'))}`",
+            f"- tf_vg: `{_format_quantity(flange_flex_rupture_m1_note.get('tf_vg'))}`",
+            f"- bf_vg: `{_format_quantity(flange_flex_rupture_m1_note.get('bf_vg'))}`",
+            f"- n_blt_flange_z: `{_format_text(flange_flex_rupture_m1_note.get('n_blt_flange_z'))}`",
+            f"- dh.2: `{_format_quantity(flange_flex_rupture_m1_note.get('dh_2'))}`",
+            f"- Afg_m1_vg: `{_format_quantity(flange_flex_rupture_m1_note.get('afg_flange_m1_vg'))}`",
+            f"- Afn_m1_vg: `{_format_quantity(flange_flex_rupture_m1_note.get('afn_flange_m1_vg'))}`",
+            f"- Sx_vg: `{_format_quantity(flange_flex_rupture_m1_note.get('sx_vg'))}`",
+            f"- Yf: `{_format_text(flange_flex_rupture_m1_note.get('yf'))}`",
+            f"- Fy/Fu: `{_format_text(flange_flex_rupture_m1_note.get('fy_over_fu'))}`",
+            f"- Fu*Afn: `{_format_quantity(flange_flex_rupture_m1_note.get('lhs_fu_afn'))}`",
+            f"- Yf*Fy*Agf: `{_format_quantity(flange_flex_rupture_m1_note.get('rhs_yf_fy_agf'))}`",
+            f"- F13.1 aplica: `{_format_text(flange_flex_rupture_m1_note.get('limit_applies'))}`",
+            f"- phi_no_ductil: `{_format_text(flange_flex_rupture_m1_note.get('phi_no_ductil'))}`",
+            f"- Rn1_m1_vg: `{_format_quantity(flange_flex_rupture_m1_note.get('rn1_flange_m1_vg'))}`",
+            f"- phi*Rn1_m1_vg: `{_format_quantity(flange_flex_rupture_m1_note.get('phi_rn1_flange_m1_vg'))}`",
+            f"- Ru1_m1_vg: `{_format_quantity(ru1_flange_m1_vg_abs_disp.model_dump() if isinstance(ru1_flange_m1_vg_abs_disp, Quantity) else None)}`",
+            f"- DCR1_m1_vg: `{dcr1_flange_m1_vg_disp}`",
+            f"- Resultado: {flange_flex_rupture_m1_result}",
+            "",
+            "### 4.9 Revisi?n de capacidad bajo la acci?n de fuerzas combinadas en la viga",
+            "",
+            "#### 4.9.1. ELR #1: Interacci?n entre cargas en la viga",
+            "",
+            "- Clausula: `Documento: AISC 360-22 | Seccion: H1.1 (DRY: compute_member_combined_interaction_h11)`",
+            (
+                "- Ecuaciones: `si Pu_sp >= 0 -> Pr/(phiPc) = DCR_4.5.1 (hasta implementar 4.5.2); "
+                "si Pu_sp < 0 -> Pr/(phiPc) = Pu_sp/phiPnc; "
+                "Mrx/Mcx = max(|Mu3_sp|/phiMn3, DCR_4.8.1); "
+                "Mry/Mcy = 0; "
+                "si Pr/Pc >= 0.2 -> H1-1a = Pr/Pc + (8/9)*(Mrx/Mcx + Mry/Mcy); "
+                "si Pr/Pc < 0.2 -> H1-1b = Pr/(2*Pc) + (Mrx/Mcx + Mry/Mcy)`"
+            ),
+            f"- Pu_sp: `{_format_quantity(viga_combined_forces_note.get('pu_sp'))}`",
+            f"- phiPnc: `{_format_quantity(viga_combined_forces_note.get('phi_pnc'))}`",
+            f"- phiMn3: `{_format_quantity(viga_combined_forces_note.get('phi_mn3'))}`",
+            f"- phiMn2: `{_format_quantity(viga_combined_forces_note.get('phi_mn2'))}`",
+            f"- DCR_4.5.1: `{dcr_451_disp}`",
+            f"- DCR_4.8.1: `{dcr_481_disp}`",
+            f"- |Mu3_sp|/phiMn3: `{mrx_from_mu3_disp}`",
+            f"- Pr/(phiPc): `{pr_over_pc_vg_disp}`",
+            f"- Mrx/Mcx: `{mrx_over_mcx_vg_disp}`",
+            f"- Mry/Mcy: `{mry_over_mcy_vg_disp}`",
+            f"- Ecuacion gobernante: `{_format_text(viga_combined_forces_note.get('equation_used'))}`",
+            f"- DCR_Fcomb_vg: `{dcr_fcomb_vg_disp}`",
+            f"- Resultado: {viga_combined_forces_result}",
+            "",
+            "## Paso 5 - RevisiÃ³n de resistencia de la platina 1 de alma",
+            "",
+            "### 5.1 RevisiÃƒÂ³n de capacidad a cortante en la platina 1 de alma en direccion 2",
             "",
             "#### 5.1.1. ELR #1: Desgarramiento en la perforacion del perno",
             "",
@@ -4621,7 +4989,7 @@ def _render_fully_restrained_splice_outline(
             f"- DCR6_plt_v2_web: `{dcr6_plt_v2_web_disp}`",
             f"- Resultado: {plt1_shear_rupture_v2_result}",
             "",
-            "### 5.2 Revisión de capacidad a traccion en la platina 1 de alma en direccion 3",
+            "### 5.2 RevisiÃƒÂ³n de capacidad a traccion en la platina 1 de alma en direccion 3",
             "",
             "#### 5.2.1. ELR #1: Desgarramiento en la perforacion del perno",
             "",
@@ -4715,7 +5083,7 @@ def _render_fully_restrained_splice_outline(
             f"- DCR3_plt_v3_web: `{dcr3_plt_v3_web_disp}`",
             f"- Resultado: {plt1_tension_yielding_v3_result}",
             "",
-            "#### 5.2.4. ELR #4: Rotura por tracción en la platina 1 de alma",
+            "#### 5.2.4. ELR #4: Rotura por tracciÃƒÂ³n en la platina 1 de alma",
             "",
             "- Clausula: `Documento: AISC 360-22 | Seccion: J4.1(b) (DRY: compute_element_tension_rupture_strength_j41b)`",
             (
@@ -4751,7 +5119,7 @@ def _render_fully_restrained_splice_outline(
             f"- DCR4_plt_v3_web: `{dcr4_plt_v3_web_disp}`",
             f"- Resultado: {plt1_tension_rupture_v3_result}",
             "",
-            "### 5.3 Revisión de capacidad a compresión en la platina 1 de alma",
+            "### 5.3 RevisiÃƒÂ³n de capacidad a compresiÃƒÂ³n en la platina 1 de alma",
             "",
             "#### 5.3.1. ELR #1: Pandeo por flexion en la platina 1 de alma",
             "",
@@ -4782,7 +5150,7 @@ def _render_fully_restrained_splice_outline(
             f"- DCR1_plt_p3(-)_web: `{dcr1_plt_p3_minus_web_disp}`",
             f"- Resultado: {plt1_comp_buckling_p3_minus_result}",
             "",
-            "### 5.4 Revisión de capacidad a flexión en la platina 1 de alma alrededor de 1",
+            "### 5.4 RevisiÃƒÂ³n de capacidad a flexiÃƒÂ³n en la platina 1 de alma alrededor de 1",
             "",
             "#### 5.4.1. ELR #1: Fluencia por flexion en la platina 1 de alma",
             "",
@@ -4885,7 +5253,7 @@ def _render_fully_restrained_splice_outline(
             f"- DCR3_plt_m1_web: `{dcr3_plt_m1_web_disp}`",
             f"- Resultado: {plt1_flex_rupture_m1_result}",
             "",
-            "### 5.5 Revisión de capacidad bajo al accion de fuerzas combinadas en la platina 1 de alma",
+            "### 5.5 RevisiÃƒÂ³n de capacidad bajo al accion de fuerzas combinadas en la platina 1 de alma",
             "",
             "#### 5.5.1. ELR #1: Interaccion entre cargas en la platina 1 de alma",
             "",
@@ -5200,7 +5568,7 @@ def _render_step_1_list_grouped_by_scope(
     for summary in scope_summary:
         fail_numerals = summary["fail_numerals"]
         fail_text = ", ".join(fail_numerals) if fail_numerals else "ninguno"
-        status_dot = "🟢" if summary["fail"] == 0 else "🔴"
+        status_dot = chr(0x1F7E2) if summary["fail"] == 0 else chr(0x1F534)
         lines.append(
             f"- {status_dot} "
                 f"`{chapter_number}.{summary['section_offset']}` `{summary['scope']}`: "
@@ -5255,7 +5623,7 @@ def _render_scope_subtitles_only(*, chapter_number: int, scopes: list[str]) -> s
         elif chapter_number == 1 and scope == "DOUBLER_PLATE_COL":
             lines.append(f"### {chapter_number}.{section_offset} platina de enchape del alma")
         else:
-            lines.append(f"### {chapter_number}.{section_offset} Ámbito `{scope}`")
+            lines.append(f"### {chapter_number}.{section_offset} ÃƒÂmbito `{scope}`")
         lines.append("")
     return "\n".join(lines)
 
@@ -5300,7 +5668,7 @@ def _render_step_1_notes_by_scope_template(
         elif chapter_number == 1 and scope == "DOUBLER_PLATE_COL":
             lines.append(f"### {chapter_number}.{section_offset} platina de enchape del alma")
         else:
-            lines.append(f"### {chapter_number}.{section_offset} Ámbito `{scope}`")
+            lines.append(f"### {chapter_number}.{section_offset} ÃƒÂmbito `{scope}`")
         lines.append("")
         if chapter_number == 1 and scope == "BEAM_IZQ":
             rows_map: dict[str, dict] = {}
@@ -6547,7 +6915,7 @@ def render_memory_markdown(result: DetailedRunResult) -> str:
         if isinstance(value, bool):
             return value
         if isinstance(value, str):
-            return value.strip().lower() in {"true", "1", "yes", "si", "sí"}
+            return value.strip().lower() in {"true", "1", "yes", "si", "sÃƒÂ­"}
         if isinstance(value, (int, float)):
             return value != 0
         return False
@@ -7461,9 +7829,9 @@ def render_memory_markdown(result: DetailedRunResult) -> str:
                 result_w3_p_pos_col = "Cumple"
 
             block_25_lines = [
-                f"## Paso {assigned_step_number}- Revisión de resistencia de soldadura # 5 ( Platina de continuidad con aleta de columna)",
+                f"## Paso {assigned_step_number}- RevisiÃƒÂ³n de resistencia de soldadura # 5 ( Platina de continuidad con aleta de columna)",
                 "",
-                f"### {assigned_step_number}.1. Revisión de capacidad a tracción",
+                f"### {assigned_step_number}.1. RevisiÃƒÂ³n de capacidad a tracciÃƒÂ³n",
                 "",
                 f"#### {assigned_step_number}.1.1. ELR #1: Rotura de soldadura",
                 "",
@@ -7929,9 +8297,9 @@ def render_memory_markdown(result: DetailedRunResult) -> str:
                     result_w6_v2_col_base = "Cumple" if dcr_w6_v2_col_base <= 1.0 else "No cumple"
 
             block_26_lines = [
-                f"## Paso {assigned_step_number}- Revisión de resistencia de soldadura # 6 ( Platina de continuidad con alma de columna)",
+                f"## Paso {assigned_step_number}- RevisiÃƒÂ³n de resistencia de soldadura # 6 ( Platina de continuidad con alma de columna)",
                 "",
-                f"### {assigned_step_number}.1. Revisión de capacidad a cortante",
+                f"### {assigned_step_number}.1. RevisiÃƒÂ³n de capacidad a cortante",
                 "",
                 f"#### {assigned_step_number}.1.1. ELR #1: Rotura de soldadura",
                 "",
@@ -7987,7 +8355,7 @@ def render_memory_markdown(result: DetailedRunResult) -> str:
                 )
             block_26_lines.extend(
                 [
-                    f"### {assigned_step_number}.6. Revisión de capacidad del material base",
+                    f"### {assigned_step_number}.6. RevisiÃƒÂ³n de capacidad del material base",
                     "",
                     f"#### {assigned_step_number}.6.2. ELR #1: Rotura del material base",
                     "",
@@ -8000,7 +8368,7 @@ def render_memory_markdown(result: DetailedRunResult) -> str:
                     [
                         f"- tipo_w6_col: `{tipo_w6_raw}`",
                         "- CJP: `Cumple`",
-                        "- Resultado: `🟢 Cumple`",
+                        "- Resultado: `?? Cumple`",
                         "",
                     ]
                 )
@@ -8273,9 +8641,9 @@ def render_memory_markdown(result: DetailedRunResult) -> str:
                 result_w8_v2_col = "Cumple"
 
             block_27_lines = [
-                f"## Paso {assigned_step_number}- Revisión de resistencia de soldadura # 8 (Platina de enchape con aleta de columna)",
+                f"## Paso {assigned_step_number}- RevisiÃƒÂ³n de resistencia de soldadura # 8 (Platina de enchape con aleta de columna)",
                 "",
-                f"### {assigned_step_number}.1. Revisión de capacidad a cortante",
+                f"### {assigned_step_number}.1. RevisiÃƒÂ³n de capacidad a cortante",
                 "",
                 f"#### {assigned_step_number}.1.1. ELR #1: Rotura de soldadura",
                 "",
@@ -8480,9 +8848,9 @@ def render_memory_markdown(result: DetailedRunResult) -> str:
                     result_w7_v2_col = "No cumple"
 
             block_28_lines = [
-                f"## Paso {assigned_step_number}- Revisión de resistencia de soldadura # 7 (Platina de enchape con alma de columna)",
+                f"## Paso {assigned_step_number}- RevisiÃƒÂ³n de resistencia de soldadura # 7 (Platina de enchape con alma de columna)",
                 "",
-                f"### {assigned_step_number}.1. Revisión de capacidad a cortante",
+                f"### {assigned_step_number}.1. RevisiÃƒÂ³n de capacidad a cortante",
                 "",
                 f"#### {assigned_step_number}.1.1. ELR #1: Rotura de soldadura",
                 "",
@@ -8554,7 +8922,7 @@ def render_memory_markdown(result: DetailedRunResult) -> str:
         if dcr_summary_entries:
             assigned_step_number = next_step_number
             worst_entry = dcr_summary_entries[0]
-            worst_state = "🔴" if worst_entry["value"] > 1.0 else "🟢"
+            worst_state = chr(0x1F534) if worst_entry["value"] > 1.0 else chr(0x1F7E2)
             summary_lines = [
                 f"## Paso {assigned_step_number} - Resumen general",
                 "",
@@ -8566,7 +8934,7 @@ def render_memory_markdown(result: DetailedRunResult) -> str:
                 "",
             ]
             for idx, entry in enumerate(dcr_summary_entries, start=1):
-                status_icon = "🟢" if entry["value"] <= 1.0 else "🔴"
+                status_icon = chr(0x1F7E2) if entry["value"] <= 1.0 else chr(0x1F534)
                 summary_lines.extend(
                     [
                         (
@@ -8594,7 +8962,7 @@ def write_memory_markdown(result: DetailedRunResult, target_dir: str | Path) -> 
     directory.mkdir(parents=True, exist_ok=True)
     target = directory / "memory.md"
     rendered = render_memory_markdown(result).rstrip("\n") + "\n"
-    target.write_text(rendered, encoding="utf-8")
+    target.write_text(rendered, encoding="utf-8-sig")
     return target
 
 
@@ -9334,8 +9702,8 @@ def write_splice_methods_table_markdown(result: DetailedRunResult, target_dir: s
     target = directory / "Detalle_Ru_blt_web_v23.md"
     target_v13 = directory / "Detalle_Ru_blt_web_v13.md"
     rendered = render_splice_methods_table_markdown(result).rstrip("\n") + "\n"
-    target.write_text(rendered, encoding="utf-8")
-    target_v13.write_text(rendered, encoding="utf-8")
+    target.write_text(rendered, encoding="utf-8-sig")
+    target_v13.write_text(rendered, encoding="utf-8-sig")
     return target
 
 
@@ -9384,5 +9752,10 @@ def write_splice_methods_table_markdown_flange(result: DetailedRunResult, target
     directory.mkdir(parents=True, exist_ok=True)
     target = directory / "Detalle_Ru_blt_flange_v13.md"
     rendered = render_splice_methods_table_markdown_flange(result).rstrip("\n") + "\n"
-    target.write_text(rendered, encoding="utf-8")
+    target.write_text(rendered, encoding="utf-8-sig")
     return target
+
+
+
+
+

@@ -88,6 +88,8 @@
     "thread_blt_flange": "N",
     "type_tight_blt_flange": "pretensioned",
     "deformation_at_bolt_hole_service_load_is_design": true,
+    "Ubs_flange_v3_vg": 1.0,
+    "Ubs_flange_v1_vg": 1.0,
     "n_blt_flange_x": 4,
     "n_blt_flange_z": 1,
     "p_blt_flange": {
@@ -112,10 +114,6 @@
     },
     "Le_blt_flange_z2": {
       "value": 40.0,
-      "unit": "mm"
-    },
-    "Le_blt_flange_z3": {
-      "value": 30.0,
       "unit": "mm"
     }
   },
@@ -161,6 +159,20 @@
     "phi_pr": 0.75,
     "phi_bs": 0.75,
     "phi_sc": 1.0
+  },
+  "capacidad_miembro": {
+    "phiPnc": {
+      "value": 1200.0,
+      "unit": "kN"
+    },
+    "phiMn3": {
+      "value": 800.0,
+      "unit": "kN-m"
+    },
+    "phiMn2": {
+      "value": 800.0,
+      "unit": "kN-m"
+    }
   },
   "procedure": {
     "method_1": "ICR",

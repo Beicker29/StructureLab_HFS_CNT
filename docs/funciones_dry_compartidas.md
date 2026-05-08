@@ -170,6 +170,14 @@ Fuente canonica: `src/steel_connections/codes/engineering/common`.
   - `Mn = min(Fy*Z, 1.5*Fy*Sx)`
   - `phi*Mn = phi_n*Mn`
 
+`compute_member_flexural_rupture_with_tension_flange_holes_f131(material_fu, material_fy, net_tension_flange_area_afn, gross_tension_flange_area_agf, elastic_section_modulus_sx, phi_n, unit_system)`
+
+- Rotura por flexion con agujeros en ala traccionada (AISC 360-22 F13.1):
+  - `Yf = 1.0` si `Fy/Fu <= 0.8`; `Yf = 1.1` en otro caso.
+  - Si `Fu*Afn >= Yf*Fy*Agf`, el limite de rotura por traccion del ala no aplica.
+  - Si `Fu*Afn < Yf*Fy*Agf`, `Mn = (Fu*Afn/Agf)*Sx`.
+  - `phi*Mn = phi_n*Mn`.
+
 `compute_rectangular_bar_ltb_strength_f112(material_fy, modulus_e, unbraced_length_lb, bar_depth_d, bar_thickness_t, elastic_section_modulus_sx, plastic_moment_mp, cb_factor, phi_n, unit_system)`
 
 - Pandeo lateral-torsional (AISC 360-22 F11.2), casos (a), (b), (c) con limite por `Mp`.
@@ -205,7 +213,19 @@ Fuente canonica: `src/steel_connections/codes/engineering/common`.
   - `DCR_plt_Fcomb_web = max(DCR_case_1, DCR_case_2)`
 - Incluye caso controlante y verificacion de cumplimiento (`<= 1.0`).
 
-## 11) Inventario canonico (exportado en `engineering/common`)
+## 11) Interaccion de fuerzas combinadas en miembro (H1)
+
+`compute_member_combined_interaction_h11(pr_over_pc, mrx_over_mcx, mry_over_mcy=0.0)`
+
+- Calcula interaccion axial + flexion para miembros simetricos (AISC 360-22 H1):
+  - Si `Pr/Pc >= 0.2` usa H1-1a:
+    - `DCR = Pr/Pc + (8/9)*(Mrx/Mcx + Mry/Mcy)`
+  - Si `Pr/Pc < 0.2` usa H1-1b:
+    - `DCR = Pr/(2*Pc) + (Mrx/Mcx + Mry/Mcy)`
+- Devuelve:
+  - `dcr`, `equation_used` (`H1-1a` o `H1-1b`), y `passes` (`<= 1.0`).
+
+## 12) Inventario canonico (exportado en `engineering/common`)
 
 Listado sincronizado con `src/steel_connections/codes/engineering/common/__init__.py`:
 
@@ -224,10 +244,12 @@ Listado sincronizado con `src/steel_connections/codes/engineering/common/__init_
 - `compute_element_tension_rupture_strength_j41b`
 - `compute_element_tension_yielding_strength_j41a`
 - `compute_rectangular_bar_flexural_yielding_strength_f111`
+- `compute_member_flexural_rupture_with_tension_flange_holes_f131`
 - `compute_rectangular_bar_ltb_strength_f112`
 - `compute_rectangular_bar_net_flexural_rupture_strength_j55`
 - `compute_plate_compression_buckling_strength`
 - `compute_plate_combined_force_interaction`
+- `compute_member_combined_interaction_h11`
 - `compute_bolt_hole_dimensions_j33`
 - `compute_minimum_bolt_spacing_j33`
 - `compute_minimum_edge_distance_standard_hole_j34`

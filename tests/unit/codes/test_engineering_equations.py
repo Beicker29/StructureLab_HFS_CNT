@@ -17,6 +17,9 @@ from steel_connections.codes.engineering.common.bolts import (
 from steel_connections.codes.engineering.common.continuity_plate import (
     compute_plate_compression_buckling_strength,
 )
+from steel_connections.codes.engineering.common.shear import (
+    compute_member_flexural_rupture_with_tension_flange_holes_f131,
+)
 from steel_connections.codes.engineering.common.prequalified_ep import (
     compute_limites_precalificacion_conexion_tipo_ep,
 )
@@ -334,6 +337,36 @@ def test_compute_limites_precalificacion_conexion_tipo_ep_invalid_type_raises() 
         assert "Unsupported prequalified EP connection type" in str(exc)
     else:
         raise AssertionError("Expected ValueError for unsupported EP connection type.")
+
+
+def test_compute_member_flexural_rupture_with_tension_flange_holes_f131_limit_applies() -> None:
+    phi_mn, meta = compute_member_flexural_rupture_with_tension_flange_holes_f131(
+        material_fu=Quantity(value=450.0, unit="MPa"),
+        material_fy=Quantity(value=345.0, unit="MPa"),
+        net_tension_flange_area_afn=Quantity(value=3000.0, unit="mm2"),
+        gross_tension_flange_area_agf=Quantity(value=4000.0, unit="mm2"),
+        elastic_section_modulus_sx=Quantity(value=1_000_000.0, unit="mm3"),
+        phi_n=0.75,
+        unit_system=UnitSystem.SI,
+    )
+    assert phi_mn.unit == "kN-mm"
+    assert bool(meta["tensile_rupture_limit_applies"]) is True
+    assert math.isclose(float(meta["yf"]), 1.0, rel_tol=1e-9)
+    assert math.isclose(phi_mn.value, 253125.0, rel_tol=1e-9)
+
+
+def test_compute_member_flexural_rupture_with_tension_flange_holes_f131_limit_not_applicable() -> None:
+    phi_mn, meta = compute_member_flexural_rupture_with_tension_flange_holes_f131(
+        material_fu=Quantity(value=450.0, unit="MPa"),
+        material_fy=Quantity(value=345.0, unit="MPa"),
+        net_tension_flange_area_afn=Quantity(value=3500.0, unit="mm2"),
+        gross_tension_flange_area_agf=Quantity(value=4000.0, unit="mm2"),
+        elastic_section_modulus_sx=Quantity(value=1_000_000.0, unit="mm3"),
+        phi_n=0.75,
+        unit_system=UnitSystem.SI,
+    )
+    assert phi_mn.unit == "kN-mm"
+    assert bool(meta["tensile_rupture_limit_applies"]) is False
 
 
 def test_compute_moment_prequalified_step6_2_bolt_shear_demand_8es() -> None:

@@ -74,10 +74,6 @@
             "value": 40.0,
             "unit": "mm"
           },
-          "Le_blt_flange_z3": {
-            "value": 30.0,
-            "unit": "mm"
-          },
           "T_vg": {
             "value": 394.0,
             "unit": "mm"
@@ -858,8 +854,8 @@
             },
             {
               "scope": "pernos_2",
-              "description": "Distancia minima a borde Le_blt_flange_z3 para agujero estandar",
-              "calculated_symbol": "Le_blt_flange_z3",
+              "description": "Distancia minima a borde Le_blt_flange_z1 para agujero estandar",
+              "calculated_symbol": "Le_blt_flange_z1",
               "limit_symbol": "max {Le_min, C1}",
               "comparison": "simple",
               "comparison_text": ">=",
@@ -877,8 +873,8 @@
             },
             {
               "scope": "pernos_2",
-              "description": "Distancia maxima a borde Le_blt_flange_z3",
-              "calculated_symbol": "Le_blt_flange_z3",
+              "description": "Distancia maxima a borde Le_blt_flange_z1",
+              "calculated_symbol": "Le_blt_flange_z1",
               "limit_symbol": "Le_max",
               "comparison": "simple",
               "comparison_text": "<=",
@@ -1098,6 +1094,24 @@
               "result": "PASS"
             },
             {
+              "scope": "viga",
+              "description": "Alma de la viga no es esbelta",
+              "calculated_symbol": "h/tw",
+              "limit_symbol": "5.7*sqrt(E_vg/Fy_vg)",
+              "comparison": "simple",
+              "comparison_text": "<",
+              "calculated": {
+                "value": 53.5,
+                "unit": "ratio"
+              },
+              "limit": {
+                "value": 137.2398725177769,
+                "unit": "ratio"
+              },
+              "clause": "AISC 360-22 (criterio solicitado por usuario)",
+              "result": "PASS"
+            },
+            {
               "scope": "pernos_1",
               "description": "Nota tecnica J3.1 - Fuerza minima de pretension por perno (grupo 1)",
               "calculated_symbol": "Tb,min,1",
@@ -1287,13 +1301,13 @@
                 "unit": "mm"
               },
               "le2z4_var": "Le_blt_flange_z4",
-              "le2z4_formula": "Le_blt_flange_z4 = 0.5*bfdet_vg - (Le_blt_flange_z3 + k1_vg + (n_blt_flange_z - 1)*g_blt_flange)",
+              "le2z4_formula": "Le_blt_flange_z4 = 0.5*bfdet_vg - (Le_blt_flange_z1 + k1_vg + (n_blt_flange_z - 1)*g_blt_flange)",
               "le2z4": {
                 "value": 26.9,
                 "unit": "mm"
               },
               "g1_blt_flange_var": "g1_blt_flange",
-              "g1_blt_flange_formula": "g1_blt_flange = bf_vg - 2*(Le_blt_flange_z3 + (n_blt_flange_z - 1)*g_blt_flange)",
+              "g1_blt_flange_formula": "g1_blt_flange = bf_vg - 2*(Le_blt_flange_z1 + (n_blt_flange_z - 1)*g_blt_flange)",
               "g1_blt_flange": {
                 "value": 92.0,
                 "unit": "mm"
@@ -1351,8 +1365,8 @@
               ],
               "n2z_var": "n_blt_flange_z",
               "n2z": 1,
-              "le2z3_var": "Le_blt_flange_z3",
-              "le2z3": {
+              "le2z1_var": "Le_blt_flange_z1",
+              "le2z1": {
                 "value": 30.0,
                 "unit": "mm"
               },
@@ -1690,7 +1704,7 @@
                 "unit": "mm"
               },
               "ru1_flange_p3_vg_var": "Ru1_flange_p3(+)_vg",
-              "ru1_flange_p3_vg_formula": "Ru1_flange_p3(+)_vg = (1- alpha_Pu_web)*Pu_sp + Mu3_sp/(d_vg - tf_vg); si <0 -> 0",
+              "ru1_flange_p3_vg_formula": "Ru1_flange_p3(+)_vg = (1- alpha_Pu_web)*Pu_sp + Mu3_sp/(d_vg - tf_vg)",
               "ru1_flange_p3_vg": {
                 "value": 1091.5774619344263,
                 "unit": "kN"
@@ -1700,6 +1714,512 @@
               "result1_flange_p3_vg": "FAIL",
               "coefficient": 1.2,
               "reference": "AISC 360-22 J3.11a.(b) (DRY: compute_bolt_hole_tearout_strength_j36)"
+            },
+            {
+              "id": "bbmb_splice.step4.flange_shear_tearout_v1_note",
+              "scope": "viga",
+              "description": "Revision de resistencia por desgarramiento en la perforacion del perno del ala en direccion 1",
+              "clause": "AISC 360-22 J3.11a.(b)",
+              "fu_vg_var": "Fu_vg",
+              "fu_vg": {
+                "value": 450.0,
+                "unit": "MPa"
+              },
+              "tf_vg_var": "tf_vg",
+              "tf_vg": {
+                "value": 10.8,
+                "unit": "mm"
+              },
+              "g_blt_flange_var": "g_blt_flange",
+              "g_blt_flange": {
+                "value": 40.0,
+                "unit": "mm"
+              },
+              "n_blt_flange_z_var": "n_blt_flange_z",
+              "n_blt_flange_z": 1,
+              "le_blt_flange_z1_var": "Le_blt_flange_z1",
+              "le_blt_flange_z1": {
+                "value": 30.0,
+                "unit": "mm"
+              },
+              "dh_2_var": "dh.2",
+              "dh_2": {
+                "value": 20.6375,
+                "unit": "mm"
+              },
+              "lc_flange_v1_vg_var": "lc_flange_v1_vg",
+              "lc_flange_v1_vg_formula": "si n_blt_flange_z = 1 -> lc_flange_v1_vg = Le_blt_flange_z1 - 0.5*dh.2",
+              "lc_flange_v1_vg": {
+                "value": 19.68125,
+                "unit": "mm"
+              },
+              "svc_hole_deformation_design_flange_var": "deformation_at_bolt_hole_service_load_is_design",
+              "svc_hole_deformation_design_flange": true,
+              "rn1_flange_v1_vg_var": "Rn1_flange_v1_vg",
+              "rn1_flange_v1_vg_formula": "Rn1_flange_v1_vg = 1.2*lc_flange_v1_vg*tf_vg*Fu_vg",
+              "rn1_flange_v1_vg": {
+                "value": 114.78105,
+                "unit": "kN"
+              },
+              "phi_pr_var": "phi_pr",
+              "phi_pr": 0.75,
+              "phi_rn1_flange_v1_vg_var": "phi*Rn1_flange_v1_vg",
+              "phi_rn1_flange_v1_vg_formula": "phi*Rn1_flange_v1_vg = phi_pr*Rn1_flange_v1_vg",
+              "phi_rn1_flange_v1_vg": {
+                "value": 86.0857875,
+                "unit": "kN"
+              },
+              "coefficient": 1.2,
+              "reference": "AISC 360-22 J3.11a.(b) (DRY: compute_bolt_hole_tearout_strength_j36)"
+            },
+            {
+              "id": "bbmb_splice.step4.flange_flexural_rupture_m1_note",
+              "scope": "viga",
+              "description": "Revision de resistencia por rotura a flexion en la viga (agujeros en ala traccionada)",
+              "clause": "AISC 360-22 F13.1",
+              "fu_vg_var": "Fu_vg",
+              "fu_vg": {
+                "value": 450.0,
+                "unit": "MPa"
+              },
+              "fy_vg_var": "Fy_vg",
+              "fy_vg": {
+                "value": 345.0,
+                "unit": "MPa"
+              },
+              "tf_vg_var": "tf_vg",
+              "tf_vg": {
+                "value": 10.8,
+                "unit": "mm"
+              },
+              "bf_vg_var": "bf_vg",
+              "bf_vg": {
+                "value": 152.0,
+                "unit": "mm"
+              },
+              "n_blt_flange_z_var": "n_blt_flange_z",
+              "n_blt_flange_z": 1,
+              "dh_2_var": "dh.2",
+              "dh_2": {
+                "value": 20.6375,
+                "unit": "mm"
+              },
+              "hole_add_var": "delta_hole",
+              "hole_add": {
+                "value": 1.8,
+                "unit": "mm"
+              },
+              "afg_flange_m1_vg_var": "Afg_flange_m1_vg",
+              "afg_flange_m1_vg_formula": "Afg_flange_m1_vg = tf_vg*bf_vg",
+              "afg_flange_m1_vg": {
+                "value": 1641.6000000000001,
+                "unit": "mm2"
+              },
+              "afn_flange_m1_vg_var": "Afn_flange_m1_vg",
+              "afn_flange_m1_vg_formula": "Afn_flange_m1_vg = Afg_flange_m1_vg - 2*n_blt_flange_z*(dh.2 + 1.80mm)*tf_vg",
+              "afn_flange_m1_vg": {
+                "value": 1156.95,
+                "unit": "mm2"
+              },
+              "sx_vg_var": "Sx_vg",
+              "sx_vg_formula": "Sx_vg tomado del catalogo (usando zx)",
+              "sx_vg": {
+                "value": 1090000.0,
+                "unit": "mm3"
+              },
+              "yf_var": "Yf",
+              "yf": 1.0,
+              "fy_over_fu_var": "Fy/Fu",
+              "fy_over_fu": 0.7666666666666667,
+              "lhs_fu_afn_var": "Fu*Afn",
+              "lhs_fu_afn": {
+                "value": 520.6275,
+                "unit": "kN"
+              },
+              "rhs_yf_fy_agf_var": "Yf*Fy*Agf",
+              "rhs_yf_fy_agf": {
+                "value": 566.352,
+                "unit": "kN"
+              },
+              "limit_applies_var": "F13.1_aplica",
+              "limit_applies": true,
+              "phi_no_ductil_var": "phi_no_ductil",
+              "phi_no_ductil": 0.9,
+              "rn1_flange_m1_vg_var": "Rn1_flange_m1_vg",
+              "rn1_flange_m1_vg_formula": "Rn1_flange_m1_vg = (Fu_vg*Afn_flange_m1_vg/Afg_flange_m1_vg)*Sx_vg",
+              "rn1_flange_m1_vg": {
+                "value": 345689.5559210526,
+                "unit": "kN-mm"
+              },
+              "phi_rn1_flange_m1_vg_var": "phi*Rn1_flange_m1_vg",
+              "phi_rn1_flange_m1_vg_formula": "phi*Rn1_flange_m1_vg = phi_no_ductil*Rn1_flange_m1_vg",
+              "phi_rn1_flange_m1_vg": {
+                "value": 311120.6003289473,
+                "unit": "kN-mm"
+              },
+              "ru1_flange_m1_vg_var": "Ru1_flange_m1_vg",
+              "ru1_flange_m1_vg_formula": "Ru1_flange_m1_vg = Mu3_sp",
+              "mu3_sp_var": "Mu3_sp",
+              "mu3_sp": {
+                "value": 450000.0,
+                "unit": "kN-mm"
+              },
+              "ru1_flange_m1_vg": {
+                "value": 450000.0,
+                "unit": "kN-mm"
+              },
+              "dcr1_flange_m1_vg_var": "DCR1_flange_m1_vg",
+              "dcr1_flange_m1_vg": 1.446384455173382,
+              "result1_flange_m1_vg": "FAIL",
+              "reference": "AISC 360-22 F13.1 (DRY: compute_member_flexural_rupture_with_tension_flange_holes_f131)"
+            },
+            {
+              "id": "bbmb_splice.step4.viga_combined_forces_note",
+              "scope": "viga",
+              "description": "Revision de capacidad bajo la accion de fuerzas combinadas en la viga",
+              "clause": "AISC 360-22 H1-1a/H1-1b",
+              "pu_sp_var": "Pu_sp",
+              "pu_sp": {
+                "value": 66.987298,
+                "unit": "kN"
+              },
+              "phi_pnc_var": "phiPnc",
+              "phi_pnc": {
+                "value": 1200.0,
+                "unit": "kN"
+              },
+              "phi_mn3_var": "phiMn3",
+              "phi_mn3": {
+                "value": 800.0,
+                "unit": "kN-m"
+              },
+              "phi_mn2_var": "phiMn2",
+              "phi_mn2": {
+                "value": 800.0,
+                "unit": "kN-m"
+              },
+              "dcr_451_var": "DCR_4.5.1",
+              "dcr_451": 0.11208259511014802,
+              "dcr_481_var": "DCR_4.8.1",
+              "dcr_481": 1.446384455173382,
+              "mrx_from_mu3_var": "|Mu3_sp|/phiMn3",
+              "mrx_from_mu3": 0.5625,
+              "pr_over_pc_var": "Pr/(phiPc)",
+              "pr_over_pc": 0.11208259511014802,
+              "mrx_over_mcx_var": "Mrx/Mcx",
+              "mrx_over_mcx": 1.446384455173382,
+              "mry_over_mcy_var": "Mry/Mcy",
+              "mry_over_mcy": 0.0,
+              "equation_used": "H1-1b",
+              "dcr_fcomb_vg_var": "DCR_Fcomb_vg",
+              "dcr_fcomb_vg": 1.502425752728456,
+              "result_fcomb_vg": "FAIL",
+              "reference": "AISC 360-22 H1.1 (DRY: compute_member_combined_interaction_h11)"
+            },
+            {
+              "id": "bbmb_splice.step4.flange_tension_bearing_v3_note",
+              "scope": "viga",
+              "description": "Revision de resistencia por aplatamiento en la perforacion del perno del ala en direccion 3",
+              "clause": "AISC 360-22 J3.11a.(a)",
+              "fu_vg_var": "Fu_vg",
+              "fu_vg": {
+                "value": 450.0,
+                "unit": "MPa"
+              },
+              "tf_vg_var": "tf_vg",
+              "tf_vg": {
+                "value": 10.8,
+                "unit": "mm"
+              },
+              "db_blt_flange_var": "db_blt_flange",
+              "db_blt_flange": {
+                "value": 19.049999999999997,
+                "unit": "mm"
+              },
+              "svc_hole_deformation_design_flange_var": "deformation_at_bolt_hole_service_load_is_design",
+              "svc_hole_deformation_design_flange": true,
+              "rn2_flange_p3_vg_var": "Rn2_flange_p3_vg",
+              "rn2_flange_p3_vg_formula": "Rn2_flange_p3_vg = 2.4*db_blt_flange*tf_vg*Fu_vg",
+              "rn2_flange_p3_vg": {
+                "value": 222.1992,
+                "unit": "kN"
+              },
+              "phi_pr_var": "phi_pr",
+              "phi_pr": 0.75,
+              "phi_rn2_flange_p3_vg_var": "phi*Rn2_flange_p3_vg",
+              "phi_rn2_flange_p3_vg_formula": "phi*Rn2_flange_p3_vg = phi_pr*Rn2_flange_p3_vg",
+              "phi_rn2_flange_p3_vg": {
+                "value": 166.64939999999999,
+                "unit": "kN"
+              },
+              "alpha_pu_web_var": "alpha_Pu_web",
+              "alpha_pu_web": 0.0,
+              "pu_sp_var": "Pu_sp",
+              "pu_sp": {
+                "value": 66.987298,
+                "unit": "kN"
+              },
+              "mu3_sp_var": "Mu3_sp",
+              "mu3_sp": {
+                "value": 450000.0,
+                "unit": "kN-mm"
+              },
+              "d_vg_var": "d_vg",
+              "d_vg": {
+                "value": 450.0,
+                "unit": "mm"
+              },
+              "ru2_flange_p3_vg_var": "Ru2_flange_p3(+)_vg",
+              "ru2_flange_p3_vg_formula": "Ru2_flange_p3(+)_vg = (1- alpha_Pu_web)*Pu_sp + Mu3_sp/(d_vg - tf_vg)",
+              "ru2_flange_p3_vg": {
+                "value": 1091.5774619344263,
+                "unit": "kN"
+              },
+              "dcr2_flange_p3_vg_var": "DCR2_flange_p3_vg",
+              "dcr2_flange_p3_vg": 6.550143366459324,
+              "result2_flange_p3_vg": "FAIL",
+              "coefficient": 2.4,
+              "reference": "AISC 360-22 J3.11a.(a) (DRY: compute_bolt_hole_bearing_strength_j36)"
+            },
+            {
+              "id": "bbmb_splice.step4.flange_tension_bolt_shear_v3_note",
+              "scope": "viga",
+              "description": "Revision de resistencia por rotura a cortante en el perno del ala en direccion 3",
+              "clause": "AISC 360-22 J3.7",
+              "db_blt_flange_var": "db_blt_flange",
+              "db_blt_flange": {
+                "value": 19.049999999999997,
+                "unit": "mm"
+              },
+              "ab_blt_flange_var": "Ab_blt_flange",
+              "ab_blt_flange": {
+                "value": 285.0229569923424,
+                "unit": "mm2"
+              },
+              "fnv_blt_flange_var": "Fnv_blt_flange",
+              "fnv_blt_flange": {
+                "value": 370.0,
+                "unit": "MPa"
+              },
+              "phi_pr_var": "phi_pr",
+              "phi_pr": 0.75,
+              "rn3_flange_p3_vg_var": "Rn3_flange_p3_vg",
+              "rn3_flange_p3_vg_formula": "Rn3_flange_p3_vg = Ab_blt_flange*Fnv_blt_flange",
+              "rn3_flange_p3_vg": {
+                "value": 105.45849408716668,
+                "unit": "kN"
+              },
+              "phi_rn3_flange_p3_vg_var": "phi*Rn3_flange_p3_vg",
+              "phi_rn3_flange_p3_vg_formula": "phi*Rn3_flange_p3_vg = phi_pr*Rn3_flange_p3_vg",
+              "phi_rn3_flange_p3_vg": {
+                "value": 79.09387056537501,
+                "unit": "kN"
+              },
+              "ru3_flange_p3_vg_var": "Ru3_flange_p3(+)_vg",
+              "ru3_flange_p3_vg_formula": "Ru3_flange_p3(+)_vg = Ru_blt_2_flange_vg (tomado de 3.2)",
+              "ru3_flange_p3_vg": {
+                "value": 1091.5774619344263,
+                "unit": "kN"
+              },
+              "dcr3_flange_p3_vg_var": "DCR3_flange_p3_vg",
+              "dcr3_flange_p3_vg": 13.801037351335378,
+              "result3_flange_p3_vg": "FAIL",
+              "reference": "AISC 360-22 J3.7 (DRY: compute_bolt_shear_rupture_capacity_per_bolt)"
+            },
+            {
+              "id": "bbmb_splice.step4.flange_tension_block_shear_v3_note",
+              "scope": "viga",
+              "description": "Revision de resistencia por bloque de cortante en ala de viga en direccion 3",
+              "clause": "AISC 360-22 J4.3",
+              "fu_vg_var": "Fu_vg",
+              "fu_vg": {
+                "value": 450.0,
+                "unit": "MPa"
+              },
+              "fy_vg_var": "Fy_vg",
+              "fy_vg": {
+                "value": 345.0,
+                "unit": "MPa"
+              },
+              "tf_vg_var": "tf_vg",
+              "tf_vg": {
+                "value": 10.8,
+                "unit": "mm"
+              },
+              "tw_vg_var": "tw_vg",
+              "tw_vg": {
+                "value": 7.62,
+                "unit": "mm"
+              },
+              "d_vg_var": "d_vg",
+              "d_vg": {
+                "value": 450.0,
+                "unit": "mm"
+              },
+              "kdes_vg_var": "kdes_vg",
+              "kdes_vg": {
+                "value": 21.0,
+                "unit": "mm"
+              },
+              "a_g_var": "A_g",
+              "a_g": {
+                "value": 6650.0,
+                "unit": "mm2"
+              },
+              "n_blt_flange_x_var": "n_blt_flange_x",
+              "n_blt_flange_x": 4,
+              "n_blt_flange_z_var": "n_blt_flange_z",
+              "n_blt_flange_z": 1,
+              "p_blt_flange_var": "p_blt_flange",
+              "p_blt_flange": {
+                "value": 60.0,
+                "unit": "mm"
+              },
+              "le_blt_flange_x1_var": "Le_blt_flange_x1",
+              "le_blt_flange_x1": {
+                "value": 50.0,
+                "unit": "mm"
+              },
+              "le_blt_flange_z1_var": "Le_blt_flange_z1",
+              "le_blt_flange_z1": {
+                "value": 30.0,
+                "unit": "mm"
+              },
+              "dh_2_var": "dh.2",
+              "dh_2": {
+                "value": 20.6375,
+                "unit": "mm"
+              },
+              "hole_add_var": "delta_hole",
+              "hole_add": {
+                "value": 1.8,
+                "unit": "mm"
+              },
+              "ubs_flange_v3_vg_var": "Ubs_flange_v3_vg",
+              "ubs_flange_v3_vg": 1.0,
+              "ubs_flange_v1_vg_var": "Ubs_flange_v1_vg",
+              "ubs_flange_v1_vg": 1.0,
+              "agt1_flange_v3_vg_var": "Agt1_flange_v3_vg",
+              "agt1_flange_v3_vg_formula": "Agt1_flange_v3_vg = 2 * (Le_blt_flange_z1 * tf_vg)",
+              "agt1_flange_v3_vg": {
+                "value": 648.0,
+                "unit": "mm2"
+              },
+              "ant1_flange_v3_vg_var": "Ant1_flange_v3_vg",
+              "ant1_flange_v3_vg_formula": "Ant1_flange_v3_vg = Agt1_flange_v3_vg - 2 *tf_vg * 0.5 * (dh.2 +1.80mm)",
+              "ant1_flange_v3_vg": {
+                "value": 405.67499999999995,
+                "unit": "mm2"
+              },
+              "agv1_flange_v3_vg_var": "Agv1_flange_v3_vg",
+              "agv1_flange_v3_vg_formula": "Agv1_flange_v3_vg = 2 * tf_vg * ( Le_blt_flange_x1 + (n_blt_flange_x - 1)* p_blt_flange )",
+              "agv1_flange_v3_vg": {
+                "value": 4968.0,
+                "unit": "mm2"
+              },
+              "anv1_flange_v3_vg_var": "Anv1_flange_v3_vg",
+              "anv1_flange_v3_vg_formula": "Anv1_flange_v3_vg = Agv1_flange_v3_vg - 2 *tf_vg * (n_blt_flange_x - 0.5) * (dh.2 +1.80mm)",
+              "anv1_flange_v3_vg": {
+                "value": 3271.725,
+                "unit": "mm2"
+              },
+              "rn4_1_case1_flange_p3_vg_var": "Rn4_1_case1_flange_p3_vg",
+              "rn4_1_case1_flange_p3_vg": {
+                "value": 1065.9195,
+                "unit": "kN"
+              },
+              "rn4_2_case1_flange_p3_vg_var": "Rn4_2_case1_flange_p3_vg",
+              "rn4_2_case1_flange_p3_vg": {
+                "value": 1210.92975,
+                "unit": "kN"
+              },
+              "rn4_case1_flange_p3_vg_var": "Rn4_case1_flange_p3_vg",
+              "rn4_case1_flange_p3_vg": {
+                "value": 1065.9195,
+                "unit": "kN"
+              },
+              "phi_rn4_case1_flange_p3_vg_var": "phi*Rn4_case1_flange_p3_vg",
+              "phi_rn4_case1_flange_p3_vg": {
+                "value": 799.439625,
+                "unit": "kN"
+              },
+              "agt2_flange_v3_vg_var": "Agt2_flange_v3_vg",
+              "agt2_flange_v3_vg_formula": "Agt2_flange_v3_vg = 0.5*(A_g - (d_vg - 2 *kdes_vg)*tw_vg)",
+              "agt2_flange_v3_vg": {
+                "value": 1770.52,
+                "unit": "mm2"
+              },
+              "ant2_flange_v3_vg_var": "Ant2_flange_v3_vg",
+              "ant2_flange_v3_vg_formula": "Ant2_flange_v3_vg = Agt2_flange_v3_vg - n_blt_flange_z * tf_vg * (dh.2 +1.80mm)",
+              "ant2_flange_v3_vg": {
+                "value": 1528.195,
+                "unit": "mm2"
+              },
+              "agv2_flange_v3_vg_var": "Agv2_flange_v3_vg",
+              "agv2_flange_v3_vg_formula": "Agv2_flange_v3_vg = tw_vg * ( Le_blt_flange_x1 + (n_blt_flange_x - 1)* p_blt_flange )",
+              "agv2_flange_v3_vg": {
+                "value": 1752.6000000000001,
+                "unit": "mm2"
+              },
+              "anv2_flange_v3_vg_var": "Anv2_flange_v3_vg",
+              "anv2_flange_v3_vg_formula": "Anv2_flange_v3_vg = Agv2_flange_v3_vg",
+              "anv2_flange_v3_vg": {
+                "value": 1752.6000000000001,
+                "unit": "mm2"
+              },
+              "rn4_1_case2_flange_p3_vg_var": "Rn4_1_case2_flange_p3_vg",
+              "rn4_1_case2_flange_p3_vg": {
+                "value": 1160.88975,
+                "unit": "kN"
+              },
+              "rn4_2_case2_flange_p3_vg_var": "Rn4_2_case2_flange_p3_vg",
+              "rn4_2_case2_flange_p3_vg": {
+                "value": 1050.47595,
+                "unit": "kN"
+              },
+              "rn4_case2_flange_p3_vg_var": "Rn4_case2_flange_p3_vg",
+              "rn4_case2_flange_p3_vg": {
+                "value": 1050.47595,
+                "unit": "kN"
+              },
+              "phi_rn4_case2_flange_p3_vg_var": "phi*Rn4_case2_flange_p3_vg",
+              "phi_rn4_case2_flange_p3_vg": {
+                "value": 787.8569624999999,
+                "unit": "kN"
+              },
+              "phi_pr_var": "phi_pr",
+              "phi_pr": 0.75,
+              "phi_rn4_flange_p3_vg_var": "phi*Rn4_flange_p3_vg",
+              "phi_rn4_flange_p3_vg_formula": "phi*Rn4_flange_p3_vg = min(phi*Rn4_case1_flange_p3_vg, phi*Rn4_case2_flange_p3_vg)",
+              "phi_rn4_flange_p3_vg": {
+                "value": 787.8569624999999,
+                "unit": "kN"
+              },
+              "controlling_case_flange_p3_vg_var": "Caso_control",
+              "controlling_case_flange_p3_vg": "Caso 2",
+              "alpha_pu_web_var": "alpha_Pu_web",
+              "alpha_pu_web": 0.0,
+              "pu_sp_var": "Pu_sp",
+              "pu_sp": {
+                "value": 66.987298,
+                "unit": "kN"
+              },
+              "mu3_sp_var": "Mu3_sp",
+              "mu3_sp": {
+                "value": 450000.0,
+                "unit": "kN-mm"
+              },
+              "ru4_flange_p3_vg_var": "Ru4_flange_p3(+)_vg",
+              "ru4_flange_p3_vg_formula": "Ru4_flange_p3(+)_vg = (1- alpha_Pu_web ) * Pu_sp + Mu3_sp /(d_vg - tf_vg), si <0 entonces 0",
+              "ru4_flange_p3_vg": {
+                "value": 1091.5774619344263,
+                "unit": "kN"
+              },
+              "dcr4_flange_p3_vg_var": "DCR4_flange_p3_vg",
+              "dcr4_flange_p3_vg": 1.385502082091997,
+              "result4_flange_p3_vg": "FAIL",
+              "reference_case1": "AISC 360-22 J4.3 (DRY: compute_block_shear_strength_j45)",
+              "reference_case2": "AISC 360-22 J4.3 (DRY: compute_block_shear_strength_j45)"
             },
             {
               "id": "bbmb_splice.step4.web_bearing_note",
@@ -1912,13 +2432,13 @@
               "alpha_pu_web_var": "alpha_Pu_web",
               "alpha_pu_web": 0.0,
               "ru3_v3_vg_var": "Ru3_v3_vg",
-              "ru3_v3_vg_formula": "Ru3_v3_vg = Pu_sp*alpha_Pu_web",
+              "ru3_v3_vg_formula": "Ru3_v3_vg = Pu_sp",
               "ru3_v3_vg": {
-                "value": 0.0,
+                "value": 66.987298,
                 "unit": "kN"
               },
               "dcr3_v3_vg_var": "DCR3_v3_vg",
-              "dcr3_v3_vg": 0.0,
+              "dcr3_v3_vg": 0.11208259511014802,
               "result3_v3_vg": "PASS",
               "reference": "AISC 360-22 J4.1(b), Eq. J4-2"
             },
@@ -3381,11 +3901,6 @@
                 "value": 40.0,
                 "unit": "mm"
               },
-              "le_blt_flange_z3_var": "Le_blt_flange_z3",
-              "le_blt_flange_z3": {
-                "value": 30.0,
-                "unit": "mm"
-              },
               "g1_blt_flange_var": "g1_blt_flange",
               "g1_blt_flange": {
                 "value": 92.0,
@@ -3550,8 +4065,7 @@
           "Le_blt_flange_x1": "mm",
           "Le_blt_flange_x2": "mm",
           "Le_blt_flange_z1": "mm",
-          "Le_blt_flange_z2": "mm",
-          "Le_blt_flange_z3": "mm"
+          "Le_blt_flange_z2": "mm"
         },
         "final_capacity": null
       },

@@ -18,6 +18,14 @@ APPROVED_GOLDEN_F_FLOOR = Path("tests/golden/approved/case_001_bbmb_splice_test_
 APPROVED_MEMORY_F_FLOOR = Path("tests/golden/approved/case_001_bbmb_splice_test_f_floor/memory.md")
 
 
+def _assert_memory_encoding_and_icons(memory: str) -> None:
+    for bad_token in ("\u00C3", "\u00F0\u0178", "\u00E2\u20AC\u2122", "\u00E2\u20AC\u0153", "\u00E2\u20AC"):
+        assert bad_token not in memory
+    assert "Revisiónes" not in memory
+    assert chr(0x1F7E2) in memory
+    assert chr(0x1F534) in memory
+
+
 def test_splice_memory_renders_from_design_result_wrapper_without_recalculation() -> None:
     result = run_case_file(EXAMPLE_SPLICE_PATH)
     assert_same_detailed_result_numeric(result.model_dump(mode="json"), load_json(APPROVED_GOLDEN))
@@ -25,6 +33,7 @@ def test_splice_memory_renders_from_design_result_wrapper_without_recalculation(
     memory = render_memory_markdown(result)
 
     compare_report_text(memory, APPROVED_MEMORY.read_text(encoding="utf-8-sig"))
+    _assert_memory_encoding_and_icons(memory)
     assert "# Memoria de Cálculo" in memory
     assert "## Paso 1 - Propiedades geométricas, mecánicas y fabricacion" in memory
 
@@ -47,5 +56,6 @@ def test_splice_memory_renders_f_floor_branch_for_staggered_check() -> None:
     memory = render_memory_markdown(result)
 
     compare_report_text(memory, APPROVED_MEMORY_F_FLOOR.read_text(encoding="utf-8-sig"))
+    _assert_memory_encoding_and_icons(memory)
     assert "#### Chequeo 2.1.23" in memory
     assert "Pmin_blt = min{|x_j_blt_web - x_k_blt_flange|}" in memory

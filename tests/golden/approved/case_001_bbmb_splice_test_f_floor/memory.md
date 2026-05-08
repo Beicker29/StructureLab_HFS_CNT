@@ -1,4 +1,4 @@
-# Memoria de Cálculo
+﻿# Memoria de Cálculo
 
 - Proyecto: `proj_bbmb_demo`
 - Caso: `case_001_bbmb_splice_si`
@@ -62,7 +62,7 @@ Propiedades organizadas por ambito.
 - Rango del indice: `k = 0, 1, ..., n_blt_flange_x - 1`
 - Coordenadas en direccion X para pernos de aleta (x_k_blt_flange): `k=0: 50 mm; k=1: 110 mm; k=2: 170 mm; k=3: 230 mm`
 - Numero de pernos en na mitad de aleta en direccion Z de la aleta (n_blt_flange_z) (inp): `1`
-- Distancia de borde en direccion Z del grupo de pernos del ala (Le_blt_flange_z3) (inp): `35 mm`
+- Distancia de borde en direccion Z del grupo de pernos del ala (Le_blt_flange_z1) (inp): `35 mm`
 - Distancia complementaria de borde en aleta (Le_blt_flange_z4): `21.9 mm`
 - Gage entre columnas de pernos del ala (g_blt_flange) (inp): `40 mm`
 - Tipo de perforacion por pernos grupo 2 ala (type_hole_flange) (inp): `standard`
@@ -76,9 +76,9 @@ Propiedades organizadas por ambito.
 - Formula distancia vertical borde ala/pernos alma: `Le_blt_web_y3 = 0.5*(d_vg - (n_blt_web_y - 1)*p_blt_web)`
 - Formula distancia neta respecto a kdet en alma: `Le_blt_web_y3.1 = Le_blt_web_y3 - kdet_vg`
 - Formula coordenadas X pernos de aleta: `x_k_blt_flange = Le_blt_flange_x1 + k*p_blt_flange`
-- Formula distancia util entre filas internas de pernos de aleta: `g1_blt_flange = bf_vg - 2*(Le_blt_flange_z3 + (n_blt_flange_z - 1)*g_blt_flange)`
+- Formula distancia util entre filas internas de pernos de aleta: `g1_blt_flange = bf_vg - 2*(Le_blt_flange_z1 + (n_blt_flange_z - 1)*g_blt_flange)`
 - Formula despeje horizontal entre grupos de pernos: `F_blt_flange = 0.5*g1_blt_flange - 0.5*tw_vg - t_plt_web`
-- Formula distancia complementaria de borde en aleta: `Le_blt_flange_z4 = 0.5*bfdet_vg - (Le_blt_flange_z3 + k1_vg + (n_blt_flange_z - 1)*g_blt_flange)`
+- Formula distancia complementaria de borde en aleta: `Le_blt_flange_z4 = 0.5*bfdet_vg - (Le_blt_flange_z1 + k1_vg + (n_blt_flange_z - 1)*g_blt_flange)`
 
 ### 1.2 Ámbito `PLATINA_1`
 
@@ -150,11 +150,11 @@ Propiedades organizadas por ambito.
 - Distancia al borde de la platina de ala en x (Le_plt_flange_x2) (inp): `50 mm`
 - Numero de pernos en direccion Z del ala (n_plt_flange_z) (inp): `1`
 - Gage entre columnas de pernos del ala (g_plt_flange) (inp): `40 mm`
-- Distancia de borde interior 1 en direccion Z del ala (Le_plt_flange_z1) (inp): `30 mm`
+- Distancia de borde interior 1 en direccion Z del ala (Le_plt_flange_z1) (inp): `35 mm`
 - Distancia de borde interior 2 en direccion Z del ala (Le_plt_flange_z2) (inp): `40 mm`
 - Distancia util entre filas internas de pernos de aleta (g1_plt_flange): `82 mm`
 - Longitud de platina de ala (L_plt_flange): `585.4 mm`
-- Ancho de platina de ala (B_plt_flange): `152 mm`
+- Ancho de platina de ala (B_plt_flange): `157 mm`
 - dh_plt_flange: `20.64 mm`
 
 #### 1.4.2 Formulas de cálculo
@@ -166,7 +166,7 @@ Propiedades organizadas por ambito.
 - Formula trazabilidad: `g_plt_flange = g_blt_flange`
 - Formula trazabilidad: `Le_plt_flange_z1 = Le_blt_flange_z1`
 - Formula trazabilidad: `Le_plt_flange_z2 = Le_blt_flange_z2`
-- Formula calculo: `g1_plt_flange = bf_vg - 2*(Le_blt_flange_z3 + (n_blt_flange_z - 1)*g_blt_flange)`
+- Formula calculo: `g1_plt_flange = bf_vg - 2*(Le_blt_flange_z1 + (n_blt_flange_z - 1)*g_blt_flange)`
 - Formula trazabilidad: `g1_plt_flange = g1_blt_flange`
 - Formula B_plt_flange: `B_plt_flange = Le_blt_flange_z1 + Le_blt_flange_z2 + 2*(n_blt_flange_z - 1)*g_blt_flange + g1_blt_flange`
 - Formula L_plt_flange: `L_plt_flange = 2*(Le_blt_flange_x1 + (n_blt_flange_x - 1)*p_blt_flange + Le_blt_flange_x2) + gap_sp`
@@ -189,7 +189,7 @@ Propiedades organizadas por ambito.
 - Diametro de cabeza: `39.69 mm`
 - Altura de cabeza: `11.91 mm`
 
-## Paso 2 - Revisiónes de requerimientos de propiedades mecánicas y geométricas
+## Paso 2 - Revisiones de requerimientos de propiedades mecánicas y geométricas
 
 ### 2.1 Ámbito `VIGA`
 
@@ -277,18 +277,18 @@ Propiedades organizadas por ambito.
 - Clausula: `Documento: AISC 360-22 | Seccion: AISC 360-22 J3.6`
 - Resultado: 🟢 Cumple
 
-#### Chequeo 2.1.13 - Distancia minima a borde Le_blt_flange_z3 para agujero estandar (`Le_blt_flange_z3`)
+#### Chequeo 2.1.13 - Distancia minima a borde Le_blt_flange_z1 para agujero estandar (`Le_blt_flange_z1`)
 
 - Ámbito: `VIGA`
-- Verificacion: `Le_blt_flange_z3 >= max {Le_min, C1}; 35 mm >= 30.16 mm`
-- Clausula: `Documento: AISC 360-22 + Steel Construction Manual AISC 16th edition 2023 | Seccion: AISC 360-22 Tabla J3.4, J3.6 y Tabla 7-15 Entering and Tightening Clearance, in.`
+- Verificacion: `Le_blt_flange_z1 >= Le_min; 35 mm >= 25.4 mm`
+- Clausula: `Documento: AISC 360-22 | Seccion: AISC 360-22 Tabla J3.4`
 - Resultado: 🟢 Cumple
 
-#### Chequeo 2.1.14 - Distancia maxima a borde Le_blt_flange_z3 (`Le_blt_flange_z3`)
+#### Chequeo 2.1.14 - Distancia minima a borde Le_blt_flange_z1 para agujero estandar (`Le_blt_flange_z1`)
 
 - Ámbito: `VIGA`
-- Verificacion: `Le_blt_flange_z3 <= Le_max; 35 mm <= 129.6 mm`
-- Clausula: `Documento: AISC 360-22 | Seccion: AISC 360-22 J3.6`
+- Verificacion: `Le_blt_flange_z1 >= max {Le_min, C1}; 35 mm >= 30.16 mm`
+- Clausula: `Documento: AISC 360-22 + Steel Construction Manual AISC 16th edition 2023 | Seccion: AISC 360-22 Tabla J3.4, J3.6 y Tabla 7-15 Entering and Tightening Clearance, in.`
 - Resultado: 🟢 Cumple
 
 #### Chequeo 2.1.15 - Distancia minima a borde Le_blt_flange_z4 para agujero estandar (`Le_blt_flange_z4`)
@@ -489,14 +489,14 @@ Propiedades organizadas por ambito.
 #### Chequeo 2.4.7 - Distancia minima a borde de platina de ala Le_plt_flange_z1 para agujero estandar (`Le_plt_flange_z1`)
 
 - Ámbito: `PLATINA_2`
-- Verificacion: `Le_plt_flange_z1 >= Le_min; 30 mm >= 25.4 mm`
+- Verificacion: `Le_plt_flange_z1 >= Le_min; 35 mm >= 25.4 mm`
 - Clausula: `Documento: AISC 360-22 | Seccion: AISC 360-22 Tabla J3.4`
 - Resultado: 🟢 Cumple
 
 #### Chequeo 2.4.8 - Distancia maxima a borde de platina de ala Le_plt_flange_z1 (`Le_plt_flange_z1`)
 
 - Ámbito: `PLATINA_2`
-- Verificacion: `Le_plt_flange_z1 <= Le_max; 30 mm <= 150 mm`
+- Verificacion: `Le_plt_flange_z1 <= Le_max; 35 mm <= 150 mm`
 - Clausula: `Documento: AISC 360-22 | Seccion: AISC 360-22 J3.6`
 - Resultado: 🟢 Cumple
 
@@ -552,23 +552,33 @@ Propiedades organizadas por ambito.
 - 🟢 `2.4` `PLATINA_2`: total=12, cumple=12, no_cumple=0, numerales_no_cumplen=ninguno
 - 🟢 `2.5` `PERNOS_2`: total=2, cumple=2, no_cumple=0, numerales_no_cumplen=ninguno
 
-## Paso 3 - Metodo ICR/Elastic para grupo de pernos 1
+## Paso 3 - Metodo ICR/Elastic
 
-### 3.1 Metodo ICR/Elastic
+### 3.1 Metodo ICR/Elastic para pernos 1 del alma de la viga
 
 - Metodo seleccionado: `icr`
 - Clausula: `Documento: Steel Construction Manual AISC 16th edition 2023 | Seccion: Part 7 DESIGN CONSIDERATIONS FOR BOLTS - Instantaneous Center of Rotation Method`
-- Ecuaciones: `ex_blt_web = gap_sp + 2*Le_blt_web_x1 + (n_blt_web_x - 1)*g_blt_web; Muz_blt_web = Vu2_sp*ex_blt_web - alpha_Pu_web*Pu_sp*ey_blt_web`
-- Pu_sp: `66.99 kN`
-- Vu2_sp: `250 kN`
-- ex_blt_web: `76.2 mm`
-- ey_blt_web: `0 mm`
-- Muz_blt_web: `19.05 kN-m`
+- Ecuaciones: `e3_blt_web = gap_sp + 2*Le_blt_web_x1 + (n_blt_web_x - 1)*g_blt_web; Mu1_blt_web = v2_blt_web*e3_blt_web - alpha_Pu_web*P3_blt_web*e2_blt_web`
+- P3_blt_web: `66.99 kN`
+- v2_blt_web: `250 kN`
+- e3_blt_web: `76.2 mm`
+- e2_blt_web: `0 mm`
+- Mu1_blt_web: `19.05 kN-m`
 - Demanda (metodo activo): `258.82 kN`
-- Ru_web_vg: `Ru_1_blt_web = 11.62 kip`
-- Ru_web_v2_max_vg: `Ru_1_blt_web_v2 = -9.28 kip`
-- Ru_web_v3_max_vg: `Ru_4_blt_web_v3 = -10.88 kip`
+- Ru_blt_1_web_vg: `Ru_1_blt_1_web = 11.62 kip`
+- Ru_blt_1_web_v3_max_vg: `Ru_1_blt_1_web_v3 = -9.28 kip`
+- Ru_blt_1_web_v2_max_vg: `Ru_4_blt_1_web_v2 = -10.88 kip`
 - Coeficiente Cu (ICR): `4.92`
+- Verificacion de equilibrio por componentes:
+- `sum(Ru_i_blt_1_web_v3) = -15.06 kip` vs `-P3_blt_web = -15.06 kip`; `diferencia = -0 kip`
+- `sum(Ru_i_blt_1_web_v2) = -56.2 kip` vs `-v2_blt_web = -56.2 kip`; `diferencia = -0 kip`
+
+### 3.2 Metodo ICR/Elastic para pernos 2 del ala de la viga
+
+- Metodo seleccionado: `icr`
+- Clausula: `Documento: Steel Construction Manual AISC 16th edition 2023 | Seccion: Part 7 DESIGN CONSIDERATIONS FOR BOLTS - Instantaneous Center of Rotation Method`
+- Ecuaciones: `P3_blt_flange = (1 - alpha_Pu_web)*Pu_sp + Mu3_sp/(d_vg - tf_vg); v1_blt_flange = 0.5*Vu3_sp; e3_blt_flange = gap_sp + 2*Le_blt_flange_x1 + (n_blt_flange_x - 1)*p_blt_flange; Mu2_blt_flange = v1_blt_flange*e3_blt_flange - P3_blt_flange*e1_blt_flange`
+- Nota: `Metodo seleccionado 'icr' no aplica cuando Mz=0. Cambia a 'elastic_superposition' para este grupo de pernos.`
 
 ## Paso 4 - Revisión de resistencia de la viga
 
@@ -620,7 +630,7 @@ Propiedades organizadas por ambito.
 - DCR3_web_v2-v3_vg: `0.94`
 - Resultado: 🟢 Cumple
 
-#### 4.1.4. ELR #4: Rotura por cortante de la viga
+#### 4.6.1. ELR #4: Rotura por cortante de la viga
 
 - Clausula: `Documento: AISC 360-22 | Seccion: J4.2(b) (DRY: compute_element_shear_rupture_strength_j43)`
 - Ecuaciones: `A_vg = d_vg*tw_vg; Anv_web_v2_vg = A_vg - n_blt_web_y*(dh.1+1.8mm)*tw_vg; Rn4_web_v2_vg = 0.60*Fu_vg*Anv_web_v2_vg; phi*Rn4_web_v2_vg = phi_fragil*Rn4_web_v2_vg; DCR4_web_v2_vg = Ru4_web_v2_vg/phi*Rn4_web_v2_vg`
@@ -687,7 +697,7 @@ Propiedades organizadas por ambito.
 - DCR1_web_v3_vg: `0.94`
 - Resultado: 🟢 Cumple
 
-#### 4.2.2. ELR #2: Rotura por tracción de la viga
+#### 4.5.1. ELR #2: Rotura por tracción de la viga
 
 - Clausula: `Documento: AISC 360-22 | Seccion: J4.1.(b)`
 - Ecuaciones: `si 2*g_blt_web*(n_blt_web_x - 1)*sqrt(3)/3 + (n_blt_web_y - 1)*p_blt_web - n_blt_web_y*(dh.1 + 1.80mm) <= T_vg -> Ant_v3_vg = tw_vg*(2*g_blt_web*(n_blt_web_x - 1)*sqrt(3)/3 + (n_blt_web_y - 1)*p_blt_web - n_blt_web_y*(dh.1 + 1.80mm)); si no -> Ant_v3_vg = A_vg - n_blt_web_y*(dh.1 + 1.80mm)*tw_vg; si n_blt_web_x <= 1 -> U_v3_vg = T_vg*tw_vg/A_vg; si n_blt_web_x > 1 -> U_v3_vg = 1 - 0.5*tw_vg/(n_blt_web_x*g_blt_web); Ae_v3_vg = Ant_v3_vg*U_v3_vg; Rn3_v3_vg = Fu_vg*Ae_v3_vg; phi*Rn3_v3_vg = phi_fragil*Rn3_v3_vg; Ru3_v3_vg = Pu_sp*alpha_Pu_web; DCR3_v3_vg = Ru3_v3_vg/phi*Rn3_v3_vg`
@@ -739,6 +749,119 @@ Propiedades organizadas por ambito.
 - Ru4_web_v3_vg = Pu_sp*alpha_Pu_web: `0 kN`
 - DCR4_web_v3_vg: `0`
 - Resultado: 🟢 Cumple
+
+### 4.3 Revisión de capacidad a tracción en el ala en direccion 3
+
+#### 4.3.1. ELR #1: Desgarramiento en la perforacion del perno
+
+- Clausula: `Documento: AISC 360-22 | Seccion: J3.11a.(b) (DRY: compute_bolt_hole_tearout_strength_j36)`
+- Ecuaciones: `lc_flange_p3_vg = min(p_blt_flange - dh.2, Le_blt_flange_x1 - 0.5*dh.2); Rn1_flange_p3_vg = C*lc_flange_p3_vg*tf_vg*Fu_vg; phi*Rn1_flange_p3_vg = phi_pr*Rn1_flange_p3_vg; Ru1_flange_p3(+)_vg = Ru_flange_v3_max_vg (tomado de 3.2); DCR1_flange_p3_vg = Ru1_flange_p3(+)_vg/phi*Rn1_flange_p3_vg`
+- Fu_vg: `450 MPa`
+- tf_vg: `10.8 mm`
+- p_blt_flange: `60 mm`
+- Le_blt_flange_x1: `50 mm`
+- dh.2: `20.64 mm`
+- lc_flange_p3_vg: `39.36 mm`
+- C: `1.5`
+- phi_pr: `0.75`
+- Rn1_flange_p3_vg: `286.95 kN`
+- phi*Rn1_flange_p3_vg: `215.21 kN`
+- alpha_Pu_web: `0`
+- Pu_sp: `66.99 kN`
+- Mu3_sp: `450 kN-m`
+- d_vg: `450 mm`
+- Ru1_flange_p3(+)_vg: `1091.58 kN`
+- DCR1_flange_p3_vg: `5.07`
+- Resultado: 🔴 No cumple
+
+#### 4.3.2. ELR #2: Aplastamiento en la perforacion del perno
+
+- Clausula: `Documento: AISC 360-22 | Seccion: J3.11a.(a) (DRY: compute_bolt_hole_bearing_strength_j36)`
+- Ecuaciones: `Rn2_flange_p3_vg = C*db_blt_flange*tf_vg*Fu_vg; phi*Rn2_flange_p3_vg = phi_pr*Rn2_flange_p3_vg; Ru2_flange_p3(+)_vg = Ru_flange_v3_max_vg (tomado de 3.2); DCR2_flange_p3_vg = Ru2_flange_p3(+)_vg/phi*Rn2_flange_p3_vg`
+- Fu_vg: `450 MPa`
+- tf_vg: `10.8 mm`
+- db_blt_flange: `19.05 mm`
+- C: `3`
+- phi_pr: `0.75`
+- Rn2_flange_p3_vg: `277.75 kN`
+- phi*Rn2_flange_p3_vg: `208.31 kN`
+- Ru2_flange_p3(+)_vg: `1091.58 kN`
+- DCR2_flange_p3_vg: `5.24`
+- Resultado: 🔴 No cumple
+
+#### 4.3.3. ELR #3: Rotura por cortante en el perno
+
+- Clausula: `Documento: AISC 360-22 | Seccion: J3.7 (DRY: compute_bolt_shear_rupture_capacity_per_bolt)`
+- Ecuaciones: `Rn3_flange_p3_vg = Ab_blt_flange*Fnv_blt_flange; phi*Rn3_flange_p3_vg = phi_pr*Rn3_flange_p3_vg; Ru3_flange_p3(+)_vg = Ru_blt_2_flange_vg (tomado de 3.2); DCR3_flange_p3_vg = Ru3_flange_p3(+)_vg/phi*Rn3_flange_p3_vg`
+- db_blt_flange: `19.05 mm`
+- Ab_blt_flange: `285.02 mm2`
+- Fnv_blt_flange: `370 MPa`
+- phi_pr: `0.75`
+- Rn3_flange_p3_vg: `105.46 kN`
+- phi*Rn3_flange_p3_vg: `79.09 kN`
+- Ru3_flange_p3(+)_vg: `1091.58 kN`
+- DCR3_flange_p3_vg: `13.8`
+- Resultado: 🔴 No cumple
+
+#### 4.3.4. ELR #4: Bloque de cortante en ala de viga
+
+- Clausula: `Documento: AISC 360-22 | Seccion: J4.3 (DRY: compute_block_shear_strength_j45)`
+- Ecuaciones: `Caso 1 -> Agt1_flange_v3_vg = 2*(Le_blt_flange_z1*tf_vg); Ant1_flange_v3_vg = Agt1_flange_v3_vg - 2*tf_vg*0.5*(dh.2 + 1.80mm); Agv1_flange_v3_vg = 2*tf_vg*(Le_blt_flange_x1 + (n_blt_flange_x - 1)*p_blt_flange); Anv1_flange_v3_vg = Agv1_flange_v3_vg - 2*tf_vg*(n_blt_flange_x - 0.5)*(dh.2 + 1.80mm); Caso 2 -> Agt2_flange_v3_vg = 0.5*(A_g - (d_vg - 2*kdes_vg)*tw_vg); Ant2_flange_v3_vg = Agt2_flange_v3_vg - n_blt_flange_z*tf_vg*(dh.2 + 1.80mm); Agv2_flange_v3_vg = tw_vg*(Le_blt_flange_x1 + (n_blt_flange_x - 1)*p_blt_flange); Anv2_flange_v3_vg = Agv2_flange_v3_vg; phi*Rn4_flange_p3_vg = min(phi*Rn4_case1_flange_p3_vg, phi*Rn4_case2_flange_p3_vg); Ru4_flange_p3(+)_vg = (1- alpha_Pu_web)*Pu_sp + Mu3_sp/(d_vg - tf_vg), si <0 entonces 0; DCR4_flange_p3_vg = Ru4_flange_p3(+)_vg/phi*Rn4_flange_p3_vg`
+- Fu_vg: `450 MPa`
+- Fy_vg: `345 MPa`
+- tf_vg: `10.8 mm`
+- tw_vg: `7.62 mm`
+- d_vg: `450 mm`
+- kdes_vg: `21 mm`
+- A_g: `6650 mm2`
+- n_blt_flange_x: `4`
+- n_blt_flange_z: `1`
+- p_blt_flange: `60 mm`
+- Le_blt_flange_x1: `50 mm`
+- Le_blt_flange_z1: `35 mm`
+- dh.2: `20.64 mm`
+- Ubs_flange_v3_vg (inp): `1`
+- Ubs_flange_v1_vg (inp): `1`
+- Agt1_flange_v3_vg: `756 mm2`
+- Ant1_flange_v3_vg: `513.67 mm2`
+- Agv1_flange_v3_vg: `4968 mm2`
+- Anv1_flange_v3_vg: `3271.72 mm2`
+- phi*Rn4_case1_flange_p3_vg: `835.89 kN`
+- Agt2_flange_v3_vg: `1770.52 mm2`
+- Ant2_flange_v3_vg: `1528.19 mm2`
+- Agv2_flange_v3_vg: `1752.6 mm2`
+- Anv2_flange_v3_vg: `1752.6 mm2`
+- phi*Rn4_case2_flange_p3_vg: `787.86 kN`
+- Caso control: `Caso 2`
+- phi_pr: `0.75`
+- phi*Rn4_flange_p3_vg: `787.86 kN`
+- Ru4_flange_p3(+)_vg: `1091.58 kN`
+- DCR4_flange_p3_vg: `1.39`
+- Resultado: 🔴 No cumple
+
+### 4.4 Revisión de capacidad a cortante en el ala en dirección 1
+
+- Pendiente de desarrollo en esta versión.
+
+### 4.5 Revisión de capacidad a tracción de la viga en dirección 3
+
+- Pendiente de desarrollo en esta versión.
+
+### 4.6 Revisión de capacidad a cortante de la viga en dirección 2
+
+- Pendiente de desarrollo en esta versión.
+
+### 4.7 Revisión de capacidad a cortante de la viga en dirección 1
+
+- Pendiente de desarrollo en esta versión.
+
+### 4.8 Revisión de capacidad a flexión de la viga en dirección 1
+
+- Pendiente de desarrollo en esta versión.
+
+### 4.8 Revisión de capacidad bajo la acción de fuerzas combinadas en la viga
+
+- Pendiente de desarrollo en esta versión.
 
 ## Paso 5 - Revisión de resistencia de la platina 1 de alma
 
@@ -955,9 +1078,35 @@ Propiedades organizadas por ambito.
 - DCR4_plt_v3_web: `0`
 - Resultado: 🟢 Cumple
 
-### 5.3 Revisión de capacidad a flexión en la platina 1 de alma alrededor de 1
+### 5.3 Revisión de capacidad a compresión en la platina 1 de alma
 
-#### 5.3.1. ELR #1: Fluencia por flexión en la platina 1 de alma
+#### 5.3.1. ELR #1: Pandeo por flexión en la platina 1 de alma
+
+- Clausula: `Documento: AISC 360-22 | Seccion: E3 y J4.4 (DRY: compute_plate_compression_buckling_strength)`
+- Ecuaciones: `Lp_plt_p3(-)_web = min(gap_sp + 2*Le_blt_web_x1, g_blt_web); Ru1_plt_p3(-)_web = alpha_Pu_web*Pu_sp; phi*Rn1_plt_p3(-)_web = phi*Fcr_plt_p3(-)_web*H_plt_web*t_plt_web*n_plt_web; DCR1_plt_p3(-)_web = Ru1_plt_p3(-)_web/phi*Rn1_plt_p3(-)_web`
+- Fy_plt_web: `250 MPa`
+- H_plt_web: `431 mm`
+- t_plt_web: `9.5 mm`
+- Lp_plt_p3(-)_web: `76.2 mm`
+- n_plt_web: `1`
+- phi_no_ductil: `0.9`
+- K: `0.65`
+- r_plt_p3(-)_web: `2.75 mm`
+- KL_r_plt_p3(-)_web: `17.98`
+- Fe_plt_p3(-)_web: `6107.12 MPa`
+- Fcr_plt_p3(-)_web: `250 MPa`
+- Ecuacion Fcr usada: `Fcr_pc_col = Fy_pc_col`
+- Ag_plt_p3(-)_web: `4094.5 mm2`
+- phi*Rn1_plt_p3(-)_web: `921.26 kN`
+- Pu_sp: `66.99 kN`
+- alpha_Pu_web: `0`
+- Ru1_plt_p3(-)_web: `0 kN`
+- DCR1_plt_p3(-)_web: `0`
+- Resultado: 🟢 Cumple
+
+### 5.4 Revisión de capacidad a flexión en la platina 1 de alma alrededor de 1
+
+#### 5.4.1. ELR #1: Fluencia por flexión en la platina 1 de alma
 
 - Clausula: `Documento: AISC 360-22 | Seccion: F11.1 (DRY: compute_rectangular_bar_flexural_yielding_strength_f111)`
 - Ecuaciones: `Z_plt_m1_web = t_plt_web*H_plt_web^2/4; S_plt_m1_web = t_plt_web*H_plt_web^2/6; Rn1_plt_m1_web = min(Fy_plt_web*Z_plt_m1_web, 1.5*Fy_plt_web*S_plt_m1_web); phi*Rn1_plt_m1_web = phi_no_ductil*Rn1_plt_m1_web; Ru1_plt_m1_web = Vu2_sp*ex_blt_web - alpha_Pu_web*Pu_sp*ey_blt_web; DCR1_plt_m1_web = Ru1_plt_m1_web/phi*Rn1_plt_m1_web`
@@ -978,7 +1127,7 @@ Propiedades organizadas por ambito.
 - DCR1_plt_m1_web: `0.19`
 - Resultado: 🟢 Cumple
 
-#### 5.3.2. ELR #2: Pandeo lateral-torsional en la platina 1 de alma
+#### 5.4.2. ELR #2: Pandeo lateral-torsional en la platina 1 de alma
 
 - Clausula: `Documento: AISC 360-22 | Seccion: F11.2 (DRY: compute_rectangular_bar_ltb_strength_f112)`
 - Ecuaciones: `Z_plt_m1_web = t_plt_web*H_plt_web^2/4; S_plt_m1_web = t_plt_web*H_plt_web^2/6; Lb_plt_m1_web = max(2*Le_blt_web_x1 + gap_sp, g_plt_web); My_plt_m1_web = Fy_plt_web*S_plt_m1_web; Rn2_plt_m1_web = Mn_ltb(F11.2) <= Mp; phi*Rn2_plt_m1_web = phi_no_ductil*Rn2_plt_m1_web; Ru2_plt_m1_web = Vu2_sp*ex_blt_web - alpha_Pu_web*Pu_sp*ey_blt_web; DCR2_plt_m1_web = Ru2_plt_m1_web/phi*Rn2_plt_m1_web`
@@ -1008,7 +1157,7 @@ Propiedades organizadas por ambito.
 - DCR2_plt_m1_web: `0.21`
 - Resultado: 🟢 Cumple
 
-#### 5.3.3. ELR #3: Rotura por flexión en la platina 1 de alma
+#### 5.4.3. ELR #3: Rotura por flexión en la platina 1 de alma
 
 - Clausula: `Documento: AISC 360-22 | Seccion: J5.5 (DRY: compute_rectangular_bar_net_flexural_rupture_strength_j55)`
 - Ecuaciones: `h = e1 + (n - 1)*s + e2; Znet_plt_m1_web = tp*h^2/4 - d'*tp*sum_{i=0}^{n-1}|e1 + i*s - h/2|; Rn3_plt_m1_web = Fu_plt_web*Znet_plt_m1_web; phi*Rn3_plt_m1_web = phi_fragil*Rn3_plt_m1_web; Ru3_plt_m1_web = Vu2_sp*ex_blt_web - alpha_Pu_web*Pu_sp*ey_blt_web; DCR3_plt_m1_web = Ru3_plt_m1_web/phi*Rn3_plt_m1_web`
@@ -1034,3 +1183,19 @@ Propiedades organizadas por ambito.
 - Ru3_plt_m1_web = Vu2_sp*ex_blt_web - alpha_Pu_web*Pu_sp*ey_blt_web: `19.05 kN-m`
 - DCR3_plt_m1_web: `0.2`
 - Resultado: 🟢 Cumple
+
+### 5.5 Revisión de capacidad bajo al accion de fuerzas combinadas en la platina 1 de alma
+
+#### 5.5.1. ELR #1: Interaccion entre cargas en la platina 1 de alma
+
+- Clausula: `Documento: Criterio de interaccion solicitado por usuario (DRY: compute_plate_combined_force_interaction)`
+- Ecuaciones: `DCR_case_1 = DCR_plt_m1_web + (DCR_plt_v3_web)^2 + (DCR_plt_v2_web)^4; DCR_case_2 = DCR_plt_m1_web + (DCR_plt_p3(-)_web)^2 + (DCR_plt_v2_web)^4; DCR_plt_Fcomb_web = max(DCR_case_1, DCR_case_2)`
+- DCR_plt_v2_web (max de 5.1): `0.94`
+- DCR_plt_v3_web (max de 5.2): `0.54`
+- DCR_plt_p3(-)_web (max de 5.3): `0`
+- DCR_plt_m1_web (max de 5.4): `0.21`
+- DCR_case_1: `1.28`
+- DCR_case_2: `0.99`
+- Caso controlante: `Caso 1`
+- DCR_plt_Fcomb_web: `1.28`
+- Resultado: 🔴 No cumple

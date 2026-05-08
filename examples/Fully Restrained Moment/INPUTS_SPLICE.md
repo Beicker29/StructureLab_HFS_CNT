@@ -8,6 +8,7 @@ Fuente oficial de nomenclatura: [`/VARIABLES_SPLICE_NAMING.txt`](/D:/Users/byoma
 - `geometry`: geometria de viga/platinas/patrones de pernos.
 - `loads`: acciones de diseno del splice.
 - `design_factors`: factores `phi`.
+- `capacidad_miembro`: capacidades de miembro para interaccion H1.
 - `procedure`: configuracion separada de metodo por grupo de pernos.
 
 ## Variables implementadas
@@ -54,6 +55,8 @@ Fuente oficial de nomenclatura: [`/VARIABLES_SPLICE_NAMING.txt`](/D:/Users/byoma
 - `Le_blt_web_y2`
 - `type_tight_blt_web` (`snug_tight`, `pretensioned`, `slip_critical`)
 - `svc_hole_deformation_design_web` (bool; alias de entrada: `deformation_at_bolt_hole_service_load_is_design`)
+- `Ubs_flange_v3_vg` (factor Ubs para bloque de cortante en ala, caso 1)
+- `Ubs_flange_v1_vg` (factor Ubs para bloque de cortante en ala, caso 2)
 - `n_blt_flange_x`
 - `n_blt_flange_z` (`>= 1`)
 - `p_blt_flange`
@@ -62,7 +65,6 @@ Fuente oficial de nomenclatura: [`/VARIABLES_SPLICE_NAMING.txt`](/D:/Users/byoma
 - `Le_blt_flange_x2`
 - `Le_blt_flange_z1`
 - `Le_blt_flange_z2`
-- `Le_blt_flange_z3`
 - `type_tight_blt_flange` (`snug_tight`, `pretensioned`, `slip_critical`)
 - `svc_hole_deformation_design_flange` (bool; alias de entrada: `deformation_at_bolt_hole_service_load_is_design`)
 
@@ -87,6 +89,11 @@ Variables derivadas (no input):
 - `phi_pr`
 - `phi_bs`
 - `phi_sc` (opcional)
+
+### `capacidad_miembro`
+- `phiPnc`
+- `phiMn3` (SI: `kN-m`)
+- `phiMn2` (SI: `kN-m`)
 
 ### `procedure`
 - `method_1` (pernos 1 de alma; `elastic_superposition`, `elastic_ecr`, `icr`)

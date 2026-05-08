@@ -76,7 +76,6 @@ def test_parse_non_prequalified_moment_splice_case_valid() -> None:
             "Le_blt_flange_x2": {"value": 40.0, "unit": "mm"},
             "Le_blt_flange_z1": {"value": 40.0, "unit": "mm"},
             "Le_blt_flange_z2": {"value": 40.0, "unit": "mm"},
-            "Le_blt_flange_z3": {"value": 40.0, "unit": "mm"},
             "type_tight_blt_flange": "pretensioned",
         },
         "loads": {

@@ -4,8 +4,8 @@
 
 - Proyecto: `proj_bbmb_demo`
 - Caso: `case_001_bbmb_splice_si`
-- Metodo seleccionado en JSON: `elastic_superposition`
-- Metodo efectivo: `elastic_superposition`
+- Metodo seleccionado en JSON: `icr`
+- Metodo efectivo: `icr`
 
 ### 1.1 Variables de carga
 
@@ -24,22 +24,22 @@
 - n_blt_web: `8 -` con `conteo pernos activos`
 - x_cg_blt_web: `3.54 in` con `sum(x_i_blt_web)/n_blt_web`
 - y_cg_blt_web: `0 in` con `sum(y_i_blt_web)/n_blt_web`
-- Ix_blt_web: `26.24 in2` con `sum((y_i_blt_web-y_cg_blt_web)^2)`
+- Ix_blt_web: `20.84 in2` con `sum((y_i_blt_web-y_cg_blt_web)^2)`
 - Iy_blt_web: `55.8 in2` con `sum((x_i_blt_web-x_cg_blt_web)^2)`
-- J_blt_web: `82.04 in2` con `Ix_blt_web + Iy_blt_web`
+- J_blt_web: `76.64 in2` con `Ix_blt_web + Iy_blt_web`
 - Muz_blt_web: `0 kip-in` con `Vu2_sp*ex_blt_web - alpha_Pu_web*Pu_sp*ey_blt_web`
-- dmax_blt_web: `3.98 in` con `max(sqrt((x_i_blt_web-x_cg_blt_web)^2+(y_i_blt_web-y_cg_blt_web)^2))`
+- dmax_blt_web: `3.89 in` con `max(sqrt((x_i_blt_web-x_cg_blt_web)^2+(y_i_blt_web-y_cg_blt_web)^2))`
 
 ## 3. Geometria del grupo de pernos
 
-- Perno `f1`: x_1_blt_web=`0 in`, y_1_blt_web=`-1.81 in`, dx_cg_1_blt_web=`-3.54 in`, dy_cg_1_blt_web=`-1.81 in`, r_cg_1_blt_web=`3.98 in`
-- Perno `f2`: x_2_blt_web=`0 in`, y_2_blt_web=`1.81 in`, dx_cg_2_blt_web=`-3.54 in`, dy_cg_2_blt_web=`1.81 in`, r_cg_2_blt_web=`3.98 in`
-- Perno `f3`: x_3_blt_web=`2.36 in`, y_3_blt_web=`-1.81 in`, dx_cg_3_blt_web=`-1.18 in`, dy_cg_3_blt_web=`-1.81 in`, r_cg_3_blt_web=`2.16 in`
-- Perno `f4`: x_4_blt_web=`2.36 in`, y_4_blt_web=`1.81 in`, dx_cg_4_blt_web=`-1.18 in`, dy_cg_4_blt_web=`1.81 in`, r_cg_4_blt_web=`2.16 in`
-- Perno `f5`: x_5_blt_web=`4.72 in`, y_5_blt_web=`-1.81 in`, dx_cg_5_blt_web=`1.18 in`, dy_cg_5_blt_web=`-1.81 in`, r_cg_5_blt_web=`2.16 in`
-- Perno `f6`: x_6_blt_web=`4.72 in`, y_6_blt_web=`1.81 in`, dx_cg_6_blt_web=`1.18 in`, dy_cg_6_blt_web=`1.81 in`, r_cg_6_blt_web=`2.16 in`
-- Perno `f7`: x_7_blt_web=`7.09 in`, y_7_blt_web=`-1.81 in`, dx_cg_7_blt_web=`3.54 in`, dy_cg_7_blt_web=`-1.81 in`, r_cg_7_blt_web=`3.98 in`
-- Perno `f8`: x_8_blt_web=`7.09 in`, y_8_blt_web=`1.81 in`, dx_cg_8_blt_web=`3.54 in`, dy_cg_8_blt_web=`1.81 in`, r_cg_8_blt_web=`3.98 in`
+- Perno `f1`: x_1_blt_web=`0 in`, y_1_blt_web=`-1.61 in`, dx_cg_1_blt_web=`-3.54 in`, dy_cg_1_blt_web=`-1.61 in`, r_cg_1_blt_web=`3.89 in`
+- Perno `f2`: x_2_blt_web=`0 in`, y_2_blt_web=`1.61 in`, dx_cg_2_blt_web=`-3.54 in`, dy_cg_2_blt_web=`1.61 in`, r_cg_2_blt_web=`3.89 in`
+- Perno `f3`: x_3_blt_web=`2.36 in`, y_3_blt_web=`-1.61 in`, dx_cg_3_blt_web=`-1.18 in`, dy_cg_3_blt_web=`-1.61 in`, r_cg_3_blt_web=`2 in`
+- Perno `f4`: x_4_blt_web=`2.36 in`, y_4_blt_web=`1.61 in`, dx_cg_4_blt_web=`-1.18 in`, dy_cg_4_blt_web=`1.61 in`, r_cg_4_blt_web=`2 in`
+- Perno `f5`: x_5_blt_web=`4.72 in`, y_5_blt_web=`-1.61 in`, dx_cg_5_blt_web=`1.18 in`, dy_cg_5_blt_web=`-1.61 in`, r_cg_5_blt_web=`2 in`
+- Perno `f6`: x_6_blt_web=`4.72 in`, y_6_blt_web=`1.61 in`, dx_cg_6_blt_web=`1.18 in`, dy_cg_6_blt_web=`1.61 in`, r_cg_6_blt_web=`2 in`
+- Perno `f7`: x_7_blt_web=`7.09 in`, y_7_blt_web=`-1.61 in`, dx_cg_7_blt_web=`3.54 in`, dy_cg_7_blt_web=`-1.61 in`, r_cg_7_blt_web=`3.89 in`
+- Perno `f8`: x_8_blt_web=`7.09 in`, y_8_blt_web=`1.61 in`, dx_cg_8_blt_web=`3.54 in`, dy_cg_8_blt_web=`1.61 in`, r_cg_8_blt_web=`3.89 in`
 
 ## 4. Resumen global por metodo
 
@@ -61,14 +61,14 @@
 
 ### 5.2 Geometria por perno
 
-- `f1`: x_1_blt_web=`0`, y_1_blt_web=`-1.81`, dx_cg_1_blt_web=`-3.54`, dy_cg_1_blt_web=`-1.81`, r_cg_1_blt_web=`3.98`
-- `f2`: x_2_blt_web=`0`, y_2_blt_web=`1.81`, dx_cg_2_blt_web=`-3.54`, dy_cg_2_blt_web=`1.81`, r_cg_2_blt_web=`3.98`
-- `f3`: x_3_blt_web=`2.36`, y_3_blt_web=`-1.81`, dx_cg_3_blt_web=`-1.18`, dy_cg_3_blt_web=`-1.81`, r_cg_3_blt_web=`2.16`
-- `f4`: x_4_blt_web=`2.36`, y_4_blt_web=`1.81`, dx_cg_4_blt_web=`-1.18`, dy_cg_4_blt_web=`1.81`, r_cg_4_blt_web=`2.16`
-- `f5`: x_5_blt_web=`4.72`, y_5_blt_web=`-1.81`, dx_cg_5_blt_web=`1.18`, dy_cg_5_blt_web=`-1.81`, r_cg_5_blt_web=`2.16`
-- `f6`: x_6_blt_web=`4.72`, y_6_blt_web=`1.81`, dx_cg_6_blt_web=`1.18`, dy_cg_6_blt_web=`1.81`, r_cg_6_blt_web=`2.16`
-- `f7`: x_7_blt_web=`7.09`, y_7_blt_web=`-1.81`, dx_cg_7_blt_web=`3.54`, dy_cg_7_blt_web=`-1.81`, r_cg_7_blt_web=`3.98`
-- `f8`: x_8_blt_web=`7.09`, y_8_blt_web=`1.81`, dx_cg_8_blt_web=`3.54`, dy_cg_8_blt_web=`1.81`, r_cg_8_blt_web=`3.98`
+- `f1`: x_1_blt_web=`0`, y_1_blt_web=`-1.61`, dx_cg_1_blt_web=`-3.54`, dy_cg_1_blt_web=`-1.61`, r_cg_1_blt_web=`3.89`
+- `f2`: x_2_blt_web=`0`, y_2_blt_web=`1.61`, dx_cg_2_blt_web=`-3.54`, dy_cg_2_blt_web=`1.61`, r_cg_2_blt_web=`3.89`
+- `f3`: x_3_blt_web=`2.36`, y_3_blt_web=`-1.61`, dx_cg_3_blt_web=`-1.18`, dy_cg_3_blt_web=`-1.61`, r_cg_3_blt_web=`2`
+- `f4`: x_4_blt_web=`2.36`, y_4_blt_web=`1.61`, dx_cg_4_blt_web=`-1.18`, dy_cg_4_blt_web=`1.61`, r_cg_4_blt_web=`2`
+- `f5`: x_5_blt_web=`4.72`, y_5_blt_web=`-1.61`, dx_cg_5_blt_web=`1.18`, dy_cg_5_blt_web=`-1.61`, r_cg_5_blt_web=`2`
+- `f6`: x_6_blt_web=`4.72`, y_6_blt_web=`1.61`, dx_cg_6_blt_web=`1.18`, dy_cg_6_blt_web=`1.61`, r_cg_6_blt_web=`2`
+- `f7`: x_7_blt_web=`7.09`, y_7_blt_web=`-1.61`, dx_cg_7_blt_web=`3.54`, dy_cg_7_blt_web=`-1.61`, r_cg_7_blt_web=`3.89`
+- `f8`: x_8_blt_web=`7.09`, y_8_blt_web=`1.61`, dx_cg_8_blt_web=`3.54`, dy_cg_8_blt_web=`1.61`, r_cg_8_blt_web=`3.89`
 
 ### 5.3 Fuerzas por perno
 
@@ -114,7 +114,7 @@
 - Pu_sp (componente aplicada en direccion v3): `245.4 kip`
 - Vu2_sp (componente aplicada en direccion v2): `0 kip`
 - n_blt_web: `8`
-- J_blt_web: `82.04 in2`
+- J_blt_web: `76.64 in2`
 - Muz_blt_web: `0 kip-in`
 - ax_blt_web: `n/a in`
 - ay_blt_web: `n/a in`

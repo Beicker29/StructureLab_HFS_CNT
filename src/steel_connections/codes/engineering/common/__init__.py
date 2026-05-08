@@ -23,6 +23,7 @@ from .shear import compute_block_shear_strength_j45
 from .shear import compute_element_tension_rupture_strength_j41b
 from .shear import compute_element_tension_yielding_strength_j41a
 from .shear import compute_rectangular_bar_flexural_yielding_strength_f111
+from .shear import compute_member_flexural_rupture_with_tension_flange_holes_f131
 from .shear import compute_rectangular_bar_net_flexural_rupture_strength_j55
 from .shear import compute_rectangular_bar_ltb_strength_f112
 from .bolts import compute_bolt_hole_dimensions_j33
@@ -35,6 +36,7 @@ from .bolts import compute_max_spacing_and_edge_distance_limits_j36
 from .bolts import compute_maximum_bolt_spacing_j36
 from .continuity_plate import compute_plate_compression_buckling_strength
 from .interactions import compute_plate_combined_force_interaction
+from .interactions import compute_member_combined_interaction_h11
 from .prequalified_ep import compute_limites_precalificacion_conexion_tipo_ep
 from .utilization import compute_dcr_ratio
 
@@ -58,6 +60,7 @@ __all__ = [
     "compute_element_tension_rupture_strength_j41b",
     "compute_element_tension_yielding_strength_j41a",
     "compute_rectangular_bar_flexural_yielding_strength_f111",
+    "compute_member_flexural_rupture_with_tension_flange_holes_f131",
     "compute_rectangular_bar_net_flexural_rupture_strength_j55",
     "compute_rectangular_bar_ltb_strength_f112",
     "compute_bolt_hole_dimensions_j33",
@@ -70,6 +73,7 @@ __all__ = [
     "compute_maximum_bolt_spacing_j36",
     "compute_plate_compression_buckling_strength",
     "compute_plate_combined_force_interaction",
+    "compute_member_combined_interaction_h11",
     "compute_limites_precalificacion_conexion_tipo_ep",
     "compute_dcr_ratio",
     "solve_bolt_group_method",

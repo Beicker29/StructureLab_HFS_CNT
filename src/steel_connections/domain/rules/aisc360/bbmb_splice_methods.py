@@ -124,12 +124,12 @@ def _flange_group_points_in(
     if not isinstance(bf_vg, Quantity):
         raise ValueError(f"Unable to resolve bf_vg for shape '{case.sections.shape_vg}'.")
 
-    le_z3 = case.geometry.Le_blt_flange_z3
+    le_z1 = case.geometry.Le_blt_flange_z1
     g_flange = case.geometry.g_blt_flange
-    if bf_vg.unit != le_z3.unit or bf_vg.unit != g_flange.unit:
-        raise ValueError("Incompatible units in g1_blt_flange = bf_vg - 2*(Le_blt_flange_z3 + (n_blt_flange_z-1)*g_blt_flange)")
+    if bf_vg.unit != le_z1.unit or bf_vg.unit != g_flange.unit:
+        raise ValueError("Incompatible units in g1_blt_flange = bf_vg - 2*(Le_blt_flange_z1 + (n_blt_flange_z-1)*g_blt_flange)")
 
-    g1_value = bf_vg.value - 2.0 * (le_z3.value + (case.geometry.n_blt_flange_z - 1) * g_flange.value)
+    g1_value = bf_vg.value - 2.0 * (le_z1.value + (case.geometry.n_blt_flange_z - 1) * g_flange.value)
     g1_blt_flange = Quantity(value=g1_value, unit=bf_vg.unit)
 
     px_in = _to_in(case.geometry.p_blt_flange, case.units_system)

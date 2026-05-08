@@ -1,4 +1,4 @@
-# Reporte Metodos Pernos 1 (Splice)
+﻿# Reporte Metodos Pernos 1 (Splice)
 
 ## 1. Informacion General
 

@@ -51,3 +51,49 @@ def compute_plate_combined_force_interaction(
         "equation_governing": "DCR_plt_Fcomb_web = max(DCR_case_1, DCR_case_2)",
     }
 
+
+def compute_member_combined_interaction_h11(
+    *,
+    pr_over_pc: float,
+    mrx_over_mcx: float,
+    mry_over_mcy: float = 0.0,
+) -> dict[str, Any]:
+    """Compute AISC 360-22 H1 interaction for axial + flexure members.
+
+    H1-1a (when Pr/Pc >= 0.2):
+        DCR = Pr/Pc + (8/9) * (Mrx/Mcx + Mry/Mcy)
+
+    H1-1b (when Pr/Pc < 0.2):
+        DCR = Pr/(2*Pc) + (Mrx/Mcx + Mry/Mcy)
+    """
+
+    values = {
+        "pr_over_pc": float(pr_over_pc),
+        "mrx_over_mcx": float(mrx_over_mcx),
+        "mry_over_mcy": float(mry_over_mcy),
+    }
+    for key, value in values.items():
+        if not math.isfinite(value):
+            raise ValueError(f"{key} must be a finite float.")
+    for key in ("mrx_over_mcx", "mry_over_mcy"):
+        if values[key] < 0.0:
+            raise ValueError(f"{key} must be >= 0.0.")
+
+    sum_m = values["mrx_over_mcx"] + values["mry_over_mcy"]
+    if values["pr_over_pc"] >= 0.2:
+        dcr = values["pr_over_pc"] + (8.0 / 9.0) * sum_m
+        equation = "H1-1a"
+    else:
+        dcr = (values["pr_over_pc"] / 2.0) + sum_m
+        equation = "H1-1b"
+
+    return {
+        "pr_over_pc": values["pr_over_pc"],
+        "mrx_over_mcx": values["mrx_over_mcx"],
+        "mry_over_mcy": values["mry_over_mcy"],
+        "dcr": dcr,
+        "equation_used": equation,
+        "passes": dcr <= 1.0,
+        "equation_h11a": "DCR = Pr/Pc + (8/9)*(Mrx/Mcx + Mry/Mcy)",
+        "equation_h11b": "DCR = Pr/(2*Pc) + (Mrx/Mcx + Mry/Mcy)",
+    }
