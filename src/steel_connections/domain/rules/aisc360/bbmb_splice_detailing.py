@@ -975,7 +975,7 @@ def run_step1_viga_detailing(case: BeamBeamMomentBoltedCase, rule_binding: objec
         value=min(alpha.value + 2.0 * le1_x1.value, s1x.value),
         unit=alpha.unit,
     )
-    ey_blt_web = case.loads.ey_blt_web
+    ey_blt_web = case.loads.e2_blt_web
     if ey_blt_web is None:
         ey_blt_web = Quantity(value=0.0, unit=ex_blt_web.unit)
     if ey_blt_web.unit != ex_blt_web.unit:

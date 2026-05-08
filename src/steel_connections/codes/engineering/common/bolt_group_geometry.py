@@ -185,6 +185,50 @@ def build_rectangular_bolt_pattern(
     return tuple(bolts)
 
 
+def build_mirrored_half_flange_bolt_pattern(
+    *,
+    nx: int,
+    nz_half: int,
+    px: float,
+    gz: float,
+    g1z: float,
+    x0: float = 0.0,
+    y0: float = 0.0,
+    tag_prefix: str = "f",
+) -> tuple[BoltCoordinate, ...]:
+    """Generate one-flange bolt pattern mirrored about the flange midline.
+
+    This pattern is used when ``nz_half`` is defined per half-flange. The total
+    number of transverse rows is ``2*nz_half`` and the transverse coordinates
+    are defined as:
+
+    ``y_(m,±) = y0 ± (g1z/2 + m*gz)``, for ``m = 0..nz_half-1``.
+    """
+
+    if nx < 1 or nz_half < 1:
+        raise ValueError("nx and nz_half must be >= 1.")
+    if px < 0.0 or gz < 0.0 or g1z < 0.0:
+        raise ValueError("px, gz, and g1z must be >= 0.")
+
+    y_rows_positive = [y0 + (0.5 * g1z + float(m) * gz) for m in range(nz_half)]
+    y_rows = [-value for value in reversed(y_rows_positive)] + y_rows_positive
+
+    bolts: list[BoltCoordinate] = []
+    index = 1
+    for ix in range(nx):
+        x_coord = x0 + float(ix) * px
+        for y_coord in y_rows:
+            bolts.append(
+                BoltCoordinate(
+                    tag=f"{tag_prefix}{index}",
+                    x=x_coord,
+                    y=y_coord,
+                )
+            )
+            index += 1
+    return tuple(bolts)
+
+
 def ensure_unique_bolt_tags(bolts: Iterable[BoltCoordinate]) -> None:
     """Guardrail utility for deterministic downstream reporting."""
 

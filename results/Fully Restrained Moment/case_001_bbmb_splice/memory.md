@@ -558,21 +558,38 @@ Propiedades organizadas por ambito.
 
 - Metodo seleccionado: `icr`
 - Clausula: `Documento: Steel Construction Manual AISC 16th edition 2023 | Seccion: Part 7 DESIGN CONSIDERATIONS FOR BOLTS - Instantaneous Center of Rotation Method`
-- Ecuaciones: `ex_blt_web = gap_sp + 2*Le_blt_web_x1 + (n_blt_web_x - 1)*g_blt_web; Muz_blt_web = Vu2_sp*ex_blt_web - alpha_Pu_web*Pu_sp*ey_blt_web`
-- Pu_sp: `66.99 kN`
-- Vu2_sp: `250 kN`
-- ex_blt_web: `76.2 mm`
-- ey_blt_web: `0 mm`
-- Muz_blt_web: `19.05 kN-m`
+- Ecuaciones: `e3_blt_web = gap_sp + 2*Le_blt_web_x1 + (n_blt_web_x - 1)*g_blt_web; Mu1_blt_web = v2_blt_web*e3_blt_web - alpha_Pu_web*P3_blt_web*e2_blt_web`
+- P3_blt_web: `66.99 kN`
+- v2_blt_web: `250 kN`
+- e3_blt_web: `76.2 mm`
+- e2_blt_web: `0 mm`
+- Mu1_blt_web: `19.05 kN-m`
 - Demanda (metodo activo): `258.82 kN`
 - Ru_web_vg: `Ru_1_blt_web = 11.62 kip`
-- Ru_web_v2_max_vg: `Ru_1_blt_web_v2 = -9.28 kip`
-- Ru_web_v3_max_vg: `Ru_4_blt_web_v3 = -10.88 kip`
+- Ru_web_v3_max_vg: `Ru_1_blt_web_v3 = -9.28 kip`
+- Ru_web_v2_max_vg: `Ru_4_blt_web_v2 = -10.88 kip`
 - Coeficiente Cu (ICR): `4.92`
+- Verificacion de equilibrio por componentes:
+- `sum(Ru_i_blt_web_v3) = -15.06 kip` vs `-P3_blt_web = -15.06 kip`; `diferencia = -0 kip`
+- `sum(Ru_i_blt_web_v2) = -56.2 kip` vs `-v2_blt_web = -56.2 kip`; `diferencia = -0 kip`
 
 ### 3.2 Metodo ICR/Elastic para pernos 2 del ala de la viga
 
-Pendiente de implementacion para pernos 2 del ala de la viga.
+- Metodo seleccionado: `elastic_superposition`
+- Clausula: `Documento: Steel Construction Manual AISC 16th edition 2023 | Seccion: Part 7 DESIGN CONSIDERATIONS FOR BOLTS - Instantaneous Center of Rotation Method`
+- Ecuaciones: `P3_blt_flange = (1 - alpha_Pu_web)*Pu_sp + Mu3_sp/(d_vg - tf_vg); v1_blt_flange = 0.5*Vu3_sp; e3_blt_flange = gap_sp + 2*Le_blt_flange_x1 + (n_blt_flange_x - 1)*p_blt_flange; Mu2_blt_flange = v1_blt_flange*e3_blt_flange - P3_blt_flange*e1_blt_flange`
+- P3_blt_flange: `1091.58 kN`
+- v1_blt_flange: `0 kN`
+- e3_blt_flange: `305.4 mm`
+- e1_blt_flange: `0 mm`
+- Mu2_blt_flange: `0 kN-m`
+- Demanda (metodo activo): `136.45 kN`
+- Ru_flange_vg: `Ru_1_blt_flange = 30.67 kip`
+- Ru_flange_v3_max_vg: `Ru_1_blt_flange_v3 = -30.67 kip`
+- Ru_flange_v1_max_vg: `Ru_1_blt_flange_v1 = 0 kip`
+- Verificacion de equilibrio por componentes:
+- `sum(Ru_i_blt_flange_v3) = -245.4 kip` vs `-P3_blt_flange = -245.4 kip`; `diferencia = 0 kip`
+- `sum(Ru_i_blt_flange_v1) = 0 kip` vs `-v1_blt_flange = -0 kip`; `diferencia = 0 kip`
 
 ## Paso 4 - Revisión de resistencia de la viga
 
@@ -749,7 +766,7 @@ Pendiente de implementacion para pernos 2 del ala de la viga.
 #### 4.3.1. ELR #1: Desgarramiento en la perforacion del perno
 
 - Clausula: `Documento: AISC 360-22 | Seccion: J3.11a.(b) (DRY: compute_bolt_hole_tearout_strength_j36)`
-- Ecuaciones: `lc_flange_p3_vg = min(p_blt_flange - dh.2, Le_blt_flange_x1 - 0.5*dh.2); Rn1_flange_p3_vg = C*lc_flange_p3_vg*tf_vg*Fu_vg; phi*Rn1_flange_p3_vg = phi_pr*Rn1_flange_p3_vg; Ru1_flange_p3(+)_vg = (1- alpha_Pu_web)*Pu_sp + Mu3_sp/(d_vg - tf_vg), si < 0 -> 0; DCR1_flange_p3_vg = Ru1_flange_p3(+)_vg/phi*Rn1_flange_p3_vg`
+- Ecuaciones: `lc_flange_p3_vg = min(p_blt_flange - dh.2, Le_blt_flange_x1 - 0.5*dh.2); Rn1_flange_p3_vg = C*lc_flange_p3_vg*tf_vg*Fu_vg; phi*Rn1_flange_p3_vg = phi_pr*Rn1_flange_p3_vg; Ru1_flange_p3(+)_vg = Ru_flange_v3_max_vg (tomado de 3.2); DCR1_flange_p3_vg = Ru1_flange_p3(+)_vg/phi*Rn1_flange_p3_vg`
 - Fu_vg: `450 MPa`
 - tf_vg: `10.8 mm`
 - p_blt_flange: `60 mm`
@@ -764,9 +781,9 @@ Pendiente de implementacion para pernos 2 del ala de la viga.
 - Pu_sp: `66.99 kN`
 - Mu3_sp: `450 kN-m`
 - d_vg: `450 mm`
-- Ru1_flange_p3(+)_vg: `1091.58 kN`
-- DCR1_flange_p3_vg: `6.34`
-- Resultado: 🔴 No cumple
+- Ru1_flange_p3(+)_vg: `136.45 kN`
+- DCR1_flange_p3_vg: `0.79`
+- Resultado: 🟢 Cumple
 
 ## Paso 5 - Revisión de resistencia de la platina 1 de alma
 

@@ -5,6 +5,7 @@ from .bolt_group_elastic import solve_elastic_superposition
 from .bolt_group_geometry import build_bolt_group_geometry
 from .bolt_group_geometry import build_in_plane_load
 from .bolt_group_geometry import build_in_plane_load_from_explicit_eccentricity
+from .bolt_group_geometry import build_mirrored_half_flange_bolt_pattern
 from .bolt_group_geometry import build_rectangular_bolt_pattern
 from .bolt_group_icr import ICRLawParameters
 from .bolt_group_icr import solve_instant_center_of_rotation
@@ -45,6 +46,7 @@ __all__ = [
     "build_bolt_group_geometry",
     "build_in_plane_load",
     "build_in_plane_load_from_explicit_eccentricity",
+    "build_mirrored_half_flange_bolt_pattern",
     "build_rectangular_bolt_pattern",
     "compute_bolt_tension_rupture_capacity_per_bolt",
     "compute_bolt_shear_rupture_capacity_per_bolt",

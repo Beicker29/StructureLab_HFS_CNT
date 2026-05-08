@@ -1183,7 +1183,8 @@ class BeamBeamMomentBoltedLoads(StrictModel):
     Mu2_sp: Quantity
     Tu_sp: Quantity
     alpha_Pu_web: float = 0.0
-    ey_blt_web: Quantity | None = None
+    e2_blt_web: Quantity | None = None
+    e1_blt_flange: Quantity | None = None
 
 
 class BeamBeamMomentBoltedDesignFactors(StrictModel):
@@ -1212,14 +1213,23 @@ class BeamBeamMomentBoltedDesignFactors(StrictModel):
 
 
 class BeamBeamMomentBoltedICRSettings(StrictModel):
-    method: str = "elastic_superposition"
+    # Grupo 1 (pernos de alma)
+    method_1: str | None = None
     tolerance_1: float = 0.01
     max_iterations_1: int = 1000
     rult_1_kip: Quantity | None = None
 
-    @field_validator("method")
+    # Grupo 2 (pernos de ala)
+    method_2: str | None = None
+    tolerance_2: float = 0.01
+    max_iterations_2: int = 1000
+    rult_2_kip: Quantity | None = None
+
+    # Legacy/global method (kept for backward compatibility).
+    method: str | None = None
+
     @classmethod
-    def normalize_method(cls, value: str) -> str:
+    def _normalize_method_value(cls, value: str) -> str:
         normalized = re.sub(r"[^a-z0-9]+", "_", value.strip().lower()).strip("_")
         aliases = {
             "icr": "icr",
@@ -1242,32 +1252,61 @@ class BeamBeamMomentBoltedICRSettings(StrictModel):
                 else:
                     canonical = "elastic_ecr"
         if canonical is None:
-            raise ValueError("procedure.icr.method must be 'icr', 'elastic_superposition', or 'elastic_ecr'.")
+            raise ValueError(
+                "procedure.method/method_1/method_2 must be "
+                "'icr', 'elastic_superposition', or 'elastic_ecr'."
+            )
         return canonical
 
-    @field_validator("tolerance_1")
+    @field_validator("method", "method_1", "method_2")
+    @classmethod
+    def normalize_method(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        return cls._normalize_method_value(value)
+
+    @field_validator("tolerance_1", "tolerance_2")
     @classmethod
     def validate_tolerance(cls, value: float) -> float:
         if value <= 0.0:
-            raise ValueError("procedure.icr.tolerance_1 must be > 0.")
+            raise ValueError("procedure.tolerance_1/tolerance_2 must be > 0.")
         return value
 
-    @field_validator("max_iterations_1")
+    @field_validator("max_iterations_1", "max_iterations_2")
     @classmethod
     def validate_max_iterations(cls, value: int) -> int:
         if value < 1:
-            raise ValueError("procedure.icr.max_iterations_1 must be >= 1.")
+            raise ValueError("procedure.max_iterations_1/max_iterations_2 must be >= 1.")
         return value
 
     @model_validator(mode="after")
     def validate_conditional_rult(self) -> "BeamBeamMomentBoltedICRSettings":
-        if self.method == "icr" and self.rult_1_kip is None:
-            raise ValueError("procedure.icr.rult_1_kip is required when procedure.icr.method='icr'.")
+        method_1 = self.method_1 or self.method or "elastic_superposition"
+        method_2 = self.method_2 or self.method or "elastic_superposition"
+
+        object.__setattr__(self, "method_1", method_1)
+        object.__setattr__(self, "method_2", method_2)
+
+        if method_1 == "icr" and self.rult_1_kip is None:
+            raise ValueError("procedure.rult_1_kip is required when procedure.method_1='icr'.")
+        if method_2 == "icr" and self.rult_2_kip is None:
+            raise ValueError("procedure.rult_2_kip is required when procedure.method_2='icr'.")
         return self
 
 
-class BeamBeamMomentBoltedProcedure(StrictModel):
-    icr: BeamBeamMomentBoltedICRSettings = Field(default_factory=BeamBeamMomentBoltedICRSettings)
+class BeamBeamMomentBoltedProcedure(BeamBeamMomentBoltedICRSettings):
+    @model_validator(mode="before")
+    @classmethod
+    def normalize_legacy_icr_block(cls, data: object) -> object:
+        if isinstance(data, dict):
+            icr_block = data.get("icr")
+            if isinstance(icr_block, dict):
+                merged = dict(icr_block)
+                for key, value in data.items():
+                    if key != "icr":
+                        merged[key] = value
+                return merged
+        return data
 
 
 class BeamBeamMomentBoltedCase(CaseBase):
@@ -1326,12 +1365,19 @@ class BeamBeamMomentBoltedCase(CaseBase):
                 self.units_system,
                 f"loads.{field_name}",
             )
-        if self.loads.ey_blt_web is not None:
+        if self.loads.e2_blt_web is not None:
             validate_quantity_unit(
-                self.loads.ey_blt_web,
+                self.loads.e2_blt_web,
                 "length",
                 self.units_system,
-                "loads.ey_blt_web",
+                "loads.e2_blt_web",
+            )
+        if self.loads.e1_blt_flange is not None:
+            validate_quantity_unit(
+                self.loads.e1_blt_flange,
+                "length",
+                self.units_system,
+                "loads.e1_blt_flange",
             )
         expected_moment_unit = "kip-in" if self.units_system == UnitSystem.US else "kN-mm"
         for field_name in ("Mu3_sp", "Mu2_sp", "Tu_sp"):
@@ -1341,9 +1387,12 @@ class BeamBeamMomentBoltedCase(CaseBase):
                     f"Invalid unit at 'loads.{field_name}'. "
                     f"Expected '{expected_moment_unit}' for {self.units_system.value}."
                 )
-        if self.procedure is not None and self.procedure.icr.rult_1_kip is not None:
-            if self.procedure.icr.rult_1_kip.unit != "kip":
-                raise ValueError("Invalid unit at 'procedure.icr.rult_1_kip'. Expected 'kip'.")
+        if self.procedure is not None and self.procedure.rult_1_kip is not None:
+            if self.procedure.rult_1_kip.unit != "kip":
+                raise ValueError("Invalid unit at 'procedure.rult_1_kip'. Expected 'kip'.")
+        if self.procedure is not None and self.procedure.rult_2_kip is not None:
+            if self.procedure.rult_2_kip.unit != "kip":
+                raise ValueError("Invalid unit at 'procedure.rult_2_kip'. Expected 'kip'.")
         return self
 
 

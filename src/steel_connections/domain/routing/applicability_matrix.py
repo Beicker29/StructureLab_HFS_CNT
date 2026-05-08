@@ -369,6 +369,18 @@ APPLICABILITY_MATRIX: list[RuleBinding] = [
         evaluator=bbmb_splice_methods.run_step2_pernos1_method,
     ),
     RuleBinding(
+        rule_id="AISC360.J3.bbmb_splice.step2_pernos2_method",
+        name="bbmb_splice Punto 2 pernos 2 metodo ICR/Elastic",
+        source_document="AISC 360-22 (motor interno ICR/Elastic)",
+        clause="Metodo configurable de pernos grupo 2 (ICR / Elastic)",
+        chapter="J3",
+        page=None,
+        connection_family="Fully_Restrained_Moment",
+        connection_type="bbmb_splice",
+        load_state="strength",
+        evaluator=bbmb_splice_methods.run_step2_pernos2_method,
+    ),
+    RuleBinding(
         rule_id="DG1.01.1.1.base_plate_anchor_strength",
         name="Base plate and anchor rod design",
         source_document="Design Guide 1 (3rd Edition)",

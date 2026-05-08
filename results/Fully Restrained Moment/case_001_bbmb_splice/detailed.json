@@ -3575,24 +3575,25 @@
       "calculation_memory": {
         "inputs": {
           "method_selected": "icr",
-          "Pu_sp": {
+          "method_effective": "icr",
+          "P3_blt_web": {
             "value": 66.987298,
             "unit": "kN"
           },
-          "Vu2_sp": {
+          "v2_blt_web": {
             "value": 250.0,
             "unit": "kN"
           },
-          "ex_blt_web": {
+          "e3_blt_web": {
             "value": 76.19999999999999,
             "unit": "mm"
           },
-          "ey_blt_web": {
+          "e2_blt_web": {
             "value": 0.0,
             "unit": "mm"
           },
           "eccentricity_source": "splice_formula_ex_plus_input_ey",
-          "Muz_blt_web": {
+          "Mu1_blt_web": {
             "value": 19049.999999999993,
             "unit": "kN-mm"
           },
@@ -3720,7 +3721,8 @@
             "resultant_kip": 58.18483597730279
           },
           "active_mode_data": {
-            "method": "icr",
+            "method_selected": "icr",
+            "method_effective": "icr",
             "converged": true,
             "icr_x_in": -7.580930979548083,
             "icr_y_in": 10.071891848994406,
@@ -4011,6 +4013,7 @@
             "id": "bbmb_splice.step2.pernos1.method",
             "scope": "pernos_1",
             "method_selected": "icr",
+            "method_effective": "icr",
             "px": {
               "value": 66.987298,
               "unit": "kN"
@@ -4508,14 +4511,413 @@
         },
         "equation": "ICR: DCR = ConnectionDemand / ConnectionCapacity",
         "units_trace": {
-          "Pu_sp": "kN",
-          "Vu2_sp": "kN",
-          "ex_blt_web": "mm",
-          "ey_blt_web": "mm",
-          "Muz_blt_web": "kN-mm"
+          "P3_blt_web": "kN",
+          "v2_blt_web": "kN",
+          "e3_blt_web": "mm",
+          "e2_blt_web": "mm",
+          "Mu1_blt_web": "kN-mm"
         },
         "final_capacity": {
           "value": 1617.943820870446,
+          "unit": "kN"
+        }
+      },
+      "notes": null
+    },
+    {
+      "name": "bbmb_splice Punto 2 pernos 2 metodo ICR/Elastic",
+      "rule_id": "AISC360.J3.bbmb_splice.step2_pernos2_method",
+      "clause": "Metodo configurable de pernos grupo 2 (ICR / Elastic)",
+      "source_document": "AISC 360-22 (motor interno ICR/Elastic)",
+      "demand": {
+        "value": 136.4471827418033,
+        "unit": "kN"
+      },
+      "capacity": {
+        "value": 94.91264467845005,
+        "unit": "kN"
+      },
+      "dcr": 1.437608057430768,
+      "status": "FAIL",
+      "calculation_memory": {
+        "inputs": {
+          "method_selected": "elastic_superposition",
+          "method_effective": "elastic_superposition",
+          "P3_blt_flange": {
+            "value": 1091.5774619344263,
+            "unit": "kN"
+          },
+          "v1_blt_flange": {
+            "value": 0.0,
+            "unit": "kN"
+          },
+          "e3_blt_flange": {
+            "value": 305.4,
+            "unit": "mm"
+          },
+          "e1_blt_flange": {
+            "value": 0.0,
+            "unit": "mm"
+          },
+          "eccentricity_source": "splice_formula_e3_plus_input_e1",
+          "Mu2_blt_flange": {
+            "value": 0.0,
+            "unit": "kN-mm"
+          },
+          "g1_blt_flange": {
+            "value": 92.0,
+            "unit": "mm"
+          },
+          "n_blt_flange_x": 4,
+          "n_blt_flange_z": 1,
+          "bolt_group_2_points_in": [
+            {
+              "tag": "f1",
+              "x": 0.0,
+              "y": -1.8110236220472442
+            },
+            {
+              "tag": "f2",
+              "x": 0.0,
+              "y": 1.8110236220472442
+            },
+            {
+              "tag": "f3",
+              "x": 2.362204724409449,
+              "y": -1.8110236220472442
+            },
+            {
+              "tag": "f4",
+              "x": 2.362204724409449,
+              "y": 1.8110236220472442
+            },
+            {
+              "tag": "f5",
+              "x": 4.724409448818898,
+              "y": -1.8110236220472442
+            },
+            {
+              "tag": "f6",
+              "x": 4.724409448818898,
+              "y": 1.8110236220472442
+            },
+            {
+              "tag": "f7",
+              "x": 7.086614173228347,
+              "y": -1.8110236220472442
+            },
+            {
+              "tag": "f8",
+              "x": 7.086614173228347,
+              "y": 1.8110236220472442
+            }
+          ],
+          "tolerance_2": 0.001,
+          "max_iterations_2": 1000,
+          "rult_2_kip": {
+            "value": 74.0,
+            "unit": "kip"
+          }
+        },
+        "intermediates": {
+          "elastic_capacity_basis": {
+            "db_flange_us": {
+              "value": 0.75,
+              "unit": "in"
+            },
+            "ab_flange_in2": 0.44178646691106466,
+            "fnv_flange_us": {
+              "value": 53.663962960177415,
+              "unit": "ksi"
+            },
+            "phi_bv": 0.9,
+            "std_blt_flange": "ASTM A325",
+            "desc_blt_flange": "Grupo 120"
+          },
+          "bolt_group_geometry": {
+            "bolt_count": 8,
+            "centroid_x_in": 3.5433070866141736,
+            "centroid_y_in": 0.0,
+            "ix_in2": 26.23845247690496,
+            "iy_in2": 55.80011160022321,
+            "ixy_in2": 0.0,
+            "ip_in2": 82.03856407712817,
+            "bolts_offsets": [
+              {
+                "tag": "f1",
+                "x_in": 0.0,
+                "y_in": -1.8110236220472442,
+                "dx_in": -3.5433070866141736,
+                "dy_in": -1.8110236220472442,
+                "r_in": 3.979300399525442
+              },
+              {
+                "tag": "f2",
+                "x_in": 0.0,
+                "y_in": 1.8110236220472442,
+                "dx_in": -3.5433070866141736,
+                "dy_in": 1.8110236220472442,
+                "r_in": 3.979300399525442
+              },
+              {
+                "tag": "f3",
+                "x_in": 2.362204724409449,
+                "y_in": -1.8110236220472442,
+                "dx_in": -1.1811023622047245,
+                "dy_in": -1.8110236220472442,
+                "r_in": 2.1621307429521233
+              },
+              {
+                "tag": "f4",
+                "x_in": 2.362204724409449,
+                "y_in": 1.8110236220472442,
+                "dx_in": -1.1811023622047245,
+                "dy_in": 1.8110236220472442,
+                "r_in": 2.1621307429521233
+              },
+              {
+                "tag": "f5",
+                "x_in": 4.724409448818898,
+                "y_in": -1.8110236220472442,
+                "dx_in": 1.1811023622047245,
+                "dy_in": -1.8110236220472442,
+                "r_in": 2.1621307429521233
+              },
+              {
+                "tag": "f6",
+                "x_in": 4.724409448818898,
+                "y_in": 1.8110236220472442,
+                "dx_in": 1.1811023622047245,
+                "dy_in": 1.8110236220472442,
+                "r_in": 2.1621307429521233
+              },
+              {
+                "tag": "f7",
+                "x_in": 7.086614173228347,
+                "y_in": -1.8110236220472442,
+                "dx_in": 3.5433070866141736,
+                "dy_in": -1.8110236220472442,
+                "r_in": 3.979300399525442
+              },
+              {
+                "tag": "f8",
+                "x_in": 7.086614173228347,
+                "y_in": 1.8110236220472442,
+                "dx_in": 3.5433070866141736,
+                "dy_in": 1.8110236220472442,
+                "r_in": 3.979300399525442
+              }
+            ]
+          },
+          "load_in_plane_kip_in": {
+            "vx_kip": 245.39637552894285,
+            "vy_kip": 0.0,
+            "mz_kip_in": 0.0,
+            "ex_in": 12.023622047244094,
+            "ey_in": 0.0,
+            "resultant_kip": 245.39637552894285
+          },
+          "active_mode_data": {
+            "method_selected": "elastic_superposition",
+            "method_effective": "elastic_superposition",
+            "demand_kip": 30.674546941117857,
+            "capacity_kip": 21.337211336960717,
+            "dcr": 1.437608057430768,
+            "sum_fx_kip": -245.39637552894285,
+            "sum_fy_kip": 0.0,
+            "sum_mz_kip_in": 0.0
+          },
+          "icr_active_or_compare": {
+            "converged": false,
+            "note": "ICR is not applicable when Mz=0.",
+            "icr_x": 3.5433070866141736,
+            "icr_y": 0.0,
+            "cu": null,
+            "demand": null,
+            "capacity": null,
+            "dcr": null,
+            "final_residual": null,
+            "n_iterations": 0,
+            "iterations": []
+          },
+          "icr_compare_capacity": null,
+          "method_report": {
+            "id": "bbmb_splice.step2.pernos2.method",
+            "scope": "pernos_2",
+            "method_selected": "elastic_superposition",
+            "method_effective": "elastic_superposition",
+            "px": {
+              "value": 1091.5774619344263,
+              "unit": "kN"
+            },
+            "py": {
+              "value": 0.0,
+              "unit": "kN"
+            },
+            "ex": {
+              "value": 305.4,
+              "unit": "mm"
+            },
+            "ey": {
+              "value": 0.0,
+              "unit": "mm"
+            },
+            "eccentricity_source": "splice_formula_e3_plus_input_e1",
+            "mz": {
+              "value": 0.0,
+              "unit": "kN-mm"
+            },
+            "demand": {
+              "value": 136.4471827418033,
+              "unit": "kN"
+            },
+            "capacity": {
+              "value": 94.91264467845005,
+              "unit": "kN"
+            },
+            "dcr": 1.437608057430768,
+            "status": "FAIL",
+            "cu": null,
+            "icr_compare_capacity": null,
+            "final_residual": null,
+            "n_iterations": 0,
+            "methods_summary": [
+              {
+                "method": "elastic_superposition",
+                "applicable": true,
+                "status": "FAIL",
+                "demand_kip": 30.674546941117857,
+                "capacity_kip": 21.337211336960717,
+                "dcr": 1.437608057430768,
+                "direct_fx_kip": -30.674546941117857,
+                "direct_fy_kip": -0.0,
+                "ip_in2": 82.03856407712817,
+                "sum_fx_kip": -245.39637552894285,
+                "sum_fy_kip": 0.0,
+                "sum_mz_kip_in": 0.0,
+                "bolt_forces": [
+                  {
+                    "tag": "f1",
+                    "fx_kip": -30.674546941117857,
+                    "fy_kip": 0.0,
+                    "resultant_kip": 30.674546941117857,
+                    "moment_about_cg_kip_in": -55.552329105961476
+                  },
+                  {
+                    "tag": "f2",
+                    "fx_kip": -30.674546941117857,
+                    "fy_kip": 0.0,
+                    "resultant_kip": 30.674546941117857,
+                    "moment_about_cg_kip_in": 55.552329105961476
+                  },
+                  {
+                    "tag": "f3",
+                    "fx_kip": -30.674546941117857,
+                    "fy_kip": 0.0,
+                    "resultant_kip": 30.674546941117857,
+                    "moment_about_cg_kip_in": -55.552329105961476
+                  },
+                  {
+                    "tag": "f4",
+                    "fx_kip": -30.674546941117857,
+                    "fy_kip": 0.0,
+                    "resultant_kip": 30.674546941117857,
+                    "moment_about_cg_kip_in": 55.552329105961476
+                  },
+                  {
+                    "tag": "f5",
+                    "fx_kip": -30.674546941117857,
+                    "fy_kip": 0.0,
+                    "resultant_kip": 30.674546941117857,
+                    "moment_about_cg_kip_in": -55.552329105961476
+                  },
+                  {
+                    "tag": "f6",
+                    "fx_kip": -30.674546941117857,
+                    "fy_kip": 0.0,
+                    "resultant_kip": 30.674546941117857,
+                    "moment_about_cg_kip_in": 55.552329105961476
+                  },
+                  {
+                    "tag": "f7",
+                    "fx_kip": -30.674546941117857,
+                    "fy_kip": 0.0,
+                    "resultant_kip": 30.674546941117857,
+                    "moment_about_cg_kip_in": -55.552329105961476
+                  },
+                  {
+                    "tag": "f8",
+                    "fx_kip": -30.674546941117857,
+                    "fy_kip": 0.0,
+                    "resultant_kip": 30.674546941117857,
+                    "moment_about_cg_kip_in": 55.552329105961476
+                  }
+                ],
+                "note": null
+              },
+              {
+                "method": "elastic_ecr",
+                "applicable": false,
+                "status": "PASS",
+                "demand_kip": null,
+                "capacity_kip": null,
+                "dcr": null,
+                "ax_in": null,
+                "ay_in": null,
+                "ecc_x_in": null,
+                "ecc_y_in": null,
+                "dmax_in": null,
+                "sum_d2_in2": null,
+                "center_x_in": null,
+                "center_y_in": null,
+                "ce": null,
+                "sum_fx_kip": null,
+                "sum_fy_kip": null,
+                "sum_mz_kip_in": null,
+                "bolt_forces": [],
+                "note": "Elastic ECR is not applicable when Mz=0."
+              },
+              {
+                "method": "icr",
+                "applicable": false,
+                "status": "PASS",
+                "converged": false,
+                "acceptance_ok": false,
+                "demand_kip": null,
+                "capacity_kip": null,
+                "dcr": null,
+                "icr_x_in": 3.5433070866141736,
+                "icr_y_in": 0.0,
+                "cu": null,
+                "final_residual": null,
+                "n_iterations": 0,
+                "law_mu": 10.0,
+                "law_lambda": 0.55,
+                "law_delta_max": 0.34,
+                "bolt_forces": [],
+                "note": "ICR is not applicable when Mz=0."
+              }
+            ],
+            "icr_iterations": [],
+            "capacity_basis": {
+              "elastic_capacity_kip": 21.337211336960717,
+              "icr_reporting_capacity_kip": 74.0
+            }
+          }
+        },
+        "design_factors": {
+          "phi_bv": 0.9
+        },
+        "equation": "Elastic Superposition: DCR = BoltDemand / BoltCapacity",
+        "units_trace": {
+          "P3_blt_flange": "kN",
+          "v1_blt_flange": "kN",
+          "e3_blt_flange": "mm",
+          "e1_blt_flange": "mm",
+          "Mu2_blt_flange": "kN-mm"
+        },
+        "final_capacity": {
+          "value": 94.91264467845005,
           "unit": "kN"
         }
       },
@@ -4525,9 +4927,9 @@
   "errors": [],
   "summary": {
     "pass_count": 1,
-    "fail_count": 1,
+    "fail_count": 2,
     "error_count": 0,
     "not_implemented_count": 0,
-    "worst_dcr": 0.15996788129230696
+    "worst_dcr": 1.437608057430768
   }
 }

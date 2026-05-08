@@ -8,7 +8,7 @@ Fuente oficial de nomenclatura: [`/VARIABLES_SPLICE_NAMING.txt`](/D:/Users/byoma
 - `geometry`: geometria de viga/platinas/patrones de pernos.
 - `loads`: acciones de diseno del splice.
 - `design_factors`: factores `phi`.
-- `procedure.icr`: selector de metodo (`elastic_superposition`, `elastic_ecr`, `icr`).
+- `procedure`: configuracion separada de metodo por grupo de pernos.
 
 ## Variables implementadas
 
@@ -77,7 +77,8 @@ Variables derivadas (no input):
 - `Mu2_sp`
 - `Tu_sp`
 - `alpha_Pu_web` (default `0.0`)
-- `ey_blt_web` (opcional, default interno `0`)
+- `e2_blt_web` (opcional, default interno `0`)
+- `e1_blt_flange` (opcional, default interno `0`; ubicar debajo de `e2_blt_web`)
 
 ### `design_factors`
 - `phi_bt`
@@ -87,13 +88,25 @@ Variables derivadas (no input):
 - `phi_bs`
 - `phi_sc` (opcional)
 
-### `procedure.icr`
-- `method`
+### `procedure`
+- `method_1` (pernos 1 de alma; `elastic_superposition`, `elastic_ecr`, `icr`)
 - `tolerance_1`
 - `max_iterations_1`
-- `rult_1_kip` (requerido solo con `method=icr`)
+- `rult_1_kip` (requerido solo con `method_1=icr`)
+- `method_2` (pernos 2 de ala; `elastic_superposition`, `elastic_ecr`, `icr`)
+- `tolerance_2`
+- `max_iterations_2`
+- `rult_2_kip` (requerido solo con `method_2=icr`)
+- `method` (legado/opcional; si se entrega, completa `method_1`/`method_2` cuando falten)
 
 ## Excentricidad usada por el metodo de pernos 1
 - `ex = gap_sp + 2*Le_blt_web_x1 + (n_blt_web_x-1)*g_blt_web`
-- `ey = ey_blt_web` (o `0` si no se entrega)
+- `ey = e2_blt_web` (o `0` si no se entrega)
 - `Mz = Vy*ex - Vx*ey`
+
+## Excentricidad usada por el metodo de pernos 2 (una aleta)
+- `Px = P3_blt_flange = (1 - alpha_Pu_web)*Pu_sp + Mu3_sp/(d_vg - tf_vg)`
+- `Py = v1_blt_flange = 0.5*Vu3_sp`
+- `ex = e3_blt_flange = gap_sp + 2*Le_blt_flange_x1 + (n_blt_flange_x-1)*p_blt_flange`
+- `ey = e1_blt_flange` (o `0` si no se entrega)
+- `Mz = Mu2_blt_flange = Py*ex - Px*ey`

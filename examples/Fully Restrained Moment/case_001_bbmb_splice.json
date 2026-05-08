@@ -145,7 +145,11 @@
       "unit": "kN-mm"
     },
     "alpha_Pu_web": 0.0,
-    "ey_blt_web": {
+    "e2_blt_web": {
+      "value": 0.0,
+      "unit": "mm"
+    },
+    "e1_blt_flange": {
       "value": 0.0,
       "unit": "mm"
     }
@@ -159,14 +163,19 @@
     "phi_sc": 1.0
   },
   "procedure": {
-    "icr": {
-      "method": "ICR",
-      "tolerance_1": 0.001,
-      "max_iterations_1": 1000,
-      "rult_1_kip": {
-        "value": 74.0,
-        "unit": "kip"
-      }
+    "method_1": "ICR",
+    "tolerance_1": 0.001,
+    "max_iterations_1": 1000,
+    "rult_1_kip": {
+      "value": 74.0,
+      "unit": "kip"
+    },
+    "method_2": "elastic_superposition",
+    "tolerance_2": 0.001,
+    "max_iterations_2": 1000,
+    "rult_2_kip": {
+      "value": 74.0,
+      "unit": "kip"
     }
   }
 }

@@ -1348,6 +1348,28 @@ def _normalize_fully_restrained_splice_payload(payload: dict[str, Any]) -> dict[
         return normalized
     if normalized.get("connection_type") != "bbmb_splice":
         return normalized
+    def _normalize_splice_load_aliases(loads_obj: dict[str, Any] | None) -> dict[str, Any] | None:
+        if not isinstance(loads_obj, dict):
+            return loads_obj
+        loads_copy = deepcopy(loads_obj)
+        if "e2_blt_web" not in loads_copy:
+            alias_value = _first_present(
+                loads_copy,
+                "ey_blt_web",
+            )
+            if alias_value is not None:
+                loads_copy["e2_blt_web"] = alias_value
+        if "e1_blt_flange" not in loads_copy:
+            alias_value = _first_present(
+                loads_copy,
+                "ez_blt_flange",
+            )
+            if alias_value is not None:
+                loads_copy["e1_blt_flange"] = alias_value
+        loads_copy.pop("ey_blt_web", None)
+        loads_copy.pop("ez_blt_flange", None)
+        return loads_copy
+
     # Canonical payload already present.
     if (
         isinstance(normalized.get("sections"), dict)
@@ -1358,6 +1380,7 @@ def _normalize_fully_restrained_splice_payload(payload: dict[str, Any]) -> dict[
         geometry = deepcopy(normalized["geometry"])
         geometry.pop("Le_blt_web_y3", None)
         normalized["geometry"] = geometry
+        normalized["loads"] = _normalize_splice_load_aliases(_first_dict(normalized, "loads", "cargas", "cargas_splice"))
         return normalized
 
     # Subdivision by scope (as defined in VARIABLES_SPLICE_NAMING.txt).
@@ -1379,7 +1402,7 @@ def _normalize_fully_restrained_splice_payload(payload: dict[str, Any]) -> dict[
         "pernos_grupo_2_ala",
         "bolts_flange",
     )
-    loads = _first_dict(normalized, "loads", "cargas", "cargas_splice")
+    loads = _normalize_splice_load_aliases(_first_dict(normalized, "loads", "cargas", "cargas_splice"))
     design_factors = _first_dict(normalized, "design_factors", "factores_diseno")
     procedure = _first_dict(normalized, "procedure", "procedimiento")
 

@@ -130,6 +130,14 @@ Fuente canonica: `src/steel_connections/codes/engineering/common`.
 
 - Genera patron rectangular de pernos.
 
+`build_mirrored_half_flange_bolt_pattern(nx, nz_half, px, gz, g1z, x0=0, y0=0, tag_prefix='f')`
+
+- Genera patron de pernos para una aleta cuando `n_blt_flange_z` se define por media aleta.
+- Filas transversales:
+  - `y_(m,±) = ±(g1z/2 + m*gz)`, con `m = 0..nz_half-1`.
+- Total de filas transversales en una aleta:
+  - `N_y = 2*nz_half`.
+
 ## 5) Analisis elastico de grupos de pernos
 
 `solve_elastic_superposition(geometry, load, bolt_capacity, epsilon=1e-12)`
@@ -204,6 +212,7 @@ Listado sincronizado con `src/steel_connections/codes/engineering/common/__init_
 - `build_bolt_group_geometry`
 - `build_in_plane_load`
 - `build_in_plane_load_from_explicit_eccentricity`
+- `build_mirrored_half_flange_bolt_pattern`
 - `build_rectangular_bolt_pattern`
 - `compute_bolt_tension_rupture_capacity_per_bolt`
 - `compute_bolt_shear_rupture_capacity_per_bolt`
