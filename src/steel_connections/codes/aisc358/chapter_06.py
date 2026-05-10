@@ -1170,12 +1170,16 @@ def compute_end_plate_height_from_geometry(
     beam_depth: Quantity,
     pfo: Quantity,
     de: Quantity,
+    pb: Quantity | None,
     unit_system: UnitSystem,
 ) -> Quantity:
     validate_quantity_unit(beam_depth, "length", unit_system, "sections.beam_depth")
     validate_quantity_unit(pfo, "length", unit_system, "geometry.pfo")
     validate_quantity_unit(de, "length", unit_system, "geometry.de")
-    return Quantity(value=beam_depth.value + 2.0 * pfo.value + 2.0 * de.value, unit=beam_depth.unit)
+    if pb is not None:
+        validate_quantity_unit(pb, "length", unit_system, "geometry.pb")
+    pb_value = pb.value if pb is not None else 0.0
+    return Quantity(value=beam_depth.value + 2.0 * pfo.value + 2.0 * de.value + 2.0 * pb_value, unit=beam_depth.unit)
 
 
 def compute_stiffener_slenderness_ratio(

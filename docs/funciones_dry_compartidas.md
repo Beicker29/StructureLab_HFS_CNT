@@ -101,6 +101,15 @@ Fuente canonica: `src/steel_connections/codes/engineering/common`.
   - `Rn = Fy*Ag`
   - `phi*Rn = phi_n*Rn`
 
+`compute_whitmore_section_area(plate_width_b, plate_thickness_t, primary_spacing_p, n_primary_lines, internal_gage_g1, secondary_spacing_g, n_secondary_lines, unit_system, whitmore_angle_deg=30)`
+
+- Calcula seccion bruta efectiva tipo Whitmore reusable para conexiones apernadas:
+  - `L_whitmore = 2*(n_primary_lines-1)*p*tan(theta) + g1 + 2*(n_secondary_lines-1)*g`
+  - `A_rect = B*t`
+  - `A_whitmore = L_whitmore*t`
+  - `A_gt = min(A_rect, A_whitmore)`
+- Devuelve `A_gt` y trazabilidad completa (`L_whitmore`, `A_rect`, `A_whitmore`, caso controlante).
+
 ## 3) Limites de precalificacion EP (Tabla 6.1)
 
 `compute_limites_precalificacion_conexion_tipo_ep(connection_type, unit_system)`
@@ -243,6 +252,7 @@ Listado sincronizado con `src/steel_connections/codes/engineering/common/__init_
 - `compute_block_shear_strength_j45`
 - `compute_element_tension_rupture_strength_j41b`
 - `compute_element_tension_yielding_strength_j41a`
+- `compute_whitmore_section_area`
 - `compute_rectangular_bar_flexural_yielding_strength_f111`
 - `compute_member_flexural_rupture_with_tension_flange_holes_f131`
 - `compute_rectangular_bar_ltb_strength_f112`

@@ -214,6 +214,86 @@ def compute_element_tension_yielding_strength_j41a(
     }
 
 
+def compute_whitmore_section_area(
+    *,
+    plate_width_b: Quantity,
+    plate_thickness_t: Quantity,
+    primary_spacing_p: Quantity,
+    n_primary_lines: int,
+    internal_gage_g1: Quantity,
+    secondary_spacing_g: Quantity,
+    n_secondary_lines: int,
+    unit_system: UnitSystem,
+    whitmore_angle_deg: float = 30.0,
+) -> tuple[Quantity, dict[str, Quantity | float | str]]:
+    """Compute Whitmore effective gross section area for bolted plate checks.
+
+    Expressions:
+    - ``L_whitmore = 2*(n_primary_lines-1)*p*tan(theta) + g1 + 2*(n_secondary_lines-1)*g``
+    - ``A_rect = B*t``
+    - ``A_whitmore = L_whitmore*t``
+    - ``A_gt = min(A_rect, A_whitmore)``
+    """
+
+    validate_quantity_unit(plate_width_b, "length", unit_system, "plate_width_b")
+    validate_quantity_unit(plate_thickness_t, "length", unit_system, "plate_thickness_t")
+    validate_quantity_unit(primary_spacing_p, "length", unit_system, "primary_spacing_p")
+    validate_quantity_unit(internal_gage_g1, "length", unit_system, "internal_gage_g1")
+    validate_quantity_unit(secondary_spacing_g, "length", unit_system, "secondary_spacing_g")
+
+    if n_primary_lines < 1:
+        raise ValueError("n_primary_lines must be >= 1.")
+    if n_secondary_lines < 1:
+        raise ValueError("n_secondary_lines must be >= 1.")
+    if whitmore_angle_deg <= 0.0 or whitmore_angle_deg >= 90.0:
+        raise ValueError("whitmore_angle_deg must be between 0 and 90 degrees.")
+
+    length_unit = plate_width_b.unit
+    if not (
+        plate_thickness_t.unit == length_unit
+        and primary_spacing_p.unit == length_unit
+        and internal_gage_g1.unit == length_unit
+        and secondary_spacing_g.unit == length_unit
+    ):
+        raise ValueError(
+            "plate_width_b, plate_thickness_t, primary_spacing_p, internal_gage_g1, and secondary_spacing_g must share length unit."
+        )
+
+    tan_theta = math.tan(math.radians(whitmore_angle_deg))
+    whitmore_length = (
+        2.0 * (n_primary_lines - 1) * primary_spacing_p.value * tan_theta
+        + internal_gage_g1.value
+        + 2.0 * (n_secondary_lines - 1) * secondary_spacing_g.value
+    )
+    whitmore_length_q = Quantity(value=whitmore_length, unit=length_unit)
+
+    area_unit = "in2" if unit_system == UnitSystem.US else "mm2"
+    area_rect = Quantity(
+        value=plate_width_b.value * plate_thickness_t.value,
+        unit=area_unit,
+    )
+    area_whitmore = Quantity(
+        value=whitmore_length_q.value * plate_thickness_t.value,
+        unit=area_unit,
+    )
+    agt = area_rect if area_rect.value <= area_whitmore.value else area_whitmore
+    controlling = "rectangular_b_t" if area_rect.value <= area_whitmore.value else "whitmore"
+
+    return agt, {
+        "reference": "Whitmore section geometry (reusable DRY helper)",
+        "equation_length": "L_whitmore = 2*(n_primary_lines-1)*p*tan(theta) + g1 + 2*(n_secondary_lines-1)*g",
+        "equation_area_rect": "A_rect = B*t",
+        "equation_area_whitmore": "A_whitmore = L_whitmore*t",
+        "equation_area_governing": "A_gt = min(A_rect, A_whitmore)",
+        "whitmore_angle_deg": whitmore_angle_deg,
+        "tan_theta": tan_theta,
+        "whitmore_length": whitmore_length_q,
+        "area_rect": area_rect,
+        "area_whitmore": area_whitmore,
+        "controlling": controlling,
+    }
+
+
 def compute_rectangular_bar_flexural_yielding_strength_f111(
     *,
     material_fy: Quantity,

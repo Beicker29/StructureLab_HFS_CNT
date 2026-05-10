@@ -1,4 +1,4 @@
-# Memoria de Cálculo
+﻿# Memoria de Cálculo
 
 - Proyecto: `proj_bseep_si_demo`
 - Caso: `case_si_bseep_4es_w18x175_w24x76`
@@ -350,7 +350,7 @@ Especificaciones tecnicas organizadas por ambito.
 
 ### 2.20 Ámbito `CONTINUITY_PLATE_COL`
 
-## Paso 3 - Revisiónes de requerimientos de propiedades mecánicas y geométricas
+## Paso 3 - Revisiones de requerimientos de propiedades mecánicas y geométricas
 
 Comparacion directa de valor calculado contra limite normativo (sin formato DCR).
 
@@ -710,7 +710,7 @@ Comparacion directa de valor calculado contra limite normativo (sin formato DCR)
 #### Chequeo 3.5.8 - Espesor individual minimo del alma de columna (`tw_col`)
 
 - Ámbito: `COLUMN`
-- Verificacion: `tw_col >= (dz_dp_col + wz_dp_col)/90; si use_weld_7_col=false: dz_dp_col=d_col-2*tf_col, wz_dp_col=max{d_lado-2*tf_lado}; si use_weld_7_col=true: dz_dp_col=h_dp_col/(nfilas_w7_col + 1), wz_dp_col=b_dp_col/(ncolumna_w7_col + 1); 22.6 mm >= 11.11 mm`
+- Verificacion: `tw_col >= (dz_dp_col + wz_dp_col)/90; si use_weld_7_col=false: wz_dp_col=d_col-2*tf_col, dz_dp_col=max{d_lado-2*tf_lado}; si use_weld_7_col=true: h_w7_col=max{d_lado-2*tf_lado}/(nfilas_w7_col + 1), b_w7_col=b_dp_col/(ncolumna_w7_col + 1), dz_dp_col=h_w7_col, wz_dp_col=b_w7_col; 22.6 mm >= 11.11 mm`
 - Clausula: `Documento: AISC 358-22 | Seccion: AISC 341-22w E3.6e.2`
 - Resultado: 🟢 Cumple
 
@@ -1825,7 +1825,7 @@ Donde:
 - Ecuacion: `Ru_w5_v2_col = MIN{Ru1..Ru9}; phi*Rn1_w6-dp_v2_col = phi_fragil * 0.6 * fu_dp_col * t_dp_col * L_w6_col; phi*Rn2_w6-dp_v2_col = phi_no_ductil * 0.6 * fy_dp_col * t_dp_col * L_w6_col; phi*Rn1_w6-cw_v2_col = phi_fragil * 0.6 * fu_col * tw_col * L_w6_col; phi*Rn2_w6-cw_v2_col = phi_no_ductil * 0.6 * fy_col * tw_col * L_w6_col; phi*Rn_w6_v2_col = min(phi*Rn1_w6-dp_v2_col, phi*Rn2_w6-dp_v2_col, phi*Rn1_w6-cw_v2_col, phi*Rn2_w6-cw_v2_col); DCR_w6_v2_col = Ru_w5_v2_col / phi*Rn_w6_v2_col`
 - tipo_w6_col: `CJP`
 - CJP: `Cumple`
-- Resultado: `🟢 Cumple`
+- Resultado: `?? Cumple`
 
 ## Paso 27- Revisión de resistencia de soldadura # 8 (Platina de enchape con aleta de columna)
 

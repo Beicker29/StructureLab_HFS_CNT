@@ -131,16 +131,16 @@
       "unit": "kN"
     },
     "Mu3_sp": {
-      "value": 450000.0,
-      "unit": "kN-mm"
+      "value": 450.0,
+      "unit": "kN-m"
     },
     "Mu2_sp": {
       "value": 0.0,
-      "unit": "kN-mm"
+      "unit": "kN-m"
     },
     "Tu_sp": {
       "value": 0.0,
-      "unit": "kN-mm"
+      "unit": "kN-m"
     },
     "alpha_Pu_web": 0.0,
     "e2_blt_web": {

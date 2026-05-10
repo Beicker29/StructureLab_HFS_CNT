@@ -514,10 +514,26 @@ def run_step1_viga_detailing(case: BeamBeamMomentBoltedCase, rule_binding: objec
     if case.units_system == UnitSystem.US and case.loads.Pu_sp.unit == "lb":
         pu_base = case.loads.Pu_sp.value / 1000.0
     mu3_base = case.loads.Mu3_sp.value
-    if case.units_system == UnitSystem.SI and case.loads.Mu3_sp.unit == "N-mm":
-        mu3_base = case.loads.Mu3_sp.value / 1000.0
-    if case.units_system == UnitSystem.US and case.loads.Mu3_sp.unit == "lb-in":
-        mu3_base = case.loads.Mu3_sp.value / 1000.0
+    if case.units_system == UnitSystem.SI:
+        # Keep mu3_base in kN-mm to match denominator in mm and get force in kN.
+        if case.loads.Mu3_sp.unit == "kN-m":
+            mu3_base = case.loads.Mu3_sp.value * 1000.0
+        elif case.loads.Mu3_sp.unit == "kN-mm":
+            mu3_base = case.loads.Mu3_sp.value
+        elif case.loads.Mu3_sp.unit == "N-mm":
+            mu3_base = case.loads.Mu3_sp.value / 1000.0
+        else:
+            raise ValueError("Unsupported Mu3_sp unit for SI in splice detailing.")
+    else:
+        # Keep mu3_base in kip-in to match denominator in in and get force in kip.
+        if case.loads.Mu3_sp.unit == "kip-in":
+            mu3_base = case.loads.Mu3_sp.value
+        elif case.loads.Mu3_sp.unit == "kip-ft":
+            mu3_base = case.loads.Mu3_sp.value * 12.0
+        elif case.loads.Mu3_sp.unit == "lb-in":
+            mu3_base = case.loads.Mu3_sp.value / 1000.0
+        else:
+            raise ValueError("Unsupported Mu3_sp unit for US in splice detailing.")
     ru1_flange_p3_raw = (1.0 - case.loads.alpha_Pu_web) * pu_base + mu3_base / (dvg_catalog.value - tf_catalog.value)
     ru1_flange_p3_vg = Quantity(value=ru1_flange_p3_raw, unit=force_unit)
     dcr1_flange_p3_vg: float | None = None
@@ -710,6 +726,22 @@ def run_step1_viga_detailing(case: BeamBeamMomentBoltedCase, rule_binding: objec
     )
     rn1_flange_m1_vg = flange_flex_rupture_m1_inter.get("mn")
     ru1_flange_m1_vg = case.loads.Mu3_sp
+    if (
+        isinstance(phi_rn1_flange_m1_vg, Quantity)
+        and ru1_flange_m1_vg.unit != phi_rn1_flange_m1_vg.unit
+    ):
+        conversions = {
+            ("kN-m", "kN-mm"): 1000.0,
+            ("kN-mm", "kN-m"): 1.0 / 1000.0,
+            ("kip-ft", "kip-in"): 12.0,
+            ("kip-in", "kip-ft"): 1.0 / 12.0,
+        }
+        factor = conversions.get((ru1_flange_m1_vg.unit, phi_rn1_flange_m1_vg.unit))
+        if factor is not None:
+            ru1_flange_m1_vg = Quantity(
+                value=ru1_flange_m1_vg.value * factor,
+                unit=phi_rn1_flange_m1_vg.unit,
+            )
     dcr1_flange_m1_vg: float | None = None
     result1_flange_m1_vg = "FAIL"
     limit_applies_flange_m1 = bool(flange_flex_rupture_m1_inter.get("tensile_rupture_limit_applies"))

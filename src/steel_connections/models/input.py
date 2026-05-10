@@ -1388,7 +1388,7 @@ class BeamBeamMomentBoltedCase(CaseBase):
                 self.units_system,
                 "loads.e1_blt_flange",
             )
-        expected_moment_unit = "kip-in" if self.units_system == UnitSystem.US else "kN-mm"
+        expected_moment_unit = "kip-in" if self.units_system == UnitSystem.US else "kN-m"
         for field_name in ("Mu3_sp", "Mu2_sp", "Tu_sp"):
             value = getattr(self.loads, field_name)
             if value.unit != expected_moment_unit:

@@ -173,16 +173,21 @@ def _resolve_flange_step2_components(
     vu3_sp = case.loads.Vu3_sp
     if case.units_system == UnitSystem.US:
         force_unit = "kip"
-        moment_unit = "kip-in"
+        input_moment_unit = "kip-in"
+        derived_moment_unit = "kip-in"
+        clear_depth_for_div = clear_depth
     else:
         force_unit = "kN"
-        moment_unit = "kN-mm"
+        input_moment_unit = "kN-m"
+        # Derived from force (kN) * length (mm) in splice geometry checks/reporting.
+        derived_moment_unit = "kN-mm"
+        clear_depth_for_div = clear_depth / 1000.0
     if pu_sp.unit != force_unit or vu3_sp.unit != force_unit:
         raise ValueError(f"Expected Pu_sp/Vu3_sp in '{force_unit}' for step2 pernos2.")
-    if mu3_sp.unit != moment_unit:
-        raise ValueError(f"Expected Mu3_sp in '{moment_unit}' for step2 pernos2.")
+    if mu3_sp.unit != input_moment_unit:
+        raise ValueError(f"Expected Mu3_sp in '{input_moment_unit}' for step2 pernos2.")
 
-    p3_value = (1.0 - case.loads.alpha_Pu_web) * pu_sp.value + mu3_sp.value / clear_depth
+    p3_value = (1.0 - case.loads.alpha_Pu_web) * pu_sp.value + mu3_sp.value / clear_depth_for_div
     p3_blt_flange = Quantity(value=p3_value, unit=force_unit)
     v1_blt_flange = Quantity(value=0.5 * vu3_sp.value, unit=force_unit)
 
@@ -207,7 +212,7 @@ def _resolve_flange_step2_components(
         eccentricity_source = "splice_formula_e3_plus_input_e1"
 
     mu2_value = v1_blt_flange.value * e3_blt_flange.value - p3_blt_flange.value * e1_blt_flange.value
-    mu2_blt_flange = Quantity(value=mu2_value, unit=moment_unit)
+    mu2_blt_flange = Quantity(value=mu2_value, unit=derived_moment_unit)
     return (
         p3_blt_flange,
         v1_blt_flange,

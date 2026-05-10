@@ -22,6 +22,7 @@ from .shear import compute_element_shear_rupture_strength_j43
 from .shear import compute_block_shear_strength_j45
 from .shear import compute_element_tension_rupture_strength_j41b
 from .shear import compute_element_tension_yielding_strength_j41a
+from .shear import compute_whitmore_section_area
 from .shear import compute_rectangular_bar_flexural_yielding_strength_f111
 from .shear import compute_member_flexural_rupture_with_tension_flange_holes_f131
 from .shear import compute_rectangular_bar_net_flexural_rupture_strength_j55
@@ -59,6 +60,7 @@ __all__ = [
     "compute_block_shear_strength_j45",
     "compute_element_tension_rupture_strength_j41b",
     "compute_element_tension_yielding_strength_j41a",
+    "compute_whitmore_section_area",
     "compute_rectangular_bar_flexural_yielding_strength_f111",
     "compute_member_flexural_rupture_with_tension_flange_holes_f131",
     "compute_rectangular_bar_net_flexural_rupture_strength_j55",

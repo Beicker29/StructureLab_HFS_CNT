@@ -75,9 +75,9 @@ Variables derivadas (no input):
 - `Pu_sp`
 - `Vu2_sp`
 - `Vu3_sp`
-- `Mu3_sp`
-- `Mu2_sp`
-- `Tu_sp`
+- `Mu3_sp` (SI: `kN-m`)
+- `Mu2_sp` (SI: `kN-m`)
+- `Tu_sp` (SI: `kN-m`)
 - `alpha_Pu_web` (default `0.0`)
 - `e2_blt_web` (opcional, default interno `0`)
 - `e1_blt_flange` (opcional, default interno `0`; ubicar debajo de `e2_blt_web`)

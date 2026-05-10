@@ -247,6 +247,8 @@
           "n_dp_col": 1,
           "extended_dp_col": false,
           "doubler_plate_enabled": false,
+          "use_weld_7_col": null,
+          "usar_weld_7_col": null,
           "beam_clear_span_length_der": {
             "value": 6096.0,
             "unit": "mm"
@@ -334,13 +336,15 @@
           "compactness_ca_beam_calculated": 0.0,
           "compactness_ca_column_calculated": 0.0,
           "dz_dp_col": {
-            "value": 427.2,
-            "unit": "mm"
-          },
-          "wz_dp_col": {
             "value": 572.4,
             "unit": "mm"
           },
+          "wz_dp_col": {
+            "value": 427.2,
+            "unit": "mm"
+          },
+          "h_w7_col": null,
+          "b_w7_col": null,
           "h_dp_col": {
             "value": 873.8000000000001,
             "unit": "mm"
@@ -1191,7 +1195,7 @@
               "clause": "AISC 341-22w E3.6e.2",
               "description": "Espesor individual minimo del alma de columna",
               "calculated_symbol": "tw_col",
-              "limit_symbol": "(dz_dp_col + wz_dp_col)/90; si use_weld_7_col=false: dz_dp_col=d_col-2*tf_col, wz_dp_col=max{d_lado-2*tf_lado}; si use_weld_7_col=true: dz_dp_col=h_dp_col/(nfilas_w7_col + 1), wz_dp_col=b_dp_col/(ncolumna_w7_col + 1)",
+              "limit_symbol": "(dz_dp_col + wz_dp_col)/90; si use_weld_7_col=false: wz_dp_col=d_col-2*tf_col, dz_dp_col=max{d_lado-2*tf_lado}; si use_weld_7_col=true: h_w7_col=max{d_lado-2*tf_lado}/(nfilas_w7_col + 1), b_w7_col=b_dp_col/(ncolumna_w7_col + 1), dz_dp_col=h_w7_col, wz_dp_col=b_w7_col",
               "calculated": {
                 "value": 22.6,
                 "unit": "mm"
@@ -3061,7 +3065,7 @@
               "clause": "AISC 341-22w E3.6e.2",
               "description": "Espesor individual minimo del alma de columna",
               "calculated_symbol": "tw_col",
-              "limit_symbol": "(dz_dp_col + wz_dp_col)/90; si use_weld_7_col=false: dz_dp_col=d_col-2*tf_col, wz_dp_col=max{d_lado-2*tf_lado}; si use_weld_7_col=true: dz_dp_col=h_dp_col/(nfilas_w7_col + 1), wz_dp_col=b_dp_col/(ncolumna_w7_col + 1)",
+              "limit_symbol": "(dz_dp_col + wz_dp_col)/90; si use_weld_7_col=false: wz_dp_col=d_col-2*tf_col, dz_dp_col=max{d_lado-2*tf_lado}; si use_weld_7_col=true: h_w7_col=max{d_lado-2*tf_lado}/(nfilas_w7_col + 1), b_w7_col=b_dp_col/(ncolumna_w7_col + 1), dz_dp_col=h_w7_col, wz_dp_col=b_w7_col",
               "calculated": {
                 "value": 22.6,
                 "unit": "mm"

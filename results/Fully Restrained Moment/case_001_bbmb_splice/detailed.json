@@ -1695,8 +1695,8 @@
               },
               "mu3_sp_var": "Mu3_sp",
               "mu3_sp": {
-                "value": 450000.0,
-                "unit": "kN-mm"
+                "value": 450.0,
+                "unit": "kN-m"
               },
               "d_vg_var": "d_vg",
               "d_vg": {
@@ -1861,8 +1861,8 @@
               "ru1_flange_m1_vg_formula": "Ru1_flange_m1_vg = Mu3_sp",
               "mu3_sp_var": "Mu3_sp",
               "mu3_sp": {
-                "value": 450000.0,
-                "unit": "kN-mm"
+                "value": 450.0,
+                "unit": "kN-m"
               },
               "ru1_flange_m1_vg": {
                 "value": 450000.0,
@@ -1961,8 +1961,8 @@
               },
               "mu3_sp_var": "Mu3_sp",
               "mu3_sp": {
-                "value": 450000.0,
-                "unit": "kN-mm"
+                "value": 450.0,
+                "unit": "kN-m"
               },
               "d_vg_var": "d_vg",
               "d_vg": {
@@ -2206,8 +2206,8 @@
               },
               "mu3_sp_var": "Mu3_sp",
               "mu3_sp": {
-                "value": 450000.0,
-                "unit": "kN-mm"
+                "value": 450.0,
+                "unit": "kN-m"
               },
               "ru4_flange_p3_vg_var": "Ru4_flange_p3(+)_vg",
               "ru4_flange_p3_vg_formula": "Ru4_flange_p3(+)_vg = (1- alpha_Pu_web ) * Pu_sp + Mu3_sp /(d_vg - tf_vg), si <0 entonces 0",
