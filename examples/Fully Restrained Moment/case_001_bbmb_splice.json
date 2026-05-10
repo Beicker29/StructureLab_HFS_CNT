@@ -13,7 +13,7 @@
     "shape_vg": "W18X35",
     "steel_vg": "ASTM A572 Gr 50",
     "gap_sp": {
-      "value": 25.4,
+      "value": 10,
       "unit": "mm"
     },
     "tol_L_vg": {
@@ -54,18 +54,18 @@
     "deformation_at_bolt_hole_service_load_is_design": true,
     "Ubs_web_v2_vg": 0.5,
     "Ubs_web_v3_vg": 0.5,
-    "n_blt_web_x": 1,
+    "n_blt_web_x": 2,
     "n_blt_web_y": 6,
     "g_blt_web": {
-      "value": 76.2,
+      "value": 60.0,
       "unit": "mm"
     },
     "p_blt_web": {
-      "value": 76.2,
+      "value": 60,
       "unit": "mm"
     },
     "Le_blt_web_x1": {
-      "value": 25.4,
+      "value": 35,
       "unit": "mm"
     },
     "Le_blt_web_x2": {
@@ -97,7 +97,7 @@
       "unit": "mm"
     },
     "g_blt_flange": {
-      "value": 40.0,
+      "value": 0.0,
       "unit": "mm"
     },
     "Le_blt_flange_x1": {
@@ -113,17 +113,17 @@
       "unit": "mm"
     },
     "Le_blt_flange_z2": {
-      "value": 40.0,
+      "value": 30,
       "unit": "mm"
     }
   },
   "loads": {
     "Pu_sp": {
-      "value": 66.987298,
+      "value": 0.00,
       "unit": "kN"
     },
     "Vu2_sp": {
-      "value": 250.0,
+      "value": 260.0,
       "unit": "kN"
     },
     "Vu3_sp": {
@@ -131,7 +131,7 @@
       "unit": "kN"
     },
     "Mu3_sp": {
-      "value": 450.0,
+      "value": 250,
       "unit": "kN-m"
     },
     "Mu2_sp": {
@@ -153,12 +153,9 @@
     }
   },
   "design_factors": {
-    "phi_bt": 0.9,
-    "phi_bv": 0.9,
-    "phi_py": 0.9,
-    "phi_pr": 0.75,
-    "phi_bs": 0.75,
-    "phi_sc": 1.0
+    "phi_ductil": 1.0,
+    "phi_no_ductil": 0.9,
+    "phi_fragil": 0.75
   },
   "capacidad_miembro": {
     "phiPnc": {

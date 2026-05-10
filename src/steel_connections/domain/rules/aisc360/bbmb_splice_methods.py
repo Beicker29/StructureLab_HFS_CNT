@@ -268,13 +268,13 @@ def _derive_elastic_bolt_capacity_kip(
     if not isinstance(fnv, Quantity):
         raise ValueError("Unable to resolve bolt shear strength Fnv.")
 
-    phi = case.design_factors.phi_bv
+    phi = case.design_factors.phi_no_ductil
     bolt_capacity_kip = phi * fnv.value * area_in2
     return bolt_capacity_kip, {
         f"db_{suffix}_us": db_us.model_dump(),
         f"ab_{suffix}_in2": area_in2,
         f"fnv_{suffix}_us": fnv.model_dump(),
-        "phi_bv": phi,
+        "phi_no_ductil": phi,
         f"std_blt_{suffix}": bolt_standard,
         f"desc_blt_{suffix}": bolt_description,
     }
@@ -852,7 +852,7 @@ def run_step2_pernos1_method(case: BeamBeamMomentBoltedCase, rule_binding: objec
             },
         },
         design_factors={
-            "phi_bv": case.design_factors.phi_bv,
+            "phi_no_ductil": case.design_factors.phi_no_ductil,
         },
         equation=equation,
         units_trace={
@@ -1196,7 +1196,7 @@ def run_step2_pernos2_method(case: BeamBeamMomentBoltedCase, rule_binding: objec
             },
         },
         design_factors={
-            "phi_bv": case.design_factors.phi_bv,
+            "phi_no_ductil": case.design_factors.phi_no_ductil,
         },
         equation=equation,
         units_trace={

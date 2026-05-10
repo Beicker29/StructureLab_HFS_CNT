@@ -9,6 +9,7 @@ from steel_connections.codes.engineering.common import (
     compute_bolt_hole_bearing_strength_j36,
     compute_bolt_shear_rupture_capacity_per_bolt,
     compute_bolt_hole_tearout_strength_j36,
+    compute_block_shear_strength_j45,
     compute_element_tension_rupture_strength_j41b,
     compute_element_tension_yielding_strength_j41a,
     compute_plate_compression_buckling_strength,
@@ -3231,7 +3232,6 @@ def _render_fully_restrained_splice_outline(
                         f"- Distancia al borde de la platina de ala en x ({_format_text('Le_plt_flange_x2')}) (inp): `{_format_quantity(note_geom.get('le_blt_flange_x2'))}`",
                         f"- Numero de pernos en direccion Z del ala ({_format_text('n_plt_flange_z')}) (inp): `{_format_text(note_geom.get('n_blt_flange_z'))}`",
                         f"- Gage entre columnas de pernos del ala ({_format_text('g_plt_flange')}) (inp): `{_format_quantity(note_geom.get('g_blt_flange'))}`",
-                        f"- Distancia de borde interior 1 en direccion Z del ala ({_format_text('Le_plt_flange_z1')}) (inp): `{_format_quantity(note_geom.get('le_blt_flange_z1'))}`",
                         f"- Distancia de borde interior 2 en direccion Z del ala ({_format_text('Le_plt_flange_z2')}) (inp): `{_format_quantity(note_geom.get('le_blt_flange_z2'))}`",
                         f"- Distancia util entre filas internas de pernos de aleta ({_format_text('g1_plt_flange')}): `{_format_quantity(note_geom.get('g1_blt_flange'))}`",
                         f"- Longitud de platina de ala ({_format_text(note_geom.get('l_plt_flange_var'))}): `{_format_quantity(note_geom.get('l_plt_flange'))}`",
@@ -3741,6 +3741,7 @@ def _render_fully_restrained_splice_outline(
     plt1_combined_forces_note = notes_by_id_scope.get(("bbmb_splice.step5.plt1_web_combined_forces_note", "PLATINA_1"), {})
     plt1_shear_yielding_v2_note = notes_by_id_scope.get(("bbmb_splice.step5.plt1_web_shear_yielding_v2_note", "PLATINA_1"), {})
     plt1_shear_rupture_v2_note = notes_by_id_scope.get(("bbmb_splice.step5.plt1_web_shear_rupture_v2_note", "PLATINA_1"), {})
+    geom_note = notes_by_id_scope.get(("bbmb_splice.step1.geometry_note", "VIGA"), {})
     plt2_geom_note = notes_by_id_scope.get(("bbmb_splice.step1.geometry_formulas_plt2_note", "PLATINA_2"), {})
     plt2_hole_note = notes_by_id_scope.get(("bbmb_splice.step1.plate_2_hole_diameter_note", "PLATINA_2"), {})
     tearout_v3_note = notes_by_id_scope.get(("bbmb_splice.step4.web_tearout_v3_note", "VIGA"), {})
@@ -3904,6 +3905,32 @@ def _render_fully_restrained_splice_outline(
     except (TypeError, ValueError):
         pass
     # 5.1.4 plate 1 block shear in v2 direction
+    rn4_1_plt_v2_web_q = _as_quantity(plt1_block_shear_v2_note.get("rn4_1_plt_v2_web"))
+    rn4_2_plt_v2_web_q = _as_quantity(plt1_block_shear_v2_note.get("rn4_2_plt_v2_web"))
+    try:
+        phi_fragil_plt_v2_web_val = float(plt1_block_shear_v2_note.get("phi_fragil"))
+    except (TypeError, ValueError):
+        phi_fragil_plt_v2_web_val = None
+    phi_rn4_case1_plt_v2_web_q: Quantity | None = None
+    phi_rn4_case2_plt_v2_web_q: Quantity | None = None
+    if (
+        isinstance(rn4_1_plt_v2_web_q, Quantity)
+        and isinstance(phi_fragil_plt_v2_web_val, float)
+    ):
+        phi_rn4_case1_plt_v2_web_q = Quantity(
+            value=rn4_1_plt_v2_web_q.value * phi_fragil_plt_v2_web_val,
+            unit=rn4_1_plt_v2_web_q.unit,
+        )
+    if (
+        isinstance(rn4_2_plt_v2_web_q, Quantity)
+        and isinstance(phi_fragil_plt_v2_web_val, float)
+    ):
+        phi_rn4_case2_plt_v2_web_q = Quantity(
+            value=rn4_2_plt_v2_web_q.value * phi_fragil_plt_v2_web_val,
+            unit=rn4_2_plt_v2_web_q.unit,
+        )
+    controlling_plt_v2_raw = _format_text(plt1_block_shear_v2_note.get("controlling")).lower()
+    controlling_case_plt_v2 = "Caso 1" if "rn1" in controlling_plt_v2_raw else ("Caso 2" if "rn2" in controlling_plt_v2_raw else "n/a")
     phi_rn4_plt_v2_web_q = _as_quantity(plt1_block_shear_v2_note.get("phi_rn4_plt_v2_web"))
     ru4_plt_v2_web_q = _as_quantity(plt1_block_shear_v2_note.get("ru4_plt_v2_web"))
     ru4_plt_v2_web_disp = _convert_ru_to_capacity_unit(ru4_plt_v2_web_q, phi_rn4_plt_v2_web_q)
@@ -4052,6 +4079,24 @@ def _render_fully_restrained_splice_outline(
     # 5.3.1 plate 1 compression buckling (only for Pu_sp < 0)
     ru1_plt_p3_minus_web_q = _as_quantity(plt1_comp_buckling_p3_minus_note.get("ru1_plt_p3_minus_web"))
     phi_rn1_plt_p3_minus_web_q = _as_quantity(plt1_comp_buckling_p3_minus_note.get("phi_rn1_plt_p3_minus_web"))
+    try:
+        phi_no_ductil_plt_p3_minus_web_val = float(plt1_comp_buckling_p3_minus_note.get("phi_no_ductil"))
+    except (TypeError, ValueError):
+        phi_no_ductil_plt_p3_minus_web_val = None
+    try:
+        klr_plt_p3_minus_web_val = float(plt1_comp_buckling_p3_minus_note.get("klr"))
+    except (TypeError, ValueError):
+        klr_plt_p3_minus_web_val = None
+    rn1_plt_p3_minus_web_q: Quantity | None = None
+    if (
+        isinstance(phi_rn1_plt_p3_minus_web_q, Quantity)
+        and isinstance(phi_no_ductil_plt_p3_minus_web_val, float)
+        and abs(phi_no_ductil_plt_p3_minus_web_val) > 1e-12
+    ):
+        rn1_plt_p3_minus_web_q = Quantity(
+            value=phi_rn1_plt_p3_minus_web_q.value / phi_no_ductil_plt_p3_minus_web_val,
+            unit=phi_rn1_plt_p3_minus_web_q.unit,
+        )
     ru1_plt_p3_minus_web_disp = _convert_ru_to_capacity_unit(ru1_plt_p3_minus_web_q, phi_rn1_plt_p3_minus_web_q)
     ru1_plt_p3_minus_web_abs_disp: Quantity | None = None
     if isinstance(ru1_plt_p3_minus_web_disp, Quantity):
@@ -4286,6 +4331,7 @@ def _render_fully_restrained_splice_outline(
     fu_plt_flange_q = _as_quantity(plt2_geom_note.get("fu_plt_flange"))
     t_plt_flange_q = _as_quantity(plt2_geom_note.get("t_plt_flange"))
     p_plt_flange_q = _as_quantity(plt2_geom_note.get("p_blt_flange"))
+    le_plt_flange_x1_q = _as_quantity(plt2_geom_note.get("le_blt_flange_x1"))
     le_plt_flange_x2_q = _as_quantity(plt2_geom_note.get("le_blt_flange_x2"))
     dh_plt_flange_q = _as_quantity(plt2_hole_note.get("dh"))
     svc_hole_deformation_design_flange_plt2 = bool(
@@ -4627,6 +4673,309 @@ def _render_fully_restrained_splice_outline(
             result5_plt_p3_plus_flange = _render_result_label("PASS" if dcr_num <= 1.0 else "FAIL")
         except (TypeError, ValueError):
             result5_plt_p3_plus_flange = _render_result_label("NOT_APPLICABLE")
+    # 6.1.6 plate 2 flange block shear by three geometric cases (J4.3, DRY)
+    phi_fragil_plt_flange_j45 = 0.75
+    le_plt_flange_z2_q = _as_quantity(plt2_geom_note.get("le_blt_flange_z2"))
+    agv1_plt_p3_plus_flange_q: Quantity | None = None
+    anv1_plt_p3_plus_flange_q: Quantity | None = None
+    agt1_plt_p3_plus_flange_q: Quantity | None = None
+    ant1_plt_p3_plus_flange_q: Quantity | None = None
+    rn6_case1_plt_p3_plus_flange_q: Quantity | None = None
+    phi_rn6_case1_plt_p3_plus_flange_q: Quantity | None = None
+    agv2_plt_p3_plus_flange_q: Quantity | None = None
+    anv2_plt_p3_plus_flange_q: Quantity | None = None
+    agt2_plt_p3_plus_flange_q: Quantity | None = None
+    ant2_plt_p3_plus_flange_q: Quantity | None = None
+    rn6_case2_plt_p3_plus_flange_q: Quantity | None = None
+    phi_rn6_case2_plt_p3_plus_flange_q: Quantity | None = None
+    agv3_plt_p3_plus_flange_q: Quantity | None = None
+    anv3_plt_p3_plus_flange_q: Quantity | None = None
+    agt3_plt_p3_plus_flange_q: Quantity | None = None
+    ant3_plt_p3_plus_flange_q: Quantity | None = None
+    rn6_case3_plt_p3_plus_flange_q: Quantity | None = None
+    phi_rn6_case3_plt_p3_plus_flange_q: Quantity | None = None
+    rn6_plt_p3_plus_flange_q: Quantity | None = None
+    phi_rn6_plt_p3_plus_flange_q: Quantity | None = None
+    controlling_case6_plt_p3_plus_flange = "n/a"
+    ubs_plt_p3_plus_flange = 1.0
+    if (
+        isinstance(fu_plt_flange_q, Quantity)
+        and isinstance(fy_plt_flange_q, Quantity)
+        and isinstance(t_plt_flange_q, Quantity)
+        and isinstance(dh_plt_flange_q, Quantity)
+        and isinstance(p_plt_flange_q, Quantity)
+        and isinstance(le_plt_flange_x2_q, Quantity)
+        and isinstance(g1_plt_flange_q, Quantity)
+        and isinstance(g_plt_flange_q, Quantity)
+        and isinstance(le_plt_flange_z2_q, Quantity)
+        and dh_plt_flange_q.unit == t_plt_flange_q.unit
+        and p_plt_flange_q.unit == t_plt_flange_q.unit
+        and le_plt_flange_x2_q.unit == t_plt_flange_q.unit
+        and g1_plt_flange_q.unit == t_plt_flange_q.unit
+        and g_plt_flange_q.unit == t_plt_flange_q.unit
+        and le_plt_flange_z2_q.unit == t_plt_flange_q.unit
+        and n_plt_flange_x >= 1
+        and n_plt_flange_z >= 1
+    ):
+        hole_eff_plt2 = dh_plt_flange_q.value + hole_add_plt2
+        # Caso 1
+        agv1_plt_p3_plus_flange_q = Quantity(
+            value=2.0 * (le_plt_flange_x2_q.value + (n_plt_flange_x - 1) * p_plt_flange_q.value) * t_plt_flange_q.value,
+            unit="mm2" if unit_system_plt2 == UnitSystem.SI else "in2",
+        )
+        anv1_plt_p3_plus_flange_q = Quantity(
+            value=agv1_plt_p3_plus_flange_q.value
+            - 2.0 * (n_plt_flange_x - 0.5) * hole_eff_plt2 * t_plt_flange_q.value,
+            unit=agv1_plt_p3_plus_flange_q.unit,
+        )
+        agt1_plt_p3_plus_flange_q = Quantity(
+            value=(g1_plt_flange_q.value + 2.0 * (n_plt_flange_z - 1) * g_plt_flange_q.value) * t_plt_flange_q.value,
+            unit=agv1_plt_p3_plus_flange_q.unit,
+        )
+        ant1_plt_p3_plus_flange_q = Quantity(
+            value=agt1_plt_p3_plus_flange_q.value - (2.0 * n_plt_flange_z - 1.0) * hole_eff_plt2 * t_plt_flange_q.value,
+            unit=agv1_plt_p3_plus_flange_q.unit,
+        )
+        phi_rn6_case1_plt_p3_plus_flange_q, case1_inter = compute_block_shear_strength_j45(
+            material_fu=fu_plt_flange_q,
+            material_fy=fy_plt_flange_q,
+            net_shear_area_anv=anv1_plt_p3_plus_flange_q,
+            gross_shear_area_agv=agv1_plt_p3_plus_flange_q,
+            net_tension_area_ant=ant1_plt_p3_plus_flange_q,
+            ubs_factor=ubs_plt_p3_plus_flange,
+            phi_n=phi_fragil_plt_flange_j45,
+            unit_system=unit_system_plt2,
+        )
+        rn6_case1_raw = case1_inter.get("rn")
+        if isinstance(rn6_case1_raw, Quantity):
+            rn6_case1_plt_p3_plus_flange_q = rn6_case1_raw
+        # Caso 2 (segun criterio del usuario: Anv2 usa Agv1)
+        agv2_plt_p3_plus_flange_q = Quantity(
+            value=2.0 * (le_plt_flange_x2_q.value + (n_plt_flange_x - 1) * p_plt_flange_q.value) * t_plt_flange_q.value,
+            unit=agv1_plt_p3_plus_flange_q.unit,
+        )
+        anv2_plt_p3_plus_flange_q = Quantity(
+            value=agv1_plt_p3_plus_flange_q.value
+            - 2.0 * (n_plt_flange_x - 0.5) * hole_eff_plt2 * t_plt_flange_q.value,
+            unit=agv2_plt_p3_plus_flange_q.unit,
+        )
+        agt2_plt_p3_plus_flange_q = Quantity(
+            value=2.0 * le_plt_flange_z2_q.value * t_plt_flange_q.value,
+            unit=agv2_plt_p3_plus_flange_q.unit,
+        )
+        ant2_plt_p3_plus_flange_q = Quantity(
+            value=agt2_plt_p3_plus_flange_q.value - hole_eff_plt2 * t_plt_flange_q.value,
+            unit=agv2_plt_p3_plus_flange_q.unit,
+        )
+        phi_rn6_case2_plt_p3_plus_flange_q, case2_inter = compute_block_shear_strength_j45(
+            material_fu=fu_plt_flange_q,
+            material_fy=fy_plt_flange_q,
+            net_shear_area_anv=anv2_plt_p3_plus_flange_q,
+            gross_shear_area_agv=agv2_plt_p3_plus_flange_q,
+            net_tension_area_ant=ant2_plt_p3_plus_flange_q,
+            ubs_factor=ubs_plt_p3_plus_flange,
+            phi_n=phi_fragil_plt_flange_j45,
+            unit_system=unit_system_plt2,
+        )
+        rn6_case2_raw = case2_inter.get("rn")
+        if isinstance(rn6_case2_raw, Quantity):
+            rn6_case2_plt_p3_plus_flange_q = rn6_case2_raw
+        # Caso 3 (segun criterio del usuario: Anv3 usa Agv1 y Ant3 usa Agt2)
+        agv3_plt_p3_plus_flange_q = Quantity(
+            value=(le_plt_flange_x2_q.value + (n_plt_flange_x - 1) * p_plt_flange_q.value) * t_plt_flange_q.value,
+            unit=agv1_plt_p3_plus_flange_q.unit,
+        )
+        anv3_plt_p3_plus_flange_q = Quantity(
+            value=agv1_plt_p3_plus_flange_q.value
+            - (n_plt_flange_x - 0.5) * hole_eff_plt2 * t_plt_flange_q.value,
+            unit=agv3_plt_p3_plus_flange_q.unit,
+        )
+        agt3_plt_p3_plus_flange_q = Quantity(
+            value=(
+                le_plt_flange_z2_q.value * t_plt_flange_q.value
+                + (g1_plt_flange_q.value + 2.0 * (n_plt_flange_z - 1) * g_plt_flange_q.value) * t_plt_flange_q.value
+            ),
+            unit=agv3_plt_p3_plus_flange_q.unit,
+        )
+        ant3_plt_p3_plus_flange_q = Quantity(
+            value=agt2_plt_p3_plus_flange_q.value - (2.0 * n_plt_flange_z - 0.5) * hole_eff_plt2 * t_plt_flange_q.value,
+            unit=agv3_plt_p3_plus_flange_q.unit,
+        )
+        phi_rn6_case3_plt_p3_plus_flange_q, case3_inter = compute_block_shear_strength_j45(
+            material_fu=fu_plt_flange_q,
+            material_fy=fy_plt_flange_q,
+            net_shear_area_anv=anv3_plt_p3_plus_flange_q,
+            gross_shear_area_agv=agv3_plt_p3_plus_flange_q,
+            net_tension_area_ant=ant3_plt_p3_plus_flange_q,
+            ubs_factor=ubs_plt_p3_plus_flange,
+            phi_n=phi_fragil_plt_flange_j45,
+            unit_system=unit_system_plt2,
+        )
+        rn6_case3_raw = case3_inter.get("rn")
+        if isinstance(rn6_case3_raw, Quantity):
+            rn6_case3_plt_p3_plus_flange_q = rn6_case3_raw
+        phi_candidates: list[tuple[str, Quantity]] = []
+        if isinstance(phi_rn6_case1_plt_p3_plus_flange_q, Quantity):
+            phi_candidates.append(("Caso 1", phi_rn6_case1_plt_p3_plus_flange_q))
+        if isinstance(phi_rn6_case2_plt_p3_plus_flange_q, Quantity):
+            phi_candidates.append(("Caso 2", phi_rn6_case2_plt_p3_plus_flange_q))
+        if isinstance(phi_rn6_case3_plt_p3_plus_flange_q, Quantity):
+            phi_candidates.append(("Caso 3", phi_rn6_case3_plt_p3_plus_flange_q))
+        if phi_candidates:
+            controlling_case6_plt_p3_plus_flange, phi_rn6_plt_p3_plus_flange_q = min(
+                phi_candidates,
+                key=lambda it: it[1].value,
+            )
+            if controlling_case6_plt_p3_plus_flange == "Caso 1":
+                rn6_plt_p3_plus_flange_q = rn6_case1_plt_p3_plus_flange_q
+            elif controlling_case6_plt_p3_plus_flange == "Caso 2":
+                rn6_plt_p3_plus_flange_q = rn6_case2_plt_p3_plus_flange_q
+            else:
+                rn6_plt_p3_plus_flange_q = rn6_case3_plt_p3_plus_flange_q
+    ru6_plt_p3_plus_flange_q = ru4_plt_p3_plus_flange_q
+    ru6_plt_p3_plus_flange_disp = _convert_ru_to_capacity_unit(
+        ru6_plt_p3_plus_flange_q, phi_rn6_plt_p3_plus_flange_q
+    )
+    dcr6_plt_p3_plus_flange_disp = "n/a"
+    result6_plt_p3_plus_flange = _render_result_label("NOT_APPLICABLE")
+    if (
+        isinstance(ru6_plt_p3_plus_flange_disp, Quantity)
+        and isinstance(phi_rn6_plt_p3_plus_flange_q, Quantity)
+        and ru6_plt_p3_plus_flange_disp.unit == phi_rn6_plt_p3_plus_flange_q.unit
+        and abs(phi_rn6_plt_p3_plus_flange_q.value) > 1e-12
+    ):
+        dcr6_plt_p3_plus_flange_disp = _format_decimal(
+            abs(ru6_plt_p3_plus_flange_disp.value) / phi_rn6_plt_p3_plus_flange_q.value
+        )
+        try:
+            dcr_num = float(dcr6_plt_p3_plus_flange_disp)
+            result6_plt_p3_plus_flange = _render_result_label("PASS" if dcr_num <= 1.0 else "FAIL")
+        except (TypeError, ValueError):
+            result6_plt_p3_plus_flange = _render_result_label("NOT_APPLICABLE")
+    # 6.2.1 plate 2 flange compression buckling in direction 3 (E3/J4.4, DRY)
+    gap_sp_q = _as_quantity(geom_note.get("alpha"))
+    lp_plt_p3_minus_flange_q: Quantity | None = None
+    phi_no_ductil_plt_flange_pminus = 0.9
+    k_plt_p3_minus_flange = 0.65
+    r_plt_p3_minus_flange_q: Quantity | None = None
+    klr_plt_p3_minus_flange: float | None = None
+    e_plt_p3_minus_flange_q: Quantity | None = None
+    fe_plt_p3_minus_flange_q: Quantity | None = None
+    fcr_plt_p3_minus_flange_q: Quantity | None = None
+    ag_plt_p3_minus_flange_q: Quantity | None = None
+    rn1_plt_p3_minus_flange_q: Quantity | None = None
+    phi_rn1_plt_p3_minus_flange_q: Quantity | None = None
+    fcr_eq_plt_p3_minus_flange = "n/a"
+    if (
+        isinstance(gap_sp_q, Quantity)
+        and isinstance(le_plt_flange_x1_q, Quantity)
+        and isinstance(p_plt_flange_q, Quantity)
+        and gap_sp_q.unit == le_plt_flange_x1_q.unit == p_plt_flange_q.unit
+    ):
+        lp_plt_p3_minus_flange_q = Quantity(
+            value=min(
+                gap_sp_q.value + 2.0 * le_plt_flange_x1_q.value,
+                p_plt_flange_q.value,
+            ),
+            unit=gap_sp_q.unit,
+        )
+    if (
+        isinstance(fy_plt_flange_q, Quantity)
+        and isinstance(b_plt_flange_q, Quantity)
+        and isinstance(t_plt_flange_q, Quantity)
+        and isinstance(lp_plt_p3_minus_flange_q, Quantity)
+    ):
+        try:
+            pminus_plt2_inter = compute_plate_compression_buckling_strength(
+                material_fy=fy_plt_flange_q,
+                plate_width_b1=b_plt_flange_q,
+                plate_thickness_t=t_plt_flange_q,
+                unbraced_length_lp=lp_plt_p3_minus_flange_q,
+                plate_count_n=1,
+                unit_system=unit_system_plt2,
+                phi=phi_no_ductil_plt_flange_pminus,
+                k_factor=k_plt_p3_minus_flange,
+            )
+        except ValueError:
+            pminus_plt2_inter = {}
+        radius_raw = pminus_plt2_inter.get("radius")
+        if isinstance(radius_raw, Quantity):
+            r_plt_p3_minus_flange_q = radius_raw
+        klr_raw = pminus_plt2_inter.get("klr")
+        if isinstance(klr_raw, (int, float)):
+            klr_plt_p3_minus_flange = float(klr_raw)
+        e_raw = pminus_plt2_inter.get("elastic_modulus")
+        if isinstance(e_raw, Quantity):
+            e_plt_p3_minus_flange_q = e_raw
+        fe_raw = pminus_plt2_inter.get("elastic_buckling_stress")
+        if isinstance(fe_raw, Quantity):
+            fe_plt_p3_minus_flange_q = fe_raw
+        fcr_raw = pminus_plt2_inter.get("critical_stress")
+        if isinstance(fcr_raw, Quantity):
+            fcr_plt_p3_minus_flange_q = fcr_raw
+        ag_raw = pminus_plt2_inter.get("gross_area")
+        if isinstance(ag_raw, Quantity):
+            ag_plt_p3_minus_flange_q = ag_raw
+        phi_rn_raw = pminus_plt2_inter.get("phi_rn")
+        if isinstance(phi_rn_raw, Quantity):
+            phi_rn1_plt_p3_minus_flange_q = phi_rn_raw
+            if abs(phi_no_ductil_plt_flange_pminus) > 1e-12:
+                rn1_plt_p3_minus_flange_q = Quantity(
+                    value=phi_rn_raw.value / phi_no_ductil_plt_flange_pminus,
+                    unit=phi_rn_raw.unit,
+                )
+        fcr_eq_plt_p3_minus_flange = _format_text(pminus_plt2_inter.get("critical_stress_equation"))
+    ru1_plt_p3_minus_flange_q: Quantity | None = None
+    if (
+        isinstance(pu_sp_plt2_q, Quantity)
+        and isinstance(mu3_sp_plt2_q, Quantity)
+        and isinstance(d_vg_plt2_q, Quantity)
+        and isinstance(tf_vg_plt2_q, Quantity)
+        and d_vg_plt2_q.unit == tf_vg_plt2_q.unit
+    ):
+        denom = d_vg_plt2_q.value - tf_vg_plt2_q.value
+        if abs(denom) > 1e-12:
+            ru_raw: float | None = None
+            if pu_sp_plt2_q.unit == "kN" and d_vg_plt2_q.unit == "mm":
+                if mu3_sp_plt2_q.unit == "kN-m":
+                    ru_raw = (1.0 - alpha_pu_web_plt2) * pu_sp_plt2_q.value + mu3_sp_plt2_q.value / (denom / 1000.0)
+                elif mu3_sp_plt2_q.unit == "kN-mm":
+                    ru_raw = (1.0 - alpha_pu_web_plt2) * pu_sp_plt2_q.value + mu3_sp_plt2_q.value / denom
+            elif pu_sp_plt2_q.unit == "kip" and d_vg_plt2_q.unit == "in":
+                if mu3_sp_plt2_q.unit == "kip-in":
+                    ru_raw = (1.0 - alpha_pu_web_plt2) * pu_sp_plt2_q.value + mu3_sp_plt2_q.value / denom
+                elif mu3_sp_plt2_q.unit == "kip-ft":
+                    ru_raw = (1.0 - alpha_pu_web_plt2) * pu_sp_plt2_q.value + (mu3_sp_plt2_q.value * 12.0) / denom
+            if ru_raw is not None:
+                ru1_plt_p3_minus_flange_q = Quantity(
+                    value=0.0 if ru_raw > 0.0 else ru_raw,
+                    unit=pu_sp_plt2_q.unit,
+                )
+    ru1_plt_p3_minus_flange_disp = _convert_ru_to_capacity_unit(
+        ru1_plt_p3_minus_flange_q, phi_rn1_plt_p3_minus_flange_q
+    )
+    ru1_plt_p3_minus_flange_abs_disp: Quantity | None = None
+    if isinstance(ru1_plt_p3_minus_flange_disp, Quantity):
+        ru1_plt_p3_minus_flange_abs_disp = Quantity(
+            value=abs(ru1_plt_p3_minus_flange_disp.value),
+            unit=ru1_plt_p3_minus_flange_disp.unit,
+        )
+    dcr1_plt_p3_minus_flange_disp = "n/a"
+    result1_plt_p3_minus_flange = _render_result_label("NOT_APPLICABLE")
+    if (
+        isinstance(ru1_plt_p3_minus_flange_disp, Quantity)
+        and isinstance(phi_rn1_plt_p3_minus_flange_q, Quantity)
+        and ru1_plt_p3_minus_flange_disp.unit == phi_rn1_plt_p3_minus_flange_q.unit
+        and abs(phi_rn1_plt_p3_minus_flange_q.value) > 1e-12
+    ):
+        dcr1_plt_p3_minus_flange_disp = _format_decimal(
+            abs(ru1_plt_p3_minus_flange_disp.value) / phi_rn1_plt_p3_minus_flange_q.value
+        )
+        try:
+            dcr_num = float(dcr1_plt_p3_minus_flange_disp)
+            result1_plt_p3_minus_flange = _render_result_label("PASS" if dcr_num <= 1.0 else "FAIL")
+        except (TypeError, ValueError):
+            result1_plt_p3_minus_flange = _render_result_label("NOT_APPLICABLE")
     # 4.3.2 flange bearing in direction 3
     ru2_flange_p3_vg_q = (
         Quantity(value=ru_flange_v3_max_kip, unit="kip")
@@ -4736,6 +5085,73 @@ def _render_fully_restrained_splice_outline(
         flange_tearout_v1_result = _render_result_label("PASS" if dcr_flange_v1_num <= 1.0 else "FAIL")
     except (TypeError, ValueError):
         pass
+    # 6.3.1 plate 2 flange tearout in shear direction 1 (J3.11a.(b), DRY J3.6)
+    lc_plt_v1_flange_q: Quantity | None = None
+    rn1_plt_v1_flange_q: Quantity | None = None
+    phi_rn1_plt_v1_flange_q: Quantity | None = None
+    coefficient_plt_v1_flange = "n/a"
+    if (
+        isinstance(fu_plt_flange_q, Quantity)
+        and isinstance(t_plt_flange_q, Quantity)
+        and isinstance(g_plt_flange_q, Quantity)
+        and isinstance(le_plt_flange_z2_q, Quantity)
+        and isinstance(dh_plt_flange_q, Quantity)
+        and g_plt_flange_q.unit == le_plt_flange_z2_q.unit == dh_plt_flange_q.unit
+    ):
+        if n_plt_flange_z >= 2:
+            lc_plt_v1_flange_q = Quantity(
+                value=min(
+                    g_plt_flange_q.value - dh_plt_flange_q.value,
+                    le_plt_flange_z2_q.value - 0.5 * dh_plt_flange_q.value,
+                ),
+                unit=g_plt_flange_q.unit,
+            )
+        else:
+            lc_plt_v1_flange_q = Quantity(
+                value=le_plt_flange_z2_q.value - 0.5 * dh_plt_flange_q.value,
+                unit=le_plt_flange_z2_q.unit,
+            )
+        phi_rn1_plt_v1_flange_q, tearout_plt_v1_flange_inter = compute_bolt_hole_tearout_strength_j36(
+            material_fu=fu_plt_flange_q,
+            clear_distance_lc=lc_plt_v1_flange_q,
+            connected_thickness_t=t_plt_flange_q,
+            n_critical_bolts=1,
+            phi_n=phi_pr_plt_flange,
+            unit_system=unit_system_plt2,
+            deformation_at_service_is_design_consideration=svc_hole_deformation_design_flange_plt2,
+        )
+        rn1_raw = tearout_plt_v1_flange_inter.get("rn1_ind")
+        if isinstance(rn1_raw, Quantity):
+            rn1_plt_v1_flange_q = rn1_raw
+        coefficient_plt_v1_flange = _format_text(tearout_plt_v1_flange_inter.get("coefficient"))
+    ru1_plt_v1_flange_q = (
+        Quantity(value=ru_flange_v1_max_kip, unit="kip")
+        if isinstance(ru_flange_v1_max_kip, float)
+        else None
+    )
+    ru1_plt_v1_flange_disp = _convert_ru_to_capacity_unit(ru1_plt_v1_flange_q, phi_rn1_plt_v1_flange_q)
+    ru1_plt_v1_flange_abs_disp: Quantity | None = None
+    if isinstance(ru1_plt_v1_flange_disp, Quantity):
+        ru1_plt_v1_flange_abs_disp = Quantity(
+            value=abs(ru1_plt_v1_flange_disp.value),
+            unit=ru1_plt_v1_flange_disp.unit,
+        )
+    dcr1_plt_v1_flange_disp = "n/a"
+    result1_plt_v1_flange = _render_result_label("NOT_APPLICABLE")
+    if (
+        isinstance(ru1_plt_v1_flange_disp, Quantity)
+        and isinstance(phi_rn1_plt_v1_flange_q, Quantity)
+        and ru1_plt_v1_flange_disp.unit == phi_rn1_plt_v1_flange_q.unit
+        and abs(phi_rn1_plt_v1_flange_q.value) > 1e-12
+    ):
+        dcr1_plt_v1_flange_disp = _format_decimal(
+            abs(ru1_plt_v1_flange_disp.value) / phi_rn1_plt_v1_flange_q.value
+        )
+        try:
+            dcr_num = float(dcr1_plt_v1_flange_disp)
+            result1_plt_v1_flange = _render_result_label("PASS" if dcr_num <= 1.0 else "FAIL")
+        except (TypeError, ValueError):
+            result1_plt_v1_flange = _render_result_label("NOT_APPLICABLE")
     # 4.8.1 flange flexural rupture in beam (F13.1)
     ru1_flange_m1_vg_q = _as_quantity(flange_flex_rupture_m1_note.get("ru1_flange_m1_vg"))
     phi_rn1_flange_m1_vg_q = _as_quantity(flange_flex_rupture_m1_note.get("phi_rn1_flange_m1_vg"))
@@ -5186,8 +5602,14 @@ def _render_fully_restrained_splice_outline(
                 "- Ecuaciones: `si 2*g_blt_web*(n_blt_web_x - 1)*sqrt(3)/3 + (n_blt_web_y - 1)*p_blt_web - n_blt_web_y*(dh.1 + 1.80mm) <= T_vg -> "
                 "Ant_v3_vg = tw_vg*(2*g_blt_web*(n_blt_web_x - 1)*sqrt(3)/3 + (n_blt_web_y - 1)*p_blt_web - n_blt_web_y*(dh.1 + 1.80mm)); "
                 "si no -> Ant_v3_vg = A_vg - n_blt_web_y*(dh.1 + 1.80mm)*tw_vg; "
-                "si n_blt_web_x <= 1 -> U_v3_vg = T_vg*tw_vg/A_vg; "
-                "si n_blt_web_x > 1 -> U_v3_vg = 1 - 0.5*tw_vg/(n_blt_web_x*g_blt_web); "
+                "si n_blt_web_x <= 1 -> U_web_v3_vg = T_vg*tw_vg/A_vg; "
+                "si n_blt_web_x > 1 -> U_web_v3_vg = 1 - 0.5*tw_vg/((n_blt_web_x - 1)*g_blt_web); "
+                "si n_blt_flange_x <= 1 -> U_flange_v3_vg = 2*bf_vg*tw_vg/A_vg; "
+                "si n_blt_flange_x > 1 -> U_flange_v3_vg = 1 - xt_flange_vg/((n_blt_flange_x - 1)*p_plt_flange); "
+                "Subcaso 2.1: si 0.75 < alpha_Pu_web <= 1 -> U_v3_vg = U_web_v3_vg; "
+                "Subcaso 2.2: si 0.25 < alpha_Pu_web <= 0.75 -> U_v3_vg = max(U_web_v3_vg, U_flange_v3_vg); "
+                "Subcaso 2.3: si alpha_Pu_web <= 0.25 -> U_v3_vg = U_flange_v3_vg; "
+                "U_v3_vg = min(U_v3_raw, 1.0); "
                 "Ae_v3_vg = Ant_v3_vg*U_v3_vg; "
                 "Rn3_v3_vg = Fu_vg*Ae_v3_vg; "
                 "phi*Rn3_v3_vg = phi_fragil*Rn3_v3_vg; "
@@ -5201,8 +5623,16 @@ def _render_fully_restrained_splice_outline(
             f"- n_blt_web_y: `{_format_text(tension_rupture_v3_note.get('n_blt_web_y'))}`",
             f"- dh.1: `{_format_quantity(tension_rupture_v3_note.get('dh_1'))}`",
             f"- Ant_v3_vg: `{_format_quantity(tension_rupture_v3_note.get('ant_v3_vg'))}`",
+            f"- alpha_Pu_web: `{_format_text(tension_rupture_v3_note.get('alpha_pu_web'))}`",
             f"- n_blt_web_x: `{_format_text(tension_rupture_v3_note.get('n_blt_web_x'))}`",
             f"- g_blt_web: `{_format_quantity(tension_rupture_v3_note.get('g_blt_web'))}`",
+            f"- n_blt_flange_x: `{_format_text(tension_rupture_v3_note.get('n_blt_flange_x'))}`",
+            f"- p_plt_flange: `{_format_quantity(tension_rupture_v3_note.get('p_plt_flange'))}`",
+            f"- bf_vg: `{_format_quantity(tension_rupture_v3_note.get('bf_vg'))}`",
+            f"- xt_flange_vg: `{_format_quantity(tension_rupture_v3_note.get('xt_flange_vg'))}`",
+            f"- U_web_v3_vg: `{_format_text(tension_rupture_v3_note.get('u_web_v3_vg'))}`",
+            f"- U_flange_v3_vg: `{_format_text(tension_rupture_v3_note.get('u_flange_v3_vg'))}`",
+            f"- Caso U_v3_vg: `{_format_text(tension_rupture_v3_note.get('u_v3_vg_case'))}`",
             f"- U_v3_vg: `{_format_text(tension_rupture_v3_note.get('u_v3_vg'))}`",
             f"- Ae_v3_vg: `{_format_quantity(tension_rupture_v3_note.get('ae_v3_vg'))}`",
             f"- phi_fragil: `{_format_text(tension_rupture_v3_note.get('phi_fragil'))}`",
@@ -5374,12 +5804,13 @@ def _render_fully_restrained_splice_outline(
             "",
             "- Clausula: `Documento: AISC 360-22w | Seccion: J4.3`",
             (
-                "- Ecuaciones: `Agv_plt_v2_web = (p_plt_web*(n_plt_web_y - 1) + min(Le_plt_web_y1, Le_plt_web_y2))*t_plt_web; "
-                "Anv_plt_v2_web = Agv_plt_v2_web - (n_blt_web_y - 0.5)*t_plt_web*(dh.1 + 1.80mm); "
-                "Agt_plt_v2_web = (g_blt_web*(n_blt_web_x - 1) + Le_plt_web_x2)*t_plt_web; "
-                "Ant_plt_v2_web = Agt_plt_v2_web - (n_blt_web_x - 0.5)*t_plt_web*(dh.1 + 1.80mm); "
-                "Rn4_1_plt_v2_web = 0.60*Fu_plt_web*Anv_plt_v2_web + Ubs_plt_v2_web*Fu_plt_web*Ant_plt_v2_web; "
-                "Rn4_2_plt_v2_web = 0.60*Fy_plt_web*Agv_plt_v2_web + Ubs_plt_v2_web*Fu_plt_web*Ant_plt_v2_web; "
+                "- Ecuaciones: `Caso 1 -> Agv1_plt_v2_web = (p_plt_web*(n_plt_web_y - 1) + min(Le_plt_web_y1, Le_plt_web_y2))*t_plt_web; "
+                "Anv1_plt_v2_web = Agv1_plt_v2_web - (n_blt_web_y - 0.5)*t_plt_web*(dh.1 + 1.80mm); "
+                "Agt1_plt_v2_web = (g_blt_web*(n_blt_web_x - 1) + Le_plt_web_x2)*t_plt_web; "
+                "Ant1_plt_v2_web = Agt1_plt_v2_web - (n_blt_web_x - 0.5)*t_plt_web*(dh.1 + 1.80mm); "
+                "Rn4_1_plt_v2_web = 0.60*Fu_plt_web*Anv1_plt_v2_web + Ubs_plt_v2_web*Fu_plt_web*Ant1_plt_v2_web; "
+                "Caso 2 -> Agv2_plt_v2_web = Agv1_plt_v2_web; Ant2_plt_v2_web = Ant1_plt_v2_web; "
+                "Rn4_2_plt_v2_web = 0.60*Fy_plt_web*Agv2_plt_v2_web + Ubs_plt_v2_web*Fu_plt_web*Ant2_plt_v2_web; "
                 "Rn4_plt_v2_web = min(Rn4_1_plt_v2_web, Rn4_2_plt_v2_web); "
                 "phi*Rn4_plt_v2_web = phi_fragil*Rn4_plt_v2_web; "
                 "DCR4_plt_v2_web = Ru4_plt_v2_web/phi*Rn4_plt_v2_web`"
@@ -5396,13 +5827,18 @@ def _render_fully_restrained_splice_outline(
             f"- Le_plt_web_y2: `{_format_quantity(plt1_block_shear_v2_note.get('le_plt_web_y2'))}`",
             f"- dh.1: `{_format_quantity(plt1_block_shear_v2_note.get('dh_1'))}`",
             f"- Ubs_plt_v2_web (inp = Ubs_web_v2_vg): `{_format_text(plt1_block_shear_v2_note.get('ubs_plt_v2_web'))}`",
-            f"- Agv_plt_v2_web: `{_format_quantity(plt1_block_shear_v2_note.get('agv_plt_v2_web'))}`",
-            f"- Anv_plt_v2_web: `{_format_quantity(plt1_block_shear_v2_note.get('anv_plt_v2_web'))}`",
-            f"- Agt_plt_v2_web: `{_format_quantity(plt1_block_shear_v2_note.get('agt_plt_v2_web'))}`",
-            f"- Ant_plt_v2_web: `{_format_quantity(plt1_block_shear_v2_note.get('ant_plt_v2_web'))}`",
+            f"- Agv1_plt_v2_web: `{_format_quantity(plt1_block_shear_v2_note.get('agv_plt_v2_web'))}`",
+            f"- Anv1_plt_v2_web: `{_format_quantity(plt1_block_shear_v2_note.get('anv_plt_v2_web'))}`",
+            f"- Agt1_plt_v2_web: `{_format_quantity(plt1_block_shear_v2_note.get('agt_plt_v2_web'))}`",
+            f"- Ant1_plt_v2_web: `{_format_quantity(plt1_block_shear_v2_note.get('ant_plt_v2_web'))}`",
             f"- phi_fragil: `{_format_text(plt1_block_shear_v2_note.get('phi_fragil'))}`",
             f"- Rn4_1_plt_v2_web: `{_format_quantity(plt1_block_shear_v2_note.get('rn4_1_plt_v2_web'))}`",
+            f"- phi*Rn4_case1_plt_v2_web: `{_format_quantity(phi_rn4_case1_plt_v2_web_q.model_dump() if isinstance(phi_rn4_case1_plt_v2_web_q, Quantity) else None)}`",
+            f"- Agv2_plt_v2_web: `{_format_quantity(plt1_block_shear_v2_note.get('agv_plt_v2_web'))}`",
+            f"- Ant2_plt_v2_web: `{_format_quantity(plt1_block_shear_v2_note.get('ant_plt_v2_web'))}`",
             f"- Rn4_2_plt_v2_web: `{_format_quantity(plt1_block_shear_v2_note.get('rn4_2_plt_v2_web'))}`",
+            f"- phi*Rn4_case2_plt_v2_web: `{_format_quantity(phi_rn4_case2_plt_v2_web_q.model_dump() if isinstance(phi_rn4_case2_plt_v2_web_q, Quantity) else None)}`",
+            f"- Caso control: `{controlling_case_plt_v2}`",
             f"- Rn4_plt_v2_web: `{_format_quantity(plt1_block_shear_v2_note.get('rn4_plt_v2_web'))}`",
             f"- phi*Rn4_plt_v2_web: `{_format_quantity(plt1_block_shear_v2_note.get('phi_rn4_plt_v2_web'))}`",
             f"- Ru4_plt_v2_web = Vu2_sp: `{_format_quantity(ru4_plt_v2_web_abs_disp.model_dump() if isinstance(ru4_plt_v2_web_abs_disp, Quantity) else None)}`",
@@ -5593,23 +6029,27 @@ def _render_fully_restrained_splice_outline(
             "- Clausula: `Documento: AISC 360-22 | Seccion: E3 y J4.4 (DRY: compute_plate_compression_buckling_strength)`",
             (
                 "- Ecuaciones: `Lp_plt_p3(-)_web = min(gap_sp + 2*Le_blt_web_x1, g_blt_web); "
-                "Ru1_plt_p3(-)_web = alpha_Pu_web*Pu_sp; "
+                "Ru1_plt_p3(-)_web = si Pu_sp < 0 -> alpha_Pu_web*Pu_sp; si Pu_sp >= 0 -> 0; "
                 "phi*Rn1_plt_p3(-)_web = phi*Fcr_plt_p3(-)_web*H_plt_web*t_plt_web*n_plt_web; "
                 "DCR1_plt_p3(-)_web = Ru1_plt_p3(-)_web/phi*Rn1_plt_p3(-)_web`"
             ),
             f"- Fy_plt_web: `{_format_quantity(plt1_comp_buckling_p3_minus_note.get('fy_plt_web'))}`",
             f"- H_plt_web: `{_format_quantity(plt1_comp_buckling_p3_minus_note.get('h_plt_web'))}`",
             f"- t_plt_web: `{_format_quantity(plt1_comp_buckling_p3_minus_note.get('t_plt_web'))}`",
+            f"- gap_sp: `{_format_quantity(plt1_comp_buckling_p3_minus_note.get('gap_sp'))}`",
+            f"- Le_blt_web_x1: `{_format_quantity(plt1_comp_buckling_p3_minus_note.get('le_blt_web_x1'))}`",
+            f"- g_blt_web: `{_format_quantity(plt1_comp_buckling_p3_minus_note.get('g_blt_web'))}`",
             f"- Lp_plt_p3(-)_web: `{_format_quantity(plt1_comp_buckling_p3_minus_note.get('lp_plt_p3_minus_web'))}`",
             f"- n_plt_web: `{_format_text(plt1_comp_buckling_p3_minus_note.get('plate_count_n'))}`",
             f"- phi_no_ductil: `{_format_text(plt1_comp_buckling_p3_minus_note.get('phi_no_ductil'))}`",
             f"- K: `{_format_text(plt1_comp_buckling_p3_minus_note.get('k_factor'))}`",
             f"- r_plt_p3(-)_web: `{_format_quantity(plt1_comp_buckling_p3_minus_note.get('radius'))}`",
-            f"- KL_r_plt_p3(-)_web: `{_format_text(plt1_comp_buckling_p3_minus_note.get('klr'))}`",
+            f"- KL_r_plt_p3(-)_web: `{_format_text(_format_decimal(klr_plt_p3_minus_web_val) if isinstance(klr_plt_p3_minus_web_val, float) else None)}`",
             f"- Fe_plt_p3(-)_web: `{_format_quantity(plt1_comp_buckling_p3_minus_note.get('fe'))}`",
             f"- Fcr_plt_p3(-)_web: `{_format_quantity(plt1_comp_buckling_p3_minus_note.get('fcr'))}`",
             f"- Ecuacion Fcr usada: `{_format_text(plt1_comp_buckling_p3_minus_note.get('fcr_equation'))}`",
             f"- Ag_plt_p3(-)_web: `{_format_quantity(plt1_comp_buckling_p3_minus_note.get('area_gross'))}`",
+            f"- Rn1_plt_p3(-)_web: `{_format_quantity(rn1_plt_p3_minus_web_q.model_dump() if isinstance(rn1_plt_p3_minus_web_q, Quantity) else None)}`",
             f"- phi*Rn1_plt_p3(-)_web: `{_format_quantity(plt1_comp_buckling_p3_minus_note.get('phi_rn1_plt_p3_minus_web'))}`",
             f"- Pu_sp: `{_format_quantity(plt1_comp_buckling_p3_minus_note.get('pu_sp'))}`",
             f"- alpha_Pu_web: `{_format_text(plt1_comp_buckling_p3_minus_note.get('alpha_pu_web'))}`",
@@ -5839,7 +6279,7 @@ def _render_fully_restrained_splice_outline(
             f"- DCR4_plt_p3(+)_flange: `{dcr4_plt_p3_plus_flange_disp}`",
             f"- Resultado: {result4_plt_p3_plus_flange}",
             "",
-            "#### 6.1.5. ELR #5: Rotura por cortante en la platina 2 de alma",
+            "#### 6.1.5. ELR #5: Rotura por tracción en la platina 2 de ala",
             "",
             "- Cláusula: `Documento: AISC 360-22 | Sección: J4.1(b) (DRY: compute_element_tension_rupture_strength_j41b)`",
             (
@@ -5866,6 +6306,128 @@ def _render_fully_restrained_splice_outline(
             f"- Ru5_plt_p3(+)_flange: `{_format_quantity(ru5_plt_p3_plus_flange_disp.model_dump() if isinstance(ru5_plt_p3_plus_flange_disp, Quantity) else None)}`",
             f"- DCR5_plt_p3(+)_flange: `{dcr5_plt_p3_plus_flange_disp}`",
             f"- Resultado: {result5_plt_p3_plus_flange}",
+            "",
+            "#### 6.1.6. ELR #6: Bloque de cortante en platina 2 de ala",
+            "",
+            "- Cláusula: `Documento: AISC 360-22 | Sección: J4.3 (DRY: compute_block_shear_strength_j45)`",
+            (
+                "- Ecuaciones: `Caso 1 -> Agv1_plt_p3(+)_flange = 2*(Le_plt_flange_x2 + (n_plt_flange_x-1)*p_plt_flange)*t_plt_flange; "
+                "Anv1_plt_p3(+)_flange = Agv1_plt_p3(+)_flange - 2*(n_plt_flange_x-0.5)*(dh.2+1.80mm)*t_plt_flange; "
+                "Agt1_plt_p3(+)_flange = (g1_plt_flange + 2*(n_plt_flange_z-1)*g_plt_flange)*t_plt_flange; "
+                "Ant1_plt_p3(+)_flange = Agt1_plt_p3(+)_flange - (2*n_plt_flange_z-1)*(dh.2+1.80mm)*t_plt_flange; "
+                "Caso 2 -> Agv2_plt_p3(+)_flange = 2*(Le_plt_flange_x2 + (n_plt_flange_x-1)*p_plt_flange)*t_plt_flange; "
+                "Anv2_plt_p3(+)_flange = Agv1_plt_p3(+)_flange - 2*(n_plt_flange_x-0.5)*(dh.2+1.80mm)*t_plt_flange; "
+                "Agt2_plt_p3(+)_flange = 2*Le_plt_flange_z2*t_plt_flange; "
+                "Ant2_plt_p3(+)_flange = Agt2_plt_p3(+)_flange - (dh.2+1.80mm)*t_plt_flange; "
+                "Caso 3 -> Agv3_plt_p3(+)_flange = (Le_plt_flange_x2 + (n_plt_flange_x-1)*p_plt_flange)*t_plt_flange; "
+                "Anv3_plt_p3(+)_flange = Agv1_plt_p3(+)_flange - (n_plt_flange_x-0.5)*(dh.2+1.80mm)*t_plt_flange; "
+                "Agt3_plt_p3(+)_flange = Le_plt_flange_z2*t_plt_flange + (g1_plt_flange + 2*(n_plt_flange_z-1)*g_plt_flange)*t_plt_flange; "
+                "Ant3_plt_p3(+)_flange = Agt2_plt_p3(+)_flange - (2*n_plt_flange_z-0.5)*(dh.2+1.80mm)*t_plt_flange; "
+                "phi*Rn6_plt_p3(+)_flange = min(phi*Rn6_case1_plt_p3(+)_flange, phi*Rn6_case2_plt_p3(+)_flange, phi*Rn6_case3_plt_p3(+)_flange); "
+                "Ru6_plt_p3(+)_flange = (1-alpha_Pu_web)*Pu_sp + Mu3_sp/(d_vg - tf_vg), si <0 entonces 0; "
+                "DCR6_plt_p3(+)_flange = Ru6_plt_p3(+)_flange/phi*Rn6_plt_p3(+)_flange`"
+            ),
+            f"- Fu_plt_flange: `{_format_quantity(fu_plt_flange_q.model_dump() if isinstance(fu_plt_flange_q, Quantity) else None)}`",
+            f"- Fy_plt_flange: `{_format_quantity(fy_plt_flange_q.model_dump() if isinstance(fy_plt_flange_q, Quantity) else None)}`",
+            f"- t_plt_flange: `{_format_quantity(t_plt_flange_q.model_dump() if isinstance(t_plt_flange_q, Quantity) else None)}`",
+            f"- n_plt_flange_x: `{_format_text(n_plt_flange_x if n_plt_flange_x > 0 else None)}`",
+            f"- n_plt_flange_z: `{_format_text(n_plt_flange_z if n_plt_flange_z > 0 else None)}`",
+            f"- p_plt_flange: `{_format_quantity(p_plt_flange_q.model_dump() if isinstance(p_plt_flange_q, Quantity) else None)}`",
+            f"- g_plt_flange: `{_format_quantity(g_plt_flange_q.model_dump() if isinstance(g_plt_flange_q, Quantity) else None)}`",
+            f"- g1_plt_flange: `{_format_quantity(g1_plt_flange_q.model_dump() if isinstance(g1_plt_flange_q, Quantity) else None)}`",
+            f"- Le_plt_flange_x2: `{_format_quantity(le_plt_flange_x2_q.model_dump() if isinstance(le_plt_flange_x2_q, Quantity) else None)}`",
+            f"- Le_plt_flange_z2: `{_format_quantity(le_plt_flange_z2_q.model_dump() if isinstance(le_plt_flange_z2_q, Quantity) else None)}`",
+            f"- dh.2: `{_format_quantity(dh_plt_flange_q.model_dump() if isinstance(dh_plt_flange_q, Quantity) else None)}`",
+            f"- Agv1_plt_p3(+)_flange: `{_format_quantity(agv1_plt_p3_plus_flange_q.model_dump() if isinstance(agv1_plt_p3_plus_flange_q, Quantity) else None)}`",
+            f"- Anv1_plt_p3(+)_flange: `{_format_quantity(anv1_plt_p3_plus_flange_q.model_dump() if isinstance(anv1_plt_p3_plus_flange_q, Quantity) else None)}`",
+            f"- Agt1_plt_p3(+)_flange: `{_format_quantity(agt1_plt_p3_plus_flange_q.model_dump() if isinstance(agt1_plt_p3_plus_flange_q, Quantity) else None)}`",
+            f"- Ant1_plt_p3(+)_flange: `{_format_quantity(ant1_plt_p3_plus_flange_q.model_dump() if isinstance(ant1_plt_p3_plus_flange_q, Quantity) else None)}`",
+            f"- phi*Rn6_case1_plt_p3(+)_flange: `{_format_quantity(phi_rn6_case1_plt_p3_plus_flange_q.model_dump() if isinstance(phi_rn6_case1_plt_p3_plus_flange_q, Quantity) else None)}`",
+            f"- Agv2_plt_p3(+)_flange: `{_format_quantity(agv2_plt_p3_plus_flange_q.model_dump() if isinstance(agv2_plt_p3_plus_flange_q, Quantity) else None)}`",
+            f"- Anv2_plt_p3(+)_flange: `{_format_quantity(anv2_plt_p3_plus_flange_q.model_dump() if isinstance(anv2_plt_p3_plus_flange_q, Quantity) else None)}`",
+            f"- Agt2_plt_p3(+)_flange: `{_format_quantity(agt2_plt_p3_plus_flange_q.model_dump() if isinstance(agt2_plt_p3_plus_flange_q, Quantity) else None)}`",
+            f"- Ant2_plt_p3(+)_flange: `{_format_quantity(ant2_plt_p3_plus_flange_q.model_dump() if isinstance(ant2_plt_p3_plus_flange_q, Quantity) else None)}`",
+            f"- phi*Rn6_case2_plt_p3(+)_flange: `{_format_quantity(phi_rn6_case2_plt_p3_plus_flange_q.model_dump() if isinstance(phi_rn6_case2_plt_p3_plus_flange_q, Quantity) else None)}`",
+            f"- Agv3_plt_p3(+)_flange: `{_format_quantity(agv3_plt_p3_plus_flange_q.model_dump() if isinstance(agv3_plt_p3_plus_flange_q, Quantity) else None)}`",
+            f"- Anv3_plt_p3(+)_flange: `{_format_quantity(anv3_plt_p3_plus_flange_q.model_dump() if isinstance(anv3_plt_p3_plus_flange_q, Quantity) else None)}`",
+            f"- Agt3_plt_p3(+)_flange: `{_format_quantity(agt3_plt_p3_plus_flange_q.model_dump() if isinstance(agt3_plt_p3_plus_flange_q, Quantity) else None)}`",
+            f"- Ant3_plt_p3(+)_flange: `{_format_quantity(ant3_plt_p3_plus_flange_q.model_dump() if isinstance(ant3_plt_p3_plus_flange_q, Quantity) else None)}`",
+            f"- phi*Rn6_case3_plt_p3(+)_flange: `{_format_quantity(phi_rn6_case3_plt_p3_plus_flange_q.model_dump() if isinstance(phi_rn6_case3_plt_p3_plus_flange_q, Quantity) else None)}`",
+            f"- Ubs_plt_p3(+)_flange: `{_format_text(ubs_plt_p3_plus_flange)}`",
+            f"- phi_fragil: `{_format_text(phi_fragil_plt_flange_j45)}`",
+            f"- Caso control: `{controlling_case6_plt_p3_plus_flange}`",
+            f"- Rn6_plt_p3(+)_flange: `{_format_quantity(rn6_plt_p3_plus_flange_q.model_dump() if isinstance(rn6_plt_p3_plus_flange_q, Quantity) else None)}`",
+            f"- phi*Rn6_plt_p3(+)_flange: `{_format_quantity(phi_rn6_plt_p3_plus_flange_q.model_dump() if isinstance(phi_rn6_plt_p3_plus_flange_q, Quantity) else None)}`",
+            f"- Ru6_plt_p3(+)_flange: `{_format_quantity(ru6_plt_p3_plus_flange_disp.model_dump() if isinstance(ru6_plt_p3_plus_flange_disp, Quantity) else None)}`",
+            f"- DCR6_plt_p3(+)_flange: `{dcr6_plt_p3_plus_flange_disp}`",
+            f"- Resultado: {result6_plt_p3_plus_flange}",
+            "",
+            "### 6.2 Revisión de capacidad a compresion en la platina 2 de ala en dirección 3",
+            "",
+            "#### 6.2.1. ELR #1: Pandeo por flexión en la platina 2 de ala",
+            "",
+            "- Clausula: `Documento: AISC 360-22 | Seccion: E3 y J4.4 (DRY: compute_plate_compression_buckling_strength)`",
+            (
+                "- Ecuaciones: `Lp_plt_p3(-)_flange = min(gap_sp + 2*Le_blt_flange_x1, p_blt_flange); "
+                "Ru1_plt_p3(-)_flange = (1-alpha_Pu_web)*Pu_sp + Mu3_sp/(d_vg - tf_vg), si >0 entonces 0; "
+                "phi*Rn1_plt_p3(-)_flange = phi*Fcr_plt_p3(-)_flange*B_plt_flange*t_plt_flange*n_plt_flange; "
+                "DCR1_plt_p3(-)_flange = Ru1_plt_p3(-)_flange/phi*Rn1_plt_p3(-)_flange`"
+            ),
+            f"- Fy_plt_flange: `{_format_quantity(fy_plt_flange_q.model_dump() if isinstance(fy_plt_flange_q, Quantity) else None)}`",
+            f"- B_plt_flange: `{_format_quantity(b_plt_flange_q.model_dump() if isinstance(b_plt_flange_q, Quantity) else None)}`",
+            f"- t_plt_flange: `{_format_quantity(t_plt_flange_q.model_dump() if isinstance(t_plt_flange_q, Quantity) else None)}`",
+            f"- gap_sp: `{_format_quantity(gap_sp_q.model_dump() if isinstance(gap_sp_q, Quantity) else None)}`",
+            f"- Le_blt_flange_x1: `{_format_quantity(le_plt_flange_x1_q.model_dump() if isinstance(le_plt_flange_x1_q, Quantity) else None)}`",
+            f"- p_blt_flange: `{_format_quantity(p_plt_flange_q.model_dump() if isinstance(p_plt_flange_q, Quantity) else None)}`",
+            f"- Lp_plt_p3(-)_flange: `{_format_quantity(lp_plt_p3_minus_flange_q.model_dump() if isinstance(lp_plt_p3_minus_flange_q, Quantity) else None)}`",
+            "- n_plt_flange: `1`",
+            f"- phi_no_ductil: `{_format_text(phi_no_ductil_plt_flange_pminus)}`",
+            f"- K: `{_format_text(k_plt_p3_minus_flange)}`",
+            f"- r_plt_p3(-)_flange: `{_format_quantity(r_plt_p3_minus_flange_q.model_dump() if isinstance(r_plt_p3_minus_flange_q, Quantity) else None)}`",
+            f"- KL_r_plt_p3(-)_flange: `{_format_text(_format_decimal(klr_plt_p3_minus_flange) if isinstance(klr_plt_p3_minus_flange, float) else None)}`",
+            f"- E_plt_flange: `{_format_quantity(e_plt_p3_minus_flange_q.model_dump() if isinstance(e_plt_p3_minus_flange_q, Quantity) else None)}`",
+            f"- Fe_plt_p3(-)_flange: `{_format_quantity(fe_plt_p3_minus_flange_q.model_dump() if isinstance(fe_plt_p3_minus_flange_q, Quantity) else None)}`",
+            f"- Fcr_plt_p3(-)_flange: `{_format_quantity(fcr_plt_p3_minus_flange_q.model_dump() if isinstance(fcr_plt_p3_minus_flange_q, Quantity) else None)}`",
+            f"- Ecuacion Fcr usada: `{fcr_eq_plt_p3_minus_flange}`",
+            f"- Ag_plt_p3(-)_flange: `{_format_quantity(ag_plt_p3_minus_flange_q.model_dump() if isinstance(ag_plt_p3_minus_flange_q, Quantity) else None)}`",
+            f"- Rn1_plt_p3(-)_flange: `{_format_quantity(rn1_plt_p3_minus_flange_q.model_dump() if isinstance(rn1_plt_p3_minus_flange_q, Quantity) else None)}`",
+            f"- phi*Rn1_plt_p3(-)_flange: `{_format_quantity(phi_rn1_plt_p3_minus_flange_q.model_dump() if isinstance(phi_rn1_plt_p3_minus_flange_q, Quantity) else None)}`",
+            f"- alpha_Pu_web: `{_format_text(alpha_pu_web_plt2)}`",
+            f"- Pu_sp: `{_format_quantity(pu_sp_plt2_q.model_dump() if isinstance(pu_sp_plt2_q, Quantity) else None)}`",
+            f"- Mu3_sp: `{_format_quantity(mu3_sp_plt2_q.model_dump() if isinstance(mu3_sp_plt2_q, Quantity) else None)}`",
+            f"- d_vg: `{_format_quantity(d_vg_plt2_q.model_dump() if isinstance(d_vg_plt2_q, Quantity) else None)}`",
+            f"- tf_vg: `{_format_quantity(tf_vg_plt2_q.model_dump() if isinstance(tf_vg_plt2_q, Quantity) else None)}`",
+            f"- Ru1_plt_p3(-)_flange: `{_format_quantity(ru1_plt_p3_minus_flange_abs_disp.model_dump() if isinstance(ru1_plt_p3_minus_flange_abs_disp, Quantity) else None)}`",
+            f"- DCR1_plt_p3(-)_flange: `{dcr1_plt_p3_minus_flange_disp}`",
+            f"- Resultado: {result1_plt_p3_minus_flange}",
+            "",
+            "### 6.3 Revisión de capacidad a cortante en la platina 2 de aleta en dirección 1",
+            "",
+            "#### 6.3.1. ELR #1: Desgarramiento en la perforación del perno",
+            "",
+            "- Cláusula: `Documento: AISC 360-22 | Sección: J3.11a.(b) (DRY: compute_bolt_hole_tearout_strength_j36)`",
+            (
+                "- Ecuaciones: `si n_plt_flange_z >= 2 -> lc_plt_v1_flange = min(g_plt_flange - dh.2, Le_plt_flange_z2 - 0.5*dh.2); "
+                "si n_plt_flange_z = 1 -> lc_plt_v1_flange = Le_plt_flange_z2 - 0.5*dh.2; "
+                "Rn1_plt_v1_flange = C*lc_plt_v1_flange*t_plt_flange*Fu_plt_flange; "
+                "phi*Rn1_plt_v1_flange = phi_pr*Rn1_plt_v1_flange; "
+                "Ru1_plt_v1_flange = Ru_blt_2_flange_v1_max_vg; "
+                "DCR1_plt_v1_flange = Ru1_plt_v1_flange/phi*Rn1_plt_v1_flange`"
+            ),
+            f"- Fu_plt_flange: `{_format_quantity(fu_plt_flange_q.model_dump() if isinstance(fu_plt_flange_q, Quantity) else None)}`",
+            f"- t_plt_flange: `{_format_quantity(t_plt_flange_q.model_dump() if isinstance(t_plt_flange_q, Quantity) else None)}`",
+            f"- n_plt_flange_z: `{_format_text(n_plt_flange_z if n_plt_flange_z > 0 else None)}`",
+            f"- g_plt_flange: `{_format_quantity(g_plt_flange_q.model_dump() if isinstance(g_plt_flange_q, Quantity) else None)}`",
+            f"- Le_plt_flange_z2: `{_format_quantity(le_plt_flange_z2_q.model_dump() if isinstance(le_plt_flange_z2_q, Quantity) else None)}`",
+            f"- dh.2: `{_format_quantity(dh_plt_flange_q.model_dump() if isinstance(dh_plt_flange_q, Quantity) else None)}`",
+            f"- lc_plt_v1_flange: `{_format_quantity(lc_plt_v1_flange_q.model_dump() if isinstance(lc_plt_v1_flange_q, Quantity) else None)}`",
+            f"- C: `{coefficient_plt_v1_flange}`",
+            f"- phi_pr: `{_format_text(phi_pr_plt_flange)}`",
+            f"- Rn1_plt_v1_flange: `{_format_quantity(rn1_plt_v1_flange_q.model_dump() if isinstance(rn1_plt_v1_flange_q, Quantity) else None)}`",
+            f"- phi*Rn1_plt_v1_flange: `{_format_quantity(phi_rn1_plt_v1_flange_q.model_dump() if isinstance(phi_rn1_plt_v1_flange_q, Quantity) else None)}`",
+            f"- Ru1_plt_v1_flange = Ru_blt_2_flange_v1_max_vg: `{_format_quantity(ru1_plt_v1_flange_abs_disp.model_dump() if isinstance(ru1_plt_v1_flange_abs_disp, Quantity) else None)}`",
+            f"- DCR1_plt_v1_flange: `{dcr1_plt_v1_flange_disp}`",
+            f"- Resultado: {result1_plt_v1_flange}",
             "",
         ]
     )

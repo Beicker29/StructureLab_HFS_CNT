@@ -1191,25 +1191,17 @@ class BeamBeamMomentBoltedLoads(StrictModel):
 
 
 class BeamBeamMomentBoltedDesignFactors(StrictModel):
-    phi_bt: float
-    phi_bv: float
-    phi_py: float
-    phi_pr: float
-    phi_bs: float
-    phi_sc: float | None = None
+    phi_ductil: float
+    phi_no_ductil: float
+    phi_fragil: float
 
     @field_validator(
-        "phi_bt",
-        "phi_bv",
-        "phi_py",
-        "phi_pr",
-        "phi_bs",
-        "phi_sc",
+        "phi_ductil",
+        "phi_no_ductil",
+        "phi_fragil",
     )
     @classmethod
-    def validate_phi_range(cls, value: float | None) -> float | None:
-        if value is None:
-            return value
+    def validate_phi_range(cls, value: float) -> float:
         if not (0.0 < value <= 1.0):
             raise ValueError("Resistance factor phi must be in (0, 1].")
         return value

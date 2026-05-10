@@ -23,6 +23,8 @@ from steel_connections.codes.engineering.common import (
     compute_rectangular_bar_net_flexural_rupture_strength_j55,
     compute_rectangular_bar_ltb_strength_f112,
     compute_standard_hole_diameter_j33,
+    compute_half_beam_wt_centroid_distance_from_flange_edge,
+    compute_u_v3_shear_lag_factor_case2,
 )
 from steel_connections.data.materials_repository import (
     get_bolt_strength_properties,
@@ -381,8 +383,8 @@ def run_step1_viga_detailing(case: BeamBeamMomentBoltedCase, rule_binding: objec
     lc_blt_web_y = Quantity(value=s1y.value - dh_web.value, unit=s1y.unit)
     svc_hole_deformation_design_web = bool(case.geometry.svc_hole_deformation_design_web)
     svc_hole_deformation_design_flange = bool(case.geometry.svc_hole_deformation_design_flange)
-    phi_fragil_web = 0.75
-    phi_fragil_flange = float(case.design_factors.phi_pr)
+    phi_fragil_web = float(case.design_factors.phi_fragil)
+    phi_fragil_flange = float(case.design_factors.phi_fragil)
     phi_rn1_web_v2_vg, tearout_web_inter = compute_bolt_hole_tearout_strength_j36(
         material_fu=fu_vg,
         clear_distance_lc=lc_blt_web_y,
@@ -714,7 +716,7 @@ def run_step1_viga_detailing(case: BeamBeamMomentBoltedCase, rule_binding: objec
         - 2.0 * case.geometry.n_blt_flange_z * (dh_flange.value + hole_add_f13) * tf_catalog.value,
         unit=area_unit,
     )
-    phi_no_ductil_m1 = 0.9
+    phi_no_ductil_m1 = float(case.design_factors.phi_no_ductil)
     phi_rn1_flange_m1_vg, flange_flex_rupture_m1_inter = compute_member_flexural_rupture_with_tension_flange_holes_f131(
         material_fu=fu_vg,
         material_fy=fy_vg,
@@ -838,12 +840,37 @@ def run_step1_viga_detailing(case: BeamBeamMomentBoltedCase, rule_binding: objec
             "n_blt_web_y*(dh.1 + 1.80mm) > T_vg -> "
             "Ant_v3_vg = A_vg - n_blt_web_y*(dh.1 + 1.80mm)*tw_vg"
         )
-    if case.geometry.n_blt_web_x <= 1:
-        u_v3_vg = (t_catalog.value * tw_catalog.value) / a_vg_v3.value
-        u_v3_vg_formula = "si n_blt_web_x <= 1 -> U_v3_vg = T_vg*tw_vg/A_vg"
-    else:
-        u_v3_vg = 1.0 - 0.5 * tw_catalog.value / (case.geometry.n_blt_web_x * s1x.value)
-        u_v3_vg_formula = "si n_blt_web_x > 1 -> U_v3_vg = 1 - 0.5*tw_vg/(n_blt_web_x*g_blt_web)"
+    xt_flange_vg, _xt_flange_vg_meta = compute_half_beam_wt_centroid_distance_from_flange_edge(
+        beam_depth_d=dvg_catalog,
+        flange_width_bf=bf_catalog,
+        flange_thickness_tf=tf_catalog,
+        web_thickness_tw=tw_catalog,
+        unit_system=case.units_system,
+    )
+    u_v3_vg, u_v3_meta = compute_u_v3_shear_lag_factor_case2(
+        alpha_pu_web=case.loads.alpha_Pu_web,
+        n_blt_web_x=case.geometry.n_blt_web_x,
+        n_blt_flange_x=case.geometry.n_blt_flange_x,
+        t_vg=t_catalog,
+        tw_vg=tw_catalog,
+        bf_vg=bf_catalog,
+        a_vg=a_vg_v3,
+        g_blt_web=s1x,
+        p_plt_flange=s2x,
+        xt_flange_vg=xt_flange_vg,
+        unit_system=case.units_system,
+    )
+    u_web_v3_vg = float(u_v3_meta.get("u_web", 0.0))
+    u_flange_v3_vg = float(u_v3_meta.get("u_flange", 0.0))
+    u_v3_vg_case = str(u_v3_meta.get("selected_case", "2.2"))
+    u_web_v3_vg_formula = str(u_v3_meta.get("u_web_formula", ""))
+    u_flange_v3_vg_formula = str(u_v3_meta.get("u_flange_formula", ""))
+    u_v3_vg_formula = (
+        "Caso 2 - Subcaso 2.1: si 0.75 < alpha_Pu_web <= 1 -> U_v3_vg = U_web_v3_vg; "
+        "Subcaso 2.2: si 0.25 < alpha_Pu_web <= 0.75 -> U_v3_vg = max(U_web_v3_vg, U_flange_v3_vg); "
+        "Subcaso 2.3: si alpha_Pu_web <= 0.25 -> U_v3_vg = U_flange_v3_vg; "
+        "U_v3_vg = min(U_v3_raw, 1.0)"
+    )
     ae_v3_vg = Quantity(value=ant_v3_vg.value * u_v3_vg, unit=ant_v3_vg.unit)
     phi_rn3_v3_vg, tension_rupture_v3_inter = compute_element_tension_rupture_strength_j41b(
         material_fu=fu_vg,
@@ -1200,7 +1227,7 @@ def run_step1_viga_detailing(case: BeamBeamMomentBoltedCase, rule_binding: objec
         dcr2_plt_v3_web = abs(ru2_plt_v3_web.value) / phi_rn2_plt_v3_web.value
         result2_plt_v3_web = "PASS" if dcr2_plt_v3_web <= 1.0 else "FAIL"
     # Plate 1 tension yielding in v3 (AISC 360-22 J4.1(a), DRY function).
-    phi_no_ductil_plt = 0.9
+    phi_no_ductil_plt = float(case.design_factors.phi_no_ductil)
     agt_v3_plt_web_expr = (
         2.0 * s1x.value * (case.geometry.n_blt_web_x - 1) * math.sqrt(3.0) / 3.0
         + (case.geometry.n_blt_web_y - 1) * s1y.value
@@ -1279,7 +1306,7 @@ def run_step1_viga_detailing(case: BeamBeamMomentBoltedCase, rule_binding: objec
         ey_blt_web = Quantity(value=0.0, unit=ex_blt_web.unit)
     if ey_blt_web.unit != ex_blt_web.unit:
         raise ValueError("Incompatible units between ey_blt_web and ex_blt_web in splice flexural checks.")
-    phi_no_ductil_flex = 0.9
+    phi_no_ductil_flex = float(case.design_factors.phi_no_ductil)
     phi_rn1_plt_p3_minus_web: Quantity | None = None
     ru1_plt_p3_minus_web: Quantity | None = None
     dcr1_plt_p3_minus_web: float | None = None
@@ -1441,7 +1468,7 @@ def run_step1_viga_detailing(case: BeamBeamMomentBoltedCase, rule_binding: objec
         result3_plt_m1_web = "PASS" if dcr3_plt_m1_web <= 1.0 else "FAIL"
 
     # Plate 1 shear yielding in v2 (AISC 360-22 J4.2(a), DRY function).
-    phi_ductil_plt = 1.0
+    phi_ductil_plt = float(case.design_factors.phi_ductil)
     agv5_plt_v2_web = Quantity(
         value=(
             s1y.value * (case.geometry.n_blt_web_y - 1)
@@ -3208,10 +3235,28 @@ def run_step1_viga_detailing(case: BeamBeamMomentBoltedCase, rule_binding: objec
                     "ant_v3_vg_var": "Ant_v3_vg",
                     "ant_v3_vg_formula": ant_v3_vg_formula,
                     "ant_v3_vg": ant_v3_vg.model_dump(),
+                    "alpha_pu_web_var": "alpha_Pu_web",
+                    "alpha_pu_web": case.loads.alpha_Pu_web,
                     "n_blt_web_x_var": "n_blt_web_x",
                     "n_blt_web_x": case.geometry.n_blt_web_x,
                     "g_blt_web_var": "g_blt_web",
                     "g_blt_web": s1x.model_dump(),
+                    "n_blt_flange_x_var": "n_blt_flange_x",
+                    "n_blt_flange_x": case.geometry.n_blt_flange_x,
+                    "p_plt_flange_var": "p_plt_flange",
+                    "p_plt_flange": s2x.model_dump(),
+                    "bf_vg_var": "bf_vg",
+                    "bf_vg": bf_catalog.model_dump(),
+                    "xt_flange_vg_var": "xt_flange_vg",
+                    "xt_flange_vg": xt_flange_vg.model_dump(),
+                    "u_web_v3_vg_var": "U_web_v3_vg",
+                    "u_web_v3_vg_formula": u_web_v3_vg_formula,
+                    "u_web_v3_vg": u_web_v3_vg,
+                    "u_flange_v3_vg_var": "U_flange_v3_vg",
+                    "u_flange_v3_vg_formula": u_flange_v3_vg_formula,
+                    "u_flange_v3_vg": u_flange_v3_vg,
+                    "u_v3_vg_case_var": "Caso U_v3_vg",
+                    "u_v3_vg_case": u_v3_vg_case,
                     "u_v3_vg_var": "U_v3_vg",
                     "u_v3_vg_formula": u_v3_vg_formula,
                     "u_v3_vg": u_v3_vg,
@@ -3228,8 +3273,6 @@ def run_step1_viga_detailing(case: BeamBeamMomentBoltedCase, rule_binding: objec
                     "phi_rn3_v3_vg": phi_rn3_v3_vg.model_dump(),
                     "pu_sp_var": "Pu_sp",
                     "pu_sp": case.loads.Pu_sp.model_dump(),
-                    "alpha_pu_web_var": "alpha_Pu_web",
-                    "alpha_pu_web": case.loads.alpha_Pu_web,
                     "ru3_v3_vg_var": "Ru3_v3_vg",
                     "ru3_v3_vg_formula": "Ru3_v3_vg = Pu_sp",
                     "ru3_v3_vg": ru3_v3_vg.model_dump() if isinstance(ru3_v3_vg, Quantity) else None,

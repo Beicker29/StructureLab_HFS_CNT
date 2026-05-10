@@ -1,4 +1,4 @@
-# Catalogo de funciones DRY compartidas
+﻿# Catalogo de funciones DRY compartidas
 
 Este documento resume las funciones DRY de uso comun en el repo.
 Fuente canonica: `src/steel_connections/codes/engineering/common`.
@@ -110,6 +110,29 @@ Fuente canonica: `src/steel_connections/codes/engineering/common`.
   - `A_gt = min(A_rect, A_whitmore)`
 - Devuelve `A_gt` y trazabilidad completa (`L_whitmore`, `A_rect`, `A_whitmore`, caso controlante).
 
+`compute_half_beam_wt_centroid_distance_from_flange_edge(beam_depth_d, flange_width_bf, flange_thickness_tf, web_thickness_tw, unit_system)`
+
+- Calcula la distancia desde el borde exterior del ala al centroide de media viga tratada como perfil WT:
+  - `h_w = d` (altura total de la viga tomada del catalogo de perfiles; para splice normalmente `d_vg`).
+  - `h_w_eff = h_w*0.5 - tf`
+  - `A_f = bf*tf`
+  - `A_w = h_w_eff*tw = (h_w*0.5 - tf)*tw`
+  - `x_wt = (A_f*y_f + A_w*y_w)/(A_f + A_w)`
+  - donde `y_f = tf/2` y `y_w = tf + h_w_eff/2`.
+- Devuelve `x_wt` y trazabilidad de areas/centroides parciales.
+
+`compute_u_v3_shear_lag_factor_case2(alpha_pu_web, n_blt_web_x, n_blt_flange_x, t_vg, tw_vg, bf_vg, a_vg, g_blt_web, p_plt_flange, xt_flange_vg, unit_system)`
+
+- Calcula el factor de rezago `U_v3_vg` para ELR #2 de rotura a traccion de la viga (4.5.1), definido como **Caso 2** con subcasos:
+  - **Subcaso 2.1**: `0.75 < alpha_Pu_web <= 1` -> `U_v3_vg = U_web`
+  - **Subcaso 2.2**: `0.25 < alpha_Pu_web <= 0.75` -> `U_v3_vg = max(U_web, U_flange)`
+  - **Subcaso 2.3**: `alpha_Pu_web <= 0.25` -> `U_v3_vg = U_flange`
+- Donde:
+  - `U_web = T_vg*tw_vg/A_vg` si `n_blt_web_x <= 1`, si no `1 - 0.5*tw_vg/((n_blt_web_x-1)*g_blt_web)`
+  - `U_flange = 2*bf_vg*tw_vg/A_vg` si `n_blt_flange_x <= 1`, si no `1 - xt_flange_vg/((n_blt_flange_x-1)*p_plt_flange)`
+- Cierre obligatorio: `U_v3_vg = min(U_v3_raw, 1.0)` para asegurar `U_v3_vg <= 1`.
+- Devuelve `U_v3_vg` y trazabilidad (`U_web`, `U_flange`, caso seleccionado, ecuaciones).
+
 ## 3) Limites de precalificacion EP (Tabla 6.1)
 
 `compute_limites_precalificacion_conexion_tipo_ep(connection_type, unit_system)`
@@ -143,7 +166,7 @@ Fuente canonica: `src/steel_connections/codes/engineering/common`.
 
 - Genera patron de pernos para una aleta cuando `n_blt_flange_z` se define por media aleta.
 - Filas transversales:
-  - `y_(m,±) = ±(g1z/2 + m*gz)`, con `m = 0..nz_half-1`.
+  - `y_(m,Â±) = Â±(g1z/2 + m*gz)`, con `m = 0..nz_half-1`.
 - Total de filas transversales en una aleta:
   - `N_y = 2*nz_half`.
 
@@ -253,6 +276,7 @@ Listado sincronizado con `src/steel_connections/codes/engineering/common/__init_
 - `compute_element_tension_rupture_strength_j41b`
 - `compute_element_tension_yielding_strength_j41a`
 - `compute_whitmore_section_area`
+- `compute_half_beam_wt_centroid_distance_from_flange_edge`
 - `compute_rectangular_bar_flexural_yielding_strength_f111`
 - `compute_member_flexural_rupture_with_tension_flange_holes_f131`
 - `compute_rectangular_bar_ltb_strength_f112`

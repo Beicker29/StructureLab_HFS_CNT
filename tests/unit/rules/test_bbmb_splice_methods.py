@@ -35,14 +35,14 @@ def _binding() -> SimpleNamespace:
 
 def _load_case(method: str, *, include_rult: bool) -> object:
     payload = json.loads(EXAMPLE_SPLICE_PATH.read_text(encoding="utf-8"))
-    payload.setdefault("procedure", {}).setdefault("icr", {})
-    payload["procedure"]["icr"]["method"] = method
-    payload["procedure"]["icr"]["tolerance_1"] = 0.01
-    payload["procedure"]["icr"]["max_iterations_1"] = 1000
+    payload.setdefault("procedure", {})
+    payload["procedure"]["method_1"] = method
+    payload["procedure"]["tolerance_1"] = 0.01
+    payload["procedure"]["max_iterations_1"] = 1000
     if include_rult:
-        payload["procedure"]["icr"]["rult_1_kip"] = {"value": 25.0, "unit": "kip"}
+        payload["procedure"]["rult_1_kip"] = {"value": 25.0, "unit": "kip"}
     else:
-        payload["procedure"]["icr"].pop("rult_1_kip", None)
+        payload["procedure"].pop("rult_1_kip", None)
     return parse_and_validate_payload(payload)
 
 
@@ -103,7 +103,7 @@ def test_step2_method_elastic_superposition_governs_status(monkeypatch) -> None:
     monkeypatch.setattr(
         bbmb_splice_methods,
         "_derive_elastic_bolt_capacity_kip",
-        lambda *_args, **_kwargs: (20.0, {"phi_bv": 0.9}),
+        lambda *_args, **_kwargs: (20.0, {"phi_no_ductil": 0.9}),
     )
     monkeypatch.setattr(
         bbmb_splice_methods,
@@ -142,7 +142,7 @@ def test_step2_method_elastic_ecr_governs_status(monkeypatch) -> None:
     monkeypatch.setattr(
         bbmb_splice_methods,
         "_derive_elastic_bolt_capacity_kip",
-        lambda *_args, **_kwargs: (20.0, {"phi_bv": 0.9}),
+        lambda *_args, **_kwargs: (20.0, {"phi_no_ductil": 0.9}),
     )
     monkeypatch.setattr(
         bbmb_splice_methods,
@@ -190,7 +190,7 @@ def test_step2_method_icr_checks_convergence_acceptance(monkeypatch) -> None:
     monkeypatch.setattr(
         bbmb_splice_methods,
         "_derive_elastic_bolt_capacity_kip",
-        lambda *_args, **_kwargs: (20.0, {"phi_bv": 0.9}),
+        lambda *_args, **_kwargs: (20.0, {"phi_no_ductil": 0.9}),
     )
     monkeypatch.setattr(
         bbmb_splice_methods,
@@ -210,7 +210,7 @@ def test_step2_method_icr_checks_convergence_acceptance(monkeypatch) -> None:
 
 def test_step2_method_uses_splice_formula_ex_and_input_ey(monkeypatch) -> None:
     case = _load_case("elastic_superposition", include_rult=False)
-    case.loads.ey_blt_web = Quantity(value=40.0, unit="mm")
+    case.loads.e2_blt_web = Quantity(value=40.0, unit="mm")
     case = parse_and_validate_payload(case.model_dump())  # re-validate with explicit fields
 
     active = ElasticSuperpositionResult(
@@ -239,7 +239,7 @@ def test_step2_method_uses_splice_formula_ex_and_input_ey(monkeypatch) -> None:
     monkeypatch.setattr(
         bbmb_splice_methods,
         "_derive_elastic_bolt_capacity_kip",
-        lambda *_args, **_kwargs: (20.0, {"phi_bv": 0.9}),
+        lambda *_args, **_kwargs: (20.0, {"phi_no_ductil": 0.9}),
     )
     monkeypatch.setattr(bbmb_splice_methods, "_solve_bolt_group_methods", _capture_solver)
 

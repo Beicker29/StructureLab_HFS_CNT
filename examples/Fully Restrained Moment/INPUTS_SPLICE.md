@@ -83,12 +83,9 @@ Variables derivadas (no input):
 - `e1_blt_flange` (opcional, default interno `0`; ubicar debajo de `e2_blt_web`)
 
 ### `design_factors`
-- `phi_bt`
-- `phi_bv`
-- `phi_py`
-- `phi_pr`
-- `phi_bs`
-- `phi_sc` (opcional)
+- `phi_ductil` (usar `1.0`)
+- `phi_no_ductil` (usar `0.9`)
+- `phi_fragil` (usar `0.75`)
 
 ### `capacidad_miembro`
 - `phiPnc`

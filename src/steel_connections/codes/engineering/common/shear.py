@@ -294,6 +294,182 @@ def compute_whitmore_section_area(
     }
 
 
+def compute_half_beam_wt_centroid_distance_from_flange_edge(
+    *,
+    beam_depth_d: Quantity,
+    flange_width_bf: Quantity,
+    flange_thickness_tf: Quantity,
+    web_thickness_tw: Quantity,
+    unit_system: UnitSystem,
+) -> tuple[Quantity, dict[str, Quantity | float | str]]:
+    """Compute centroid distance from flange outer edge for half-beam treated as WT.
+
+    Geometric model (top half of a symmetric W shape):
+    - ``h_w`` is the full beam depth from catalog (typically ``d_vg``).
+    - Effective half-web height:
+      ``h_w_eff = h_w*0.5 - tf``.
+    - Flange rectangle: ``A_f = bf * tf`` with centroid at ``y_f = tf/2``.
+    - Half-web rectangle:
+      ``A_w = h_w_eff * tw = (h_w*0.5 - tf)*tw``,
+      with centroid at ``y_w = tf + h_w_eff/2``.
+    - WT centroid distance from flange outer edge:
+      ``x_wt = (A_f*y_f + A_w*y_w) / (A_f + A_w)``.
+    """
+
+    validate_quantity_unit(beam_depth_d, "length", unit_system, "beam_depth_d")
+    validate_quantity_unit(flange_width_bf, "length", unit_system, "flange_width_bf")
+    validate_quantity_unit(flange_thickness_tf, "length", unit_system, "flange_thickness_tf")
+    validate_quantity_unit(web_thickness_tw, "length", unit_system, "web_thickness_tw")
+
+    length_unit = beam_depth_d.unit
+    if not (
+        flange_width_bf.unit == length_unit
+        and flange_thickness_tf.unit == length_unit
+        and web_thickness_tw.unit == length_unit
+    ):
+        raise ValueError("beam_depth_d, flange_width_bf, flange_thickness_tf, and web_thickness_tw must share unit.")
+
+    if beam_depth_d.value <= 0.0:
+        raise ValueError("beam_depth_d must be > 0.")
+    if flange_width_bf.value <= 0.0:
+        raise ValueError("flange_width_bf must be > 0.")
+    if flange_thickness_tf.value <= 0.0:
+        raise ValueError("flange_thickness_tf must be > 0.")
+    if web_thickness_tw.value <= 0.0:
+        raise ValueError("web_thickness_tw must be > 0.")
+
+    h_w = beam_depth_d.value
+    h_w_eff = 0.5 * h_w - flange_thickness_tf.value
+    if h_w_eff <= 0.0:
+        raise ValueError("Invalid half-web height: require d/2 - tf > 0.")
+
+    area_unit = "in2" if unit_system == UnitSystem.US else "mm2"
+    af = flange_width_bf.value * flange_thickness_tf.value
+    aw = h_w_eff * web_thickness_tw.value
+    at = af + aw
+    if at <= 0.0:
+        raise ValueError("Total WT area must be > 0.")
+
+    y_f = 0.5 * flange_thickness_tf.value
+    y_w = flange_thickness_tf.value + 0.5 * h_w_eff
+    x_wt = (af * y_f + aw * y_w) / at
+
+    return Quantity(value=x_wt, unit=length_unit), {
+        "reference": "Half-beam WT centroid geometry helper",
+        "equation_beam_depth": "h_w = d (altura total de la viga tomada del catalogo)",
+        "equation_half_web_height_effective": "h_w_eff = h_w*0.5 - tf",
+        "equation_flange_area": "A_f = bf*tf",
+        "equation_half_web_area": "A_w = h_w_eff*tw = (h_w*0.5 - tf)*tw",
+        "equation_centroid": "x_wt = (A_f*y_f + A_w*y_w)/(A_f + A_w)",
+        "beam_depth_h_w": Quantity(value=h_w, unit=length_unit),
+        "half_web_height_effective_h_w_eff": Quantity(value=h_w_eff, unit=length_unit),
+        "flange_area_af": Quantity(value=af, unit=area_unit),
+        "half_web_area_aw": Quantity(value=aw, unit=area_unit),
+        "total_area_at": Quantity(value=at, unit=area_unit),
+        "y_f": Quantity(value=y_f, unit=length_unit),
+        "y_w": Quantity(value=y_w, unit=length_unit),
+    }
+
+
+def compute_u_v3_shear_lag_factor_case2(
+    *,
+    alpha_pu_web: float,
+    n_blt_web_x: int,
+    n_blt_flange_x: int,
+    t_vg: Quantity,
+    tw_vg: Quantity,
+    bf_vg: Quantity,
+    a_vg: Quantity,
+    g_blt_web: Quantity,
+    p_plt_flange: Quantity,
+    xt_flange_vg: Quantity,
+    unit_system: UnitSystem,
+) -> tuple[float, dict[str, Quantity | float | str]]:
+    """Compute ``U_v3_vg`` (shear-lag factor) for splice ELR #2 with case scaffold.
+
+    This helper implements the currently requested criterion set for 4.5.1
+    (treated as *Caso 2*), while keeping explicit branch labels that allow
+    future expansion.
+
+    Piecewise selection by ``alpha_Pu_web``:
+    - ``0.75 < alpha <= 1``: use web expression.
+    - ``0.25 < alpha <= 0.75`` (*Caso 2*): use ``max(U_web, U_flange)``.
+    - ``0.00 < alpha <= 0.25``: use flange expression.
+
+    Final cap:
+    - ``U_v3_vg <= 1``.
+    """
+
+    validate_quantity_unit(t_vg, "length", unit_system, "t_vg")
+    validate_quantity_unit(tw_vg, "length", unit_system, "tw_vg")
+    validate_quantity_unit(bf_vg, "length", unit_system, "bf_vg")
+    validate_quantity_unit(g_blt_web, "length", unit_system, "g_blt_web")
+    validate_quantity_unit(p_plt_flange, "length", unit_system, "p_plt_flange")
+    validate_quantity_unit(xt_flange_vg, "length", unit_system, "xt_flange_vg")
+    validate_quantity_unit(a_vg, "area", unit_system, "a_vg")
+
+    if n_blt_web_x < 1:
+        raise ValueError("n_blt_web_x must be >= 1.")
+    if n_blt_flange_x < 1:
+        raise ValueError("n_blt_flange_x must be >= 1.")
+    if a_vg.value <= 0.0:
+        raise ValueError("a_vg must be > 0.")
+    if g_blt_web.value <= 0.0:
+        raise ValueError("g_blt_web must be > 0.")
+    if p_plt_flange.value <= 0.0:
+        raise ValueError("p_plt_flange must be > 0.")
+
+    if n_blt_web_x <= 1:
+        u_web = (t_vg.value * tw_vg.value) / a_vg.value
+        u_web_formula = "si n_blt_web_x <= 1 -> U_web = T_vg*tw_vg/A_vg"
+    else:
+        u_web = 1.0 - 0.5 * tw_vg.value / ((n_blt_web_x - 1) * g_blt_web.value)
+        u_web_formula = "si n_blt_web_x > 1 -> U_web = 1 - 0.5*tw_vg/((n_blt_web_x - 1)*g_blt_web)"
+
+    if n_blt_flange_x <= 1:
+        u_flange = 2.0 * bf_vg.value * tw_vg.value / a_vg.value
+        u_flange_formula = "si n_blt_flange_x <= 1 -> U_flange = 2*bf_vg*tw_vg/A_vg"
+    else:
+        u_flange = 1.0 - xt_flange_vg.value / ((n_blt_flange_x - 1) * p_plt_flange.value)
+        u_flange_formula = (
+            "si n_blt_flange_x > 1 -> U_flange = 1 - xt_flange_vg/((n_blt_flange_x - 1)*p_plt_flange)"
+        )
+
+    if 0.75 < alpha_pu_web <= 1.0:
+        selected_case = "2.1"
+        u_raw = u_web
+        selection_formula = "Subcaso 2.1: si 0.75 < alpha_Pu_web <= 1 -> U_v3_vg = U_web"
+    elif 0.25 < alpha_pu_web <= 0.75:
+        selected_case = "2.2"
+        u_raw = max(u_web, u_flange)
+        selection_formula = "Subcaso 2.2: si 0.25 < alpha_Pu_web <= 0.75 -> U_v3_vg = max(U_web, U_flange)"
+    elif alpha_pu_web <= 0.25:
+        selected_case = "2.3"
+        u_raw = u_flange
+        selection_formula = "Subcaso 2.3: si alpha_Pu_web <= 0.25 -> U_v3_vg = U_flange"
+    else:
+        selected_case = "2.1_fallback_alpha_gt_1"
+        u_raw = u_web
+        selection_formula = "alpha_Pu_web > 1.00 -> fallback Subcaso 2.1 (U_v3_vg = U_web)"
+
+    u_capped = min(u_raw, 1.0)
+    cap_formula = "U_v3_vg <= 1 -> U_v3_vg = min(U_raw, 1.0)"
+
+    return u_capped, {
+        "reference": "Splice web tension rupture helper (ELR #2, Caso 2 con subcasos 2.1/2.2/2.3)",
+        "u_web_formula": u_web_formula,
+        "u_flange_formula": u_flange_formula,
+        "selection_formula": selection_formula,
+        "cap_formula": cap_formula,
+        "selected_case": selected_case,
+        "u_web": u_web,
+        "u_flange": u_flange,
+        "u_raw": u_raw,
+        "u_capped": u_capped,
+        "alpha_pu_web": alpha_pu_web,
+    }
+
+
 def compute_rectangular_bar_flexural_yielding_strength_f111(
     *,
     material_fy: Quantity,

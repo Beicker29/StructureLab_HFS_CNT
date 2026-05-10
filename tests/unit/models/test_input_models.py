@@ -82,16 +82,14 @@ def test_parse_non_prequalified_moment_splice_case_valid() -> None:
             "Pu_sp": {"value": 100.0, "unit": "kN"},
             "Vu2_sp": {"value": 250.0, "unit": "kN"},
             "Vu3_sp": {"value": 0.0, "unit": "kN"},
-            "Mu3_sp": {"value": 450000.0, "unit": "kN-mm"},
-            "Mu2_sp": {"value": 0.0, "unit": "kN-mm"},
-            "Tu_sp": {"value": 0.0, "unit": "kN-mm"},
+            "Mu3_sp": {"value": 450.0, "unit": "kN-m"},
+            "Mu2_sp": {"value": 0.0, "unit": "kN-m"},
+            "Tu_sp": {"value": 0.0, "unit": "kN-m"},
         },
         "design_factors": {
-            "phi_bt": 0.9,
-            "phi_bv": 0.9,
-            "phi_py": 0.9,
-            "phi_pr": 0.75,
-            "phi_bs": 0.75,
+            "phi_ductil": 1.0,
+            "phi_no_ductil": 0.9,
+            "phi_fragil": 0.75,
         },
     }
     case = parse_input_case(payload)

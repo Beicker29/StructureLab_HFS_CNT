@@ -31,36 +31,36 @@ def _base_payload() -> dict:
 )
 def test_parse_splice_method_aliases(method_raw: str, expected: str) -> None:
     payload = _base_payload()
-    payload["procedure"]["icr"]["method"] = method_raw
+    payload["procedure"]["method_1"] = method_raw
     if expected != "icr":
-        payload["procedure"]["icr"].pop("rult_1_kip", None)
+        payload["procedure"].pop("rult_1_kip", None)
     case = parse_input_case(payload)
     assert case.procedure is not None
-    assert case.procedure.icr.method == expected
+    assert case.procedure.method_1 == expected
 
 
 def test_parse_splice_icr_requires_rult() -> None:
     payload = _base_payload()
-    payload["procedure"]["icr"]["method"] = "icr"
-    payload["procedure"]["icr"].pop("rult_1_kip", None)
+    payload["procedure"]["method_1"] = "icr"
+    payload["procedure"].pop("rult_1_kip", None)
     with pytest.raises(ValidationError):
         parse_input_case(payload)
 
 
 def test_parse_splice_icr_allows_rult_unit_kip() -> None:
     payload = _base_payload()
-    payload["procedure"]["icr"]["method"] = "icr"
-    payload["procedure"]["icr"]["rult_1_kip"] = {"value": 20.0, "unit": "kip"}
+    payload["procedure"]["method_1"] = "icr"
+    payload["procedure"]["rult_1_kip"] = {"value": 20.0, "unit": "kip"}
     case = parse_input_case(payload)
     assert case.procedure is not None
-    assert case.procedure.icr.rult_1_kip is not None
-    assert case.procedure.icr.rult_1_kip.unit == "kip"
+    assert case.procedure.rult_1_kip is not None
+    assert case.procedure.rult_1_kip.unit == "kip"
 
 
 def test_parse_splice_elastic_does_not_require_rult() -> None:
     payload = deepcopy(_base_payload())
-    payload["procedure"]["icr"]["method"] = "elastic_ecr"
-    payload["procedure"]["icr"].pop("rult_1_kip", None)
+    payload["procedure"]["method_1"] = "elastic_ecr"
+    payload["procedure"].pop("rult_1_kip", None)
     case = parse_input_case(payload)
     assert case.procedure is not None
-    assert case.procedure.icr.method == "elastic_ecr"
+    assert case.procedure.method_1 == "elastic_ecr"

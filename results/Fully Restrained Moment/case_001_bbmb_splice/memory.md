@@ -36,21 +36,21 @@ Propiedades organizadas por ámbito.
 
 #### 1.1.2 Resumen de geometría del alma
 
-- Separación entre vigas (gap_sp) (inp): `25.4 mm`
+- Separación entre vigas (gap_sp) (inp): `10 mm`
 - Tolerancia de fabricación en longitud de viga (tol_L_vg) (inp): `6.35 mm`
 - Referencia tolerancia: `AISC 303-22`
-- Número de pernos en dirección X del alma (n_blt_web_x) (inp): `1`
-- Separación horizontal entre columnas de pernos del alma (g_blt_web) (inp): `76.2 mm`
-- Distancia de borde en dirección X del grupo de pernos del alma (Le_blt_web_x1) (inp): `25.4 mm`
+- Número de pernos en dirección X del alma (n_blt_web_x) (inp): `2`
+- Separación horizontal entre columnas de pernos del alma (g_blt_web) (inp): `60 mm`
+- Distancia de borde en dirección X del grupo de pernos del alma (Le_blt_web_x1) (inp): `35 mm`
 - Ecuación coordenadas X de pernos del alma: `x_j_blt_web = Le_blt_web_x1 + j*g_blt_web`
 - Rango del índice: `j = 0, 1, ..., n_blt_web_x - 1`
-- Coordenadas en dirección X para pernos del alma (x_j_blt_web): `j=0: 25.4 mm`
-- Distancia de borde ajustada (Le_blt_web_x1'): `19.05 mm`
+- Coordenadas en dirección X para pernos del alma (x_j_blt_web): `j=0: 35 mm; j=1: 95 mm`
+- Distancia de borde ajustada (Le_blt_web_x1'): `28.65 mm`
 - Número de pernos en dirección Y del alma (n_blt_web_y) (inp): `6`
-- Separación vertical entre filas de pernos del alma (p_blt_web) (inp): `76.2 mm`
+- Separación vertical entre filas de pernos del alma (p_blt_web) (inp): `60 mm`
 - Tipo de perforación por pernos grupo 1 alma (type_hole_web) (inp): `standard`
-- Distancia vertical entre cara exterior de aleta inferior y fila inferior de pernos (Le_blt_web_y3): `34.5 mm`
-- Distancia neta respecto a kdet en alma (Le_blt_web_y3.1): `13.5 mm`
+- Distancia vertical entre cara exterior de aleta inferior y fila inferior de pernos (Le_blt_web_y3): `75 mm`
+- Distancia neta respecto a kdet en alma (Le_blt_web_y3.1): `54 mm`
 - Diámetro de perforación para pernos 1 (dh.1): `17.46 mm`
 
 #### 1.1.3 Resumen de geometría de la aleta
@@ -64,7 +64,7 @@ Propiedades organizadas por ámbito.
 - Número de pernos en na mitad de aleta en dirección Z de la aleta (n_blt_flange_z) (inp): `1`
 - Distancia de borde en dirección Z del grupo de pernos del ala (Le_blt_flange_z1) (inp): `30 mm`
 - Distancia complementaria de borde en aleta (Le_blt_flange_z4): `26.9 mm`
-- Gage entre columnas de pernos del ala (g_blt_flange) (inp): `40 mm`
+- Gage entre columnas de pernos del ala (g_blt_flange) (inp): `0 mm`
 - Tipo de perforación por pernos grupo 2 ala (type_hole_flange) (inp): `standard`
 - Distancia útil entre filas internas de pernos de aleta (g1_blt_flange): `92 mm`
 - Despeje horizontal entre grupos de pernos (F_blt_flange): `32.69 mm`
@@ -92,15 +92,15 @@ Propiedades organizadas por ámbito.
 - Condición superficial platina alma (cond_sup_plt_web) (inp): `painted`
 - Condición ambiental platina alma (cond_amb_plt_web) (inp): `non_corrosive`
 - Espesor de platina de alma (t_plt_web) (inp): `9.5 mm`
-- Número de pernos en dirección X del alma (n_plt_web_x) (inp): `1`
-- Separación horizontal entre columnas de pernos del alma (g_plt_web) (inp): `76.2 mm`
+- Número de pernos en dirección X del alma (n_plt_web_x) (inp): `2`
+- Separación horizontal entre columnas de pernos del alma (g_plt_web) (inp): `60 mm`
 - Distancia al borde en dirección X de platina de alma (Le_plt_web_x2) (inp): `35 mm`
 - Número de pernos en dirección Y del alma (n_plt_web_y) (inp): `6`
-- Separación vertical entre filas de pernos del alma (p_plt_web) (inp): `76.2 mm`
+- Separación vertical entre filas de pernos del alma (p_plt_web) (inp): `60 mm`
 - Distancia al borde inferior de platina de alma (Le_plt_web_y1) (inp): `25 mm`
 - Distancia al borde superior de platina de alma (Le_plt_web_y2) (inp): `25 mm`
-- Longitud de platina de alma (L_plt_web): `146.2 mm`
-- Altura de platina de alma (H_plt_web): `431 mm`
+- Longitud de platina de alma (L_plt_web): `270 mm`
+- Altura de platina de alma (H_plt_web): `350 mm`
 - dh_plt_web: `17.46 mm`
 
 #### 1.2.2 Fórmulas de cálculo
@@ -149,12 +149,11 @@ Propiedades organizadas por ámbito.
 - Separación entre filas de pernos del ala (p_plt_flange) (inp): `60 mm`
 - Distancia al borde de la platina de ala en x (Le_plt_flange_x2) (inp): `50 mm`
 - Número de pernos en dirección Z del ala (n_plt_flange_z) (inp): `1`
-- Gage entre columnas de pernos del ala (g_plt_flange) (inp): `40 mm`
-- Distancia de borde interior 1 en dirección Z del ala (Le_plt_flange_z1) (inp): `30 mm`
-- Distancia de borde interior 2 en dirección Z del ala (Le_plt_flange_z2) (inp): `40 mm`
+- Gage entre columnas de pernos del ala (g_plt_flange) (inp): `0 mm`
+- Distancia de borde interior 2 en dirección Z del ala (Le_plt_flange_z2) (inp): `30 mm`
 - Distancia útil entre filas internas de pernos de aleta (g1_plt_flange): `92 mm`
-- Longitud de platina de ala (L_plt_flange): `585.4 mm`
-- Ancho de platina de ala (B_plt_flange): `162 mm`
+- Longitud de platina de ala (L_plt_flange): `570 mm`
+- Ancho de platina de ala (B_plt_flange): `152 mm`
 - dh_plt_flange: `20.64 mm`
 
 #### 1.4.2 Fórmulas de cálculo
@@ -196,56 +195,56 @@ Propiedades organizadas por ámbito.
 #### Chequeo 2.1.1 - Separación mínima entre pernos del alma en dirección X (`g_blt_web`)
 
 - Ámbito: `VIGA`
-- Verificación: `g_blt_web >= max {2*C1, Smin}; 76.2 mm >= 60.32 mm`
+- Verificación: `g_blt_web >= max {2*C1, Smin}; 60 mm >= 60.32 mm`
 - Cláusula: `Documento: AISC 360-22 + Steel Construction Manual AISC 16th edition 2023 | Sección: AISC 360-22 J3.3, J3.6 y Tabla 7-15 Entering and Tightening Clearance, in.`
-- Resultado: 🟢 Cumple
+- Resultado: 🔴 No cumple
 
 #### Chequeo 2.1.2 - Separación máxima entre pernos del alma en dirección X (`g_blt_web`)
 
 - Ámbito: `VIGA`
-- Verificación: `g_blt_web <= Smax; 76.2 mm <= 182.88 mm`
+- Verificación: `g_blt_web <= Smax; 60 mm <= 182.88 mm`
 - Cláusula: `Documento: AISC 360-22 | Sección: AISC 360-22 J3.6`
 - Resultado: 🟢 Cumple
 
 #### Chequeo 2.1.3 - Distancia mínima a borde Le_blt_web_x1 para agujero estándar (`Le_blt_web_x1`)
 
 - Ámbito: `VIGA`
-- Verificación: `Le_blt_web_x1 >= max {Le_min, C1}; 25.4 mm >= 30.16 mm`
+- Verificación: `Le_blt_web_x1 >= max {Le_min, C1}; 35 mm >= 30.16 mm`
 - Cláusula: `Documento: AISC 360-22 + Steel Construction Manual AISC 16th edition 2023 | Sección: AISC 360-22 Tabla J3.4, J3.6 y Tabla 7-15 Entering and Tightening Clearance, in.`
-- Resultado: 🔴 No cumple
+- Resultado: 🟢 Cumple
 
 #### Chequeo 2.1.4 - Distancia máxima a borde Le_blt_web_x1 (`Le_blt_web_x1`)
 
 - Ámbito: `VIGA`
-- Verificación: `Le_blt_web_x1 <= Le_max; 25.4 mm <= 91.44 mm`
+- Verificación: `Le_blt_web_x1 <= Le_max; 35 mm <= 91.44 mm`
 - Cláusula: `Documento: AISC 360-22 | Sección: AISC 360-22 J3.6`
 - Resultado: 🟢 Cumple
 
 #### Chequeo 2.1.5 - Separación mínima entre pernos del alma en dirección Z (`p_blt_web`)
 
 - Ámbito: `VIGA`
-- Verificación: `p_blt_web >= max {2*C1, Smin}; 76.2 mm >= 60.32 mm`
+- Verificación: `p_blt_web >= max {2*C1, Smin}; 60 mm >= 60.32 mm`
 - Cláusula: `Documento: AISC 360-22 + Steel Construction Manual AISC 16th edition 2023 | Sección: AISC 360-22 J3.3, J3.6 y Tabla 7-15 Entering and Tightening Clearance, in.`
-- Resultado: 🟢 Cumple
+- Resultado: 🔴 No cumple
 
 #### Chequeo 2.1.6 - Separación máxima entre pernos del alma en dirección Z (`p_blt_web`)
 
 - Ámbito: `VIGA`
-- Verificación: `p_blt_web <= Smax; 76.2 mm <= 182.88 mm`
+- Verificación: `p_blt_web <= Smax; 60 mm <= 182.88 mm`
 - Cláusula: `Documento: AISC 360-22 | Sección: AISC 360-22 J3.6`
 - Resultado: 🟢 Cumple
 
 #### Chequeo 2.1.7 - Distancia mínima a borde Le_blt_web_y3.1 para agujero estándar (`Le_blt_web_y3.1`)
 
 - Ámbito: `VIGA`
-- Verificación: `Le_blt_web_y3.1 >= max {Le_min, C1}; 13.5 mm >= 30.16 mm`
+- Verificación: `Le_blt_web_y3.1 >= max {Le_min, C1}; 54 mm >= 30.16 mm`
 - Cláusula: `Documento: AISC 360-22 + Steel Construction Manual AISC 16th edition 2023 | Sección: AISC 360-22 Tabla J3.4, J3.6 y Tabla 7-15 Entering and Tightening Clearance, in.`
-- Resultado: 🔴 No cumple
+- Resultado: 🟢 Cumple
 
 #### Chequeo 2.1.8 - Distancia máxima a borde Le_blt_web_y3.1 (`Le_blt_web_y3.1`)
 
 - Ámbito: `VIGA`
-- Verificación: `Le_blt_web_y3.1 <= Le_max; 13.5 mm <= 91.44 mm`
+- Verificación: `Le_blt_web_y3.1 <= Le_max; 54 mm <= 91.44 mm`
 - Cláusula: `Documento: AISC 360-22 | Sección: AISC 360-22 J3.6`
 - Resultado: 🟢 Cumple
 
@@ -343,9 +342,9 @@ Propiedades organizadas por ámbito.
 #### Chequeo 2.1.22 - Distancia mínima a borde Le_blt_web_y3.1 por constructibilidad (C3) (`Le_blt_web_y3.1`)
 
 - Ámbito: `VIGA`
-- Verificación: `Le_blt_web_y3.1 >= C3; 13.5 mm >= 17.46 mm`
+- Verificación: `Le_blt_web_y3.1 >= C3; 54 mm >= 17.46 mm`
 - Cláusula: `Documento: AISC 360-22 + Steel Construction Manual AISC 16th edition 2023 | Sección: AISC 360-22 J3.6 y Tabla 7-15 Entering and Tightening Clearance, in.`
-- Resultado: 🔴 No cumple
+- Resultado: 🟢 Cumple
 
 #### Chequeo 2.1.23 - Despeje horizontal F_blt_flange y separación escalonada mínima entre pernos (`F_blt_flange`)
 
@@ -366,14 +365,14 @@ Propiedades organizadas por ámbito.
 #### Chequeo 2.2.1 - Separación mínima entre pernos de platina de alma en dirección X (`g_plt_web`)
 
 - Ámbito: `PLATINA_1`
-- Verificación: `g_plt_web >= Smin; 76.2 mm >= 47.62 mm`
+- Verificación: `g_plt_web >= Smin; 60 mm >= 47.62 mm`
 - Cláusula: `Documento: AISC 360-22 | Sección: AISC 360-22 J3.3`
 - Resultado: 🟢 Cumple
 
 #### Chequeo 2.2.2 - Separación máxima entre pernos de platina de alma en dirección X (`g_plt_web`)
 
 - Ámbito: `PLATINA_1`
-- Verificación: `g_plt_web <= Smax; 76.2 mm <= 228 mm`
+- Verificación: `g_plt_web <= Smax; 60 mm <= 228 mm`
 - Cláusula: `Documento: AISC 360-22 | Sección: AISC 360-22 J3.6`
 - Resultado: 🟢 Cumple
 
@@ -394,14 +393,14 @@ Propiedades organizadas por ámbito.
 #### Chequeo 2.2.5 - Separación mínima entre pernos de platina de alma en dirección Z (`p_plt_web`)
 
 - Ámbito: `PLATINA_1`
-- Verificación: `p_plt_web >= Smin; 76.2 mm >= 47.62 mm`
+- Verificación: `p_plt_web >= Smin; 60 mm >= 47.62 mm`
 - Cláusula: `Documento: AISC 360-22 | Sección: AISC 360-22 J3.3`
 - Resultado: 🟢 Cumple
 
 #### Chequeo 2.2.6 - Separación máxima entre pernos de platina de alma en dirección Z (`p_plt_web`)
 
 - Ámbito: `PLATINA_1`
-- Verificación: `p_plt_web <= Smax; 76.2 mm <= 228 mm`
+- Verificación: `p_plt_web <= Smax; 60 mm <= 228 mm`
 - Cláusula: `Documento: AISC 360-22 | Sección: AISC 360-22 J3.6`
 - Resultado: 🟢 Cumple
 
@@ -510,14 +509,14 @@ Propiedades organizadas por ámbito.
 #### Chequeo 2.4.9 - Distancia mínima a borde de platina de ala Le_plt_flange_z2 para agujero estándar (`Le_plt_flange_z2`)
 
 - Ámbito: `PLATINA_2`
-- Verificación: `Le_plt_flange_z2 >= Le_min; 40 mm >= 25.4 mm`
+- Verificación: `Le_plt_flange_z2 >= Le_min; 30 mm >= 25.4 mm`
 - Cláusula: `Documento: AISC 360-22 | Sección: AISC 360-22 Tabla J3.4`
 - Resultado: 🟢 Cumple
 
 #### Chequeo 2.4.10 - Distancia máxima a borde de platina de ala Le_plt_flange_z2 (`Le_plt_flange_z2`)
 
 - Ámbito: `PLATINA_2`
-- Verificación: `Le_plt_flange_z2 <= Le_max; 40 mm <= 150 mm`
+- Verificación: `Le_plt_flange_z2 <= Le_max; 30 mm <= 150 mm`
 - Cláusula: `Documento: AISC 360-22 | Sección: AISC 360-22 J3.6`
 - Resultado: 🟢 Cumple
 
@@ -553,7 +552,7 @@ Propiedades organizadas por ámbito.
 
 ### 2.6 Resumen de chequeos por ámbito
 
-- 🔴 `2.1` `VIGA`: total=24, cumple=18, no_cumple=6, numerales_no_cumplen=2.1.3, 2.1.7, 2.1.9, 2.1.14, 2.1.15, 2.1.22
+- 🔴 `2.1` `VIGA`: total=24, cumple=19, no_cumple=5, numerales_no_cumplen=2.1.1, 2.1.5, 2.1.9, 2.1.14, 2.1.15
 - 🟢 `2.2` `PLATINA_1`: total=10, cumple=10, no_cumple=0, numerales_no_cumplen=ninguno
 - 🟢 `2.3` `PERNOS_1`: total=2, cumple=2, no_cumple=0, numerales_no_cumplen=ninguno
 - 🟢 `2.4` `PLATINA_2`: total=12, cumple=12, no_cumple=0, numerales_no_cumplen=ninguno
@@ -566,36 +565,36 @@ Propiedades organizadas por ámbito.
 - Metodo seleccionado: `icr`
 - Cláusula: `Documento: Steel Construction Manual AISC 16th edition 2023 | Sección: Part 7 DESIGN CONSIDERATIONS FOR BOLTS - Instantaneous Center of Rotation Method`
 - Ecuaciones: `e3_blt_web = gap_sp + 2*Le_blt_web_x1 + (n_blt_web_x - 1)*g_blt_web; Mu1_blt_web = v2_blt_web*e3_blt_web - alpha_Pu_web*P3_blt_web*e2_blt_web`
-- P3_blt_web: `66.99 kN`
-- v2_blt_web: `250 kN`
-- e3_blt_web: `76.2 mm`
+- P3_blt_web: `0 kN`
+- v2_blt_web: `260 kN`
+- e3_blt_web: `140 mm`
 - e2_blt_web: `0 mm`
-- Mu1_blt_web: `19.05 kN-m`
-- Demanda (metodo activo): `258.82 kN`
-- Ru_blt_1_web_vg: `Ru_1_blt_1_web = 11.62 kip`
-- Ru_blt_1_web_v3_max_vg: `Ru_1_blt_1_web_v3 = -9.28 kip`
-- Ru_blt_1_web_v2_max_vg: `Ru_4_blt_1_web_v2 = -10.88 kip`
-- Coeficiente Cu (ICR): `4.92`
+- Mu1_blt_web: `36.4 kN-m`
+- Demanda (metodo activo): `260 kN`
+- Ru_blt_1_web_vg: `Ru_7_blt_1_web = 8.88 kip`
+- Ru_blt_1_web_v3_max_vg: `Ru_1_blt_1_web_v3 = -8.54 kip`
+- Ru_blt_1_web_v2_max_vg: `Ru_9_blt_1_web_v2 = -7.91 kip`
+- Coeficiente Cu (ICR): `6.46`
 - Verificación de equilibrio por componentes:
-- `sum(Ru_i_blt_1_web_v3) = -15.06 kip` vs `-P3_blt_web = -15.06 kip`; `diferencia = -0 kip`
-- `sum(Ru_i_blt_1_web_v2) = -56.2 kip` vs `-v2_blt_web = -56.2 kip`; `diferencia = -0 kip`
+- `sum(Ru_i_blt_1_web_v3) = 0 kip` vs `-P3_blt_web = -0 kip`; `diferencia = 0 kip`
+- `sum(Ru_i_blt_1_web_v2) = -58.45 kip` vs `-v2_blt_web = -58.45 kip`; `diferencia = -0 kip`
 
 ### 3.2 Metodo ICR/Elastic para pernos 2 del ala de la viga
 
 - Metodo seleccionado: `elastic_superposition`
 - Cláusula: `Documento: Steel Construction Manual AISC 16th edition 2023 | Sección: Part 7 DESIGN CONSIDERATIONS FOR BOLTS - Instantaneous Center of Rotation Method`
 - Ecuaciones: `P3_blt_flange = (1 - alpha_Pu_web)*Pu_sp + Mu3_sp/(d_vg - tf_vg); v1_blt_flange = 0.5*Vu3_sp; e3_blt_flange = gap_sp + 2*Le_blt_flange_x1 + (n_blt_flange_x - 1)*p_blt_flange; Mu2_blt_flange = v1_blt_flange*e3_blt_flange - P3_blt_flange*e1_blt_flange`
-- P3_blt_flange: `1091.58 kN`
+- P3_blt_flange: `569.22 kN`
 - v1_blt_flange: `0 kN`
-- e3_blt_flange: `305.4 mm`
+- e3_blt_flange: `290 mm`
 - e1_blt_flange: `0 mm`
 - Mu2_blt_flange: `0 kN-m`
-- Demanda (metodo activo): `136.45 kN`
-- Ru_blt_2_flange_vg: `Ru_1_blt_2_flange = 30.67 kip`
-- Ru_blt_2_flange_v3_max_vg: `Ru_1_blt_2_flange_v3 = -30.67 kip`
+- Demanda (metodo activo): `71.15 kN`
+- Ru_blt_2_flange_vg: `Ru_1_blt_2_flange = 16 kip`
+- Ru_blt_2_flange_v3_max_vg: `Ru_1_blt_2_flange_v3 = -16 kip`
 - Ru_blt_2_flange_v1_max_vg: `Ru_1_blt_2_flange_v1 = 0 kip`
 - Verificación de equilibrio por componentes:
-- `sum(Ru_i_blt_2_flange_v3) = -245.4 kip` vs `-P3_blt_flange = -245.4 kip`; `diferencia = 0 kip`
+- `sum(Ru_i_blt_2_flange_v3) = -127.97 kip` vs `-P3_blt_flange = -127.97 kip`; `diferencia = 0 kip`
 - `sum(Ru_i_blt_2_flange_v1) = 0 kip` vs `-v1_blt_flange = -0 kip`; `diferencia = 0 kip`
 
 ## Paso 4 - Revisión de resistencia de la viga
@@ -608,15 +607,15 @@ Propiedades organizadas por ámbito.
 - Ecuaciones: `lc_blt_web_y = p_blt_web - dh.1; Rn1_web_v2_vg = C*lc_blt_web_y*tw_vg*Fu_vg; phi*Rn1_web_v2_vg = phi_fragil*Rn1_web_v2_vg; DCR1_web_v2_vg = Ru1_web_v2_vg/phi*Rn1_web_v2_vg`
 - Fu_vg: `450 MPa`
 - tw_vg: `7.62 mm`
-- p_blt_web: `76.2 mm`
+- p_blt_web: `60 mm`
 - dh.1: `17.46 mm`
-- lc_blt_web_y: `58.74 mm`
+- lc_blt_web_y: `42.54 mm`
 - C: `1.2`
 - phi_fragil: `0.75`
-- Rn1_web_v2_vg: `241.69 kN`
-- phi*Rn1_web_v2_vg: `181.27 kN`
-- Ru1_web_v2_vg: `41.29 kN`
-- DCR1_web_v2_vg: `0.23`
+- Rn1_web_v2_vg: `175.03 kN`
+- phi*Rn1_web_v2_vg: `131.27 kN`
+- Ru1_web_v2_vg: `38 kN`
+- DCR1_web_v2_vg: `0.29`
 - Resultado: 🟢 Cumple
 
 #### 4.1.2. ELR #2: Aplastamiento en la perforación del perno
@@ -630,8 +629,8 @@ Propiedades organizadas por ámbito.
 - phi_fragil: `0.75`
 - Rn2_web_v2-v3_vg: `130.64 kN`
 - phi*Rn2_web_v2-v3_vg: `97.98 kN`
-- Ru2_web_v2-v3_vg = Ru_web_vg: `51.68 kN`
-- DCR2_web_v2-v3_vg: `0.53`
+- Ru2_web_v2-v3_vg = Ru_web_vg: `39.49 kN`
+- DCR2_web_v2-v3_vg: `0.4`
 - Resultado: 🟢 Cumple
 
 #### 4.1.3. ELR #3: Rotura por cortante en el perno
@@ -644,8 +643,8 @@ Propiedades organizadas por ámbito.
 - phi_fragil: `0.75`
 - Rn3_web_v2-v3_vg: `73.24 kN`
 - phi*Rn3_web_v2-v3_vg: `54.93 kN`
-- Ru3_web_v2-v3_vg = Ru_web_vg: `51.68 kN`
-- DCR3_web_v2-v3_vg: `0.94`
+- Ru3_web_v2-v3_vg = Ru_web_vg: `39.49 kN`
+- DCR3_web_v2-v3_vg: `0.72`
 - Resultado: 🟢 Cumple
 
 #### 4.1.5. ELR #5: Bloque de cortante en alma de viga
@@ -657,25 +656,25 @@ Propiedades organizadas por ámbito.
 - tw_vg: `7.62 mm`
 - tf_vg: `10.8 mm`
 - bf_vg: `152 mm`
-- n_blt_web_x: `1`
+- n_blt_web_x: `2`
 - n_blt_web_y: `6`
-- g_blt_web: `76.2 mm`
-- p_blt_web: `76.2 mm`
-- Le_blt_web_x1: `25.4 mm`
-- Le_blt_web_y3: `34.5 mm`
+- g_blt_web: `60 mm`
+- p_blt_web: `60 mm`
+- Le_blt_web_x1: `35 mm`
+- Le_blt_web_y3: `75 mm`
 - dh.1: `17.46 mm`
 - Ubs_web_v2_vg (inp): `0.5`
-- Agv_web_v2_vg: `4725.41 mm2`
-- Anv_web_v2_vg: `3918.12 mm2`
-- Agt_web_v2_vg: `193.55 mm2`
-- Ant_web_v2_vg: `120.16 mm2`
+- Agv_web_v2_vg: `4416.8 mm2`
+- Anv_web_v2_vg: `3609.51 mm2`
+- Agt_web_v2_vg: `723.9 mm2`
+- Ant_web_v2_vg: `503.73 mm2`
 - phi_fragil: `0.75`
-- Rn5_1_web_v2_vg: `1084.93 kN`
-- Rn5_2_web_v2_vg: `1005.2 kN`
-- Rn5_web_v2_vg: `1005.2 kN`
-- phi*Rn5_web_v2_vg: `753.9 kN`
-- Ru5_web_v2_vg = Vu2_sp: `250 kN`
-- DCR5_web_v2_vg: `0.33`
+- Rn5_1_web_v2_vg: `1087.91 kN`
+- Rn5_2_web_v2_vg: `1027.62 kN`
+- Rn5_web_v2_vg: `1027.62 kN`
+- phi*Rn5_web_v2_vg: `770.71 kN`
+- Ru5_web_v2_vg = Vu2_sp: `260 kN`
+- DCR5_web_v2_vg: `0.34`
 - Resultado: `Cumple`
 
 ### 4.2 Revisión de capacidad a tracción en el alma en dirección 3
@@ -686,16 +685,16 @@ Propiedades organizadas por ámbito.
 - Ecuaciones: `lc_web_v3_vg = min(g_blt_web - dh.1, Le_blt_web_x1 - 0.5*dh.1); Rn1_web_v3_vg = C*lc_web_v3_vg*tw_vg*Fu_vg; phi*Rn1_web_v3_vg = phi_fragil*Rn1_web_v3_vg; DCR1_web_v3_vg = Ru1_web_v3_vg/phi*Rn1_web_v3_vg`
 - Fu_vg: `450 MPa`
 - tw_vg: `7.62 mm`
-- g_blt_web: `76.2 mm`
-- Le_blt_web_x1: `25.4 mm`
+- g_blt_web: `60 mm`
+- Le_blt_web_x1: `35 mm`
 - dh.1: `17.46 mm`
-- lc_web_v3_vg: `16.67 mm`
+- lc_web_v3_vg: `26.27 mm`
 - C: `1.2`
 - phi_fragil: `0.75`
-- Rn1_web_v3_vg: `68.59 kN`
-- phi*Rn1_web_v3_vg: `51.44 kN`
-- Ru1_web_v3_vg = Ru_web_v3_max_vg: `48.39 kN`
-- DCR1_web_v3_vg: `0.94`
+- Rn1_web_v3_vg: `108.09 kN`
+- phi*Rn1_web_v3_vg: `81.07 kN`
+- Ru1_web_v3_vg = Ru_web_v3_max_vg: `35.18 kN`
+- DCR1_web_v3_vg: `0.43`
 - Resultado: 🟢 Cumple
 
 #### 4.2.3. ELR #3: Bloque de cortante en alma de viga
@@ -705,23 +704,23 @@ Propiedades organizadas por ámbito.
 - Fu_vg: `450 MPa`
 - Fy_vg: `345 MPa`
 - tw_vg: `7.62 mm`
-- n_blt_web_x: `1`
+- n_blt_web_x: `2`
 - n_blt_web_y: `6`
-- g_blt_web: `76.2 mm`
-- p_blt_web: `76.2 mm`
-- Le_blt_web_x1: `25.4 mm`
+- g_blt_web: `60 mm`
+- p_blt_web: `60 mm`
+- Le_blt_web_x1: `35 mm`
 - dh.1: `17.46 mm`
 - Ubs_web_v3_vg (inp): `0.5`
-- Agv_web_v3_vg: `387.1 mm2`
-- Anv_web_v3_vg: `240.32 mm2`
-- Agt_web_v3_vg: `2903.22 mm2`
-- Ant_web_v3_vg: `2169.32 mm2`
+- Agv_web_v3_vg: `1447.8 mm2`
+- Anv_web_v3_vg: `1007.46 mm2`
+- Agt_web_v3_vg: `2286 mm2`
+- Ant_web_v3_vg: `1552.1 mm2`
 - phi_fragil: `0.75`
-- Rn4_1_web_v3_vg: `552.98 kN`
-- Rn4_2_web_v3_vg: `568.23 kN`
-- Rn4_web_v3_vg: `552.98 kN`
-- phi*Rn4_web_v3_vg: `414.74 kN`
-- Pu_sp: `66.99 kN`
+- Rn4_1_web_v3_vg: `621.24 kN`
+- Rn4_2_web_v3_vg: `648.92 kN`
+- Rn4_web_v3_vg: `621.24 kN`
+- phi*Rn4_web_v3_vg: `465.93 kN`
+- Pu_sp: `0 kN`
 - alpha_Pu_web: `0`
 - Ru4_web_v3_vg = Pu_sp*alpha_Pu_web: `0 kN`
 - DCR4_web_v3_vg: `0`
@@ -744,11 +743,11 @@ Propiedades organizadas por ámbito.
 - Rn1_flange_p3_vg: `229.56 kN`
 - phi*Rn1_flange_p3_vg: `172.17 kN`
 - alpha_Pu_web: `0`
-- Pu_sp: `66.99 kN`
-- Mu3_sp: `450 kN-m`
+- Pu_sp: `0 kN`
+- Mu3_sp: `250 kN-m`
 - d_vg: `450 mm`
-- Ru1_flange_p3(+)_vg: `136.45 kN`
-- DCR1_flange_p3_vg: `0.79`
+- Ru1_flange_p3(+)_vg: `71.15 kN`
+- DCR1_flange_p3_vg: `0.41`
 - Resultado: 🟢 Cumple
 
 #### 4.3.2. ELR #2: Aplastamiento en la perforación del perno
@@ -762,8 +761,8 @@ Propiedades organizadas por ámbito.
 - phi_pr: `0.75`
 - Rn2_flange_p3_vg: `222.2 kN`
 - phi*Rn2_flange_p3_vg: `166.65 kN`
-- Ru2_flange_p3(+)_vg: `136.45 kN`
-- DCR2_flange_p3_vg: `0.82`
+- Ru2_flange_p3(+)_vg: `71.15 kN`
+- DCR2_flange_p3_vg: `0.43`
 - Resultado: 🟢 Cumple
 
 #### 4.3.3. ELR #3: Rotura por cortante en el perno
@@ -776,9 +775,9 @@ Propiedades organizadas por ámbito.
 - phi_pr: `0.75`
 - Rn3_flange_p3_vg: `105.46 kN`
 - phi*Rn3_flange_p3_vg: `79.09 kN`
-- Ru3_flange_p3(+)_vg: `136.45 kN`
-- DCR3_flange_p3_vg: `1.73`
-- Resultado: 🔴 No cumple
+- Ru3_flange_p3(+)_vg: `71.15 kN`
+- DCR3_flange_p3_vg: `0.9`
+- Resultado: 🟢 Cumple
 
 #### 4.3.4. ELR #4: Bloque de cortante en ala de viga
 
@@ -812,9 +811,9 @@ Propiedades organizadas por ámbito.
 - Caso control: `Caso 2`
 - phi_pr: `0.75`
 - phi*Rn4_flange_p3_vg: `787.86 kN`
-- Ru4_flange_p3(+)_vg: `1091.58 kN`
-- DCR4_flange_p3_vg: `1.39`
-- Resultado: 🔴 No cumple
+- Ru4_flange_p3(+)_vg: `569.22 kN`
+- DCR4_flange_p3_vg: `0.72`
+- Resultado: 🟢 Cumple
 
 ### 4.4 Revisión de capacidad a cortante en el ala en dirección 1
 
@@ -824,7 +823,7 @@ Propiedades organizadas por ámbito.
 - Ecuaciones: `si n_blt_flange_z >= 2 -> lc_flange_v1_vg = min(g_blt_flange - dh.2, Le_blt_flange_z1 - 0.5*dh.2); si n_blt_flange_z = 1 -> lc_flange_v1_vg = Le_blt_flange_z1 - 0.5*dh.2; Rn1_flange_v1_vg = C*lc_flange_v1_vg*tf_vg*Fu_vg; phi*Rn1_flange_v1_vg = phi_pr*Rn1_flange_v1_vg; Ru1_flange_v1_vg = Ru_blt_2_flange_v1_max_vg (tomado de 3.2); DCR1_flange_v1_vg = Ru1_flange_v1_vg/phi*Rn1_flange_v1_vg`
 - Fu_vg: `450 MPa`
 - tf_vg: `10.8 mm`
-- g_blt_flange: `40 mm`
+- g_blt_flange: `0 mm`
 - n_blt_flange_z: `1`
 - Le_blt_flange_z1: `30 mm`
 - dh.2: `20.64 mm`
@@ -842,24 +841,32 @@ Propiedades organizadas por ámbito.
 #### 4.5.1. ELR #2: Rotura por tracción de la viga
 
 - Cláusula: `Documento: AISC 360-22 | Sección: J4.1.(b)`
-- Ecuaciones: `si 2*g_blt_web*(n_blt_web_x - 1)*sqrt(3)/3 + (n_blt_web_y - 1)*p_blt_web - n_blt_web_y*(dh.1 + 1.80mm) <= T_vg -> Ant_v3_vg = tw_vg*(2*g_blt_web*(n_blt_web_x - 1)*sqrt(3)/3 + (n_blt_web_y - 1)*p_blt_web - n_blt_web_y*(dh.1 + 1.80mm)); si no -> Ant_v3_vg = A_vg - n_blt_web_y*(dh.1 + 1.80mm)*tw_vg; si n_blt_web_x <= 1 -> U_v3_vg = T_vg*tw_vg/A_vg; si n_blt_web_x > 1 -> U_v3_vg = 1 - 0.5*tw_vg/(n_blt_web_x*g_blt_web); Ae_v3_vg = Ant_v3_vg*U_v3_vg; Rn3_v3_vg = Fu_vg*Ae_v3_vg; phi*Rn3_v3_vg = phi_fragil*Rn3_v3_vg; Ru3_v3_vg = Pu_sp; DCR3_v3_vg = Ru3_v3_vg/phi*Rn3_v3_vg`
+- Ecuaciones: `si 2*g_blt_web*(n_blt_web_x - 1)*sqrt(3)/3 + (n_blt_web_y - 1)*p_blt_web - n_blt_web_y*(dh.1 + 1.80mm) <= T_vg -> Ant_v3_vg = tw_vg*(2*g_blt_web*(n_blt_web_x - 1)*sqrt(3)/3 + (n_blt_web_y - 1)*p_blt_web - n_blt_web_y*(dh.1 + 1.80mm)); si no -> Ant_v3_vg = A_vg - n_blt_web_y*(dh.1 + 1.80mm)*tw_vg; si n_blt_web_x <= 1 -> U_web_v3_vg = T_vg*tw_vg/A_vg; si n_blt_web_x > 1 -> U_web_v3_vg = 1 - 0.5*tw_vg/((n_blt_web_x - 1)*g_blt_web); si n_blt_flange_x <= 1 -> U_flange_v3_vg = 2*bf_vg*tw_vg/A_vg; si n_blt_flange_x > 1 -> U_flange_v3_vg = 1 - xt_flange_vg/((n_blt_flange_x - 1)*p_plt_flange); Subcaso 2.1: si 0.75 < alpha_Pu_web <= 1 -> U_v3_vg = U_web_v3_vg; Subcaso 2.2: si 0.25 < alpha_Pu_web <= 0.75 -> U_v3_vg = max(U_web_v3_vg, U_flange_v3_vg); Subcaso 2.3: si alpha_Pu_web <= 0.25 -> U_v3_vg = U_flange_v3_vg; U_v3_vg = min(U_v3_raw, 1.0); Ae_v3_vg = Ant_v3_vg*U_v3_vg; Rn3_v3_vg = Fu_vg*Ae_v3_vg; phi*Rn3_v3_vg = phi_fragil*Rn3_v3_vg; Ru3_v3_vg = Pu_sp; DCR3_v3_vg = Ru3_v3_vg/phi*Rn3_v3_vg`
 - Fu_vg: `450 MPa`
 - T_vg: `394 mm`
 - tw_vg: `7.62 mm`
 - A_vg: `3429 mm2`
 - n_blt_web_y: `6`
 - dh.1: `17.46 mm`
-- Ant_v3_vg: `2022.54 mm2`
-- n_blt_web_x: `1`
-- g_blt_web: `76.2 mm`
-- U_v3_vg: `0.88`
-- Ae_v3_vg: `1770.84 mm2`
+- Ant_v3_vg: `1933.25 mm2`
+- alpha_Pu_web: `0`
+- n_blt_web_x: `2`
+- g_blt_web: `60 mm`
+- n_blt_flange_x: `4`
+- p_plt_flange: `60 mm`
+- bf_vg: `152 mm`
+- xt_flange_vg: `61.49 mm`
+- U_web_v3_vg: `0.94`
+- U_flange_v3_vg: `0.66`
+- Caso U_v3_vg: `2.3`
+- U_v3_vg: `0.66`
+- Ae_v3_vg: `1272.84 mm2`
 - phi_fragil: `0.75`
-- Rn3_v3_vg: `796.88 kN`
-- phi*Rn3_v3_vg: `597.66 kN`
-- Pu_sp: `66.99 kN`
-- Ru3_v3_vg = Pu_sp: `66.99 kN`
-- DCR3_v3_vg: `0.11`
+- Rn3_v3_vg: `572.78 kN`
+- phi*Rn3_v3_vg: `429.58 kN`
+- Pu_sp: `0 kN`
+- Ru3_v3_vg = Pu_sp: `0 kN`
+- DCR3_v3_vg: `0`
 - Resultado: 🟢 Cumple
 
 ### 4.6 Revisión de capacidad a cortante de la viga en dirección 2
@@ -877,8 +884,8 @@ Propiedades organizadas por ámbito.
 - phi_fragil: `0.75`
 - Rn1_v2_vg: `688.05 kN`
 - phi*Rn1_v2_vg: `516.03 kN`
-- Ru1_v2_vg = Vu2_sp: `250 kN`
-- DCR1_v2_vg: `0.48`
+- Ru1_v2_vg = Vu2_sp: `260 kN`
+- DCR1_v2_vg: `0.5`
 - Resultado: 🟢 Cumple
 
 ### 4.7 Revisión de capacidad a cortante de la viga en dirección 1
@@ -908,9 +915,9 @@ Propiedades organizadas por ámbito.
 - phi_no_ductil: `0.9`
 - Rn1_m1_vg: `345.69 kN-m`
 - phi*Rn1_m1_vg: `311.12 kN-m`
-- Ru1_m1_vg: `450 kN-m`
-- DCR1_m1_vg: `1.45`
-- Resultado: 🔴 No cumple
+- Ru1_m1_vg: `250 kN-m`
+- DCR1_m1_vg: `0.8`
+- Resultado: 🟢 Cumple
 
 ### 4.9 Revisión de capacidad bajo la acción de fuerzas combinadas en la viga
 
@@ -918,19 +925,19 @@ Propiedades organizadas por ámbito.
 
 - Cláusula: `Documento: AISC 360-22 | Sección: H1.1 (DRY: compute_member_combined_interaction_h11)`
 - Ecuaciones: `si Pu_sp >= 0 -> Pr/(phiPc) = DCR_4.5.1 (hasta implementar 4.5.2); si Pu_sp < 0 -> Pr/(phiPc) = Pu_sp/phiPnc; Mrx/Mcx = max(|Mu3_sp|/phiMn3, DCR_4.8.1); Mry/Mcy = 0; si Pr/Pc >= 0.2 -> H1-1a = Pr/Pc + (8/9)*(Mrx/Mcx + Mry/Mcy); si Pr/Pc < 0.2 -> H1-1b = Pr/(2*Pc) + (Mrx/Mcx + Mry/Mcy)`
-- Pu_sp: `66.99 kN`
+- Pu_sp: `0 kN`
 - phiPnc: `1200 kN`
 - phiMn3: `800 kN-m`
 - phiMn2: `800 kN-m`
-- DCR_4.5.1: `0.11`
-- DCR_4.8.1: `1.45`
-- |Mu3_sp|/phiMn3: `0.56`
-- Pr/(phiPc): `0.11`
-- Mrx/Mcx: `1.45`
+- DCR_4.5.1: `0`
+- DCR_4.8.1: `0.8`
+- |Mu3_sp|/phiMn3: `0.31`
+- Pr/(phiPc): `0`
+- Mrx/Mcx: `0.8`
 - Mry/Mcy: `0`
 - Ecuación gobernante: `H1-1b`
-- DCR_Fcomb_vg: `1.5`
-- Resultado: 🔴 No cumple
+- DCR_Fcomb_vg: `0.8`
+- Resultado: 🟢 Cumple
 
 ## Paso 5 - Revisión de resistencia de la platina 1 de alma
 
@@ -942,7 +949,7 @@ Propiedades organizadas por ámbito.
 - Ecuaciones: `lc_plt_v2_web = min(p_plt_web - dh.1, Le_plt_web_y1 - 0.5*dh.1, Le_plt_web_y2 - 0.5*dh.1); Rn1_plt_v2_web = C*lc_plt_v2_web*t_plt_web*Fu_plt_web; phi*Rn1_plt_v2_web = phi_fragil*Rn1_plt_v2_web; DCR1_plt_v2_web = Ru1_plt_v2_web/phi*Rn1_plt_v2_web`
 - Fu_plt_web: `400 MPa`
 - t_plt_web: `9.5 mm`
-- p_plt_web: `76.2 mm`
+- p_plt_web: `60 mm`
 - Le_plt_web_y1: `25 mm`
 - Le_plt_web_y2: `25 mm`
 - dh.1: `17.46 mm`
@@ -951,8 +958,8 @@ Propiedades organizadas por ámbito.
 - phi_fragil: `0.75`
 - Rn1_plt_v2_web: `74.19 kN`
 - phi*Rn1_plt_v2_web: `55.64 kN`
-- Ru1_plt_v2_web = Ru_web_v2_max_vg: `41.29 kN`
-- DCR1_plt_v2_web: `0.74`
+- Ru1_plt_v2_web = Ru_web_v2_max_vg: `38 kN`
+- DCR1_plt_v2_web: `0.68`
 - Resultado: 🟢 Cumple
 
 #### 5.1.2. ELR #2: Aplastamiento en la perforación del perno
@@ -966,8 +973,8 @@ Propiedades organizadas por ámbito.
 - phi_fragil: `0.75`
 - Rn2_plt_v2-v3_web: `144.78 kN`
 - phi*Rn2_plt_v2-v3_web: `108.58 kN`
-- Ru2_plt_v2-v3_web = Ru_web_vg: `51.68 kN`
-- DCR2_plt_v2-v3_web: `0.48`
+- Ru2_plt_v2-v3_web = Ru_web_vg: `39.49 kN`
+- DCR2_plt_v2-v3_web: `0.36`
 - Resultado: 🟢 Cumple
 
 #### 5.1.3. ELR #3: Rotura por cortante en el perno
@@ -980,37 +987,42 @@ Propiedades organizadas por ámbito.
 - phi_fragil: `0.75`
 - Rn3_plt_v2-v3_web: `73.24 kN`
 - phi*Rn3_plt_v2-v3_web: `54.93 kN`
-- Ru3_plt_v2-v3_web = Ru_web_vg: `51.68 kN`
-- DCR3_plt_v2-v3_web: `0.94`
+- Ru3_plt_v2-v3_web = Ru_web_vg: `39.49 kN`
+- DCR3_plt_v2-v3_web: `0.72`
 - Resultado: 🟢 Cumple
 
 #### 5.1.4. ELR #4: Bloque de cortante en platina 1 del alma
 
 - Cláusula: `Documento: AISC 360-22w | Sección: J4.3`
-- Ecuaciones: `Agv_plt_v2_web = (p_plt_web*(n_plt_web_y - 1) + min(Le_plt_web_y1, Le_plt_web_y2))*t_plt_web; Anv_plt_v2_web = Agv_plt_v2_web - (n_blt_web_y - 0.5)*t_plt_web*(dh.1 + 1.80mm); Agt_plt_v2_web = (g_blt_web*(n_blt_web_x - 1) + Le_plt_web_x2)*t_plt_web; Ant_plt_v2_web = Agt_plt_v2_web - (n_blt_web_x - 0.5)*t_plt_web*(dh.1 + 1.80mm); Rn4_1_plt_v2_web = 0.60*Fu_plt_web*Anv_plt_v2_web + Ubs_plt_v2_web*Fu_plt_web*Ant_plt_v2_web; Rn4_2_plt_v2_web = 0.60*Fy_plt_web*Agv_plt_v2_web + Ubs_plt_v2_web*Fu_plt_web*Ant_plt_v2_web; Rn4_plt_v2_web = min(Rn4_1_plt_v2_web, Rn4_2_plt_v2_web); phi*Rn4_plt_v2_web = phi_fragil*Rn4_plt_v2_web; DCR4_plt_v2_web = Ru4_plt_v2_web/phi*Rn4_plt_v2_web`
+- Ecuaciones: `Caso 1 -> Agv1_plt_v2_web = (p_plt_web*(n_plt_web_y - 1) + min(Le_plt_web_y1, Le_plt_web_y2))*t_plt_web; Anv1_plt_v2_web = Agv1_plt_v2_web - (n_blt_web_y - 0.5)*t_plt_web*(dh.1 + 1.80mm); Agt1_plt_v2_web = (g_blt_web*(n_blt_web_x - 1) + Le_plt_web_x2)*t_plt_web; Ant1_plt_v2_web = Agt1_plt_v2_web - (n_blt_web_x - 0.5)*t_plt_web*(dh.1 + 1.80mm); Rn4_1_plt_v2_web = 0.60*Fu_plt_web*Anv1_plt_v2_web + Ubs_plt_v2_web*Fu_plt_web*Ant1_plt_v2_web; Caso 2 -> Agv2_plt_v2_web = Agv1_plt_v2_web; Ant2_plt_v2_web = Ant1_plt_v2_web; Rn4_2_plt_v2_web = 0.60*Fy_plt_web*Agv2_plt_v2_web + Ubs_plt_v2_web*Fu_plt_web*Ant2_plt_v2_web; Rn4_plt_v2_web = min(Rn4_1_plt_v2_web, Rn4_2_plt_v2_web); phi*Rn4_plt_v2_web = phi_fragil*Rn4_plt_v2_web; DCR4_plt_v2_web = Ru4_plt_v2_web/phi*Rn4_plt_v2_web`
 - Fu_plt_web: `400 MPa`
 - Fy_plt_web: `n/a`
 - t_plt_web: `9.5 mm`
-- n_blt_web_x: `1`
+- n_blt_web_x: `2`
 - n_plt_web_y (= n_blt_web_y): `6`
-- g_blt_web: `76.2 mm`
-- p_plt_web: `76.2 mm`
+- g_blt_web: `60 mm`
+- p_plt_web: `60 mm`
 - Le_plt_web_x2: `35 mm`
 - Le_plt_web_y1: `25 mm`
 - Le_plt_web_y2: `25 mm`
 - dh.1: `17.46 mm`
 - Ubs_plt_v2_web (inp = Ubs_web_v2_vg): `0.5`
-- Agv_plt_v2_web: `3857 mm2`
-- Anv_plt_v2_web: `2850.53 mm2`
-- Agt_plt_v2_web: `332.5 mm2`
-- Ant_plt_v2_web: `241 mm2`
+- Agv1_plt_v2_web: `3087.5 mm2`
+- Anv1_plt_v2_web: `2081.03 mm2`
+- Agt1_plt_v2_web: `902.5 mm2`
+- Ant1_plt_v2_web: `628.01 mm2`
 - phi_fragil: `0.75`
-- Rn4_1_plt_v2_web: `732.33 kN`
-- Rn4_2_plt_v2_web: `626.75 kN`
-- Rn4_plt_v2_web: `626.75 kN`
-- phi*Rn4_plt_v2_web: `470.06 kN`
-- Ru4_plt_v2_web = Vu2_sp: `250 kN`
-- DCR4_plt_v2_web: `0.53`
+- Rn4_1_plt_v2_web: `625.05 kN`
+- phi*Rn4_case1_plt_v2_web: `468.79 kN`
+- Agv2_plt_v2_web: `3087.5 mm2`
+- Ant2_plt_v2_web: `628.01 mm2`
+- Rn4_2_plt_v2_web: `588.73 kN`
+- phi*Rn4_case2_plt_v2_web: `441.55 kN`
+- Caso control: `Caso 2`
+- Rn4_plt_v2_web: `588.73 kN`
+- phi*Rn4_plt_v2_web: `441.55 kN`
+- Ru4_plt_v2_web = Vu2_sp: `260 kN`
+- DCR4_plt_v2_web: `0.59`
 - Resultado: 🟢 Cumple
 
 #### 5.1.5. ELR #5: fluencia por cortante en la platina 1 de alma
@@ -1020,15 +1032,15 @@ Propiedades organizadas por ámbito.
 - Fy_plt_web: `250 MPa`
 - t_plt_web: `9.5 mm`
 - n_plt_web_y (= n_blt_web_y): `6`
-- p_plt_web: `76.2 mm`
+- p_plt_web: `60 mm`
 - Le_plt_web_y1: `25 mm`
 - Le_plt_web_y2: `25 mm`
-- Agv_v2_plt_web: `4094.5 mm2`
+- Agv_v2_plt_web: `3325 mm2`
 - phi_ductil: `1`
-- Rn5_plt_v2_web: `614.17 kN`
-- phi*Rn5_plt_v2_web: `614.17 kN`
-- Ru5_plt_v2_web = Vu2_sp: `250 kN`
-- DCR5_plt_v2_web: `0.41`
+- Rn5_plt_v2_web: `498.75 kN`
+- phi*Rn5_plt_v2_web: `498.75 kN`
+- Ru5_plt_v2_web = Vu2_sp: `260 kN`
+- DCR5_plt_v2_web: `0.52`
 - Resultado: 🟢 Cumple
 
 #### 5.1.6. ELR #6: Rotura por cortante en la platina 1 de alma
@@ -1038,16 +1050,16 @@ Propiedades organizadas por ámbito.
 - Fu_plt_web: `400 MPa`
 - t_plt_web: `9.5 mm`
 - n_plt_web_y (= n_blt_web_y): `6`
-- p_plt_web: `76.2 mm`
+- p_plt_web: `60 mm`
 - Le_plt_web_y1: `25 mm`
 - Le_plt_web_y2: `25 mm`
 - dh.1: `17.46 mm`
-- Anv_v2_plt_web: `2850.53 mm2`
+- Anv_v2_plt_web: `2081.03 mm2`
 - phi_fragil: `0.75`
-- Rn6_plt_v2_web: `719.17 kN`
-- phi*Rn6_plt_v2_web: `539.38 kN`
-- Ru6_plt_v2_web = Vu2_sp: `250 kN`
-- DCR6_plt_v2_web: `0.46`
+- Rn6_plt_v2_web: `534.49 kN`
+- phi*Rn6_plt_v2_web: `400.87 kN`
+- Ru6_plt_v2_web = Vu2_sp: `260 kN`
+- DCR6_plt_v2_web: `0.65`
 - Resultado: 🟢 Cumple
 
 ### 5.2 Revisión de capacidad a tracción en la platina 1 de alma en dirección 3
@@ -1058,7 +1070,7 @@ Propiedades organizadas por ámbito.
 - Ecuaciones: `lc_plt_v3_web = min(g_plt_web - dh.1, Le_plt_web_x2 - 0.5*dh.1); Rn1_plt_v3_web = C*lc_plt_v3_web*t_plt_web*Fu_plt_web; phi*Rn1_plt_v3_web = phi_fragil*Rn1_plt_v3_web; DCR1_plt_v3_web = Ru1_plt_v3_web/phi*Rn1_plt_v3_web`
 - Fu_plt_web: `400 MPa`
 - t_plt_web: `9.5 mm`
-- g_plt_web: `76.2 mm`
+- g_plt_web: `60 mm`
 - Le_plt_web_x2: `35 mm`
 - dh.1: `17.46 mm`
 - lc_plt_v3_web: `26.27 mm`
@@ -1066,8 +1078,8 @@ Propiedades organizadas por ámbito.
 - phi_fragil: `0.75`
 - Rn1_plt_v3_web: `119.79 kN`
 - phi*Rn1_plt_v3_web: `89.84 kN`
-- Ru1_plt_v3_web = Ru_web_v3_max_vg: `48.39 kN`
-- DCR1_plt_v3_web: `0.54`
+- Ru1_plt_v3_web = Ru_web_v3_max_vg: `35.18 kN`
+- DCR1_plt_v3_web: `0.39`
 - Resultado: 🟢 Cumple
 
 #### 5.2.2. ELR #2: Bloque de cortante en platina 1 de alma
@@ -1077,23 +1089,23 @@ Propiedades organizadas por ámbito.
 - Fu_plt_web: `400 MPa`
 - Fy_plt_web: `n/a`
 - t_plt_web: `9.5 mm`
-- n_blt_web_x: `1`
+- n_blt_web_x: `2`
 - n_blt_web_y: `6`
-- g_blt_web: `76.2 mm`
-- p_blt_web: `76.2 mm`
+- g_blt_web: `60 mm`
+- p_blt_web: `60 mm`
 - Le_blt_web_x2: `35 mm`
 - dh.1: `17.46 mm`
 - Ubs_plt_v3_web (= Ubs_web_v3_vg): `0.5`
-- Agv_plt_v3_web: `665 mm2`
-- Anv_plt_v3_web: `482.01 mm2`
-- Agt_plt_v3_web: `3619.5 mm2`
-- Ant_plt_v3_web: `2704.53 mm2`
+- Agv_plt_v3_web: `1805 mm2`
+- Anv_plt_v3_web: `1256.02 mm2`
+- Agt_plt_v3_web: `2850 mm2`
+- Ant_plt_v3_web: `1935.03 mm2`
 - phi_fragil: `0.75`
-- Rn2_1_plt_v3_web: `656.59 kN`
-- Rn2_2_plt_v3_web: `640.66 kN`
-- Rn2_plt_v3_web: `640.66 kN`
-- phi*Rn2_plt_v3_web: `480.49 kN`
-- Pu_sp: `66.99 kN`
+- Rn2_1_plt_v3_web: `688.45 kN`
+- Rn2_2_plt_v3_web: `657.76 kN`
+- Rn2_plt_v3_web: `657.76 kN`
+- phi*Rn2_plt_v3_web: `493.32 kN`
+- Pu_sp: `0 kN`
 - alpha_Pu_web: `0`
 - Ru2_plt_v3_web = Pu_sp*alpha_Pu_web: `0 kN`
 - DCR2_plt_v3_web: `0`
@@ -1105,17 +1117,17 @@ Propiedades organizadas por ámbito.
 - Ecuaciones: `Agt_v3_plt_web_expr = 2*g_blt_web*(n_blt_web_x - 1)*sqrt(3)/3 + (n_blt_web_y - 1)*p_blt_web; Agt_v3_plt_web = min(H_plt_web, Agt_v3_plt_web_expr)*t_plt_web; Rn3_plt_v3_web = Fy_plt_web*Agt_v3_plt_web; phi*Rn3_plt_v3_web = phi_no_ductil*Rn3_plt_v3_web; Ru3_plt_v3_web = alpha_Pu_web*Pu_sp; DCR3_plt_v3_web = Ru3_plt_v3_web/phi*Rn3_plt_v3_web`
 - Fy_plt_web: `n/a`
 - t_plt_web: `9.5 mm`
-- H_plt_web: `431 mm`
-- n_blt_web_x: `1`
+- H_plt_web: `350 mm`
+- n_blt_web_x: `2`
 - n_blt_web_y: `6`
-- g_blt_web: `76.2 mm`
-- p_blt_web: `76.2 mm`
-- Agt_v3_plt_web_expr: `381 mm`
-- Agt_v3_plt_web: `3619.5 mm2`
+- g_blt_web: `60 mm`
+- p_blt_web: `60 mm`
+- Agt_v3_plt_web_expr: `369.28 mm`
+- Agt_v3_plt_web: `3325 mm2`
 - phi_no_ductil: `0.9`
-- Rn3_plt_v3_web: `904.88 kN`
-- phi*Rn3_plt_v3_web: `814.39 kN`
-- Pu_sp: `66.99 kN`
+- Rn3_plt_v3_web: `831.25 kN`
+- phi*Rn3_plt_v3_web: `748.12 kN`
+- Pu_sp: `0 kN`
 - alpha_Pu_web: `0`
 - Ru3_plt_v3_web = alpha_Pu_web*Pu_sp: `0 kN`
 - DCR3_plt_v3_web: `0`
@@ -1127,21 +1139,21 @@ Propiedades organizadas por ámbito.
 - Ecuaciones: `Agt_v3_plt_web_expr = 2*g_blt_web*(n_blt_web_x - 1)*sqrt(3)/3 + (n_blt_web_y - 1)*p_blt_web; Agt_v3_plt_web = min(H_plt_web, Agt_v3_plt_web_expr)*t_plt_web; Ant_v3_plt_web = Agt_v3_plt_web - n_blt_web_y*(dh.1 + 1.80mm)*t_plt_web; U_v3_plt_web = 1; Ae_v3_plt_web = Ant_v3_plt_web*U_v3_plt_web; Rn4_plt_v3_web = Fu_plt_web*Ae_v3_plt_web; phi*Rn4_plt_v3_web = phi_fragil*Rn4_plt_v3_web; Ru4_plt_v3_web = alpha_Pu_web*Pu_sp; DCR4_plt_v3_web = Ru4_plt_v3_web/phi*Rn4_plt_v3_web`
 - Fu_plt_web: `400 MPa`
 - t_plt_web: `9.5 mm`
-- H_plt_web: `431 mm`
-- n_blt_web_x: `1`
+- H_plt_web: `350 mm`
+- n_blt_web_x: `2`
 - n_blt_web_y: `6`
-- g_blt_web: `76.2 mm`
-- p_blt_web: `76.2 mm`
+- g_blt_web: `60 mm`
+- p_blt_web: `60 mm`
 - dh.1: `17.46 mm`
-- Agt_v3_plt_web_expr: `381 mm`
-- Agt_v3_plt_web: `3619.5 mm2`
-- Ant_v3_plt_web: `2521.54 mm2`
+- Agt_v3_plt_web_expr: `369.28 mm`
+- Agt_v3_plt_web: `3325 mm2`
+- Ant_v3_plt_web: `2227.04 mm2`
 - U_v3_plt_web: `1`
-- Ae_v3_plt_web: `2521.54 mm2`
+- Ae_v3_plt_web: `2227.04 mm2`
 - phi_fragil: `0.75`
-- Rn4_plt_v3_web: `1008.62 kN`
-- phi*Rn4_plt_v3_web: `756.46 kN`
-- Pu_sp: `66.99 kN`
+- Rn4_plt_v3_web: `890.82 kN`
+- phi*Rn4_plt_v3_web: `668.11 kN`
+- Pu_sp: `0 kN`
 - alpha_Pu_web: `0`
 - Ru4_plt_v3_web = alpha_Pu_web*Pu_sp: `0 kN`
 - DCR4_plt_v3_web: `0`
@@ -1152,22 +1164,26 @@ Propiedades organizadas por ámbito.
 #### 5.3.1. ELR #1: Pandeo por flexión en la platina 1 de alma
 
 - Cláusula: `Documento: AISC 360-22 | Sección: E3 y J4.4 (DRY: compute_plate_compression_buckling_strength)`
-- Ecuaciones: `Lp_plt_p3(-)_web = min(gap_sp + 2*Le_blt_web_x1, g_blt_web); Ru1_plt_p3(-)_web = alpha_Pu_web*Pu_sp; phi*Rn1_plt_p3(-)_web = phi*Fcr_plt_p3(-)_web*H_plt_web*t_plt_web*n_plt_web; DCR1_plt_p3(-)_web = Ru1_plt_p3(-)_web/phi*Rn1_plt_p3(-)_web`
+- Ecuaciones: `Lp_plt_p3(-)_web = min(gap_sp + 2*Le_blt_web_x1, g_blt_web); Ru1_plt_p3(-)_web = si Pu_sp < 0 -> alpha_Pu_web*Pu_sp; si Pu_sp >= 0 -> 0; phi*Rn1_plt_p3(-)_web = phi*Fcr_plt_p3(-)_web*H_plt_web*t_plt_web*n_plt_web; DCR1_plt_p3(-)_web = Ru1_plt_p3(-)_web/phi*Rn1_plt_p3(-)_web`
 - Fy_plt_web: `250 MPa`
-- H_plt_web: `431 mm`
+- H_plt_web: `350 mm`
 - t_plt_web: `9.5 mm`
-- Lp_plt_p3(-)_web: `76.2 mm`
+- gap_sp: `10 mm`
+- Le_blt_web_x1: `35 mm`
+- g_blt_web: `60 mm`
+- Lp_plt_p3(-)_web: `60 mm`
 - n_plt_web: `1`
 - phi_no_ductil: `0.9`
 - K: `0.65`
 - r_plt_p3(-)_web: `2.75 mm`
-- KL_r_plt_p3(-)_web: `17.98`
-- Fe_plt_p3(-)_web: `6107.12 MPa`
+- KL_r_plt_p3(-)_web: `14.16`
+- Fe_plt_p3(-)_web: `9850.17 MPa`
 - Fcr_plt_p3(-)_web: `250 MPa`
 - Ecuación Fcr usada: `Fcr_pc_col = Fy_pc_col`
-- Ag_plt_p3(-)_web: `4094.5 mm2`
-- phi*Rn1_plt_p3(-)_web: `921.26 kN`
-- Pu_sp: `66.99 kN`
+- Ag_plt_p3(-)_web: `3325 mm2`
+- Rn1_plt_p3(-)_web: `831.25 kN`
+- phi*Rn1_plt_p3(-)_web: `748.12 kN`
+- Pu_sp: `0 kN`
 - alpha_Pu_web: `0`
 - Ru1_plt_p3(-)_web: `0 kN`
 - DCR1_plt_p3(-)_web: `0`
@@ -1181,19 +1197,19 @@ Propiedades organizadas por ámbito.
 - Ecuaciones: `Z_plt_m1_web = t_plt_web*H_plt_web^2/4; S_plt_m1_web = t_plt_web*H_plt_web^2/6; Rn1_plt_m1_web = min(Fy_plt_web*Z_plt_m1_web, 1.5*Fy_plt_web*S_plt_m1_web); phi*Rn1_plt_m1_web = phi_no_ductil*Rn1_plt_m1_web; Ru1_plt_m1_web = Vu2_sp*ex_blt_web - alpha_Pu_web*Pu_sp*ey_blt_web; DCR1_plt_m1_web = Ru1_plt_m1_web/phi*Rn1_plt_m1_web`
 - Fy_plt_web: `250 MPa`
 - t_plt_web: `9.5 mm`
-- H_plt_web: `431 mm`
-- Z_plt_m1_web: `441182.38 mm3`
-- S_plt_m1_web: `294121.58 mm3`
-- ex_blt_web: `76.2 mm`
+- H_plt_web: `350 mm`
+- Z_plt_m1_web: `290937.5 mm3`
+- S_plt_m1_web: `193958.33 mm3`
+- ex_blt_web: `140 mm`
 - ey_blt_web: `0 mm`
 - phi_no_ductil: `0.9`
-- Rn1_plt_m1_web: `110.3 kN-m`
-- phi*Rn1_plt_m1_web: `99.27 kN-m`
-- Vu2_sp: `250 kN`
-- Pu_sp: `66.99 kN`
+- Rn1_plt_m1_web: `72.73 kN-m`
+- phi*Rn1_plt_m1_web: `65.46 kN-m`
+- Vu2_sp: `260 kN`
+- Pu_sp: `0 kN`
 - alpha_Pu_web: `0`
-- Ru1_plt_m1_web: `19.05 kN-m`
-- DCR1_plt_m1_web: `0.19`
+- Ru1_plt_m1_web: `36.4 kN-m`
+- DCR1_plt_m1_web: `0.56`
 - Resultado: 🟢 Cumple
 
 #### 5.4.2. ELR #2: Pandeo lateral-torsional en la platina 1 de alma
@@ -1203,27 +1219,27 @@ Propiedades organizadas por ámbito.
 - Fy_plt_web: `250 MPa`
 - E_plt_web: `200000 MPa`
 - t_plt_web: `9.5 mm`
-- H_plt_web: `431 mm`
-- Z_plt_m1_web: `441182.38 mm3`
-- S_plt_m1_web: `294121.58 mm3`
-- Lb_plt_m1_web: `76.2 mm`
-- My_plt_m1_web: `73.53 kN-m`
+- H_plt_web: `350 mm`
+- Z_plt_m1_web: `290937.5 mm3`
+- S_plt_m1_web: `193958.33 mm3`
+- Lb_plt_m1_web: `80 mm`
+- My_plt_m1_web: `48.49 kN-m`
 - Cb_plt_m1_web (inp): `1`
 - ltb_case_id: `f112b_inelastic_ltb`
-- Lb*d/t^2: `363.9`
+- Lb*d/t^2: `310.25`
 - 0.08E/Fy: `64`
 - 1.9E/Fy: `1520`
 - Fcr: `n/a`
 - phi_no_ductil: `0.9`
-- Rn2_plt_m1_web: `102.6 kN-m`
-- phi*Rn2_plt_m1_web: `92.34 kN-m`
-- ex_blt_web: `76.2 mm`
+- Rn2_plt_m1_web: `68.55 kN-m`
+- phi*Rn2_plt_m1_web: `61.7 kN-m`
+- ex_blt_web: `140 mm`
 - ey_blt_web: `0 mm`
-- Vu2_sp: `250 kN`
-- Pu_sp: `66.99 kN`
+- Vu2_sp: `260 kN`
+- Pu_sp: `0 kN`
 - alpha_Pu_web: `0`
-- Ru2_plt_m1_web: `19.05 kN-m`
-- DCR2_plt_m1_web: `0.21`
+- Ru2_plt_m1_web: `36.4 kN-m`
+- DCR2_plt_m1_web: `0.59`
 - Resultado: 🟢 Cumple
 
 #### 5.4.3. ELR #3: Rotura por flexión en la platina 1 de alma
@@ -1232,25 +1248,25 @@ Propiedades organizadas por ámbito.
 - Ecuaciones: `h = e1 + (n - 1)*s + e2; Znet_plt_m1_web = tp*h^2/4 - d'*tp*sum_{i=0}^{n-1}|e1 + i*s - h/2|; Rn3_plt_m1_web = Fu_plt_web*Znet_plt_m1_web; phi*Rn3_plt_m1_web = phi_fragil*Rn3_plt_m1_web; Ru3_plt_m1_web = Vu2_sp*ex_blt_web - alpha_Pu_web*Pu_sp*ey_blt_web; DCR3_plt_m1_web = Ru3_plt_m1_web/phi*Rn3_plt_m1_web`
 - Fu_plt_web: `400 MPa`
 - tp = t_plt_web: `9.5 mm`
-- h = H_plt_web: `431 mm`
+- h = H_plt_web: `350 mm`
 - d' = dh.1 + 1.80mm: `19.26 mm`
 - e1 = Le_plt_web_y1: `25 mm`
 - e2 = Le_plt_web_y2: `25 mm`
-- s = p_plt_web: `76.2 mm`
+- s = p_plt_web: `60 mm`
 - n = n_plt_web_y: `6`
-- h calculado: `431 mm`
-- sum_abs: `685.8 mm`
-- Znet_plt_m1_web: `315685.26 mm3`
+- h calculado: `350 mm`
+- sum_abs: `540 mm`
+- Znet_plt_m1_web: `192120.88 mm3`
 - phi_fragil: `0.75`
-- Rn3_plt_m1_web: `126.27 kN-m`
-- phi*Rn3_plt_m1_web: `94.71 kN-m`
-- ex_blt_web: `76.2 mm`
+- Rn3_plt_m1_web: `76.85 kN-m`
+- phi*Rn3_plt_m1_web: `57.64 kN-m`
+- ex_blt_web: `140 mm`
 - ey_blt_web: `0 mm`
-- Vu2_sp: `250 kN`
-- Pu_sp: `66.99 kN`
+- Vu2_sp: `260 kN`
+- Pu_sp: `0 kN`
 - alpha_Pu_web: `0`
-- Ru3_plt_m1_web = Vu2_sp*ex_blt_web - alpha_Pu_web*Pu_sp*ey_blt_web: `19.05 kN-m`
-- DCR3_plt_m1_web: `0.2`
+- Ru3_plt_m1_web = Vu2_sp*ex_blt_web - alpha_Pu_web*Pu_sp*ey_blt_web: `36.4 kN-m`
+- DCR3_plt_m1_web: `0.63`
 - Resultado: 🟢 Cumple
 
 ### 5.5 Revisión de capacidad bajo la acción de fuerzas combinadas en la platina 1 de alma
@@ -1259,14 +1275,14 @@ Propiedades organizadas por ámbito.
 
 - Cláusula: `Documento: Criterio de interacción solicitado por usuario (DRY: compute_plate_combined_force_interaction)`
 - Ecuaciones: `DCR_case_1 = DCR_plt_m1_web + (DCR_plt_v3_web)^2 + (DCR_plt_v2_web)^4; DCR_case_2 = DCR_plt_m1_web + (DCR_plt_p3(-)_web)^2 + (DCR_plt_v2_web)^4; DCR_plt_Fcomb_web = max(DCR_case_1, DCR_case_2)`
-- DCR_plt_v2_web (max de 5.1): `0.94`
-- DCR_plt_v3_web (max de 5.2): `0.54`
+- DCR_plt_v2_web (max de 5.1): `0.72`
+- DCR_plt_v3_web (max de 5.2): `0.39`
 - DCR_plt_p3(-)_web (max de 5.3): `0`
-- DCR_plt_m1_web (max de 5.4): `0.21`
-- DCR_case_1: `1.28`
-- DCR_case_2: `0.99`
+- DCR_plt_m1_web (max de 5.4): `0.63`
+- DCR_case_1: `1.05`
+- DCR_case_2: `0.9`
 - Caso controlante: `Caso 1`
-- DCR_plt_Fcomb_web: `1.28`
+- DCR_plt_Fcomb_web: `1.05`
 - Resultado: 🔴 No cumple
 
 ## Paso 6 - Revisión de resistencia de la platina 2 de ala
@@ -1287,8 +1303,8 @@ Propiedades organizadas por ámbito.
 - phi_pr: `0.75`
 - Rn1_plt_p3(+)_flange: `359.93 kN`
 - phi*Rn1_plt_p3(+)_flange: `269.95 kN`
-- Ru1_plt_p3(+)_flange = Ru_blt_2_flange_v3_max_vg: `136.45 kN`
-- DCR1_plt_p3(+)_flange: `0.51`
+- Ru1_plt_p3(+)_flange = Ru_blt_2_flange_v3_max_vg: `71.15 kN`
+- DCR1_plt_p3(+)_flange: `0.26`
 - Resultado: 🟢 Cumple
 
 #### 6.1.2. ELR #2: Aplastamiento en la perforación del perno
@@ -1302,8 +1318,8 @@ Propiedades organizadas por ámbito.
 - phi_pr: `0.75`
 - Rn2_plt_p3(+)_flange: `348.39 kN`
 - phi*Rn2_plt_p3(+)_flange: `261.29 kN`
-- Ru2_plt_p3(+)_flange = Ru_blt_2_flange_vg: `136.45 kN`
-- DCR2_plt_p3(+)_flange: `0.52`
+- Ru2_plt_p3(+)_flange = Ru_blt_2_flange_vg: `71.15 kN`
+- DCR2_plt_p3(+)_flange: `0.27`
 - Resultado: 🟢 Cumple
 
 #### 6.1.3. ELR #3: Rotura por cortante en el perno
@@ -1316,9 +1332,9 @@ Propiedades organizadas por ámbito.
 - phi_fragil: `0.75`
 - Rn3_plt_p3(+)_flange: `105.46 kN`
 - phi*Rn3_plt_p3(+)_flange: `79.09 kN`
-- Ru3_plt_p3(+)_flange = Ru_blt_2_flange_vg: `136.45 kN`
-- DCR3_plt_p3(+)_flange: `1.73`
-- Resultado: 🔴 No cumple
+- Ru3_plt_p3(+)_flange = Ru_blt_2_flange_vg: `71.15 kN`
+- DCR3_plt_p3(+)_flange: `0.9`
+- Resultado: 🟢 Cumple
 
 #### 6.1.4. ELR #4: Fluencia por tracción en la platina 2 de ala
 
@@ -1326,25 +1342,25 @@ Propiedades organizadas por ámbito.
 - Ecuaciones: `Agt_plt_p3(+)_flange = min(B_plt_flange*t_plt_flange, ((n_plt_flange_x-1)*p_plt_flange*tan(30°)*2 + g1_plt_flange + 2*(n_plt_flange_z-1)*g_plt_flange)*t_plt_flange); Rn4_plt_p3(+)_flange = Fy_plt_flange*Agt_plt_p3(+)_flange; phi*Rn4_plt_p3(+)_flange = phi_no_ductil*Rn4_plt_p3(+)_flange; Ru4_plt_p3(+)_flange = (1-alpha_Pu_web)*Pu_sp + Mu3_sp/(d_vg - tf_vg), si <0 entonces 0; DCR4_plt_p3(+)_flange = Ru4_plt_p3(+)_flange/phi*Rn4_plt_p3(+)_flange`
 - Fy_plt_flange: `250 MPa`
 - t_plt_flange: `19.05 mm`
-- B_plt_flange: `162 mm`
+- B_plt_flange: `152 mm`
 - n_plt_flange_x: `4`
 - p_plt_flange: `60 mm`
 - g1_plt_flange: `92 mm`
 - n_plt_flange_z: `1`
-- g_plt_flange: `40 mm`
+- g_plt_flange: `0 mm`
 - L_whitmore_plt_p3(+)_flange: `299.85 mm`
-- Agt_rect_plt_p3(+)_flange: `3086.1 mm2`
+- Agt_rect_plt_p3(+)_flange: `2895.6 mm2`
 - Agt_whitmore_plt_p3(+)_flange: `5712.07 mm2`
-- Agt_plt_p3(+)_flange: `3086.1 mm2`
+- Agt_plt_p3(+)_flange: `2895.6 mm2`
 - Sección controlante de Agt: `rectangular_b_t`
 - phi_no_ductil: `0.9`
-- Rn4_plt_p3(+)_flange: `771.52 kN`
-- phi*Rn4_plt_p3(+)_flange: `694.37 kN`
-- Ru4_plt_p3(+)_flange: `1091.58 kN`
-- DCR4_plt_p3(+)_flange: `1.57`
-- Resultado: 🔴 No cumple
+- Rn4_plt_p3(+)_flange: `723.9 kN`
+- phi*Rn4_plt_p3(+)_flange: `651.51 kN`
+- Ru4_plt_p3(+)_flange: `569.22 kN`
+- DCR4_plt_p3(+)_flange: `0.87`
+- Resultado: 🟢 Cumple
 
-#### 6.1.5. ELR #5: Rotura por cortante en la platina 2 de alma
+#### 6.1.5. ELR #5: Rotura por tracción en la platina 2 de ala
 
 - Cláusula: `Documento: AISC 360-22 | Sección: J4.1(b) (DRY: compute_element_tension_rupture_strength_j41b)`
 - Ecuaciones: `Ant_plt_p3(+)_flange = Agt_plt_p3(+)_flange - (2*n_plt_flange_z)*(dh.2 + 1.80mm)*t_plt_flange; U_plt_p3(+)_flange = 1.0; Ae_plt_p3(+)_flange = Ant_plt_p3(+)_flange*U_plt_p3(+)_flange; Rn5_plt_p3(+)_flange = Fu_plt_flange*Ae_plt_p3(+)_flange; phi*Rn5_plt_p3(+)_flange = phi_fragil*Rn5_plt_p3(+)_flange; Ru5_plt_p3(+)_flange = (1-alpha_Pu_web)*Pu_sp + Mu3_sp/(d_vg - tf_vg), si <0 entonces 0; DCR5_plt_p3(+)_flange = Ru5_plt_p3(+)_flange/phi*Rn5_plt_p3(+)_flange`
@@ -1353,13 +1369,107 @@ Propiedades organizadas por ámbito.
 - dh.2: `20.64 mm`
 - n_plt_flange_z: `1`
 - n_holes_plt_p3(+)_flange: `2`
-- Agt_plt_p3(+)_flange: `3086.1 mm2`
-- Ant_plt_p3(+)_flange: `2231.23 mm2`
+- Agt_plt_p3(+)_flange: `2895.6 mm2`
+- Ant_plt_p3(+)_flange: `2040.73 mm2`
 - U_plt_p3(+)_flange: `1`
-- Ae_plt_p3(+)_flange: `2231.23 mm2`
+- Ae_plt_p3(+)_flange: `2040.73 mm2`
 - phi_fragil: `0.75`
-- Rn5_plt_p3(+)_flange: `892.49 kN`
-- phi*Rn5_plt_p3(+)_flange: `669.37 kN`
-- Ru5_plt_p3(+)_flange: `1091.58 kN`
-- DCR5_plt_p3(+)_flange: `1.63`
-- Resultado: 🔴 No cumple
+- Rn5_plt_p3(+)_flange: `816.29 kN`
+- phi*Rn5_plt_p3(+)_flange: `612.22 kN`
+- Ru5_plt_p3(+)_flange: `569.22 kN`
+- DCR5_plt_p3(+)_flange: `0.93`
+- Resultado: 🟢 Cumple
+
+#### 6.1.6. ELR #6: Bloque de cortante en platina 2 de ala
+
+- Cláusula: `Documento: AISC 360-22 | Sección: J4.3 (DRY: compute_block_shear_strength_j45)`
+- Ecuaciones: `Caso 1 -> Agv1_plt_p3(+)_flange = 2*(Le_plt_flange_x2 + (n_plt_flange_x-1)*p_plt_flange)*t_plt_flange; Anv1_plt_p3(+)_flange = Agv1_plt_p3(+)_flange - 2*(n_plt_flange_x-0.5)*(dh.2+1.80mm)*t_plt_flange; Agt1_plt_p3(+)_flange = (g1_plt_flange + 2*(n_plt_flange_z-1)*g_plt_flange)*t_plt_flange; Ant1_plt_p3(+)_flange = Agt1_plt_p3(+)_flange - (2*n_plt_flange_z-1)*(dh.2+1.80mm)*t_plt_flange; Caso 2 -> Agv2_plt_p3(+)_flange = 2*(Le_plt_flange_x2 + (n_plt_flange_x-1)*p_plt_flange)*t_plt_flange; Anv2_plt_p3(+)_flange = Agv1_plt_p3(+)_flange - 2*(n_plt_flange_x-0.5)*(dh.2+1.80mm)*t_plt_flange; Agt2_plt_p3(+)_flange = 2*Le_plt_flange_z2*t_plt_flange; Ant2_plt_p3(+)_flange = Agt2_plt_p3(+)_flange - (dh.2+1.80mm)*t_plt_flange; Caso 3 -> Agv3_plt_p3(+)_flange = (Le_plt_flange_x2 + (n_plt_flange_x-1)*p_plt_flange)*t_plt_flange; Anv3_plt_p3(+)_flange = Agv1_plt_p3(+)_flange - (n_plt_flange_x-0.5)*(dh.2+1.80mm)*t_plt_flange; Agt3_plt_p3(+)_flange = Le_plt_flange_z2*t_plt_flange + (g1_plt_flange + 2*(n_plt_flange_z-1)*g_plt_flange)*t_plt_flange; Ant3_plt_p3(+)_flange = Agt2_plt_p3(+)_flange - (2*n_plt_flange_z-0.5)*(dh.2+1.80mm)*t_plt_flange; phi*Rn6_plt_p3(+)_flange = min(phi*Rn6_case1_plt_p3(+)_flange, phi*Rn6_case2_plt_p3(+)_flange, phi*Rn6_case3_plt_p3(+)_flange); Ru6_plt_p3(+)_flange = (1-alpha_Pu_web)*Pu_sp + Mu3_sp/(d_vg - tf_vg), si <0 entonces 0; DCR6_plt_p3(+)_flange = Ru6_plt_p3(+)_flange/phi*Rn6_plt_p3(+)_flange`
+- Fu_plt_flange: `400 MPa`
+- Fy_plt_flange: `250 MPa`
+- t_plt_flange: `19.05 mm`
+- n_plt_flange_x: `4`
+- n_plt_flange_z: `1`
+- p_plt_flange: `60 mm`
+- g_plt_flange: `0 mm`
+- g1_plt_flange: `92 mm`
+- Le_plt_flange_x2: `50 mm`
+- Le_plt_flange_z2: `30 mm`
+- dh.2: `20.64 mm`
+- Agv1_plt_p3(+)_flange: `8763 mm2`
+- Anv1_plt_p3(+)_flange: `5770.96 mm2`
+- Agt1_plt_p3(+)_flange: `1752.6 mm2`
+- Ant1_plt_p3(+)_flange: `1325.17 mm2`
+- phi*Rn6_case1_plt_p3(+)_flange: `1383.39 kN`
+- Agv2_plt_p3(+)_flange: `8763 mm2`
+- Anv2_plt_p3(+)_flange: `5770.96 mm2`
+- Agt2_plt_p3(+)_flange: `1143 mm2`
+- Ant2_plt_p3(+)_flange: `715.57 mm2`
+- phi*Rn6_case2_plt_p3(+)_flange: `1200.51 kN`
+- Agv3_plt_p3(+)_flange: `4381.5 mm2`
+- Anv3_plt_p3(+)_flange: `7266.98 mm2`
+- Agt3_plt_p3(+)_flange: `2324.1 mm2`
+- Ant3_plt_p3(+)_flange: `501.85 mm2`
+- phi*Rn6_case3_plt_p3(+)_flange: `643.47 kN`
+- Ubs_plt_p3(+)_flange: `1`
+- phi_fragil: `0.75`
+- Caso control: `Caso 3`
+- Rn6_plt_p3(+)_flange: `857.96 kN`
+- phi*Rn6_plt_p3(+)_flange: `643.47 kN`
+- Ru6_plt_p3(+)_flange: `569.22 kN`
+- DCR6_plt_p3(+)_flange: `0.88`
+- Resultado: 🟢 Cumple
+
+### 6.2 Revisión de capacidad a compresión en la platina 2 de ala en dirección 3
+
+#### 6.2.1. ELR #1: Pandeo por flexión en la platina 2 de ala
+
+- Cláusula: `Documento: AISC 360-22 | Sección: E3 y J4.4 (DRY: compute_plate_compression_buckling_strength)`
+- Ecuaciones: `Lp_plt_p3(-)_flange = min(gap_sp + 2*Le_blt_flange_x1, p_blt_flange); Ru1_plt_p3(-)_flange = (1-alpha_Pu_web)*Pu_sp + Mu3_sp/(d_vg - tf_vg), si >0 entonces 0; phi*Rn1_plt_p3(-)_flange = phi*Fcr_plt_p3(-)_flange*B_plt_flange*t_plt_flange*n_plt_flange; DCR1_plt_p3(-)_flange = Ru1_plt_p3(-)_flange/phi*Rn1_plt_p3(-)_flange`
+- Fy_plt_flange: `250 MPa`
+- B_plt_flange: `152 mm`
+- t_plt_flange: `19.05 mm`
+- gap_sp: `10 mm`
+- Le_blt_flange_x1: `50 mm`
+- p_blt_flange: `60 mm`
+- Lp_plt_p3(-)_flange: `60 mm`
+- n_plt_flange: `1`
+- phi_no_ductil: `0.9`
+- K: `0.65`
+- r_plt_p3(-)_flange: `5.52 mm`
+- KL_r_plt_p3(-)_flange: `7.06`
+- E_plt_flange: `200000 MPa`
+- Fe_plt_p3(-)_flange: `39608.33 MPa`
+- Fcr_plt_p3(-)_flange: `250 MPa`
+- Ecuación Fcr usada: `Fcr_pc_col = Fy_pc_col`
+- Ag_plt_p3(-)_flange: `2895.6 mm2`
+- Rn1_plt_p3(-)_flange: `723.9 kN`
+- phi*Rn1_plt_p3(-)_flange: `651.51 kN`
+- alpha_Pu_web: `0`
+- Pu_sp: `0 kN`
+- Mu3_sp: `250 kN-m`
+- d_vg: `450 mm`
+- tf_vg: `10.8 mm`
+- Ru1_plt_p3(-)_flange: `0 kN`
+- DCR1_plt_p3(-)_flange: `0`
+- Resultado: 🟢 Cumple
+
+### 6.3 Revisión de capacidad a cortante en la platina 2 de aleta en dirección 1
+
+#### 6.3.1. ELR #1: Desgarramiento en la perforación del perno
+
+- Cláusula: `Documento: AISC 360-22 | Sección: J3.11a.(b) (DRY: compute_bolt_hole_tearout_strength_j36)`
+- Ecuaciones: `si n_plt_flange_z >= 2 -> lc_plt_v1_flange = min(g_plt_flange - dh.2, Le_plt_flange_z2 - 0.5*dh.2); si n_plt_flange_z = 1 -> lc_plt_v1_flange = Le_plt_flange_z2 - 0.5*dh.2; Rn1_plt_v1_flange = C*lc_plt_v1_flange*t_plt_flange*Fu_plt_flange; phi*Rn1_plt_v1_flange = phi_pr*Rn1_plt_v1_flange; Ru1_plt_v1_flange = Ru_blt_2_flange_v1_max_vg; DCR1_plt_v1_flange = Ru1_plt_v1_flange/phi*Rn1_plt_v1_flange`
+- Fu_plt_flange: `400 MPa`
+- t_plt_flange: `19.05 mm`
+- n_plt_flange_z: `1`
+- g_plt_flange: `0 mm`
+- Le_plt_flange_z2: `30 mm`
+- dh.2: `20.64 mm`
+- lc_plt_v1_flange: `19.68 mm`
+- C: `1.2`
+- phi_pr: `0.75`
+- Rn1_plt_v1_flange: `179.97 kN`
+- phi*Rn1_plt_v1_flange: `134.97 kN`
+- Ru1_plt_v1_flange = Ru_blt_2_flange_v1_max_vg: `0 kN`
+- DCR1_plt_v1_flange: `0`
+- Resultado: 🟢 Cumple

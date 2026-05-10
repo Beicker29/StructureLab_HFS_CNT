@@ -10,17 +10,17 @@
 ### 1.1 Variables de carga
 
 - Ecuacion base: `Muz_blt_web = Vu2_sp*ex_blt_web - alpha_Pu_web*Pu_sp*ey_blt_web`
-- Pu_sp: `1091.58 kN` (origen: `loads.Pu_sp`)
+- Pu_sp: `569.22 kN` (origen: `loads.Pu_sp`)
 - Vu2_sp: `0 kN` (origen: `loads.Vu2_sp`)
-- ex_blt_web: `305.4 mm` (origen: `formula splice`)
+- ex_blt_web: `290 mm` (origen: `formula splice`)
 - ey_blt_web: `0 mm` (origen: `input ey`)
 - Muz_blt_web: `0 kN-mm`
 
 ## 2. Geometria de pernos derivada
 
-- Ru_blt_web_v23: `245.4 kip` con `sqrt(Pu_sp^2 + Vu2_sp^2)`
+- Ru_blt_web_v23: `127.97 kip` con `sqrt(Pu_sp^2 + Vu2_sp^2)`
 - theta_blt_web: `0 deg` con `atan2(Vu2_sp, Pu_sp)`
-- e_blt_web: `12.02 in` con `sqrt(ex_blt_web^2 + ey_blt_web^2)`
+- e_blt_web: `11.42 in` con `sqrt(ex_blt_web^2 + ey_blt_web^2)`
 - n_blt_web: `8 -` con `conteo pernos activos`
 - x_cg_blt_web: `3.54 in` con `sum(x_i_blt_web)/n_blt_web`
 - y_cg_blt_web: `0 in` con `sum(y_i_blt_web)/n_blt_web`
@@ -43,7 +43,7 @@
 
 ## 4. Resumen global por metodo
 
-- Metodo `elastic_superposition`: applicable=`True`, estado=`FAIL`, demanda=`30.67 kip`, capacidad=`21.34 kip`, DCR=`1.44`
+- Metodo `elastic_superposition`: applicable=`True`, estado=`PASS`, demanda=`16 kip`, capacidad=`21.34 kip`, DCR=`0.75`
 - Metodo `elastic_ecr`: applicable=`False`, estado=`PASS`, demanda=`n/a kip`, capacidad=`n/a kip`, DCR=`n/a`
 - Metodo `icr`: applicable=`False`, estado=`PASS`, demanda=`n/a kip`, capacidad=`n/a kip`, DCR=`n/a`
 
@@ -72,25 +72,25 @@
 
 ### 5.3 Fuerzas por perno
 
-- `f1`: Ru_dir_1_blt_web_v3=`-30.67`, Ru_dir_1_blt_web_v2=`-0`, Ru_rot_1_blt_web_v3=`-0`, Ru_rot_1_blt_web_v2=`0`, Ru_1_blt_web=`30.67`
-- `f2`: Ru_dir_2_blt_web_v3=`-30.67`, Ru_dir_2_blt_web_v2=`-0`, Ru_rot_2_blt_web_v3=`0`, Ru_rot_2_blt_web_v2=`0`, Ru_2_blt_web=`30.67`
-- `f3`: Ru_dir_3_blt_web_v3=`-30.67`, Ru_dir_3_blt_web_v2=`-0`, Ru_rot_3_blt_web_v3=`-0`, Ru_rot_3_blt_web_v2=`0`, Ru_3_blt_web=`30.67`
-- `f4`: Ru_dir_4_blt_web_v3=`-30.67`, Ru_dir_4_blt_web_v2=`-0`, Ru_rot_4_blt_web_v3=`0`, Ru_rot_4_blt_web_v2=`0`, Ru_4_blt_web=`30.67`
-- `f5`: Ru_dir_5_blt_web_v3=`-30.67`, Ru_dir_5_blt_web_v2=`-0`, Ru_rot_5_blt_web_v3=`-0`, Ru_rot_5_blt_web_v2=`-0`, Ru_5_blt_web=`30.67`
-- `f6`: Ru_dir_6_blt_web_v3=`-30.67`, Ru_dir_6_blt_web_v2=`-0`, Ru_rot_6_blt_web_v3=`0`, Ru_rot_6_blt_web_v2=`-0`, Ru_6_blt_web=`30.67`
-- `f7`: Ru_dir_7_blt_web_v3=`-30.67`, Ru_dir_7_blt_web_v2=`-0`, Ru_rot_7_blt_web_v3=`-0`, Ru_rot_7_blt_web_v2=`-0`, Ru_7_blt_web=`30.67`
-- `f8`: Ru_dir_8_blt_web_v3=`-30.67`, Ru_dir_8_blt_web_v2=`-0`, Ru_rot_8_blt_web_v3=`0`, Ru_rot_8_blt_web_v2=`-0`, Ru_8_blt_web=`30.67`
+- `f1`: Ru_dir_1_blt_web_v3=`-16`, Ru_dir_1_blt_web_v2=`-0`, Ru_rot_1_blt_web_v3=`-0`, Ru_rot_1_blt_web_v2=`0`, Ru_1_blt_web=`16`
+- `f2`: Ru_dir_2_blt_web_v3=`-16`, Ru_dir_2_blt_web_v2=`-0`, Ru_rot_2_blt_web_v3=`0`, Ru_rot_2_blt_web_v2=`0`, Ru_2_blt_web=`16`
+- `f3`: Ru_dir_3_blt_web_v3=`-16`, Ru_dir_3_blt_web_v2=`-0`, Ru_rot_3_blt_web_v3=`-0`, Ru_rot_3_blt_web_v2=`0`, Ru_3_blt_web=`16`
+- `f4`: Ru_dir_4_blt_web_v3=`-16`, Ru_dir_4_blt_web_v2=`-0`, Ru_rot_4_blt_web_v3=`0`, Ru_rot_4_blt_web_v2=`0`, Ru_4_blt_web=`16`
+- `f5`: Ru_dir_5_blt_web_v3=`-16`, Ru_dir_5_blt_web_v2=`-0`, Ru_rot_5_blt_web_v3=`-0`, Ru_rot_5_blt_web_v2=`-0`, Ru_5_blt_web=`16`
+- `f6`: Ru_dir_6_blt_web_v3=`-16`, Ru_dir_6_blt_web_v2=`-0`, Ru_rot_6_blt_web_v3=`0`, Ru_rot_6_blt_web_v2=`-0`, Ru_6_blt_web=`16`
+- `f7`: Ru_dir_7_blt_web_v3=`-16`, Ru_dir_7_blt_web_v2=`-0`, Ru_rot_7_blt_web_v3=`-0`, Ru_rot_7_blt_web_v2=`-0`, Ru_7_blt_web=`16`
+- `f8`: Ru_dir_8_blt_web_v3=`-16`, Ru_dir_8_blt_web_v2=`-0`, Ru_rot_8_blt_web_v3=`0`, Ru_rot_8_blt_web_v2=`-0`, Ru_8_blt_web=`16`
 
 ### 5.4 Resumen de fuerzas en pernos
 
-- `f1`: Ru_1_blt_web_v3=`-30.67`, Ru_1_blt_web_v2=`0`, Ru_1_blt_web=`30.67`
-- `f2`: Ru_2_blt_web_v3=`-30.67`, Ru_2_blt_web_v2=`0`, Ru_2_blt_web=`30.67`
-- `f3`: Ru_3_blt_web_v3=`-30.67`, Ru_3_blt_web_v2=`0`, Ru_3_blt_web=`30.67`
-- `f4`: Ru_4_blt_web_v3=`-30.67`, Ru_4_blt_web_v2=`0`, Ru_4_blt_web=`30.67`
-- `f5`: Ru_5_blt_web_v3=`-30.67`, Ru_5_blt_web_v2=`-0`, Ru_5_blt_web=`30.67`
-- `f6`: Ru_6_blt_web_v3=`-30.67`, Ru_6_blt_web_v2=`-0`, Ru_6_blt_web=`30.67`
-- `f7`: Ru_7_blt_web_v3=`-30.67`, Ru_7_blt_web_v2=`-0`, Ru_7_blt_web=`30.67`
-- `f8`: Ru_8_blt_web_v3=`-30.67`, Ru_8_blt_web_v2=`-0`, Ru_8_blt_web=`30.67`
+- `f1`: Ru_1_blt_web_v3=`-16`, Ru_1_blt_web_v2=`0`, Ru_1_blt_web=`16`
+- `f2`: Ru_2_blt_web_v3=`-16`, Ru_2_blt_web_v2=`0`, Ru_2_blt_web=`16`
+- `f3`: Ru_3_blt_web_v3=`-16`, Ru_3_blt_web_v2=`0`, Ru_3_blt_web=`16`
+- `f4`: Ru_4_blt_web_v3=`-16`, Ru_4_blt_web_v2=`0`, Ru_4_blt_web=`16`
+- `f5`: Ru_5_blt_web_v3=`-16`, Ru_5_blt_web_v2=`-0`, Ru_5_blt_web=`16`
+- `f6`: Ru_6_blt_web_v3=`-16`, Ru_6_blt_web_v2=`-0`, Ru_6_blt_web=`16`
+- `f7`: Ru_7_blt_web_v3=`-16`, Ru_7_blt_web_v2=`-0`, Ru_7_blt_web=`16`
+- `f8`: Ru_8_blt_web_v3=`-16`, Ru_8_blt_web_v2=`-0`, Ru_8_blt_web=`16`
 
 ## 6. Elastic Method - Center of Rotation (ECR)
 
@@ -111,7 +111,7 @@
 - `ay_blt_web = (Pu_sp*J_blt_web)/(n_blt_web*Muz_blt_web)`
 - `x_ecr_blt_web = x_cg_blt_web + ax_blt_web`
 - `y_ecr_blt_web = y_cg_blt_web + ay_blt_web`
-- Pu_sp (componente aplicada en direccion v3): `245.4 kip`
+- Pu_sp (componente aplicada en direccion v3): `127.97 kip`
 - Vu2_sp (componente aplicada en direccion v2): `0 kip`
 - n_blt_web: `8`
 - J_blt_web: `82.04 in2`
