@@ -4938,14 +4938,14 @@ def _render_fully_restrained_splice_outline(
             ru_raw: float | None = None
             if pu_sp_plt2_q.unit == "kN" and d_vg_plt2_q.unit == "mm":
                 if mu3_sp_plt2_q.unit == "kN-m":
-                    ru_raw = (1.0 - alpha_pu_web_plt2) * pu_sp_plt2_q.value + mu3_sp_plt2_q.value / (denom / 1000.0)
+                    ru_raw = (1.0 - alpha_pu_web_plt2) * pu_sp_plt2_q.value - mu3_sp_plt2_q.value / (denom / 1000.0)
                 elif mu3_sp_plt2_q.unit == "kN-mm":
-                    ru_raw = (1.0 - alpha_pu_web_plt2) * pu_sp_plt2_q.value + mu3_sp_plt2_q.value / denom
+                    ru_raw = (1.0 - alpha_pu_web_plt2) * pu_sp_plt2_q.value - mu3_sp_plt2_q.value / denom
             elif pu_sp_plt2_q.unit == "kip" and d_vg_plt2_q.unit == "in":
                 if mu3_sp_plt2_q.unit == "kip-in":
-                    ru_raw = (1.0 - alpha_pu_web_plt2) * pu_sp_plt2_q.value + mu3_sp_plt2_q.value / denom
+                    ru_raw = (1.0 - alpha_pu_web_plt2) * pu_sp_plt2_q.value - mu3_sp_plt2_q.value / denom
                 elif mu3_sp_plt2_q.unit == "kip-ft":
-                    ru_raw = (1.0 - alpha_pu_web_plt2) * pu_sp_plt2_q.value + (mu3_sp_plt2_q.value * 12.0) / denom
+                    ru_raw = (1.0 - alpha_pu_web_plt2) * pu_sp_plt2_q.value - (mu3_sp_plt2_q.value * 12.0) / denom
             if ru_raw is not None:
                 ru1_plt_p3_minus_flange_q = Quantity(
                     value=0.0 if ru_raw > 0.0 else ru_raw,
@@ -6369,7 +6369,7 @@ def _render_fully_restrained_splice_outline(
             "- Clausula: `Documento: AISC 360-22 | Seccion: E3 y J4.4 (DRY: compute_plate_compression_buckling_strength)`",
             (
                 "- Ecuaciones: `Lp_plt_p3(-)_flange = min(gap_sp + 2*Le_blt_flange_x1, p_blt_flange); "
-                "Ru1_plt_p3(-)_flange = (1-alpha_Pu_web)*Pu_sp + Mu3_sp/(d_vg - tf_vg), si >0 entonces 0; "
+                "Ru1_plt_p3(-)_flange = (1-alpha_Pu_web)*Pu_sp - Mu3_sp/(d_vg - tf_vg), si >0 entonces 0; "
                 "phi*Rn1_plt_p3(-)_flange = phi*Fcr_plt_p3(-)_flange*B_plt_flange*t_plt_flange*n_plt_flange; "
                 "DCR1_plt_p3(-)_flange = Ru1_plt_p3(-)_flange/phi*Rn1_plt_p3(-)_flange`"
             ),
@@ -6431,6 +6431,140 @@ def _render_fully_restrained_splice_outline(
             "",
         ]
     )
+
+    def _extract_dcr_summary_entries_from_lines(source_lines: list[str]) -> list[dict[str, Any]]:
+        current_h2 = ""
+        current_h3 = ""
+        current_h4 = ""
+        entries: list[dict[str, Any]] = []
+        subchapter_result: dict[str, bool] = {}
+
+        for raw_line in source_lines:
+            line = raw_line.strip()
+            if line.startswith("## "):
+                current_h2 = line[3:].strip()
+                current_h3 = ""
+                current_h4 = ""
+                continue
+            if line.startswith("### "):
+                current_h3 = line[4:].strip()
+                current_h4 = ""
+                continue
+            if line.startswith("#### "):
+                current_h4 = line[5:].strip()
+                continue
+
+            result_match = re.match(r"^- Resultado:\s*(.*)$", line)
+            if result_match:
+                subchapter = current_h4 or current_h3 or current_h2
+                result_raw = result_match.group(1).strip().lower()
+                if "no cumple" in result_raw:
+                    subchapter_result[subchapter] = False
+                elif "cumple" in result_raw:
+                    subchapter_result[subchapter] = True
+                continue
+
+            dcr_match = re.match(r"^- (DCR[^:]+): `([^`]*)`", line)
+            if not dcr_match:
+                continue
+
+            dcr_name = dcr_match.group(1).strip()
+            dcr_raw = dcr_match.group(2).strip()
+            subchapter = current_h4 or current_h3 or current_h2
+            # For combined-interaction chapters, keep only the governing final DCR
+            # in the global summary to avoid repeating intermediate ratios.
+            if subchapter.startswith("5.5.1.") and dcr_name != "DCR_plt_Fcomb_web":
+                continue
+            if subchapter.startswith("4.9.1.") and dcr_name != "DCR_Fcomb_vg":
+                continue
+            dcr_value: float | None = None
+            try:
+                dcr_value = float(dcr_raw.replace(",", ""))
+            except ValueError:
+                dcr_value = None
+
+            entries.append(
+                {
+                    "name": dcr_name,
+                    "value": dcr_value,
+                    "raw": dcr_raw,
+                    "subchapter": subchapter,
+                    "passes": subchapter_result.get(subchapter),
+                }
+            )
+
+        for entry in entries:
+            if entry.get("passes") is None:
+                subchapter = _format_text(entry.get("subchapter"))
+                if subchapter in subchapter_result:
+                    entry["passes"] = subchapter_result[subchapter]
+
+        numeric_entries = [item for item in entries if isinstance(item.get("value"), float)]
+        non_numeric_entries = [item for item in entries if not isinstance(item.get("value"), float)]
+        numeric_entries.sort(key=lambda item: float(item["value"]), reverse=True)
+        return numeric_entries + non_numeric_entries
+
+    dcr_summary_entries = _extract_dcr_summary_entries_from_lines(lines)
+    # En resumen global de splice, para ELR de interacción combinada mostrar solo
+    # el DCR final gobernante y no los DCR intermedios.
+    filtered_summary_entries: list[dict[str, Any]] = []
+    for entry in dcr_summary_entries:
+        name = str(entry.get("name", "")).strip()
+        subchapter = str(entry.get("subchapter", "")).strip()
+        if "5.5.1." in subchapter and name != "DCR_plt_Fcomb_web":
+            continue
+        if "4.9.1." in subchapter and name != "DCR_Fcomb_vg":
+            continue
+        filtered_summary_entries.append(entry)
+    dcr_summary_entries = filtered_summary_entries
+
+    summary_lines: list[str] = [
+        "## Paso 7 - Resumen general",
+        "",
+        "DCR ordenados de mayor a menor para identificar los estados limite criticos.",
+        "",
+    ]
+    numeric_entries = [item for item in dcr_summary_entries if isinstance(item.get("value"), float)]
+    failing_numeric_entries = [item for item in numeric_entries if item.get("passes") is False]
+    if numeric_entries:
+        if failing_numeric_entries:
+            worst_entry = failing_numeric_entries[0]
+            worst_state = chr(0x1F534)
+        else:
+            worst_entry = numeric_entries[0]
+            worst_state = chr(0x1F534) if float(worst_entry["value"]) > 1.0 else chr(0x1F7E2)
+        summary_lines.insert(
+            3,
+            (
+                f"- DCR critico global: {worst_state} `{worst_entry['name']} = "
+                f"{_format_decimal(float(worst_entry['value']))}` en `{worst_entry['subchapter']}`"
+            ),
+        )
+    else:
+        summary_lines.insert(3, "- DCR critico global: `n/a` (no hay DCR numericos reportados)")
+
+    for idx, entry in enumerate(dcr_summary_entries, start=1):
+        if isinstance(entry.get("value"), float):
+            value_num = float(entry["value"])
+            if entry.get("passes") is False:
+                status_icon = chr(0x1F534)
+            elif entry.get("passes") is True:
+                status_icon = chr(0x1F7E2)
+            else:
+                status_icon = chr(0x1F7E2) if value_num <= 1.0 else chr(0x1F534)
+            value_text = _format_decimal(value_num)
+        else:
+            status_icon = chr(0x26AA)
+            value_text = _format_text(entry.get("raw"))
+        summary_lines.extend(
+            [
+                f"{idx}. {status_icon} `{entry['name']}` = `{value_text}`",
+                f"Subcapitulo aplicado: `{entry['subchapter']}`",
+            ]
+        )
+    summary_lines.append("")
+    lines.extend(summary_lines)
+
     return "\n".join(lines)
 
 def _render_step_1_list(

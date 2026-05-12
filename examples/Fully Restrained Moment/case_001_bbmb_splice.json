@@ -10,7 +10,7 @@
   "connection_type": "bbmb_splice",
   "load_state": "strength",
   "viga": {
-    "shape_vg": "W18X35",
+    "shape_vg": "W18X50",
     "steel_vg": "ASTM A572 Gr 50",
     "gap_sp": {
       "value": 10,
@@ -25,7 +25,7 @@
     "c3_clearance_type": "circular"
   },
   "platina_web": {
-    "steel_plt_web": "ASTM A36",
+    "steel_plt_web": "ASTM A572 Gr 50",
     "t_plt_web": {
       "value": 9.5,
       "unit": "mm"
@@ -36,7 +36,7 @@
     "cond_amb_plt_web": "non_corrosive"
   },
   "platina_flange": {
-    "steel_plt_flange": "ASTM A36",
+    "steel_plt_flange": "ASTM A572 Gr 50",
     "t_plt_flange": {
       "value": 19.05,
       "unit": "mm"
@@ -55,13 +55,13 @@
     "Ubs_web_v2_vg": 0.5,
     "Ubs_web_v3_vg": 0.5,
     "n_blt_web_x": 2,
-    "n_blt_web_y": 6,
+    "n_blt_web_y": 5,
     "g_blt_web": {
-      "value": 60.0,
+      "value": 65.0,
       "unit": "mm"
     },
     "p_blt_web": {
-      "value": 60,
+      "value": 65,
       "unit": "mm"
     },
     "Le_blt_web_x1": {
@@ -82,7 +82,7 @@
     }
   },
   "pernos_grupo_2_flange": {
-    "shape_blt_flange": "P3/4\"X1-3/4\"",
+    "shape_blt_flange": "P7/8\"X1-3/4\"",
     "std_blt_flange": "ASTM A325",
     "desc_blt_flange": "Grupo 120",
     "thread_blt_flange": "N",
@@ -93,7 +93,7 @@
     "n_blt_flange_x": 4,
     "n_blt_flange_z": 1,
     "p_blt_flange": {
-      "value": 60.0,
+      "value": 70.0,
       "unit": "mm"
     },
     "g_blt_flange": {
@@ -109,11 +109,11 @@
       "unit": "mm"
     },
     "Le_blt_flange_z1": {
-      "value": 30.0,
+      "value": 36,
       "unit": "mm"
     },
     "Le_blt_flange_z2": {
-      "value": 30,
+      "value": 35,
       "unit": "mm"
     }
   },
@@ -123,7 +123,7 @@
       "unit": "kN"
     },
     "Vu2_sp": {
-      "value": 260.0,
+      "value": 202.7463,
       "unit": "kN"
     },
     "Vu3_sp": {
@@ -131,7 +131,7 @@
       "unit": "kN"
     },
     "Mu3_sp": {
-      "value": 250,
+      "value": 376.759,
       "unit": "kN-m"
     },
     "Mu2_sp": {
