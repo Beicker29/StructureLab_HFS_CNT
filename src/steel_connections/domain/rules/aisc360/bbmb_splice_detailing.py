@@ -106,6 +106,152 @@ def _row(
     return row_data
 
 
+def _approved_step1_rows_for_splice_memory(rows: list[dict]) -> list[dict]:
+    """Keep only the detailing checks that are rendered in splice memory step 2."""
+
+    def _sym(item: dict) -> str:
+        return str(item.get("calculated_symbol", "")).strip()
+
+    def _scope(item: dict) -> str:
+        return str(item.get("scope", "")).strip().upper()
+
+    def _desc(item: dict) -> str:
+        return str(item.get("description", ""))
+
+    def _sorted_min_max(items: list[dict]) -> list[dict]:
+        return sorted(items, key=lambda r: 0 if str(r.get("comparison_text", "")).strip() == ">=" else 1)
+
+    g_blt_web_rows = [
+        item for item in rows if _sym(item) == "g_blt_web" and "direccion X" in _desc(item)
+    ]
+    if not g_blt_web_rows:
+        g_blt_web_rows = [item for item in rows if _sym(item) == "g_blt_web"]
+    g_blt_web_rows = _sorted_min_max(g_blt_web_rows)
+
+    le_blt_web_x1_rows = _sorted_min_max([item for item in rows if _sym(item) == "Le_blt_web_x1"])
+
+    p_blt_web_rows = [
+        item for item in rows if _sym(item) == "p_blt_web" and "direccion Z" in _desc(item)
+    ]
+    if not p_blt_web_rows:
+        p_blt_web_rows = [item for item in rows if _sym(item) == "p_blt_web"]
+    p_blt_web_rows = _sorted_min_max(p_blt_web_rows)
+
+    le_blt_web_y31_rows = [
+        item
+        for item in rows
+        if _sym(item) == "Le_blt_web_y3.1" and "(C3)" not in _desc(item)
+    ]
+    le_blt_web_y31_rows = _sorted_min_max(le_blt_web_y31_rows)
+
+    p_blt_flange_rows = [
+        item for item in rows if _sym(item) == "p_blt_flange" and "direccion X" in _desc(item)
+    ]
+    if not p_blt_flange_rows:
+        p_blt_flange_rows = [item for item in rows if _sym(item) == "p_blt_flange"]
+    p_blt_flange_rows = _sorted_min_max(p_blt_flange_rows)
+
+    le_blt_flange_x1_rows = _sorted_min_max([item for item in rows if _sym(item) == "Le_blt_flange_x1"])
+    le_blt_flange_z1_rows = _sorted_min_max([item for item in rows if _sym(item) == "Le_blt_flange_z1"])
+
+    le_blt_flange_z4_rows = [
+        item for item in rows if _sym(item) == "Le_blt_flange_z4" and "(C3)" not in _desc(item)
+    ]
+    le_blt_flange_z4_rows = _sorted_min_max(le_blt_flange_z4_rows)
+
+    g_blt_flange_rows = [
+        item for item in rows if _sym(item) == "g_blt_flange" and "direccion Z" in _desc(item)
+    ]
+    if not g_blt_flange_rows:
+        g_blt_flange_rows = [item for item in rows if _sym(item) == "g_blt_flange"]
+    g_blt_flange_rows = _sorted_min_max(g_blt_flange_rows)
+
+    g1_blt_flange_rows = _sorted_min_max([item for item in rows if _sym(item) == "g1_blt_flange"])
+
+    le_blt_flange_z4_c3_rows = [
+        item for item in rows if _sym(item) == "Le_blt_flange_z4" and "(C3)" in _desc(item)
+    ]
+    le_blt_web_y31_c3_rows = [
+        item for item in rows if _sym(item) == "Le_blt_web_y3.1" and "(C3)" in _desc(item)
+    ]
+    f_blt_flange_rows = [item for item in rows if "Despeje horizontal F_blt_flange" in _desc(item)]
+    h_over_tw_rows = [item for item in rows if _sym(item) == "h/tw"]
+
+    g_plt_web_rows = _sorted_min_max(
+        [item for item in rows if _sym(item) == "g_plt_web" and _scope(item) == "PLATINA_1"]
+    )
+    le_plt_web_x2_rows = _sorted_min_max(
+        [item for item in rows if _sym(item) == "Le_plt_web_x2" and _scope(item) == "PLATINA_1"]
+    )
+    p_plt_web_rows = _sorted_min_max(
+        [item for item in rows if _sym(item) == "p_plt_web" and _scope(item) == "PLATINA_1"]
+    )
+    le_plt_web_y1_rows = _sorted_min_max(
+        [item for item in rows if _sym(item) == "Le_plt_web_y1" and _scope(item) == "PLATINA_1"]
+    )
+    le_plt_web_y2_rows = _sorted_min_max(
+        [item for item in rows if _sym(item) == "Le_plt_web_y2" and _scope(item) == "PLATINA_1"]
+    )
+
+    p_plt_flange_rows = _sorted_min_max(
+        [item for item in rows if _sym(item) == "p_plt_flange" and _scope(item) == "PLATINA_2"]
+    )
+    le_plt_flange_x2_rows = _sorted_min_max(
+        [item for item in rows if _sym(item) == "Le_plt_flange_x2" and _scope(item) == "PLATINA_2"]
+    )
+    g_plt_flange_rows = _sorted_min_max(
+        [item for item in rows if _sym(item) == "g_plt_flange" and _scope(item) == "PLATINA_2"]
+    )
+    le_plt_flange_z1_rows = _sorted_min_max(
+        [item for item in rows if _sym(item) == "Le_plt_flange_z1" and _scope(item) == "PLATINA_2"]
+    )
+    le_plt_flange_z2_rows = _sorted_min_max(
+        [item for item in rows if _sym(item) == "Le_plt_flange_z2" and _scope(item) == "PLATINA_2"]
+    )
+    g1_plt_flange_rows = _sorted_min_max(
+        [item for item in rows if _sym(item) == "g1_plt_flange" and _scope(item) == "PLATINA_2"]
+    )
+
+    selected = (
+        g_blt_web_rows[:2]
+        + le_blt_web_x1_rows[:2]
+        + p_blt_web_rows[:2]
+        + le_blt_web_y31_rows[:2]
+        + p_blt_flange_rows[:2]
+        + le_blt_flange_x1_rows[:2]
+        + le_blt_flange_z1_rows[:2]
+        + le_blt_flange_z4_rows[:2]
+        + g_blt_flange_rows[:2]
+        + g1_blt_flange_rows[:2]
+        + le_blt_flange_z4_c3_rows[:1]
+        + le_blt_web_y31_c3_rows[:1]
+        + f_blt_flange_rows[:1]
+        + h_over_tw_rows[:1]
+        + g_plt_web_rows[:2]
+        + le_plt_web_x2_rows[:2]
+        + p_plt_web_rows[:2]
+        + le_plt_web_y1_rows[:2]
+        + le_plt_web_y2_rows[:2]
+        + p_plt_flange_rows[:2]
+        + le_plt_flange_x2_rows[:2]
+        + g_plt_flange_rows[:2]
+        + le_plt_flange_z1_rows[:2]
+        + le_plt_flange_z2_rows[:2]
+        + g1_plt_flange_rows[:2]
+    )
+
+    # Preserve order and avoid duplicates when the same row is selected by more than one key.
+    unique_rows: list[dict] = []
+    seen_ids: set[int] = set()
+    for row in selected:
+        row_id = id(row)
+        if row_id in seen_ids:
+            continue
+        seen_ids.add(row_id)
+        unique_rows.append(row)
+    return unique_rows
+
+
 def run_step1_viga_detailing(case: BeamBeamMomentBoltedCase, rule_binding: object) -> CheckResult:
     bolt_web = get_bolt_section_properties(
         bolt_shape=case.materials.shape_blt_web,
@@ -2434,6 +2580,10 @@ def run_step1_viga_detailing(case: BeamBeamMomentBoltedCase, rule_binding: objec
                 passed=True,
             )
         )
+
+    approved_rows = _approved_step1_rows_for_splice_memory(rows)
+    if approved_rows:
+        rows = approved_rows
 
     passing_results = {"PASS", "NOT_APPLICABLE"}
     status = CheckStatus.PASS if all(row["result"] in passing_results for row in rows) else CheckStatus.FAIL

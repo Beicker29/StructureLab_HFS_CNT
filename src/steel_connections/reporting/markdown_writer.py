@@ -220,6 +220,35 @@ def _render_result_plain_es(raw_result: object) -> str:
         return f"{chr(0x1F534)} No cumple"
     return _format_text(raw_result)
 
+
+def _build_case_label_with_profiles(result: DetailedRunResult, rows: list[dict]) -> str:
+    """Build case label including active profiles from computed Step-1 rows."""
+    base_case = _format_text(result.case_id)
+    if not rows:
+        return base_case
+
+    rows_map: dict[tuple[str, str], dict] = {}
+    for row in rows:
+        scope_key = str(row.get("scope", "")).upper()
+        symbol_key = str(row.get("calculated_symbol", ""))
+        rows_map[(scope_key, symbol_key)] = row
+
+    perfil_vgizq = _format_text((rows_map.get(("BEAM_IZQ", "perfil_vgizq")) or {}).get("calculated_text"))
+    perfil_vgder = _format_text((rows_map.get(("BEAM_DER", "perfil_vgder")) or {}).get("calculated_text"))
+    perfil_col = _format_text((rows_map.get(("COLUMN", "shape_col")) or {}).get("calculated_text"))
+
+    profile_parts: list[str] = []
+    if perfil_vgizq != "n/a":
+        profile_parts.append(f"vgizq={perfil_vgizq}")
+    if perfil_vgder != "n/a":
+        profile_parts.append(f"vgder={perfil_vgder}")
+    if perfil_col != "n/a":
+        profile_parts.append(f"col={perfil_col}")
+
+    if not profile_parts:
+        return base_case
+    return f"{base_case} | perfiles: {', '.join(profile_parts)}"
+
 def _translate_text_es(raw_text: object) -> str:
     text = _format_text(raw_text)
     replacements = {
@@ -8016,18 +8045,24 @@ def _render_step_1_notes_by_scope_template(
             tpe_vgder = _format_quantity(step731_inputs_der.get("tpe_vgder"))
             de_pe_vgder = _format_quantity(
                 step731_inputs_der.get("de_pe_vgder")
+                or (rows_by_scope_symbol.get(("END_PLATE_DER", "de_pe_vgder")) or {}).get("calculated")
+                or (rows_by_scope_symbol.get(("END_PLATE_STIFFENER_DER", "de_pe_vgder")) or {}).get("calculated")
                 or (rows_by_scope_symbol.get(("TABLE_6_1_DER", "de_pe_vgder")) or {}).get("calculated")
             )
             pb_pe_vgder = _format_quantity(step731_inputs_der.get("pb_pe_vgder"))
             pfo_pe_vgder = _format_quantity(step731_inputs_der.get("pfo_pe_vgder"))
             pfi_pe_vgder = _format_quantity(step731_inputs_der.get("pfi_pe_vgder"))
             dh_pe_vgder = _format_quantity(step731_inputs_der.get("dh_pe_vgder"))
-            g_pe_vgder = _format_quantity(
-                (rows_by_scope_symbol.get(("BEAM_DER", "g_b_vgder")) or {}).get("calculated")
+            g_b_vgder_row = (
+                (rows_by_scope_symbol.get(("END_PLATE_DER", "g_b_vgder")) or {}).get("calculated")
+                or (rows_by_scope_symbol.get(("END_PLATE_STIFFENER_DER", "g_b_vgder")) or {}).get("calculated")
+                or (rows_by_scope_symbol.get(("BEAM_DER", "g_b_vgder")) or {}).get("calculated")
             )
-            g_pe_vgder_q = _as_quantity((rows_by_scope_symbol.get(("BEAM_DER", "g_b_vgder")) or {}).get("calculated"))
-            deh_pe_vgder = "n/a"
-            if bpe_vgder_q is not None and g_pe_vgder_q is not None:
+            g_pe_vgder = _format_quantity(g_b_vgder_row)
+            g_pe_vgder_q = _as_quantity(g_b_vgder_row)
+            deh_pe_vgder_row = (rows_by_scope_symbol.get(("END_PLATE_DER", "deh_pe_vgder")) or {}).get("calculated")
+            deh_pe_vgder = _format_quantity(deh_pe_vgder_row)
+            if deh_pe_vgder == "n/a" and bpe_vgder_q is not None and g_pe_vgder_q is not None:
                 if bpe_vgder_q.unit == g_pe_vgder_q.unit:
                     deh_pe_vgder = _format_quantity(
                         {"value": (bpe_vgder_q.value - g_pe_vgder_q.value) / 2.0, "unit": bpe_vgder_q.unit}
@@ -8088,18 +8123,24 @@ def _render_step_1_notes_by_scope_template(
             tpe_vgizq = _format_quantity(step731_inputs_izq.get("tpe_vgizq"))
             de_pe_vgizq = _format_quantity(
                 step731_inputs_izq.get("de_pe_vgizq")
+                or (rows_by_scope_symbol.get(("END_PLATE_IZQ", "de_pe_vgizq")) or {}).get("calculated")
+                or (rows_by_scope_symbol.get(("END_PLATE_STIFFENER_IZQ", "de_pe_vgizq")) or {}).get("calculated")
                 or (rows_by_scope_symbol.get(("TABLE_6_1_IZQ", "de_pe_vgizq")) or {}).get("calculated")
             )
             pb_pe_vgizq = _format_quantity(step731_inputs_izq.get("pb_pe_vgizq"))
             pfo_pe_vgizq = _format_quantity(step731_inputs_izq.get("pfo_pe_vgizq"))
             pfi_pe_vgizq = _format_quantity(step731_inputs_izq.get("pfi_pe_vgizq"))
             dh_pe_vgizq = _format_quantity(step731_inputs_izq.get("dh_pe_vgizq"))
-            g_pe_vgizq = _format_quantity(
-                (rows_by_scope_symbol.get(("BEAM_IZQ", "g_b_vgizq")) or {}).get("calculated")
+            g_b_vgizq_row = (
+                (rows_by_scope_symbol.get(("END_PLATE_IZQ", "g_b_vgizq")) or {}).get("calculated")
+                or (rows_by_scope_symbol.get(("END_PLATE_STIFFENER_IZQ", "g_b_vgizq")) or {}).get("calculated")
+                or (rows_by_scope_symbol.get(("BEAM_IZQ", "g_b_vgizq")) or {}).get("calculated")
             )
-            g_pe_vgizq_q = _as_quantity((rows_by_scope_symbol.get(("BEAM_IZQ", "g_b_vgizq")) or {}).get("calculated"))
-            deh_pe_vgizq = "n/a"
-            if bpe_vgizq_q is not None and g_pe_vgizq_q is not None:
+            g_pe_vgizq = _format_quantity(g_b_vgizq_row)
+            g_pe_vgizq_q = _as_quantity(g_b_vgizq_row)
+            deh_pe_vgizq_row = (rows_by_scope_symbol.get(("END_PLATE_IZQ", "deh_pe_vgizq")) or {}).get("calculated")
+            deh_pe_vgizq = _format_quantity(deh_pe_vgizq_row)
+            if deh_pe_vgizq == "n/a" and bpe_vgizq_q is not None and g_pe_vgizq_q is not None:
                 if bpe_vgizq_q.unit == g_pe_vgizq_q.unit:
                     deh_pe_vgizq = _format_quantity(
                         {"value": (bpe_vgizq_q.value - g_pe_vgizq_q.value) / 2.0, "unit": bpe_vgizq_q.unit}
@@ -8393,11 +8434,12 @@ def render_memory_markdown(result: DetailedRunResult) -> str:
     step_14_2_1_by_side = _map_step("step14_2_1_column_web_local_crippling")
     step_14_2_2_by_side = _map_step("step14_2_2_column_web_local_buckling")
     step_21_5_1_panel_zone = _collect_step_21_5_1_column_panel_zone_shear_wpzs(result)
+    case_label = _build_case_label_with_profiles(result, rows)
     content = [
         "# Memoria de Calculo",
         "",
         f"- Proyecto: `{result.project_id}`",
-        f"- Caso: `{result.case_id}`",
+        f"- Caso: `{case_label}`",
         f"- Familia: `{result.connection_family}`",
         f"- Tipo: `{result.connection_type}`",
         f"- Estado global: `{_render_result_plain_es(result.global_status.value)}`",

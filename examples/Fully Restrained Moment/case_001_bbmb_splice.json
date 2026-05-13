@@ -46,12 +46,12 @@
     "cond_amb_plt_flange": "non_corrosive"
   },
   "pernos_grupo_1_web": {
-    "shape_blt_web": "P5/8\"X1-3/4\"",
+    "shape_blt_web": "P3/4\"X1-3/4\"",
     "std_blt_web": "ASTM A325",
     "desc_blt_web": "Grupo 120",
     "thread_blt_web": "N",
     "type_tight_blt_web": "pretensioned",
-    "deformation_at_bolt_hole_service_load_is_design": true,
+    "deformation_at_bolt_hole_service_load_is_design": false,
     "Ubs_web_v2_vg": 0.5,
     "Ubs_web_v3_vg": 0.5,
     "n_blt_web_x": 2,
@@ -73,11 +73,11 @@
       "unit": "mm"
     },
     "Le_blt_web_y1": {
-      "value": 25.0,
+      "value": 30.0,
       "unit": "mm"
     },
     "Le_blt_web_y2": {
-      "value": 25.0,
+      "value": 30.0,
       "unit": "mm"
     }
   },
@@ -90,7 +90,7 @@
     "deformation_at_bolt_hole_service_load_is_design": true,
     "Ubs_flange_v3_vg": 1.0,
     "Ubs_flange_v1_vg": 1.0,
-    "n_blt_flange_x": 4,
+    "n_blt_flange_x": 5,
     "n_blt_flange_z": 1,
     "p_blt_flange": {
       "value": 70.0,
@@ -123,7 +123,7 @@
       "unit": "kN"
     },
     "Vu2_sp": {
-      "value": 202.7463,
+      "value": 212.85,
       "unit": "kN"
     },
     "Vu3_sp": {
@@ -131,7 +131,7 @@
       "unit": "kN"
     },
     "Mu3_sp": {
-      "value": 376.759,
+      "value": 395.289,
       "unit": "kN-m"
     },
     "Mu2_sp": {

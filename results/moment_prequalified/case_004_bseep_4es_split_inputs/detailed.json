@@ -346,10 +346,11 @@
           "h_w7_col": null,
           "b_w7_col": null,
           "h_dp_col": {
-            "value": 873.8000000000001,
+            "value": 880.0,
             "unit": "mm"
           },
           "h_dp_col_formula": "300 + max(d-tf) - t_pc_col",
+          "h_dp_col_rounding_note": "ceil_10mm",
           "b_dp_col": {
             "value": 407.0,
             "unit": "mm"
@@ -475,15 +476,15 @@
               "beam_connection_sides": "both_sides",
               "formula": "Lpz_vgder = min(L_pest_vgder + 0.5*d_vgder, 3*bf_vgder); Lpz_vgizq = min(L_pest_vgizq + 0.5*d_vgizq, 3*bf_vgizq)",
               "protected_zone_length": {
-                "value": 421.52558883257655,
+                "value": 431.0,
                 "unit": "mm"
               },
               "protected_zone_length_vgder": {
-                "value": 421.52558883257655,
+                "value": 431.0,
                 "unit": "mm"
               },
               "protected_zone_length_vgizq": {
-                "value": 494.02558883257655,
+                "value": 503.5,
                 "unit": "mm"
               }
             },

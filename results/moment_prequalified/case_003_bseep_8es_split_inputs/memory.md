@@ -1,7 +1,7 @@
 ﻿# Memoria de Cálculo
 
 - Proyecto: `proj_bseep_si_demo`
-- Caso: `case_si_bseep_8es_w18x175_w24x76`
+- Caso: `case_si_bseep_8es_w18x175_w24x76 | perfiles: vgizq=W21X68, vgder=W21X68, col=HEB 500`
 - Familia: `moment_prequalified`
 - Tipo: `bseep_8es`
 - Estado global: `🟢 Cumple`
@@ -19,7 +19,7 @@ Propiedades organizadas por ámbito.
 - Demanda de ductilidad de viga izquierda (demanda_ductilidad_vgizq) (inp): `high`
 - Luz libre de viga izquierda (Llb_vgizq) (inp): `7500 mm`
 - Longitud sin conectores desde cara de columna (Lnc_vgizq) (inp): `1000 mm`
-- Longitud de zona protegida (Lpz_vgizq): `461.99 mm`
+- Longitud de zona protegida (Lpz_vgizq): `628 mm`
 
 ### 1.2 Ámbito `BEAM_DER`
 
@@ -30,7 +30,7 @@ Propiedades organizadas por ámbito.
 - Demanda de ductilidad de viga derecha (demanda_ductilidad_vgder) (inp): `high`
 - Luz libre de viga derecha (Llb_vgder) (inp): `7500 mm`
 - Longitud sin conectores desde cara de columna (Lnc_vgder) (inp): `1000 mm`
-- Longitud de zona protegida (Lpz_vgder): `461.99 mm`
+- Longitud de zona protegida (Lpz_vgder): `628 mm`
 
 ### 1.3 Ámbito `END_PLATE_IZQ`
 
@@ -39,13 +39,13 @@ Propiedades organizadas por ámbito.
 - Altura de platina extremo de viga izquierda (Hpe_vgizq): `950 mm`
 - Ancho de platina extremo de viga izquierda (Bpe_vgizq) (inp): `230 mm`
 - Espesor de platina extremo de viga izquierda (tpe_vgizq) (inp): `25 mm`
-- Distancia de borde a fila 1 de pernos (de_pe_vgizq) (inp): `n/a`
+- Distancia de borde a fila 1 de pernos (de_pe_vgizq) (inp): `62 mm`
 - Distancia entre filas de pernos (pb_pe_vgizq) (inp): `95 mm`
 - Distancia exterior a fila de pernos (pfo_pe_vgizq) (inp): `50 mm`
 - Distancia interior a fila de pernos (pfi_pe_vgizq) (inp): `50 mm`
 - Diámetro de perforación de perno (dh_pe_vgizq): `28.57 mm`
-- Distancia horizontal entre pernos en platina (g_pe_vgizq) (inp): `n/a`
-- Distancia horizontal de borde en platina (deh_pe_vgizq): `n/a`
+- Distancia horizontal entre pernos en platina (g_pe_vgizq) (inp): `150 mm`
+- Distancia horizontal de borde en platina (deh_pe_vgizq): `40 mm`
 - Parametro s de platina extremo izquierda (s_pe_vgizq): `92.87 mm`
 - Distancia h1 de platina extremo izquierda (h1_pe_vgizq): `672.3 mm`
 - Distancia h2 de platina extremo izquierda (h2_pe_vgizq): `577.3 mm`
@@ -59,13 +59,13 @@ Propiedades organizadas por ámbito.
 - Altura de platina extremo de viga derecha (Hpe_vgder): `950 mm`
 - Ancho de platina extremo de viga derecha (Bpe_vgder) (inp): `230 mm`
 - Espesor de platina extremo de viga derecha (tpe_vgder) (inp): `25 mm`
-- Distancia de borde a fila 1 de pernos (de_pe_vgder) (inp): `n/a`
+- Distancia de borde a fila 1 de pernos (de_pe_vgder) (inp): `62 mm`
 - Distancia entre filas de pernos (pb_pe_vgder) (inp): `95 mm`
 - Distancia exterior a fila de pernos (pfo_pe_vgder) (inp): `50 mm`
 - Distancia interior a fila de pernos (pfi_pe_vgder) (inp): `50 mm`
 - Diámetro de perforación de perno (dh_pe_vgder): `28.57 mm`
-- Distancia horizontal entre pernos en platina (g_pe_vgder) (inp): `n/a`
-- Distancia horizontal de borde en platina (deh_pe_vgder): `n/a`
+- Distancia horizontal entre pernos en platina (g_pe_vgder) (inp): `150 mm`
+- Distancia horizontal de borde en platina (deh_pe_vgder): `40 mm`
 - Parametro s de platina extremo derecha (s_pe_vgder): `92.87 mm`
 - Distancia h1 de platina extremo derecha (h1_pe_vgder): `672.3 mm`
 - Distancia h2 de platina extremo derecha (h2_pe_vgder): `577.3 mm`

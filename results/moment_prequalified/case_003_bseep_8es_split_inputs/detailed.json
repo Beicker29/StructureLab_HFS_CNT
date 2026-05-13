@@ -554,15 +554,15 @@
               "beam_connection_sides": "both_sides",
               "formula": "Lpz_vgder = min(L_pest_vgder + 0.5*d_vgder, 3*bf_vgder); Lpz_vgizq = min(L_pest_vgizq + 0.5*d_vgizq, 3*bf_vgizq)",
               "protected_zone_length": {
-                "value": 461.9896904477143,
+                "value": 628.0,
                 "unit": "mm"
               },
               "protected_zone_length_vgder": {
-                "value": 461.9896904477143,
+                "value": 628.0,
                 "unit": "mm"
               },
               "protected_zone_length_vgizq": {
-                "value": 461.9896904477143,
+                "value": 628.0,
                 "unit": "mm"
               }
             },

@@ -3373,10 +3373,17 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
 
     allowed_shape_families = ("W", "HEA", "HEB", "IPE")
 
-    stiffener_length_for_pz = None if case.connection_type == "bueep_4e" else case.geometry.stiffener_length
+    # Lpz debe usar L_pest por lado para conexiones con rigidizador (4ES/8ES).
+    # Para 4E (sin rigidizador en esta regla), se mantiene Lpz = min(d, 3bf).
+    if case.connection_type in {"bseep_4es", "bseep_8es"}:
+        stiffener_length_for_pz_der = stiffener_length_derived_der
+        stiffener_length_for_pz_izq = stiffener_length_derived_izq
+    else:
+        stiffener_length_for_pz_der = None
+        stiffener_length_for_pz_izq = None
     beam_profile_der = _beam_profile_by_side(case, "der")
     pz_der = _compute_protected_zone_length(
-        lst=stiffener_length_for_pz,
+        lst=stiffener_length_for_pz_der,
         d=beam_profile_der["d"],
         bf=beam_profile_der["bf"],
     )
@@ -3384,11 +3391,11 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
     if case.design_factors.beam_connection_sides == "both_sides":
         beam_profile_izq = _beam_profile_by_side(case, "izq")
         pz_izq = _compute_protected_zone_length(
-            lst=stiffener_length_for_pz,
+            lst=stiffener_length_for_pz_izq,
             d=beam_profile_izq["d"],
             bf=beam_profile_izq["bf"],
         )
-    if stiffener_length_for_pz is None:
+    if stiffener_length_for_pz_der is None:
         pz_formula = (
             "Lpz_vgder = min(d_vgder, 3*bf_vgder); "
             "Lpz_vgizq = min(d_vgizq, 3*bf_vgizq)"
