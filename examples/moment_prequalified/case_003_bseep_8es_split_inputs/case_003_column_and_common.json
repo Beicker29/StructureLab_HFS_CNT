@@ -118,11 +118,11 @@
       "unit": "mm"
     },
     "d_hole_w7_col": {
-      "value": 25.4,
+      "value": 31,
       "unit": "mm"
     },
     "nfilas_w7_col": 3,
-    "ncolumna_w7_col": 3
+    "ncolumna_w7_col": 2
   },
   "weld_8": {
     "description": "Derecha e izquierda entre platina de enchape y aleta de columna",

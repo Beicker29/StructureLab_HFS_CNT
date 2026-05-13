@@ -4,7 +4,7 @@
   "connection_family": "moment_prequalified",
   "connection_type": "bseep_8es",
   "load_state": "strength",
-  "global_status": "FAIL",
+  "global_status": "PASS",
   "checks": [
     {
       "name": "bseep_8es Section 6.3 prequalification limits",
@@ -14,7 +14,7 @@
       "demand": null,
       "capacity": null,
       "dcr": null,
-      "status": "FAIL",
+      "status": "PASS",
       "calculation_memory": {
         "inputs": {
           "bolt_diameter": {
@@ -190,13 +190,13 @@
           },
           "nl_w7_col": 3,
           "nfilas_w7_col": 3,
-          "ncolumna_w7_col": 3,
+          "ncolumna_w7_col": 2,
           "d_hole_w7_col": {
-            "value": 25.4,
+            "value": 31.0,
             "unit": "mm"
           },
           "sh_w7_col": {
-            "value": 97.5,
+            "value": 130.0,
             "unit": "mm"
           },
           "sv_w7_col": {
@@ -406,7 +406,7 @@
             "unit": "mm"
           },
           "wz_dp_col": {
-            "value": 97.5,
+            "value": 130.0,
             "unit": "mm"
           },
           "h_w7_col": {
@@ -414,7 +414,7 @@
             "unit": "mm"
           },
           "b_w7_col": {
-            "value": 97.5,
+            "value": 130.0,
             "unit": "mm"
           },
           "h_dp_col": {
@@ -1292,13 +1292,13 @@
                 "unit": "mm"
               },
               "limit": {
-                "value": 2.4755555555555557,
+                "value": 2.836666666666667,
                 "unit": "mm"
               },
               "comparison": "ge",
               "comparison_text": ">=",
               "margin": {
-                "value": 12.024444444444445,
+                "value": 11.663333333333334,
                 "unit": "mm"
               },
               "status": "PASS",
@@ -1338,7 +1338,7 @@
               "calculated_symbol": "(nfilas_w7_col)*(ncolumna_w7_col)",
               "limit_symbol": "4",
               "calculated": {
-                "value": 9.0,
+                "value": 6.0,
                 "unit": "adim"
               },
               "limit": {
@@ -1348,7 +1348,7 @@
               "comparison": "ge",
               "comparison_text": ">=",
               "margin": {
-                "value": 5.0,
+                "value": 2.0,
                 "unit": "adim"
               },
               "status": "PASS",
@@ -1392,13 +1392,13 @@
                 "unit": "mm"
               },
               "limit": {
-                "value": 2.4755555555555557,
+                "value": 2.836666666666667,
                 "unit": "mm"
               },
               "comparison": "ge",
               "comparison_text": ">=",
               "margin": {
-                "value": 9.524444444444445,
+                "value": 9.163333333333334,
                 "unit": "mm"
               },
               "status": "PASS",
@@ -1417,13 +1417,13 @@
                 "unit": "mm"
               },
               "limit": {
-                "value": 2.1504544835199066,
+                "value": 2.2311179797094005,
                 "unit": "mm"
               },
               "comparison": "ge",
               "comparison_text": ">=",
               "margin": {
-                "value": 9.849545516480093,
+                "value": 9.768882020290599,
                 "unit": "mm"
               },
               "status": "PASS",
@@ -1892,7 +1892,7 @@
               "calculated_symbol": "d_hole_w7_col",
               "limit_symbol": "redondeo_par(t_part_w7_col + 8 mm)",
               "calculated": {
-                "value": 25.4,
+                "value": 31.0,
                 "unit": "mm"
               },
               "limit": {
@@ -1902,7 +1902,7 @@
               "comparison": "ge",
               "comparison_text": ">=",
               "margin": {
-                "value": 1.3999999999999986,
+                "value": 7.0,
                 "unit": "mm"
               },
               "status": "PASS",
@@ -1917,7 +1917,7 @@
               "calculated_symbol": "d_hole_w7_col",
               "limit_symbol": "max{d_min+3 mm, 2.25*w_w7_col}",
               "calculated": {
-                "value": 25.4,
+                "value": 31.0,
                 "unit": "mm"
               },
               "limit": {
@@ -1927,7 +1927,7 @@
               "comparison": "le",
               "comparison_text": "<=",
               "margin": {
-                "value": 10.600000000000001,
+                "value": 5.0,
                 "unit": "mm"
               },
               "status": "PASS",
@@ -1943,9 +1943,9 @@
               "limit_symbol": "verification_only",
               "comparison": "compound",
               "comparison_text": "compound",
-              "verification_text": "b_w7_col >= 4*d_hole_w7_col y h_w7_col >= 4*d_hole_w7_col; b_w7_col=97.500 mm, h_w7_col=125.300 mm, s_min=101.600 mm",
-              "status": "FAIL",
-              "result": "NO_OK"
+              "verification_text": "b_w7_col >= 4*d_hole_w7_col y h_w7_col >= 4*d_hole_w7_col; b_w7_col=130.000 mm, h_w7_col=125.300 mm, s_min=124.000 mm",
+              "status": "PASS",
+              "result": "OK"
             },
             {
               "step": "1",
@@ -3689,13 +3689,13 @@
                 "unit": "mm"
               },
               "limit": {
-                "value": 2.4755555555555557,
+                "value": 2.836666666666667,
                 "unit": "mm"
               },
               "comparison": "ge",
               "comparison_text": ">=",
               "margin": {
-                "value": 12.024444444444445,
+                "value": 11.663333333333334,
                 "unit": "mm"
               },
               "status": "PASS",
@@ -3735,7 +3735,7 @@
               "calculated_symbol": "(nfilas_w7_col)*(ncolumna_w7_col)",
               "limit_symbol": "4",
               "calculated": {
-                "value": 9.0,
+                "value": 6.0,
                 "unit": "adim"
               },
               "limit": {
@@ -3745,7 +3745,7 @@
               "comparison": "ge",
               "comparison_text": ">=",
               "margin": {
-                "value": 5.0,
+                "value": 2.0,
                 "unit": "adim"
               },
               "status": "PASS",
@@ -3789,13 +3789,13 @@
                 "unit": "mm"
               },
               "limit": {
-                "value": 2.4755555555555557,
+                "value": 2.836666666666667,
                 "unit": "mm"
               },
               "comparison": "ge",
               "comparison_text": ">=",
               "margin": {
-                "value": 9.524444444444445,
+                "value": 9.163333333333334,
                 "unit": "mm"
               },
               "status": "PASS",
@@ -3814,13 +3814,13 @@
                 "unit": "mm"
               },
               "limit": {
-                "value": 2.1504544835199066,
+                "value": 2.2311179797094005,
                 "unit": "mm"
               },
               "comparison": "ge",
               "comparison_text": ">=",
               "margin": {
-                "value": 9.849545516480093,
+                "value": 9.768882020290599,
                 "unit": "mm"
               },
               "status": "PASS",
@@ -4289,7 +4289,7 @@
               "calculated_symbol": "d_hole_w7_col",
               "limit_symbol": "redondeo_par(t_part_w7_col + 8 mm)",
               "calculated": {
-                "value": 25.4,
+                "value": 31.0,
                 "unit": "mm"
               },
               "limit": {
@@ -4299,7 +4299,7 @@
               "comparison": "ge",
               "comparison_text": ">=",
               "margin": {
-                "value": 1.3999999999999986,
+                "value": 7.0,
                 "unit": "mm"
               },
               "status": "PASS",
@@ -4314,7 +4314,7 @@
               "calculated_symbol": "d_hole_w7_col",
               "limit_symbol": "max{d_min+3 mm, 2.25*w_w7_col}",
               "calculated": {
-                "value": 25.4,
+                "value": 31.0,
                 "unit": "mm"
               },
               "limit": {
@@ -4324,7 +4324,7 @@
               "comparison": "le",
               "comparison_text": "<=",
               "margin": {
-                "value": 10.600000000000001,
+                "value": 5.0,
                 "unit": "mm"
               },
               "status": "PASS",
@@ -4340,9 +4340,9 @@
               "limit_symbol": "verification_only",
               "comparison": "compound",
               "comparison_text": "compound",
-              "verification_text": "b_w7_col >= 4*d_hole_w7_col y h_w7_col >= 4*d_hole_w7_col; b_w7_col=97.500 mm, h_w7_col=125.300 mm, s_min=101.600 mm",
-              "status": "FAIL",
-              "result": "NO_OK"
+              "verification_text": "b_w7_col >= 4*d_hole_w7_col y h_w7_col >= 4*d_hole_w7_col; b_w7_col=130.000 mm, h_w7_col=125.300 mm, s_min=124.000 mm",
+              "status": "PASS",
+              "result": "OK"
             },
             {
               "step": "1",
@@ -8229,8 +8229,8 @@
   ],
   "errors": [],
   "summary": {
-    "pass_count": 33,
-    "fail_count": 1,
+    "pass_count": 34,
+    "fail_count": 0,
     "error_count": 0,
     "not_implemented_count": 0,
     "worst_dcr": 1.0
