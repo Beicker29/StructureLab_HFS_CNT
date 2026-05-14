@@ -1354,57 +1354,57 @@ Comparacion directa de valor calculado contra limite normativo (sin formato DCR)
 - 🟢 `3.22` `WELD_7_COL`: total=5, cumple=5, no_cumple=0, numerales_no_cumplen=ninguno
 - 🟢 `3.23` `WELD_8_COL`: total=3, cumple=3, no_cumple=0, numerales_no_cumplen=ninguno
 
-## Paso 4 - Momento probable máximo en rótula plástica (Mpr)
+## Paso 4 - Momento probable en la rótula plástica (Mpr)
 
-Cálculo de momento probable por lado usando `Mpr = Cpr * Ry * Fy * Ze` (Ze = Zx del catalogo).
+Cálculo del momento probable por lado usando `Mpr = Cpr * Ry * Fy * Ze` (Ze = Zx del catálogo).
 
-### 4.1 Cálculo de Mpr para viga izquierda
+### 4.1 Momento probable en rótula plástica de la viga izquierda
 
 - Cláusula: `Documento: AISC 358-22 | Sección: Capitulo 6 / Sección 6.7.1 Paso 2 + Eq. (2.4-1) and Eq. (2.4-2)`
 - Ecuación: `Mpr_vgizq = Cpr_vgizq * Ry * Fy * Ze_vgizq`
 - Fy_vgizq: `345 MPa`
 - Ry: `1.1`
-- Ze_vgizq (catalogo): `2620000 mm3`
+- Ze_vgizq (catálogo): `2620000 mm3`
 - Demanda de ductilidad_vgizq: `high`
 - Cpr_vgizq: `1.15`
 - Mpr_vgizq: `1143.43 kN-m`
 
-### 4.2 Cálculo de Mpr para viga derecha
+### 4.2 Momento probable en rótula plástica de la viga derecha
 
 - Cláusula: `Documento: AISC 358-22 | Sección: Capitulo 6 / Sección 6.7.1 Paso 2 + Eq. (2.4-1) and Eq. (2.4-2)`
 - Ecuación: `Mpr_vgder = Cpr_vgder * Ry * Fy * Ze_vgder`
 - Fy_vgder: `345 MPa`
 - Ry: `1.1`
-- Ze_vgder (catalogo): `2620000 mm3`
+- Ze_vgder (catálogo): `2620000 mm3`
 - Demanda de ductilidad_vgder: `high`
 - Cpr_vgder: `1.15`
 - Mpr_vgder: `1143.43 kN-m`
 
-## Paso 5 - Distancia de rótula plástica desde la cara de la columna (Sh)
+## Paso 5 - Ubicación de la rótula plástica respecto a la cara de columna (Sh)
 
-### 5.1 Cálculo de Sh para viga izquierda
+### 5.1 Ubicación de la rótula plástica de la viga izquierda
 
 - Cláusula: `Documento: AISC 358-22 | Sección: Capitulo 6 / Sección 6.7.1 Paso 3 + Eq. (6.7-1) and Eq. (6.7-2)`
-- Tipo de conexion: `bseep_8es`
+- Tipo de conexión: `bseep_8es`
 - Ecuación: `Sh_vgizq = min(d_vgizq/2, 3*bf_vgizq) [4E] o Sh_vgizq = L_pest_vgizq + tpe_vgizq [4ES/8ES]`
 - d_vgizq: `536 mm`
 - bf_vgizq: `210 mm`
 - Sh_vgizq: `385 mm`
 
-### 5.2 Cálculo de Sh para viga derecha
+### 5.2 Ubicación de la rótula plástica de la viga derecha
 
 - Cláusula: `Documento: AISC 358-22 | Sección: Capitulo 6 / Sección 6.7.1 Paso 3 + Eq. (6.7-1) and Eq. (6.7-2)`
-- Tipo de conexion: `bseep_8es`
+- Tipo de conexión: `bseep_8es`
 - Ecuación: `Sh_vgder = min(d_vgder/2, 3*bf_vgder) [4E] o Sh_vgder = L_pest_vgder + tpe_vgder [4ES/8ES]`
 - d_vgder: `536 mm`
 - bf_vgder: `210 mm`
 - Sh_vgder: `385 mm`
 
-## Paso 6 - Cortante Probable En Rotula Plastica (Vhmax, Vhmin)
+## Paso 6 - Cortante probable en la rótula plástica (Vh)
 
-Cálculo segun Eq. (2.4-3): `Vhmax = 2*Mpr/Llb + Vg` y `Vhmin = 2*Mpr/Llb - Vg`.
+Cálculo según Eq. (2.4-3): `Vhmax = 2*Mpr/Llb + Vg` y `Vhmin = 2*Mpr/Llb - Vg`.
 
-### 6.1 Cálculo de cortante probable para viga izquierda
+### 6.1 Cortante probable en rótula plástica de la viga izquierda
 
 - Cláusula: `Documento: AISC 358-22 | Sección: Capitulo 6 / Sección 6.7.1 Paso 4 + Eq. (2.4-3)`
 - Ecuación: `Vh_vgizq_max = 2*Mpr_vgizq/Llb_vgizq + Vg_vgizq; Vh_vgizq_min = 2*Mpr_vgizq/Llb_vgizq - Vg_vgizq`
@@ -1415,7 +1415,7 @@ Cálculo segun Eq. (2.4-3): `Vhmax = 2*Mpr/Llb + Vg` y `Vhmin = 2*Mpr/Llb - Vg`.
 - Vh_vgizq_min: `206.72 kN`
 - Vhmax_vgizq adoptado: `403.12 kN`
 
-### 6.2 Cálculo de cortante probable para viga derecha
+### 6.2 Cortante probable en rótula plástica de la viga derecha
 
 - Cláusula: `Documento: AISC 358-22 | Sección: Capitulo 6 / Sección 6.7.1 Paso 4 + Eq. (2.4-3)`
 - Ecuación: `Vh_vgder_max = 2*Mpr_vgder/Llb_vgder + Vg_vgder; Vh_vgder_min = 2*Mpr_vgder/Llb_vgder - Vg_vgder`
@@ -1426,11 +1426,11 @@ Cálculo segun Eq. (2.4-3): `Vhmax = 2*Mpr/Llb + Vg` y `Vhmin = 2*Mpr/Llb - Vg`.
 - Vh_vgder_min: `208.28 kN`
 - Vhmax_vgder adoptado: `401.56 kN`
 
-## Paso 7 - Momento Probable En Cara De Columna (Mfmax, Mfmin)
+## Paso 7 - Momento probable en la cara de columna (Mf)
 
-Cálculo segun Eq. (2.4-4): `Mfmax = Mpr + Vhmax*Sh` y `Mfmin = Mpr + Vhmin*Sh`.
+Cálculo según Eq. (2.4-4): `Mfmax = Mpr + Vhmax*Sh` y `Mfmin = Mpr + Vhmin*Sh`.
 
-### 7.1 Cálculo de momento probable en cara de columna para viga izquierda
+### 7.1 Momento probable en cara de columna de la viga izquierda
 
 - Cláusula: `Documento: AISC 358-22 | Sección: Capitulo 6 / Sección 6.7.1 Paso 5 + Eq. (2.4-4)`
 - Ecuación: `Mf_vgizq_max = Mpr_vgizq + Vh_vgizq_max*Sh_vgizq; Mf_vgizq_min = Mpr_vgizq + Vh_vgizq_min*Sh_vgizq`
@@ -1439,7 +1439,7 @@ Cálculo segun Eq. (2.4-4): `Mfmax = Mpr + Vhmax*Sh` y `Mfmin = Mpr + Vhmin*Sh`.
 - Mf_vgizq_max: `1298.63 kN-m`
 - Mf_vgizq_min: `1223.02 kN-m`
 
-### 7.2 Cálculo de momento probable en cara de columna para viga derecha
+### 7.2 Momento probable en cara de columna de la viga derecha
 
 - Cláusula: `Documento: AISC 358-22 | Sección: Capitulo 6 / Sección 6.7.1 Paso 5 + Eq. (2.4-4)`
 - Ecuación: `Mf_vgder_max = Mpr_vgder + Vh_vgder_max*Sh_vgder; Mf_vgder_min = Mpr_vgder + Vh_vgder_min*Sh_vgder`
@@ -2053,6 +2053,7 @@ Donde:
 - Mbe_col_vgder_max: `1398.42 kN-m`
 - Mbe_col_vgder_min: `1275.69 kN-m`
 - sum_Mbe_col: `2675.1 kN-m`
+- Ecuación Vc2_col: `Vc2_col = sum_Mbe_col/(hb_col + ht_col)`
 - Vc2_col: `1070.04 kN`
 - d_vgizq: `536 mm`
 - Mf_vgizq_max: `1298.63 kN-m`
@@ -2217,7 +2218,7 @@ Donde:
 - Ecuación: `Ru_w5_v2_col = MIN{Ru1..Ru9}; phi*Rn1_w6-dp_v2_col = phi_fragil * 0.6 * fu_dp_col * t_dp_col * L_w6_col; phi*Rn2_w6-dp_v2_col = phi_no_ductil * 0.6 * fy_dp_col * t_dp_col * L_w6_col; phi*Rn1_w6-cw_v2_col = phi_fragil * 0.6 * fu_col * tw_col * L_w6_col; phi*Rn2_w6-cw_v2_col = phi_no_ductil * 0.6 * fy_col * tw_col * L_w6_col; phi*Rn_w6_v2_col = min(phi*Rn1_w6-dp_v2_col, phi*Rn2_w6-dp_v2_col, phi*Rn1_w6-cw_v2_col, phi*Rn2_w6-cw_v2_col); DCR_w6_v2_col = Ru_w5_v2_col / phi*Rn_w6_v2_col`
 - tipo_w6_col: `CJP`
 - CJP: `Cumple`
-- Resultado: `?? Cumple`
+- Resultado: `🟢 Cumple`
 
 ## Paso 27- Revisión de resistencia de soldadura # 8 (Platina de enchape con aleta de columna)
 

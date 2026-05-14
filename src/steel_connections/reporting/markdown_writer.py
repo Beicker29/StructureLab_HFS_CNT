@@ -1648,28 +1648,28 @@ def _render_step_2_mpr(step_2: dict) -> str:
     mpr_der = _format_scalar_with_unit(inter.get("mpr_der"), "kN-mm")
     mpr_izq = _format_scalar_with_unit(inter.get("mpr_izq"), "kN-mm")
     lines = [
-        "## Paso 4 - Momento probable maximo en rotula plastica (Mpr)",
+        "## Paso 4 - Momento probable en la rótula plástica (Mpr)",
         "",
-        "Calculo de momento probable por lado usando `Mpr = Cpr * Ry * Fy * Ze` (Ze = Zx del catalogo).",
+        "Cálculo del momento probable por lado usando `Mpr = Cpr * Ry * Fy * Ze` (Ze = Zx del catálogo).",
         "",
-        "### 4.1 Calculo de Mpr para viga izquierda",
+        "### 4.1 Momento probable en rótula plástica de la viga izquierda",
         "",
         f"- Clausula: `{clause_text}`",
         "- Ecuacion: `Mpr_vgizq = Cpr_vgizq * Ry * Fy * Ze_vgizq`",
         f"- Fy_vgizq: `{fy}`",
         f"- Ry: `{ry}`",
-        f"- Ze_vgizq (catalogo): `{ze_izq}`",
+        f"- Ze_vgizq (catálogo): `{ze_izq}`",
         f"- Demanda de ductilidad_vgizq: `{dd_izq}`",
         f"- Cpr_vgizq: `{cpr_izq}`",
         f"- Mpr_vgizq: `{mpr_izq}`",
         "",
-        "### 4.2 Calculo de Mpr para viga derecha",
+        "### 4.2 Momento probable en rótula plástica de la viga derecha",
         "",
         f"- Clausula: `{clause_text}`",
         "- Ecuacion: `Mpr_vgder = Cpr_vgder * Ry * Fy * Ze_vgder`",
         f"- Fy_vgder: `{fy}`",
         f"- Ry: `{ry}`",
-        f"- Ze_vgder (catalogo): `{ze_der}`",
+        f"- Ze_vgder (catálogo): `{ze_der}`",
         f"- Demanda de ductilidad_vgder: `{dd_der}`",
         f"- Cpr_vgder: `{cpr_der}`",
         f"- Mpr_vgder: `{mpr_der}`",
@@ -1685,21 +1685,21 @@ def _render_step_3_sh(step_3: dict) -> str:
     sh_izq = _format_scalar_with_unit(step_3.get("intermediates", {}).get("sh_izq"), "mm")
     sh_der = _format_scalar_with_unit(step_3.get("intermediates", {}).get("sh_der"), "mm")
     lines = [
-        "## Paso 5 - Distancia de rotula plastica desde la cara de la columna (Sh)",
+        "## Paso 5 - Ubicación de la rótula plástica respecto a la cara de columna (Sh)",
         "",
-        "### 5.1 Calculo de Sh para viga izquierda",
+        "### 5.1 Ubicación de la rótula plástica de la viga izquierda",
         "",
         f"- Clausula: `{clause_text}`",
-        f"- Tipo de conexion: `{ctype}`",
+        f"- Tipo de conexión: `{ctype}`",
         "- Ecuacion: `Sh_vgizq = min(d_vgizq/2, 3*bf_vgizq) [4E] o Sh_vgizq = L_pest_vgizq + tpe_vgizq [4ES/8ES]`",
         f"- d_vgizq: `{_format_quantity(inputs.get('d_vgizq'))}`",
         f"- bf_vgizq: `{_format_quantity(inputs.get('bf_vgizq'))}`",
         f"- Sh_vgizq: `{sh_izq}`",
         "",
-        "### 5.2 Calculo de Sh para viga derecha",
+        "### 5.2 Ubicación de la rótula plástica de la viga derecha",
         "",
         f"- Clausula: `{clause_text}`",
-        f"- Tipo de conexion: `{ctype}`",
+        f"- Tipo de conexión: `{ctype}`",
         "- Ecuacion: `Sh_vgder = min(d_vgder/2, 3*bf_vgder) [4E] o Sh_vgder = L_pest_vgder + tpe_vgder [4ES/8ES]`",
         f"- d_vgder: `{_format_quantity(inputs.get('d_vgder'))}`",
         f"- bf_vgder: `{_format_quantity(inputs.get('bf_vgder'))}`",
@@ -1715,15 +1715,15 @@ def _render_step_4_vh(step_4: dict) -> str:
     beam_connection_sides = _format_text(inputs.get("beam_connection_sides"))
     sides = ["izq", "der"] if beam_connection_sides == "both_sides" else ["der"]
     lines = [
-        "## Paso 6 - Cortante Probable En Rotula Plastica (Vhmax, Vhmin)",
+        "## Paso 6 - Cortante probable en la rótula plástica (Vh)",
         "",
-        "Calculo segun Eq. (2.4-3): `Vhmax = 2*Mpr/Llb + Vg` y `Vhmin = 2*Mpr/Llb - Vg`.",
+        "Cálculo según Eq. (2.4-3): `Vhmax = 2*Mpr/Llb + Vg` y `Vhmin = 2*Mpr/Llb - Vg`.",
         "",
     ]
     clause_text = _render_clause_text(step_4.get("clause"), step_4.get("source_document"), step_4.get("rule_id"))
     for side in sides:
         side_suffix = f"vg{side}"
-        subtitle = "### 6.1 Calculo de cortante probable para viga izquierda" if side == "izq" else "### 6.2 Calculo de cortante probable para viga derecha"
+        subtitle = "### 6.1 Cortante probable en rótula plástica de la viga izquierda" if side == "izq" else "### 6.2 Cortante probable en rótula plástica de la viga derecha"
         lines.extend(
             [
                 subtitle,
@@ -1753,14 +1753,14 @@ def _render_step_5_mf(step_5: dict) -> str:
         sides = ["der"]
     clause_text = _render_clause_text(step_5.get("clause"), step_5.get("source_document"), step_5.get("rule_id"))
     lines = [
-        "## Paso 7 - Momento Probable En Cara De Columna (Mfmax, Mfmin)",
+        "## Paso 7 - Momento probable en la cara de columna (Mf)",
         "",
-        "Calculo segun Eq. (2.4-4): `Mfmax = Mpr + Vhmax*Sh` y `Mfmin = Mpr + Vhmin*Sh`.",
+        "Cálculo según Eq. (2.4-4): `Mfmax = Mpr + Vhmax*Sh` y `Mfmin = Mpr + Vhmin*Sh`.",
         "",
     ]
     for side in sides:
         side_suffix = f"vg{side}"
-        subtitle = "### 7.1 Calculo de momento probable en cara de columna para viga izquierda" if side == "izq" else "### 7.2 Calculo de momento probable en cara de columna para viga derecha"
+        subtitle = "### 7.1 Momento probable en cara de columna de la viga izquierda" if side == "izq" else "### 7.2 Momento probable en cara de columna de la viga derecha"
         lines.extend(
             [
                 subtitle,
@@ -8639,6 +8639,7 @@ def _render_step_21_5_panel_zone_shear_wpzs(
         if mbe_min is not None:
             lines.append(f"- Mbe_col_{side_tag}_min: `{_format_quantity(mbe_min)}`")
     lines.append(f"- sum_Mbe_col: `{_format_quantity(inputs.get('sum_mbe_col'))}`")
+    lines.append("- Ecuacion Vc2_col: `Vc2_col = sum_Mbe_col/(hb_col + ht_col)`")
     lines.append(f"- Vc2_col: `{_format_quantity(inputs.get('vc2_col'))}`")
     for side_tag in ("vgizq", "vgder"):
         mf_max = inputs.get(f"mf_{side_tag}_max")
@@ -10142,7 +10143,7 @@ def render_memory_markdown(result: DetailedRunResult) -> str:
                     [
                         f"- tipo_w6_col: `{tipo_w6_raw}`",
                         "- CJP: `Cumple`",
-                        "- Resultado: `?? Cumple`",
+                        f"- Resultado: `{_render_result_plain_es('Cumple')}`",
                         "",
                     ]
                 )
