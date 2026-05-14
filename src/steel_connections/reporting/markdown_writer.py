@@ -259,22 +259,32 @@ def _translate_text_es(raw_text: object) -> str:
         "Installation requirements for bolted assemblies": "Requisitos de instalacion para conjuntos empernados",
         "Quality control and quality assurance for bolted assemblies": "Control y aseguramiento de calidad para conjuntos empernados",
         "Beam profile family allowed for prequalification": "Familia de perfil de viga permitida para precalificacion",
-        "End-plate width vs beam flange width": "Ancho de placa de extremo vs ancho de ala de viga",
-        "Bolt gage minimum spacing": "Separacion minima de gage de pernos",
+        "End-plate width vs beam flange width": "Ancho de platina extrema respecto al ancho de ala de viga",
+        "Bolt gage minimum spacing": "Separacion minima entre lineas de pernos",
         "Length without shear connectors from column face": "Longitud sin conectores de cortante desde la cara de columna",
         "Beam clearance criterion using Sc and S threshold": "Criterio de despeje de viga con umbral Sc y S",
         "Horizontal beam clearance from column projection using Sc and S threshold": (
             "Despeje horizontal de la viga respecto a la proyeccion de la columna con umbral Sc y S"
         ),
         "Top column clearance above top bolt line": "Despeje superior de columna sobre la linea superior de pernos",
-        "Clear span-to-depth ratio by frame system": "Relacion luz libre/peralte por sistema de marco",
+        "Clear span-to-depth ratio by frame system": "Relacion luz libre/peralte segun sistema de marco",
         "Beam flange width-to-thickness compactness": "Compacidad ancho-espesor del ala de viga",
         "Beam web width-to-thickness compactness": "Compacidad ancho-espesor del alma de viga",
         "Column profile family allowed for prequalification": "Familia de perfil de columna permitida para precalificacion",
-        "Column profile depth maximum (W36/W920)": "Peralte maximo del perfil de columna (W36/W920)",
-        "End-plate fit within column flange width": "Ajuste de placa de extremo dentro del ala de la columna",
+        "Column profile depth maximum (W36/W920)": "Peralte maximo permitido del perfil de columna (W36/W920)",
+        "Column flange width-to-thickness compactness": "Compacidad ancho-espesor del ala de columna",
+        "Column web width-to-thickness compactness": "Compacidad ancho-espesor del alma de columna",
+        "End-plate fit within column flange width": "Ajuste de platina extrema dentro del ancho de ala de columna",
         "Column-slab connection condition": "Condicion de conexion columna-losa",
-        "End-plate width explicit dual inequalities": "Desigualdades explicitas de ancho de placa de extremo",
+        "End-plate width explicit dual inequalities": "Rango admisible de ancho de platina extrema",
+        "Horizontal edge distance from plate edge to bolt line": "Distancia horizontal de borde entre platina extrema y linea de pernos",
+        "Maximum edge distance at de": "Distancia maxima de borde en direccion de",
+        "Outside bolt-row distance minimum": "Distancia minima a fila exterior de pernos",
+        "Outside bolt-row distance maximum": "Distancia maxima a fila exterior de pernos",
+        "Inside bolt-row distance minimum": "Distancia minima a fila interior de pernos",
+        "Inside bolt-row distance maximum": "Distancia maxima a fila interior de pernos",
+        "Horizontal bolt spacing minimum": "Separacion horizontal minima entre lineas de pernos",
+        "Horizontal bolt spacing maximum": "Separacion horizontal maxima entre lineas de pernos",
         "End-plate stiffener height derived from end-plate geometry": "Altura del rigidizador derivada de la geometria de la placa de extremo",
         "Stiffener thickness minimum requirement": "Espesor minimo requerido del rigidizador",
         "Stiffener local buckling width-thickness limit": "Limite de pandeo local ancho-espesor del rigidizador",
@@ -287,13 +297,15 @@ def _translate_text_es(raw_text: object) -> str:
         "Bolt fabrication standard must be an allowed high-strength ASTM designation": "La norma de fabricacion de pernos debe ser una designacion ASTM de alta resistencia permitida",
         "Vertical pitch minimum spacing": "Separacion minima vertical entre pernos",
         "Edge distance at de": "Distancia de borde en de",
-        "Outside bolt-row distance limits": "Limites de distancia en fila exterior de pernos",
-        "Inside bolt-row distance limits": "Limites de distancia en fila interior de pernos",
+        "Outside adjusted edge distance minimum": "Distancia ajustada minima a fila exterior de pernos",
+        "Outside adjusted edge distance maximum": "Distancia ajustada maxima a fila exterior de pernos",
+        "Outside bolt-row distance limits": "Limites de distancia a fila exterior de pernos",
+        "Inside bolt-row distance limits": "Limites de distancia a fila interior de pernos",
         "Beam flange thickness limits": "Limites de espesor del ala de viga",
         "Beam flange width limits": "Limites de ancho del ala de viga",
         "Connecting beam depth limits": "Limites de peralte de la viga conectada",
-        "End-plate thickness limits": "Limites de espesor de placa de extremo",
-        "Horizontal bolt spacing limits": "Limites de separacion horizontal de pernos",
+        "End-plate thickness limits": "Limites de espesor de platina extrema",
+        "Horizontal bolt spacing limits": "Limites de separacion horizontal entre pernos",
         "end-plate": "placa de extremo",
     }
     for source, target in replacements.items():
@@ -320,6 +332,43 @@ def _strip_redundant_scope_suffix(text: str) -> str:
         text,
         flags=re.IGNORECASE,
     ).strip()
+
+
+def _polish_check_title_es(text: str) -> str:
+    replacements = {
+        "placa de extremo": "platina extrema",
+        "vs": "respecto a",
+        "soldadura plug": "soldadura de tapon",
+        "soldadura tipo 7 (plug)": "soldadura de tapon #7",
+        "tipo_w5_col es fillet": "se usa soldadura de filete",
+        "lineas": "líneas",
+        "linea": "línea",
+        "tapon": "tapón",
+        "direccion": "dirección",
+        "mas ": "más ",
+        "(viga der)": "(lado derecho)",
+        "(viga izq)": "(lado izquierdo)",
+        "Tamano": "Tamaño",
+        "minimo": "mínimo",
+        "minima": "mínima",
+        "maximo": "máximo",
+        "maxima": "máxima",
+        "Limite ": "Límite ",
+        "Limites ": "Límites ",
+        "Relacion ": "Relación ",
+        "Proyeccion ": "Proyección ",
+        "segun ": "según ",
+        "Determinacion ": "Determinación ",
+        "automatica": "automática",
+        "categoria": "categoría",
+        "fabricacion": "fabricación",
+        "designacion": "designación",
+        "especifica": "específica",
+    }
+    polished = text
+    for source, target in replacements.items():
+        polished = polished.replace(source, target)
+    return polished.strip()
 
 
 def _render_clause_text(clause: object, source_document: object = None, rule_id: object = None) -> str:
@@ -6788,7 +6837,9 @@ def _render_step_1_list_grouped_by_scope(
                 if str(item.get("id", "")).strip().lower() not in excluded_ids
             ]
         for item in items_for_scope:
-            description = _strip_redundant_scope_suffix(_translate_text_es(item.get("description")))
+            description = _polish_check_title_es(
+                _strip_redundant_scope_suffix(_translate_text_es(item.get("description")))
+            )
             calculated_symbol = str(item.get("calculated_symbol", "calc"))
             limit_symbol = str(item.get("limit_symbol", "lim"))
             calculated = _format_quantity(item.get("calculated"))
