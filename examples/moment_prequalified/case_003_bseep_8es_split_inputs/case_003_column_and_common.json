@@ -77,10 +77,10 @@
     },
     "tipo_w5_col": "CJP",
     "w_w5_col": {
-      "value": 12.7,
+      "value": 16,
       "unit": "mm"
     },
-    "nl_w5_col": 2,
+    "nl_w5_col": 1,
     "L_gap_w5_col": {
       "value": 12.7,
       "unit": "mm"
@@ -95,10 +95,10 @@
     },
     "tipo_w6_col": "CJP",
     "w_w6_col": {
-      "value": 12,
+      "value": 16,
       "unit": "mm"
     },
-    "nl_w6_col": 2,
+    "nl_w6_col": 1,
     "L_gap_w6_col": {
       "value": 25,
       "unit": "mm"
@@ -132,7 +132,7 @@
     },
     "tipo_w8_col": "PJP",
     "w_w8_col": {
-      "value": 8.0,
+      "value": 12,
       "unit": "mm"
     },
     "nl_w8_col": 1,
@@ -151,12 +151,12 @@
     },
     "tipo_w9_col": "fillet",
     "w_w9_col": {
-      "value": 8.0,
+      "value": 0.0,
       "unit": "mm"
     },
-    "nl_w9_col": 2,
+    "nl_w9_col": 0,
     "L_gap_w9_col": {
-      "value": 50.0,
+      "value": 0,
       "unit": "mm"
     },
     "kds_w9_col": 1.0

@@ -71,7 +71,7 @@
       },
       "tipo_w1_vgizq": "CJP",
       "w_w1_vgizq": {
-        "value": 0.0,
+        "value": 16,
         "unit": "mm"
       },
       "nl_w1_vgizq": 1,
@@ -89,7 +89,7 @@
       },
       "tipo_w2_vgizq": "CJP",
       "w_w2_vgizq": {
-        "value": 0.0,
+        "value": 16,
         "unit": "mm"
       },
       "nl_w2_vgizq": 1,
@@ -106,8 +106,8 @@
         "unit": "MPa"
       },
       "tipo_w3_vgizq": "CJP",
-      "t_w3_vgizq": {
-        "value": 8.0,
+      "w_w3_vgizq": {
+        "value": 10.9,
         "unit": "mm"
       },
       "nl_w3_vgizq": 2,
@@ -120,11 +120,11 @@
         "unit": "MPa"
       },
       "tipo_w4_vgizq": "CJP",
-      "t_w4_vgizq": {
-        "value": 8.0,
+      "w_w4_vgizq": {
+        "value": 17.4,
         "unit": "mm"
       },
-      "t_w4.1_vgizq": {
+      "w_w4.1_vgizq": {
         "value": 8.0,
         "unit": "mm"
       },

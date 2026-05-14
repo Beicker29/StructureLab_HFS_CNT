@@ -750,6 +750,8 @@ def _normalize_moment_geometry_payload(payload: dict[str, Any]) -> dict[str, Any
                     weld_3,
                     (
                         "end_plate_beam_web_weld_thickness_twe",
+                        "w_w3_vgder",
+                        "w_w3_vgizq",
                         "twe",
                         "thickness",
                         "size",
@@ -782,12 +784,18 @@ def _normalize_moment_geometry_payload(payload: dict[str, Any]) -> dict[str, Any
                 for key in (
                     "tipo_w4_vgder",
                     "tipo_w4_vgizq",
+                    "w_w4_vgder",
+                    "w_w4_vgizq",
                     "t_w4_vgder",
                     "t_w4_vgizq",
                     "nl_w4_vgder",
                     "nl_w4_vgizq",
                     "t_w4_1_vgder",
                     "t_w4_1_vgizq",
+                    "w_w4_1_vgder",
+                    "w_w4_1_vgizq",
+                    "w_w4.1_vgder",
+                    "w_w4.1_vgizq",
                     "t_w4.1_vgder",
                     "t_w4.1_vgizq",
                     "kds_w4_vgder",
@@ -821,12 +829,12 @@ def _normalize_moment_geometry_payload(payload: dict[str, Any]) -> dict[str, Any
                 _assign_from_aliases(
                     "t_w4_vgder",
                     weld_4,
-                    ("t_w4_vgder", "thickness_vgder", "thickness", "size", "w"),
+                    ("w_w4_vgder", "t_w4_vgder", "thickness_vgder", "thickness", "size", "w"),
                 )
                 _assign_from_aliases(
                     "t_w4_vgizq",
                     weld_4,
-                    ("t_w4_vgizq", "thickness_vgizq", "thickness", "size", "w"),
+                    ("w_w4_vgizq", "t_w4_vgizq", "thickness_vgizq", "thickness", "size", "w"),
                 )
                 _assign_from_aliases(
                     "nl_w4_vgder",
@@ -841,12 +849,26 @@ def _normalize_moment_geometry_payload(payload: dict[str, Any]) -> dict[str, Any
                 _assign_from_aliases(
                     "t_w4_1_vgder",
                     weld_4,
-                    ("t_w4_1_vgder", "t_w4.1_vgder", "backing_thickness_vgder", "backing_thickness"),
+                    (
+                        "w_w4_1_vgder",
+                        "w_w4.1_vgder",
+                        "t_w4_1_vgder",
+                        "t_w4.1_vgder",
+                        "backing_thickness_vgder",
+                        "backing_thickness",
+                    ),
                 )
                 _assign_from_aliases(
                     "t_w4_1_vgizq",
                     weld_4,
-                    ("t_w4_1_vgizq", "t_w4.1_vgizq", "backing_thickness_vgizq", "backing_thickness"),
+                    (
+                        "w_w4_1_vgizq",
+                        "w_w4.1_vgizq",
+                        "t_w4_1_vgizq",
+                        "t_w4.1_vgizq",
+                        "backing_thickness_vgizq",
+                        "backing_thickness",
+                    ),
                 )
                 _assign_from_aliases("kds_w4_vgder", weld_4, ("kds_w4_vgder",))
                 _assign_from_aliases("kds_w4_vgizq", weld_4, ("kds_w4_vgizq",))
@@ -2609,7 +2631,13 @@ def _normalize_moment_split_side_payload(raw_payload: dict[str, Any], *, side: s
         {
             "description": _first_present(weld_3_raw, "description"),
             "weld_type": _first_present(weld_3_raw, f"tipo_w3_{side_tag}", "weld_type"),
-            "thickness": _first_present(weld_3_raw, f"t_w3_{side_tag}", "thickness"),
+            "thickness": _first_present(
+                weld_3_raw,
+                f"w_w3_{side_tag}",
+                f"t_w3_{side_tag}",
+                "size",
+                "thickness",
+            ),
             "nl": _first_present(weld_3_raw, f"nl_w3_{side_tag}", "nl"),
             f"kds_w3_{side_tag}": _first_present(weld_3_raw, f"kds_w3_{side_tag}", "kds"),
         }
@@ -2620,10 +2648,18 @@ def _normalize_moment_split_side_payload(raw_payload: dict[str, Any], *, side: s
         {
             "description": _first_present(weld_4_raw, "description"),
             "weld_type": _first_present(weld_4_raw, f"tipo_w4_{side_tag}", "weld_type"),
-            "thickness": _first_present(weld_4_raw, f"t_w4_{side_tag}", "thickness"),
+            "thickness": _first_present(
+                weld_4_raw,
+                f"w_w4_{side_tag}",
+                f"t_w4_{side_tag}",
+                "size",
+                "thickness",
+            ),
             "nl": _first_present(weld_4_raw, f"nl_w4_{side_tag}", "nl"),
             "backing_thickness": _first_present(
                 weld_4_raw,
+                f"w_w4_1_{side_tag}",
+                f"w_w4.1_{side_tag}",
                 f"t_w4_1_{side_tag}",
                 f"t_w4.1_{side_tag}",
                 "backing_thickness",
@@ -3473,6 +3509,10 @@ def _compose_moment_prequalified_split_payload(
             merged_geometry[f"pb_{side_tag}"] = end_plate_group.get("pb")
             merged_geometry[f"pfo_{side_tag}"] = end_plate_group.get("pfo")
             merged_geometry[f"pfi_{side_tag}"] = end_plate_group.get("pfi")
+            merged_geometry[f"cond_pe_{side_tag}"] = end_plate_group.get(f"cond_pe_{side_tag}") or end_plate_group.get("cond_pe")
+            merged_geometry[f"cond_amb_pe_{side_tag}"] = (
+                end_plate_group.get(f"cond_amb_pe_{side_tag}") or end_plate_group.get("cond_amb_pe")
+            )
         if bolt_group:
             merged_geometry[f"bolt_gage_{side_tag}"] = bolt_group.get("bolt_gage")
             merged_geometry[f"bolt_tightening_type_{side_tag}"] = (

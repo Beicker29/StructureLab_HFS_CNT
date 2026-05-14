@@ -2770,6 +2770,42 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
     pb = pb_der
     bolt_tightening_type = _get_geometry_by_side("bolt_tightening_type", "der")
     bolt_fabrication_standard = _get_material_by_side("bolt_fabrication_standard", "der")
+    bolt_fabrication_standard_der = _get_material_by_side("bolt_fabrication_standard", "der")
+    bolt_fabrication_standard_izq = _get_material_by_side("bolt_fabrication_standard", "izq")
+    bolt_shape_der = _get_material_by_side("bolt_shape", "der")
+    bolt_shape_izq = _get_material_by_side("bolt_shape", "izq")
+    bolt_description_der = _get_material_by_side("bolt_description", "der")
+    bolt_description_izq = _get_material_by_side("bolt_description", "izq")
+    end_plate_steel_type = case.materials.plate_steel_type
+    continuity_plate_steel_type = (
+        case.materials.continuity_plate_steel_type
+        or case.materials.plate_steel_type
+    )
+    doubler_plate_steel_type = (
+        case.materials.doubler_plate_steel_type
+        or case.materials.plate_steel_type
+    )
+    stiffener_steel_type_der = (
+        case.materials.stiffener_steel_type_vgder
+        or case.materials.plate_steel_type
+    )
+    stiffener_steel_type_izq = (
+        case.materials.stiffener_steel_type_vgizq
+        or case.materials.plate_steel_type
+    )
+
+    def _quantity_dump_or_none(value: object) -> dict[str, object] | None:
+        return value.model_dump() if isinstance(value, Quantity) else None
+
+    def _plate_strength_dump(steel_type: str | None, key: str) -> dict[str, object] | None:
+        if not steel_type:
+            return None
+        try:
+            props = get_plate_steel_properties(steel_type=steel_type, unit_system=case.units_system)
+        except Exception:
+            return None
+        return _quantity_dump_or_none(props.get(key))
+
     continuity_plate_enabled_raw = case.geometry.continuity_plate_enabled
     if continuity_plate_enabled_raw is None:
         continuity_plate_enabled = any(
@@ -4929,6 +4965,12 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
             return value
         return math.ceil(value / step) * step
 
+    def _round_down_to_multiple_5mm(value: float, unit: str) -> float:
+        step = _mm_to_unit_value(5.0, unit)
+        if step <= 0.0:
+            return value
+        return math.floor(value / step) * step
+
     l2_pc_col_q: Quantity | None = None
     b2_pc_col_q: Quantity | None = None
     if (
@@ -4941,13 +4983,19 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
             unit=kdet_for_pc.unit,
         )
         l1_pc_col_q = Quantity(
-            value=column_profile["d"].value
-            - 2.0 * tfdet_for_pc.value
-            - _mm_to_unit_value(3.0, column_profile["d"].unit),
+            value=_round_down_to_multiple_5mm(
+                column_profile["d"].value
+                - 2.0 * tfdet_for_pc.value
+                - _mm_to_unit_value(3.0, column_profile["d"].unit),
+                column_profile["d"].unit,
+            ),
             unit=column_profile["d"].unit,
         )
         l2_pc_col_q = Quantity(
-            value=l1_pc_col_q.value - 2.0 * clip1_pc_col_q.value,
+            value=_round_down_to_multiple_5mm(
+                l1_pc_col_q.value - 2.0 * clip1_pc_col_q.value,
+                l1_pc_col_q.unit,
+            ),
             unit=l1_pc_col_q.unit,
         )
     if (
@@ -7345,6 +7393,63 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
         calculation_memory=CalculationMemory(
             inputs={
                 "bolt_diameter": db.model_dump(),
+                "shape_b_vgder": bolt_shape_der,
+                "shape_b_vgizq": bolt_shape_izq,
+                "desc_b_vgder": bolt_description_der,
+                "desc_b_vgizq": bolt_description_izq,
+                "fy_vgder": _quantity_dump_or_none(case.materials.beam_fy),
+                "fu_vgder": _quantity_dump_or_none(case.materials.beam_fu),
+                "fy_vgizq": _quantity_dump_or_none(case.materials.beam_fy),
+                "fu_vgizq": _quantity_dump_or_none(case.materials.beam_fu),
+                "E_vgder": _quantity_dump_or_none(case.materials.elastic_modulus),
+                "E_vgizq": _quantity_dump_or_none(case.materials.elastic_modulus),
+                "Pu_vgder": _quantity_dump_or_none(case.loads.pu_viga_right),
+                "Pu_vgizq": _quantity_dump_or_none(case.loads.pu_viga_left),
+                "Vu2_vgder": _quantity_dump_or_none(case.loads.Vu2_vgder),
+                "Vu2_vgizq": _quantity_dump_or_none(case.loads.Vu2_vgizq),
+                "Mu3_vgder": _quantity_dump_or_none(case.loads.Mu3_vgder),
+                "Mu3_vgizq": _quantity_dump_or_none(case.loads.Mu3_vgizq),
+                "Vg_vgder": _quantity_dump_or_none(case.loads.beam_right_vgravity),
+                "Vg_vgizq": _quantity_dump_or_none(case.loads.beam_left_vgravity),
+                "std_b_vgder": bolt_fabrication_standard_der,
+                "std_b_vgizq": bolt_fabrication_standard_izq,
+                "std_v_vgder": bolt_fabrication_standard_der,
+                "std_v_vgizq": bolt_fabrication_standard_izq,
+                "fy_col": _quantity_dump_or_none(case.materials.column_fy),
+                "fu_col": _quantity_dump_or_none(case.materials.column_fu),
+                "E_col": _quantity_dump_or_none(case.materials.elastic_modulus),
+                "Pu_col": _quantity_dump_or_none(case.loads.pu_columna),
+                "cond_col": case.geometry.cond_col,
+                "cond_amb_col": case.geometry.cond_amb_col,
+                "consideracion_deformacion_inelastica_zona_panel": case.geometry.panel_zone_inelastic_deformation_considered,
+                "union_col_losa": case.geometry.column_slab_connection_condition,
+                "demanda_ductilidad_col": case.design_factors.member_ductility_demand_column,
+                "tipo_acero_pe_vgder": end_plate_steel_type,
+                "tipo_acero_pe_vgizq": end_plate_steel_type,
+                "cond_pe_vgder": case.geometry.cond_pe_vgder,
+                "cond_pe_vgizq": case.geometry.cond_pe_vgizq,
+                "cond_amb_pe_vgder": case.geometry.cond_amb_pe_vgder,
+                "cond_amb_pe_vgizq": case.geometry.cond_amb_pe_vgizq,
+                "fy_pe_vgder": _quantity_dump_or_none(case.materials.end_plate_fy),
+                "fu_pe_vgder": _quantity_dump_or_none(case.materials.end_plate_fu),
+                "fy_pe_vgizq": _quantity_dump_or_none(case.materials.end_plate_fy),
+                "fu_pe_vgizq": _quantity_dump_or_none(case.materials.end_plate_fu),
+                "fy_pc_col": _plate_strength_dump(continuity_plate_steel_type, "fy"),
+                "fu_pc_col": _plate_strength_dump(continuity_plate_steel_type, "fu"),
+                "fy_dp_col": _plate_strength_dump(doubler_plate_steel_type, "fy"),
+                "fu_dp_col": _plate_strength_dump(doubler_plate_steel_type, "fu"),
+                "tipo_acero_pest_vgder": stiffener_steel_type_der,
+                "fy_pest_vgder": _quantity_dump_or_none(
+                    case.materials.stiffener_fy_vgder
+                    or case.materials.stiffener_fy
+                ),
+                "fu_pest_vgder": _plate_strength_dump(stiffener_steel_type_der, "fu"),
+                "tipo_acero_pest_vgizq": stiffener_steel_type_izq,
+                "fy_pest_vgizq": _quantity_dump_or_none(
+                    case.materials.stiffener_fy_vgizq
+                    or case.materials.stiffener_fy
+                ),
+                "fu_pest_vgizq": _plate_strength_dump(stiffener_steel_type_izq, "fu"),
                 "beam_flange_width_bf": bf.model_dump(),
                 "column_flange_width_bcf": bcf.model_dump(),
                 "column_depth_d_col": column_profile["d"].model_dump(),
@@ -7358,10 +7463,7 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
                 ),
                 "n_pc_col": case.geometry.continuity_plate_count,
                 "usar_pc_col": case.geometry.continuity_plate_enabled,
-                "tipo_acero_pc_col": (
-                    case.materials.continuity_plate_steel_type
-                    or case.materials.plate_steel_type
-                ),
+                "tipo_acero_pc_col": continuity_plate_steel_type,
                 "kdet_col": (
                     (column_profile.get("kdet") or column_profile.get("kdes")).model_dump()
                     if (column_profile.get("kdet") or column_profile.get("kdes")) is not None
@@ -7442,7 +7544,7 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
                 "L_w9_col": l_w9_col_computed.model_dump() if l_w9_col_computed is not None else None,
                 "gap_dp_col": gap_dp_col.model_dump() if gap_dp_col is not None else None,
                 "estado_contacto_dp_col": weld8_contact_state_col,
-                "tipo_acero_dp_col": case.materials.doubler_plate_steel_type,
+                "tipo_acero_dp_col": doubler_plate_steel_type,
                 "tipo_w7_col": case.geometry.doubler_plate_web_plug_weld_type,
                 "Fexx_w7_col": weld_fexx.model_dump(),
                 "w_w7_col": (
@@ -7590,6 +7692,44 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
                 ),
                 "kds_w2_vgder": case.geometry.kds_w2_vgder,
                 "kds_w2_vgizq": case.geometry.kds_w2_vgizq,
+                "w_w3_vgder": (
+                    case.geometry.end_plate_beam_web_weld_thickness_twe_vgder.model_dump()
+                    if case.geometry.end_plate_beam_web_weld_thickness_twe_vgder is not None
+                    else (
+                        case.geometry.end_plate_beam_web_weld_thickness_twe.model_dump()
+                        if case.geometry.end_plate_beam_web_weld_thickness_twe is not None
+                        else None
+                    )
+                ),
+                "w_w3_vgizq": (
+                    case.geometry.end_plate_beam_web_weld_thickness_twe_vgizq.model_dump()
+                    if case.geometry.end_plate_beam_web_weld_thickness_twe_vgizq is not None
+                    else (
+                        case.geometry.end_plate_beam_web_weld_thickness_twe.model_dump()
+                        if case.geometry.end_plate_beam_web_weld_thickness_twe is not None
+                        else None
+                    )
+                ),
+                "w_w4_vgder": (
+                    case.geometry.t_w4_vgder.model_dump()
+                    if case.geometry.t_w4_vgder is not None
+                    else None
+                ),
+                "w_w4_vgizq": (
+                    case.geometry.t_w4_vgizq.model_dump()
+                    if case.geometry.t_w4_vgizq is not None
+                    else None
+                ),
+                "w_w4.1_vgder": (
+                    case.geometry.t_w4_1_vgder.model_dump()
+                    if case.geometry.t_w4_1_vgder is not None
+                    else None
+                ),
+                "w_w4.1_vgizq": (
+                    case.geometry.t_w4_1_vgizq.model_dump()
+                    if case.geometry.t_w4_1_vgizq is not None
+                    else None
+                ),
                 "bolt_tightening_type": bolt_tightening_type,
                 "bolt_fabrication_standard": bolt_fabrication_standard,
                 "end_plate_width_bp": bp.model_dump(),

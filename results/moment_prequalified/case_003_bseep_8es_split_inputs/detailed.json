@@ -21,6 +21,147 @@
             "value": 25.4,
             "unit": "mm"
           },
+          "shape_b_vgder": "P1\"X1-3/4\"",
+          "shape_b_vgizq": "P1\"X1-3/4\"",
+          "desc_b_vgder": "Grupo 150",
+          "desc_b_vgizq": "Grupo 150",
+          "fy_vgder": {
+            "value": 345.0,
+            "unit": "MPa"
+          },
+          "fu_vgder": {
+            "value": 450.0,
+            "unit": "MPa"
+          },
+          "fy_vgizq": {
+            "value": 345.0,
+            "unit": "MPa"
+          },
+          "fu_vgizq": {
+            "value": 450.0,
+            "unit": "MPa"
+          },
+          "E_vgder": {
+            "value": 200000.0,
+            "unit": "MPa"
+          },
+          "E_vgizq": {
+            "value": 200000.0,
+            "unit": "MPa"
+          },
+          "Pu_vgder": {
+            "value": 0.0,
+            "unit": "kN"
+          },
+          "Pu_vgizq": {
+            "value": 0.0,
+            "unit": "kN"
+          },
+          "Vu2_vgder": {
+            "value": 164.99,
+            "unit": "kN"
+          },
+          "Vu2_vgizq": {
+            "value": 169.922,
+            "unit": "kN"
+          },
+          "Mu3_vgder": {
+            "value": 382.5,
+            "unit": "kN-m"
+          },
+          "Mu3_vgizq": {
+            "value": 392.52,
+            "unit": "kN-m"
+          },
+          "Vg_vgder": {
+            "value": 96.64,
+            "unit": "kN"
+          },
+          "Vg_vgizq": {
+            "value": 98.2,
+            "unit": "kN"
+          },
+          "std_b_vgder": "ASTM A490",
+          "std_b_vgizq": "ASTM A490",
+          "std_v_vgder": "ASTM A490",
+          "std_v_vgizq": "ASTM A490",
+          "fy_col": {
+            "value": 345.0,
+            "unit": "MPa"
+          },
+          "fu_col": {
+            "value": 450.0,
+            "unit": "MPa"
+          },
+          "E_col": {
+            "value": 200000.0,
+            "unit": "MPa"
+          },
+          "Pu_col": {
+            "value": 1101.0463,
+            "unit": "kN"
+          },
+          "cond_col": "painted",
+          "cond_amb_col": "non_corrosive",
+          "consideracion_deformacion_inelastica_zona_panel": false,
+          "union_col_losa": "isolated",
+          "demanda_ductilidad_col": "high",
+          "tipo_acero_pe_vgder": "ASTM A572 Gr 50",
+          "tipo_acero_pe_vgizq": "ASTM A572 Gr 50",
+          "cond_pe_vgder": "painted",
+          "cond_pe_vgizq": "painted",
+          "cond_amb_pe_vgder": "non_corrosive",
+          "cond_amb_pe_vgizq": "non_corrosive",
+          "fy_pe_vgder": {
+            "value": 345.0,
+            "unit": "MPa"
+          },
+          "fu_pe_vgder": {
+            "value": 450.0,
+            "unit": "MPa"
+          },
+          "fy_pe_vgizq": {
+            "value": 345.0,
+            "unit": "MPa"
+          },
+          "fu_pe_vgizq": {
+            "value": 450.0,
+            "unit": "MPa"
+          },
+          "fy_pc_col": {
+            "value": 345.0,
+            "unit": "MPa"
+          },
+          "fu_pc_col": {
+            "value": 450.0,
+            "unit": "MPa"
+          },
+          "fy_dp_col": {
+            "value": 345.0,
+            "unit": "MPa"
+          },
+          "fu_dp_col": {
+            "value": 450.0,
+            "unit": "MPa"
+          },
+          "tipo_acero_pest_vgder": "ASTM A572 Gr 50",
+          "fy_pest_vgder": {
+            "value": 345.0,
+            "unit": "MPa"
+          },
+          "fu_pest_vgder": {
+            "value": 450.0,
+            "unit": "MPa"
+          },
+          "tipo_acero_pest_vgizq": "ASTM A572 Gr 50",
+          "fy_pest_vgizq": {
+            "value": 345.0,
+            "unit": "MPa"
+          },
+          "fu_pest_vgizq": {
+            "value": 450.0,
+            "unit": "MPa"
+          },
           "beam_flange_width_bf": {
             "value": 210.0,
             "unit": "mm"
@@ -69,7 +210,7 @@
             "unit": "mm"
           },
           "L2_pc_col": {
-            "value": 311.0,
+            "value": 310.0,
             "unit": "mm"
           },
           "L_w5_col": {
@@ -89,14 +230,14 @@
             "unit": "MPa"
           },
           "w_w5_col": {
-            "value": 12.7,
+            "value": 16.0,
             "unit": "mm"
           },
           "t_w5_col": {
-            "value": 12.7,
+            "value": 16.0,
             "unit": "mm"
           },
-          "nl_w5_col": 2,
+          "nl_w5_col": 1,
           "L_gap_w5_col": {
             "value": 12.7,
             "unit": "mm"
@@ -108,14 +249,14 @@
           },
           "tipo_w6_col": "CJP",
           "w_w6_col": {
-            "value": 12.0,
+            "value": 16.0,
             "unit": "mm"
           },
           "t_w6_col": {
-            "value": 12.0,
+            "value": 16.0,
             "unit": "mm"
           },
-          "nl_w6_col": 2,
+          "nl_w6_col": 1,
           "L_gap_w6_col": {
             "value": 25.0,
             "unit": "mm"
@@ -127,11 +268,11 @@
           },
           "tipo_w8_col": "PJP",
           "w_w8_col": {
-            "value": 8.0,
+            "value": 12.0,
             "unit": "mm"
           },
           "t_w8_col": {
-            "value": 8.0,
+            "value": 12.0,
             "unit": "mm"
           },
           "nl_w8_col": 1,
@@ -152,16 +293,16 @@
           "use_weld_9_col": false,
           "tipo_w9_col": "fillet",
           "w_w9_col": {
-            "value": 8.0,
+            "value": 0.0,
             "unit": "mm"
           },
           "t_w9_col": {
-            "value": 8.0,
+            "value": 0.0,
             "unit": "mm"
           },
-          "nl_w9_col": 2,
+          "nl_w9_col": 0,
           "L_gap_w9_col": {
-            "value": 50.0,
+            "value": 0.0,
             "unit": "mm"
           },
           "kds_w9_col": 1.0,
@@ -219,7 +360,7 @@
             "unit": "MPa"
           },
           "end_plate_beam_web_weld_thickness_twe": {
-            "value": 8.0,
+            "value": 10.9,
             "unit": "mm"
           },
           "end_plate_beam_web_weld_lines_nl": 2,
@@ -242,11 +383,11 @@
           "tipo_w1_vgder": "CJP",
           "tipo_w1_vgizq": "CJP",
           "w_w1_vgder": {
-            "value": 0.0,
+            "value": 16.0,
             "unit": "mm"
           },
           "w_w1_vgizq": {
-            "value": 0.0,
+            "value": 16.0,
             "unit": "mm"
           },
           "nl_w1_vgder": 1,
@@ -256,17 +397,41 @@
           "tipo_w2_vgder": "CJP",
           "tipo_w2_vgizq": "CJP",
           "w_w2_vgder": {
-            "value": 0.0,
+            "value": 16.0,
             "unit": "mm"
           },
           "w_w2_vgizq": {
-            "value": 0.0,
+            "value": 16.0,
             "unit": "mm"
           },
           "nl_w2_vgder": 1,
           "nl_w2_vgizq": 1,
           "kds_w2_vgder": 1.0,
           "kds_w2_vgizq": 1.0,
+          "w_w3_vgder": {
+            "value": 10.9,
+            "unit": "mm"
+          },
+          "w_w3_vgizq": {
+            "value": 10.9,
+            "unit": "mm"
+          },
+          "w_w4_vgder": {
+            "value": 17.4,
+            "unit": "mm"
+          },
+          "w_w4_vgizq": {
+            "value": 17.4,
+            "unit": "mm"
+          },
+          "w_w4.1_vgder": {
+            "value": 8.0,
+            "unit": "mm"
+          },
+          "w_w4.1_vgizq": {
+            "value": 8.0,
+            "unit": "mm"
+          },
           "bolt_tightening_type": "pretensioned",
           "bolt_fabrication_standard": "ASTM A490",
           "end_plate_width_bp": {
@@ -520,7 +685,7 @@
           },
           "L_w5_col_formula": "L_w5_col = b2_pc_col - 2*(L_gap_w5_col)",
           "L_w6_col": {
-            "value": 261.0,
+            "value": 260.0,
             "unit": "mm"
           },
           "L_w6_col_formula": "L_w6_col = L2_pc_col - 2*(L_gap_w6_col)",
@@ -2065,7 +2230,7 @@
                 "unit": "mm"
               },
               "weld_size": {
-                "value": 12.7,
+                "value": 16.0,
                 "unit": "mm"
               },
               "required_weld_size": {
@@ -4462,7 +4627,7 @@
                 "unit": "mm"
               },
               "weld_size": {
-                "value": 12.7,
+                "value": 16.0,
                 "unit": "mm"
               },
               "required_weld_size": {
@@ -7930,7 +8095,7 @@
             "unit": "MPa"
           },
           "t_w4_vgizq": {
-            "value": 8.0,
+            "value": 17.4,
             "unit": "mm"
           },
           "nl_w4_vgizq": 2,
@@ -8133,7 +8298,7 @@
             "unit": "MPa"
           },
           "t_w4_vgder": {
-            "value": 8.0,
+            "value": 17.4,
             "unit": "mm"
           },
           "nl_w4_vgder": 2,

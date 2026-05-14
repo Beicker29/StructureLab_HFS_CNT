@@ -5634,6 +5634,7 @@ def _render_fully_restrained_splice_outline(
                 "si n_blt_web_x <= 1 -> U_web_v3_vg = T_vg*tw_vg/A_vg; "
                 "si n_blt_web_x > 1 -> U_web_v3_vg = 1 - 0.5*tw_vg/((n_blt_web_x - 1)*g_blt_web); "
                 "si n_blt_flange_x <= 1 -> U_flange_v3_vg = 2*bf_vg*tw_vg/A_vg; "
+                "xt_flange_vg = d_vg*0.5 - z_vg/A_vg; "
                 "si n_blt_flange_x > 1 -> U_flange_v3_vg = 1 - xt_flange_vg/((n_blt_flange_x - 1)*p_plt_flange); "
                 "Subcaso 2.1: si 0.75 < alpha_Pu_web <= 1 -> U_v3_vg = U_web_v3_vg; "
                 "Subcaso 2.2: si 0.25 < alpha_Pu_web <= 0.75 -> U_v3_vg = max(U_web_v3_vg, U_flange_v3_vg); "
@@ -5658,7 +5659,10 @@ def _render_fully_restrained_splice_outline(
             f"- n_blt_flange_x: `{_format_text(tension_rupture_v3_note.get('n_blt_flange_x'))}`",
             f"- p_plt_flange: `{_format_quantity(tension_rupture_v3_note.get('p_plt_flange'))}`",
             f"- bf_vg: `{_format_quantity(tension_rupture_v3_note.get('bf_vg'))}`",
+            f"- z_vg: `{_format_quantity(tension_rupture_v3_note.get('z_vg'))}`",
+            f"- xt_flange_vg_ref: `{_format_quantity(tension_rupture_v3_note.get('xt_flange_vg_ref'))}`",
             f"- xt_flange_vg: `{_format_quantity(tension_rupture_v3_note.get('xt_flange_vg'))}`",
+            f"- delta_xt_flange_vg: `{_format_quantity(tension_rupture_v3_note.get('delta_xt_flange_vg'))}`",
             f"- U_web_v3_vg: `{_format_text(tension_rupture_v3_note.get('u_web_v3_vg'))}`",
             f"- U_flange_v3_vg: `{_format_text(tension_rupture_v3_note.get('u_flange_v3_vg'))}`",
             f"- Caso U_v3_vg: `{_format_text(tension_rupture_v3_note.get('u_v3_vg_case'))}`",
@@ -6934,15 +6938,44 @@ def _ordered_scopes_from_rows(rows: list[dict]) -> list[str]:
     return sorted(scope_order, key=_scope_sort_key)
 
 
+def _render_moment_scope_heading(chapter_number: int, section_offset: int, scope: str) -> str:
+    if chapter_number in {1, 2}:
+        scope_titles = {
+            "CONTINUITY_PLATE_COL": "platinas de continuidad de columna",
+            "DOUBLER_PLATE_COL": "platina de enchape del alma de columna",
+            "BEAM_IZQ": "viga ubicada a la izquierda de la columna",
+            "BEAM_DER": "viga ubicada a la derecha de la columna",
+            "END_PLATE_IZQ": "platina extrema de la viga izquierda",
+            "END_PLATE_DER": "platina extrema de la viga derecha",
+            "COLUMN": "columna",
+            "END_PLATE_STIFFENER_DER": "rigidizador de platina extrema derecha",
+            "END_PLATE_STIFFENER_IZQ": "rigidizador de platina extrema izquierda",
+            "BOLTS_DER": "grupo de pernos de la viga derecha",
+            "BOLTS_IZQ": "grupo de pernos de la viga izquierda",
+            "WELD_1_VGDER": "soldadura #1 del rigidizador de platina extrema derecha",
+            "WELD_1_VGIZQ": "soldadura #1 del rigidizador de platina extrema izquierda",
+            "WELD_2_VGDER": "soldadura #2 entre viga derecha y rigidizador",
+            "WELD_2_VGIZQ": "soldadura #2 entre viga izquierda y rigidizador",
+            "WELD_3_VGDER": "soldadura #3 entre alma de viga derecha y platina extrema",
+            "WELD_3_VGIZQ": "soldadura #3 entre alma de viga izquierda y platina extrema",
+            "WELD_4_VGDER": "soldadura #4 entre ala de viga derecha y platina extrema",
+            "WELD_4_VGIZQ": "soldadura #4 entre ala de viga izquierda y platina extrema",
+            "WELD_5_COL": "soldadura #5 de platina de continuidad contra ala de columna",
+            "WELD_6_COL": "soldadura #6 de platina de continuidad contra alma de columna",
+            "WELD_7_COL": "soldaduras de tapón de platina de enchape",
+            "WELD_8_COL": "soldadura #8 de platina de enchape contra ala de columna",
+            "WELD_9_COL": "soldadura #9 de platina de enchape contra alma de columna",
+        }
+        title = scope_titles.get(scope)
+        if title is not None:
+            return f"### {chapter_number}.{section_offset} Ámbito: {title} (`{scope}`)"
+    return f"### {chapter_number}.{section_offset} Ámbito `{scope}`"
+
+
 def _render_scope_subtitles_only(*, chapter_number: int, scopes: list[str]) -> str:
     lines: list[str] = []
     for section_offset, scope in enumerate(scopes, start=1):
-        if chapter_number == 1 and scope == "CONTINUITY_PLATE_COL":
-            lines.append(f"### {chapter_number}.{section_offset} platinas de continuidad")
-        elif chapter_number == 1 and scope == "DOUBLER_PLATE_COL":
-            lines.append(f"### {chapter_number}.{section_offset} platina de enchape del alma")
-        else:
-            lines.append(f"### {chapter_number}.{section_offset} ÃƒÂmbito `{scope}`")
+        lines.append(_render_moment_scope_heading(chapter_number, section_offset, scope))
         lines.append("")
     return "\n".join(lines)
 
@@ -6980,14 +7013,10 @@ def _render_step_1_notes_by_scope_template(
     for row in (rows or []):
         rows_by_scope_symbol[(str(row.get("scope", "")).upper(), str(row.get("calculated_symbol", "")))] = row
 
+    visible_scopes = [scope for scope in scopes if grouped.get(scope)] if chapter_number == 2 else scopes
     lines: list[str] = []
-    for section_offset, scope in enumerate(scopes, start=1):
-        if chapter_number == 1 and scope == "CONTINUITY_PLATE_COL":
-            lines.append(f"### {chapter_number}.{section_offset} platinas de continuidad")
-        elif chapter_number == 1 and scope == "DOUBLER_PLATE_COL":
-            lines.append(f"### {chapter_number}.{section_offset} platina de enchape del alma")
-        else:
-            lines.append(f"### {chapter_number}.{section_offset} ÃƒÂmbito `{scope}`")
+    for section_offset, scope in enumerate(visible_scopes, start=1):
+        lines.append(_render_moment_scope_heading(chapter_number, section_offset, scope))
         lines.append("")
         if chapter_number == 1 and scope == "BEAM_IZQ":
             rows_map: dict[str, dict] = {}
@@ -6997,6 +7026,7 @@ def _render_step_1_notes_by_scope_template(
             step2_inputs = (step_2 or {}).get("inputs", {}) if isinstance(step_2, dict) else {}
             step3_inputs = (step_3 or {}).get("inputs", {}) if isinstance(step_3, dict) else {}
             step4_inputs = (step_4 or {}).get("inputs", {}) if isinstance(step_4, dict) else {}
+            step1_inputs = step_1_inputs if isinstance(step_1_inputs, dict) else {}
 
             perfil_vgizq = _format_text((rows_map.get("perfil_vgizq") or {}).get("calculated_text"))
             tipo_acero_perfil_vgizq = _format_text(
@@ -7004,6 +7034,14 @@ def _render_step_1_notes_by_scope_template(
                 or step2_inputs.get("beam_steel_type_vgizq")
                 or step2_inputs.get("beam_steel_type")
             )
+            fy_vgizq = _format_quantity(step1_inputs.get("fy_vgizq"))
+            fu_vgizq = _format_quantity(step1_inputs.get("fu_vgizq"))
+            e_vgizq = _format_quantity(step1_inputs.get("E_vgizq"))
+            std_v_vgizq = _format_text(step1_inputs.get("std_v_vgizq"))
+            pu_vgizq = _format_quantity(step1_inputs.get("Pu_vgizq"))
+            vu2_vgizq = _format_quantity(step1_inputs.get("Vu2_vgizq"))
+            mu3_vgizq = _format_quantity(step1_inputs.get("Mu3_vgizq"))
+            vg_vgizq = _format_quantity(step1_inputs.get("Vg_vgizq"))
             demanda_ductilidad_vgizq = _format_text(step2_inputs.get("member_ductility_demand_vgizq"))
             llb_vgizq = _format_quantity(step4_inputs.get("lh_izq"))
             lnc_vgizq = _format_quantity((rows_map.get("Lnc_vgizq") or {}).get("calculated"))
@@ -7014,14 +7052,31 @@ def _render_step_1_notes_by_scope_template(
                     lpz_vgizq = _format_quantity(note_item.get("protected_zone_length_vgizq"))
                     break
 
-            lines.append(f"#### {chapter_number}.{section_offset}.1 Resumen de geometria")
+            lines.append(f"#### {chapter_number}.{section_offset}.1 Resumen de geometría")
             lines.append("")
-            lines.append(f"- Perfil de viga izquierda (perfil_vgizq) (inp): `{perfil_vgizq}`")
-            lines.append(f"- Tipo de acero del perfil de viga izquierda (tipo_acero_perfil_vgizq) (inp): `{tipo_acero_perfil_vgizq}`")
-            lines.append(f"- Demanda de ductilidad de viga izquierda (demanda_ductilidad_vgizq) (inp): `{demanda_ductilidad_vgizq}`")
-            lines.append(f"- Luz libre de viga izquierda (Llb_vgizq) (inp): `{llb_vgizq}`")
+            lines.append(f"- Perfil (perfil_vgizq) (inp): `{perfil_vgizq}`")
+            lines.append("")
+            lines.append(f"#### {chapter_number}.{section_offset}.2 Material del perfil")
+            lines.append("")
+            lines.append(f"- Tipo de acero del perfil (tipo_acero_perfil_vgizq) (inp): `{tipo_acero_perfil_vgizq}`")
+            lines.append(f"- Esfuerzo de fluencia Fy (fy_vgizq): `{fy_vgizq}`")
+            lines.append(f"- Resistencia última Fu (fu_vgizq): `{fu_vgizq}`")
+            lines.append(f"- Módulo de elasticidad (E_vgizq) (inp): `{e_vgizq}`")
+            lines.append(f"- Norma asociada a pernos de la viga (std_v_vgizq) (inp): `{std_v_vgizq}`")
+            lines.append("")
+            lines.append(f"#### {chapter_number}.{section_offset}.3 Geometría del perfil")
+            lines.append("")
+            lines.append(f"- Luz libre (Llb_vgizq) (inp): `{llb_vgizq}`")
             lines.append(f"- Longitud sin conectores desde cara de columna (Lnc_vgizq) (inp): `{lnc_vgizq}`")
             lines.append(f"- Longitud de zona protegida (Lpz_vgizq): `{lpz_vgizq}`")
+            lines.append("")
+            lines.append(f"#### {chapter_number}.{section_offset}.4 Demandas y parámetros sísmicos")
+            lines.append("")
+            lines.append(f"- Demanda de ductilidad (demanda_ductilidad_vgizq) (inp): `{demanda_ductilidad_vgizq}`")
+            lines.append(f"- Carga axial (Pu_vgizq) (inp): `{pu_vgizq}`")
+            lines.append(f"- Cortante mayorado (Vu2_vgizq) (inp): `{vu2_vgizq}`")
+            lines.append(f"- Momento mayorado (Mu3_vgizq) (inp): `{mu3_vgizq}`")
+            lines.append(f"- Cortante gravitacional (Vg_vgizq) (inp): `{vg_vgizq}`")
             lines.append("")
             continue
         if chapter_number == 1 and scope == "BEAM_DER":
@@ -7031,6 +7086,7 @@ def _render_step_1_notes_by_scope_template(
                     rows_map[str(row.get("calculated_symbol", ""))] = row
             step2_inputs = (step_2 or {}).get("inputs", {}) if isinstance(step_2, dict) else {}
             step4_inputs = (step_4 or {}).get("inputs", {}) if isinstance(step_4, dict) else {}
+            step1_inputs = step_1_inputs if isinstance(step_1_inputs, dict) else {}
 
             perfil_vgder = _format_text((rows_map.get("perfil_vgder") or {}).get("calculated_text"))
             tipo_acero_perfil_vgder = _format_text(
@@ -7038,6 +7094,14 @@ def _render_step_1_notes_by_scope_template(
                 or step2_inputs.get("beam_steel_type_vgder")
                 or step2_inputs.get("beam_steel_type")
             )
+            fy_vgder = _format_quantity(step1_inputs.get("fy_vgder"))
+            fu_vgder = _format_quantity(step1_inputs.get("fu_vgder"))
+            e_vgder = _format_quantity(step1_inputs.get("E_vgder"))
+            std_v_vgder = _format_text(step1_inputs.get("std_v_vgder"))
+            pu_vgder = _format_quantity(step1_inputs.get("Pu_vgder"))
+            vu2_vgder = _format_quantity(step1_inputs.get("Vu2_vgder"))
+            mu3_vgder = _format_quantity(step1_inputs.get("Mu3_vgder"))
+            vg_vgder = _format_quantity(step1_inputs.get("Vg_vgder"))
             demanda_ductilidad_vgder = _format_text(step2_inputs.get("member_ductility_demand_vgder"))
             llb_vgder = _format_quantity(step4_inputs.get("lh_der"))
             lnc_vgder = _format_quantity((rows_map.get("Lnc_vgder") or {}).get("calculated"))
@@ -7048,14 +7112,31 @@ def _render_step_1_notes_by_scope_template(
                     lpz_vgder = _format_quantity(note_item.get("protected_zone_length_vgder"))
                     break
 
-            lines.append(f"#### {chapter_number}.{section_offset}.1 Resumen de geometria")
+            lines.append(f"#### {chapter_number}.{section_offset}.1 Resumen de geometría")
             lines.append("")
-            lines.append(f"- Perfil de viga derecha (perfil_vgder) (inp): `{perfil_vgder}`")
-            lines.append(f"- Tipo de acero del perfil de viga derecha (tipo_acero_perfil_vgder) (inp): `{tipo_acero_perfil_vgder}`")
-            lines.append(f"- Demanda de ductilidad de viga derecha (demanda_ductilidad_vgder) (inp): `{demanda_ductilidad_vgder}`")
-            lines.append(f"- Luz libre de viga derecha (Llb_vgder) (inp): `{llb_vgder}`")
+            lines.append(f"- Perfil (perfil_vgder) (inp): `{perfil_vgder}`")
+            lines.append("")
+            lines.append(f"#### {chapter_number}.{section_offset}.2 Material del perfil")
+            lines.append("")
+            lines.append(f"- Tipo de acero del perfil (tipo_acero_perfil_vgder) (inp): `{tipo_acero_perfil_vgder}`")
+            lines.append(f"- Esfuerzo de fluencia Fy (fy_vgder): `{fy_vgder}`")
+            lines.append(f"- Resistencia última Fu (fu_vgder): `{fu_vgder}`")
+            lines.append(f"- Módulo de elasticidad (E_vgder) (inp): `{e_vgder}`")
+            lines.append(f"- Norma asociada a pernos de la viga (std_v_vgder) (inp): `{std_v_vgder}`")
+            lines.append("")
+            lines.append(f"#### {chapter_number}.{section_offset}.3 Geometría del perfil")
+            lines.append("")
+            lines.append(f"- Luz libre (Llb_vgder) (inp): `{llb_vgder}`")
             lines.append(f"- Longitud sin conectores desde cara de columna (Lnc_vgder) (inp): `{lnc_vgder}`")
             lines.append(f"- Longitud de zona protegida (Lpz_vgder): `{lpz_vgder}`")
+            lines.append("")
+            lines.append(f"#### {chapter_number}.{section_offset}.4 Demandas y parámetros sísmicos")
+            lines.append("")
+            lines.append(f"- Demanda de ductilidad (demanda_ductilidad_vgder) (inp): `{demanda_ductilidad_vgder}`")
+            lines.append(f"- Carga axial (Pu_vgder) (inp): `{pu_vgder}`")
+            lines.append(f"- Cortante mayorado (Vu2_vgder) (inp): `{vu2_vgder}`")
+            lines.append(f"- Momento mayorado (Mu3_vgder) (inp): `{mu3_vgder}`")
+            lines.append(f"- Cortante gravitacional (Vg_vgder) (inp): `{vg_vgder}`")
             lines.append("")
             continue
         if chapter_number == 1 and scope == "COLUMN":
@@ -7075,6 +7156,15 @@ def _render_step_1_notes_by_scope_template(
                 step1_inputs.get("tipo_acero_perfil_col")
                 or step1_inputs.get("column_steel_type")
             )
+            fy_col = _format_quantity(step1_inputs.get("fy_col"))
+            fu_col = _format_quantity(step1_inputs.get("fu_col"))
+            e_col = _format_quantity(step1_inputs.get("E_col"))
+            cond_col = _format_text(step1_inputs.get("cond_col"))
+            cond_amb_col = _format_text(step1_inputs.get("cond_amb_col"))
+            pu_col = _format_quantity(step1_inputs.get("Pu_col"))
+            demanda_ductilidad_col = _format_text(step1_inputs.get("demanda_ductilidad_col"))
+            panel_zone_inelastic = _format_text(step1_inputs.get("consideracion_deformacion_inelastica_zona_panel"))
+            union_col_losa = _format_text(step1_inputs.get("union_col_losa"))
             d_col = _format_quantity((rows_map.get("d_col") or {}).get("calculated"))
             tw_col = _format_quantity((rows_map.get("tw_col") or {}).get("calculated"))
             st_col = _format_quantity((rows_map.get("St_col") or {}).get("calculated"))
@@ -7129,19 +7219,40 @@ def _render_step_1_notes_by_scope_template(
                     return None
                 return {"value": factors[0] * qa.value + factors[1] * qb.value + factors[2] * qc.value, "unit": qa.unit}
 
-            lines.append(f"#### {chapter_number}.{section_offset}.1 Resumen de geometria")
+            lines.append(f"#### {chapter_number}.{section_offset}.1 Perfil y material")
             lines.append("")
-            lines.append(f"- Perfil de columna (shape_col) (inp): `{shape_col}`")
-            lines.append(f"- Tipo de acero del perfil de columna (tipo_acero_perfil_col) (inp): `{tipo_acero_perfil_col}`")
-            lines.append(f"- Altura de columna (d_col) (inp): `{d_col}`")
-            lines.append(f"- Espesor de alma de columna (tw_col) (inp): `{tw_col}`")
-            lines.append(f"- Espesor de ala de columna (tf_col) (inp): `{_format_quantity(tf_col_q)}`")
-            lines.append(f"- Ancho de ala de columna (bf_col) (inp): `{_format_quantity(bf_col_q)}`")
-            lines.append(f"- Proyeccion de columna sobre vigas (St_col) (inp): `{st_col}`")
-            lines.append(f"- Distancia al punto de inflexion superior (ht_col) (inp): `{ht_col}`")
-            lines.append(f"- Distancia al punto de inflexion inferior (hb_col) (inp): `{hb_col}`")
+            lines.append(f"- Perfil (shape_col) (inp): `{shape_col}`")
+            lines.append(f"- Tipo de acero del perfil (tipo_acero_perfil_col) (inp): `{tipo_acero_perfil_col}`")
+            lines.append(f"- Esfuerzo de fluencia Fy (fy_col): `{fy_col}`")
+            lines.append(f"- Resistencia última Fu (fu_col): `{fu_col}`")
+            lines.append(f"- Módulo de elasticidad (E_col) (inp): `{e_col}`")
+            lines.append(f"- Condición superficial (cond_col) (inp): `{cond_col}`")
+            lines.append(f"- Condición ambiental (cond_amb_col) (inp): `{cond_amb_col}`")
+            lines.append("")
+            lines.append(f"#### {chapter_number}.{section_offset}.2 Geometría de la sección")
+            lines.append("")
+            lines.append(f"- Altura (d_col) (inp): `{d_col}`")
+            lines.append(f"- Espesor de alma (tw_col) (inp): `{tw_col}`")
+            lines.append(f"- Espesor de ala (tf_col) (inp): `{_format_quantity(tf_col_q)}`")
+            lines.append(f"- Ancho de ala (bf_col) (inp): `{_format_quantity(bf_col_q)}`")
+            lines.append(f"- Proyección sobre vigas (St_col) (inp): `{st_col}`")
+            lines.append("")
+            lines.append(f"#### {chapter_number}.{section_offset}.3 Puntos de inflexión")
+            lines.append("")
+            lines.append(f"- Distancia al punto de inflexión superior (ht_col) (inp): `{ht_col}`")
+            lines.append(f"- Distancia al punto de inflexión inferior (hb_col) (inp): `{hb_col}`")
+            lines.append("")
+            lines.append(f"#### {chapter_number}.{section_offset}.4 Demandas y parámetros de columna")
+            lines.append("")
+            lines.append(f"- Carga axial (Pu_col) (inp): `{pu_col}`")
+            lines.append(f"- Demanda de ductilidad (demanda_ductilidad_col) (inp): `{demanda_ductilidad_col}`")
+            lines.append(
+                "- Consideración de deformación inelástica en zona de panel "
+                f"(consideracion_deformacion_inelastica_zona_panel) (inp): `{panel_zone_inelastic}`"
+            )
+            lines.append(f"- Unión columna-losa (union_col_losa) (inp): `{union_col_losa}`")
             for side in ("izq", "der"):
-                side_label = "izquierda" if side == "izq" else "derecha"
+                side_label = "izquierdo" if side == "izq" else "derecho"
                 tag = _side_tag(side)
                 step731_inputs = (
                     ((step_7_3_1_by_side or {}).get(side) or {}).get("inputs", {})
@@ -7172,30 +7283,34 @@ def _render_step_1_notes_by_scope_template(
                 if bf_col is not None and g_col is not None and bf_col.unit == g_col.unit:
                     s_col_q = {"value": 0.5 * math.sqrt(bf_col.value * g_col.value), "unit": bf_col.unit}
 
-                lines.append(f"- gage horizontal de pernos en columna lado {side_label} (g_b_col_{tag}) (inp): `{_format_quantity(g_b_q)}`")
-                lines.append(f"- Distancia exterior ajustada lado {side_label} (pso_{tag}): `{_format_quantity(pso_q)}`")
-                lines.append(f"- Distancia interior ajustada lado {side_label} (psi_{tag}): `{_format_quantity(psi_q)}`")
-                lines.append(f"- Diametro de perforacion en columna lado {side_label} (dh_col_{tag}): `{_format_quantity(dh_q)}`")
-                lines.append(f"- Parametro C de columna lado {side_label} (C_col_{tag}): `{_format_quantity(c_col_q)}`")
-                lines.append(f"- Parametro s de columna lado {side_label} (s_col_{tag}): `{_format_quantity(s_col_q)}`")
+                side_section = 5 if side == "izq" else 6
+                lines.append("")
+                lines.append(f"#### {chapter_number}.{section_offset}.{side_section} Parámetros de conexión lado {side_label}")
+                lines.append("")
+                lines.append(f"- Gage horizontal de pernos (g_b_col_{tag}) (inp): `{_format_quantity(g_b_q)}`")
+                lines.append(f"- Distancia exterior ajustada (pso_{tag}): `{_format_quantity(pso_q)}`")
+                lines.append(f"- Distancia interior ajustada (psi_{tag}): `{_format_quantity(psi_q)}`")
+                lines.append(f"- Diámetro de perforación (dh_col_{tag}): `{_format_quantity(dh_q)}`")
+                lines.append(f"- Distancia entre Pso y Psi (C_col_{tag}): `{_format_quantity(c_col_q)}`")
+                lines.append(f"- Parámetro s (s_col_{tag}): `{_format_quantity(s_col_q)}`")
                 lines.append(
-                    f"- Distancia h1 de columna lado {side_label} (h1_col_{tag}): "
+                    f"- Distancia h1 (h1_col_{tag}): "
                     f"`{_format_quantity(step61_inputs.get(f'h1_pe_{tag}'))}`"
                 )
                 lines.append(
-                    f"- Distancia h2 de columna lado {side_label} (h2_col_{tag}): "
+                    f"- Distancia h2 (h2_col_{tag}): "
                     f"`{_format_quantity(step61_inputs.get(f'h2_pe_{tag}'))}`"
                 )
                 h3_val = step61_inputs.get(f"h3_pe_{tag}")
                 if h3_val is not None:
                     lines.append(
-                        f"- Distancia h3 de columna lado {side_label} (h3_col_{tag}): "
+                        f"- Distancia h3 (h3_col_{tag}): "
                         f"`{_format_quantity(h3_val)}`"
                     )
                 h4_val = step61_inputs.get(f"h4_pe_{tag}")
                 if h4_val is not None:
                     lines.append(
-                        f"- Distancia h4 de columna lado {side_label} (h4_col_{tag}): "
+                        f"- Distancia h4 (h4_col_{tag}): "
                         f"`{_format_quantity(h4_val)}`"
                     )
 
@@ -7233,15 +7348,18 @@ def _render_step_1_notes_by_scope_template(
                 if gap_value is not None:
                     l_w5_col_text = _format_quantity({"value": b2_q.value - 2.0 * gap_value, "unit": b2_q.unit})
 
-            lines.append(f"#### {chapter_number}.{section_offset}.1 Resumen de geometria")
+            lines.append(f"#### {chapter_number}.{section_offset}.1 Material y procedimiento")
             lines.append("")
-            lines.append(f"- Tipo de soldadura #5 de platina de continuidad (tipo_w5_col) (inp): `{tipo_w5_col}`")
-            lines.append(f"- Resistencia del electrodo de soldadura #5 (Fexx_w5_col) (inp): `{_format_quantity(fexx_w5_col_q)}`")
-            lines.append(f"- Espesor/size de soldadura #5 (w_w5_col) (inp): `{_format_quantity(t_w5_col_q)}`")
-            lines.append(f"- Numero de lineas de soldadura #5 (nl_w5_col) (inp): `{_format_text(nl_w5_col)}`")
-            lines.append(f"- Separacion de extremos de soldadura #5 (L_gap_w5_col) (inp): `{_format_quantity(l_gap_w5_col_q)}`")
-            lines.append(f"- Factor de direccion/sistema de soldadura #5 (kds_w5_col) (inp): `{_format_text(kds_w5_col)}`")
-            lines.append(f"- Longitud efectiva de soldadura #5 (L_w5_col): `{l_w5_col_text}`")
+            lines.append(f"- Tipo de soldadura (tipo_w5_col) (inp): `{tipo_w5_col}`")
+            lines.append(f"- Resistencia del electrodo (Fexx_w5_col) (inp): `{_format_quantity(fexx_w5_col_q)}`")
+            lines.append(f"- Factor de dirección/sistema (kds_w5_col) (inp): `{_format_text(kds_w5_col)}`")
+            lines.append("")
+            lines.append(f"#### {chapter_number}.{section_offset}.2 Geometría de soldadura")
+            lines.append("")
+            lines.append(f"- Tamaño de soldadura (w_w5_col) (inp): `{_format_quantity(t_w5_col_q)}`")
+            lines.append(f"- Número de líneas (nl_w5_col) (inp): `{_format_text(nl_w5_col)}`")
+            lines.append(f"- Separación de extremos (L_gap_w5_col) (inp): `{_format_quantity(l_gap_w5_col_q)}`")
+            lines.append(f"- Longitud efectiva (L_w5_col): `{l_w5_col_text}`")
             lines.append("")
             continue
         if chapter_number == 1 and scope == "CONTINUITY_PLATE_COL":
@@ -7288,9 +7406,25 @@ def _render_step_1_notes_by_scope_template(
                     return None
                 return {"value": factors[0] * qa.value + factors[1] * qb.value + factors[2] * qc.value, "unit": qa.unit}
 
+            def _round_down_to_multiple_5mm(q: dict | None) -> dict | None:
+                qq = _as_quantity(q)
+                if qq is None:
+                    return q
+                if qq.unit == "mm":
+                    step = 5.0
+                elif qq.unit == "in":
+                    step = 5.0 / 25.4
+                else:
+                    return q
+                return {"value": math.floor(qq.value / step) * step, "unit": qq.unit}
+
             clip1_pc_col_q = _qsum(kdet_col_q, tfdet_col_q, _const_like(kdet_col_q, 38.0), factors=(1.0, -1.0, 1.0))
-            l1_pc_col_q = _qsum(d_col_q, tfdet_col_q, _const_like(d_col_q, -3.0), factors=(1.0, -2.0, 1.0))
-            l2_pc_col_q = _qsum(l1_pc_col_q, clip1_pc_col_q, _const_like(l1_pc_col_q, 0.0), factors=(1.0, -2.0, 0.0))
+            l1_pc_col_q = _round_down_to_multiple_5mm(
+                _qsum(d_col_q, tfdet_col_q, _const_like(d_col_q, -3.0), factors=(1.0, -2.0, 1.0))
+            )
+            l2_pc_col_q = _round_down_to_multiple_5mm(
+                _qsum(l1_pc_col_q, clip1_pc_col_q, _const_like(l1_pc_col_q, 0.0), factors=(1.0, -2.0, 0.0))
+            )
             clip2_core_q = _qsum(k1_col_q, tw_col_q, _const_like(k1_col_q, 0.0), factors=(1.0, -1.0, 0.0))
             clip2_pc_col_q = _qsum(
                 clip2_core_q,
@@ -7334,47 +7468,67 @@ def _render_step_1_notes_by_scope_template(
                         b12_pc_col_q = {"value": b1_q.value + (tpc_q.value * 25.4), "unit": "mm"}
                 elif n_dp_int == 2:
                     b12_pc_col_q = {"value": b1_q.value, "unit": b1_q.unit}
-            lines.append(f"#### {chapter_number}.{section_offset}.1 Resumen de geometria")
+            lines.append(f"#### {chapter_number}.{section_offset}.1 Uso y material")
             lines.append("")
-            lines.append(f"- Uso de platinas de continuidad (usar_pc_col) (inp): `{_format_text(usar_pc_col)}`")
-            lines.append(f"- Tipo de acero de platina de continuidad (tipo_acero_pc_col) (inp): `{tipo_acero_pc_col}`")
-            lines.append(f"- Espesor de platina de continuidad (t_pc_col) (inp): `{_format_quantity(tpc_col_q)}`")
-            lines.append(f"- Ancho base de platina de continuidad (b1_pc_col) (inp): `{_format_quantity(b1_pc_col_q)}`")
-            lines.append(f"- Ancho b1.1 de platina de continuidad (b1.1_pc_col): `{_format_quantity(b11_pc_col_q)}`")
-            lines.append(f"- Ancho b1.2 de platina de continuidad (b1.2_pc_col): `{_format_quantity(b12_pc_col_q)}`")
-            lines.append(f"- Distancia de recorte 1 de platina de continuidad (Clip1_pc_col): `{_format_quantity(clip1_pc_col_q)}`")
-            lines.append(f"- Longitud util 1 de platina de continuidad (L1_pc_col): `{_format_quantity(l1_pc_col_q)}`")
-            lines.append(f"- Longitud util 2 de platina de continuidad (L2_pc_col): `{_format_quantity(l2_pc_col_q)}`")
-            lines.append(f"- Distancia de recorte 2 de platina de continuidad (Clip2_pc_col): `{_format_quantity(clip2_pc_col_q)}`")
-            lines.append(f"- Ancho neto de platina de continuidad (b2_pc_col): `{_format_quantity(b2_pc_col_q)}`")
+            lines.append(f"- Uso (usar_pc_col) (inp): `{_format_text(usar_pc_col)}`")
+            lines.append(f"- Número de platinas (n_pc_col) (inp): `{_format_text(step1_inputs.get('n_pc_col'))}`")
+            lines.append(f"- Tipo de acero (tipo_acero_pc_col) (inp): `{tipo_acero_pc_col}`")
+            lines.append(f"- Esfuerzo de fluencia Fy (fy_pc_col): `{_format_quantity(step1_inputs.get('fy_pc_col'))}`")
+            lines.append(f"- Resistencia última Fu (fu_pc_col): `{_format_quantity(step1_inputs.get('fu_pc_col'))}`")
+            lines.append("")
+            lines.append(f"#### {chapter_number}.{section_offset}.2 Dimensiones base")
+            lines.append("")
+            lines.append(f"- Espesor (t_pc_col) (inp): `{_format_quantity(tpc_col_q)}`")
+            lines.append(f"- Ancho base 1 (b1_pc_col) (inp): `{_format_quantity(b1_pc_col_q)}`")
+            lines.append(f"- Ancho b1.1 (b1.1_pc_col): `{_format_quantity(b11_pc_col_q)}`")
+            lines.append(f"- Ancho b1.2 (b1.2_pc_col): `{_format_quantity(b12_pc_col_q)}`")
+            lines.append(f"- Longitud base 1 (L1_pc_col): `{_format_quantity(l1_pc_col_q)}`")
+            lines.append("")
+            lines.append(f"#### {chapter_number}.{section_offset}.3 Recortes y longitudes útiles")
+            lines.append("")
+            lines.append(f"- Recorte 1 (Clip1_pc_col): `{_format_quantity(clip1_pc_col_q)}`")
+            lines.append(f"- Longitud 2 (L2_pc_col): `{_format_quantity(l2_pc_col_q)}`")
+            lines.append(f"- Recorte 2 (Clip2_pc_col): `{_format_quantity(clip2_pc_col_q)}`")
+            lines.append(f"- Ancho 2 (b2_pc_col): `{_format_quantity(b2_pc_col_q)}`")
             lines.append("")
             continue
         if chapter_number == 1 and scope == "DOUBLER_PLATE_COL":
             step1_inputs = step_1_inputs if isinstance(step_1_inputs, dict) else {}
-            lines.append(f"#### {chapter_number}.{section_offset}.1 Resumen de geometria")
+            lines.append(f"#### {chapter_number}.{section_offset}.1 Uso y material")
             lines.append("")
             lines.append(
-                f"- Uso de platina de enchape del alma (usar_dp_col) (inp): "
+                f"- Uso (usar_dp_col) (inp): "
                 f"`{_format_text(step1_inputs.get('doubler_plate_enabled'))}`"
             )
             lines.append(
-                f"- Tipo de acero de platina de enchape del alma (tipo_acero_dp_col) (inp): "
+                f"- Tipo de acero (tipo_acero_dp_col) (inp): "
                 f"`{_format_text(step1_inputs.get('tipo_acero_dp_col'))}`"
             )
             lines.append(
-                f"- Espesor de platina de enchape del alma (t_dp_col) (inp): "
+                f"- Esfuerzo de fluencia Fy (fy_dp_col): "
+                f"`{_format_quantity(step1_inputs.get('fy_dp_col'))}`"
+            )
+            lines.append(
+                f"- Resistencia última Fu (fu_dp_col): "
+                f"`{_format_quantity(step1_inputs.get('fu_dp_col'))}`"
+            )
+            lines.append("")
+            lines.append(f"#### {chapter_number}.{section_offset}.2 Geometría de la platina")
+            lines.append("")
+            lines.append(
+                f"- Espesor (t_dp_col) (inp): "
                 f"`{_format_quantity(step1_inputs.get('t_dp_col'))}`"
             )
             lines.append(
-                f"- Numero de platinas de enchape del alma (n_dp_col) (inp): "
+                f"- Número de platinas (n_dp_col) (inp): "
                 f"`{_format_text(step1_inputs.get('n_dp_col'))}`"
             )
             lines.append(
-                f"- Condicion geometrica de platina de enchape (Extended_dp_col) (inp): "
+                f"- Platina de enchape extendida en altura (Extended_dp_col) (inp): "
                 f"`{_format_text(step1_inputs.get('extended_dp_col'))}`"
             )
             lines.append(
-                f"- Separacion de la platina de enchape respecto al alma (gap_dp_col) (inp): "
+                f"- Separación respecto al alma (gap_dp_col) (inp): "
                 f"`{_format_quantity(step1_inputs.get('gap_dp_col'))}`"
             )
             estado_contacto_dp_col = step1_inputs.get("estado_contacto_dp_col")
@@ -7385,7 +7539,7 @@ def _render_step_1_notes_by_scope_template(
             else:
                 estado_contacto_text = "n/a"
             lines.append(
-                f"- Estado de contacto platina de enchape vs alma: "
+                f"- Estado de contacto con el alma: "
                 f"`{estado_contacto_text}`"
             )
             d_col_q = _as_quantity(step1_inputs.get("d_col"))
@@ -7471,8 +7625,11 @@ def _render_step_1_notes_by_scope_template(
                 if wz_true_mm is None and b_dp_col_mm is not None and ncolumna_w7_v is not None and (ncolumna_w7_v + 1.0) != 0.0:
                     wz_true_mm = b_dp_col_mm / (ncolumna_w7_v + 1.0)
 
+            lines.append("")
+            lines.append(f"#### {chapter_number}.{section_offset}.3 Zona de panel y soldaduras de tapón")
+            lines.append("")
             lines.append(
-                f"- Altura de la zona de panel (dz_dp_col): "
+                f"- Altura de zona de panel (dz_dp_col): "
                 f"`{_format_quantity(_mm_to_target_quantity(dz_false_mm))}`"
             )
             lines.append(
@@ -7485,15 +7642,18 @@ def _render_step_1_notes_by_scope_template(
                 if wz_true_mm is None:
                     wz_true_mm = _quantity_to_mm(b_w7_col_q.model_dump()) if isinstance(b_w7_col_q, Quantity) else None
                 lines.append(
-                    f"- Distancia vertical entre soldaduras tipo 7 (plug) o al borde de la zona de panel (h_w7_col): "
+                    f"- Separación vertical de soldaduras #7 o borde de zona de panel (h_w7_col): "
                     f"`{_format_quantity(_mm_to_target_quantity(dz_true_mm))}`"
                 )
                 lines.append(
-                    f"- Distancia horizontal entre soldaduras tipo 7 (plug) o al borde de la zona de panel (b_w7_col): "
+                    f"- Separación horizontal de soldaduras #7 o borde de zona de panel (b_w7_col): "
                     f"`{_format_quantity(_mm_to_target_quantity(wz_true_mm))}`"
                 )
+            lines.append("")
+            lines.append(f"#### {chapter_number}.{section_offset}.4 Dimensiones finales")
+            lines.append("")
             lines.append(
-                f"- Altura de platina de enchape (h_dp_col): "
+                f"- Altura (h_dp_col): "
                 f"`{_format_quantity(step1_inputs.get('h_dp_col'))}`"
             )
             h_dp_formula = str(step1_inputs.get("h_dp_col_formula") or "n/a").strip().lower()
@@ -7511,7 +7671,7 @@ def _render_step_1_notes_by_scope_template(
             else:
                 lines.append("- Ecuacion de h_dp_col: `n/a`")
             lines.append(
-                f"- Ancho de platina de enchape (b_dp_col): "
+                f"- Ancho (b_dp_col): "
                 f"`{_format_quantity(step1_inputs.get('b_dp_col'))}`"
             )
             b_dp_formula = str(step1_inputs.get("b_dp_col_formula") or "n/a").strip().lower()
@@ -7525,38 +7685,36 @@ def _render_step_1_notes_by_scope_template(
             continue
         if chapter_number == 1 and scope == "WELD_7_COL":
             step1_inputs = step_1_inputs if isinstance(step_1_inputs, dict) else {}
-            lines.append(f"#### {chapter_number}.{section_offset}.1 Resumen de geometria")
+            lines.append(f"#### {chapter_number}.{section_offset}.1 Material y procedimiento")
             lines.append("")
+            lines.append(f"- Tipo de soldadura (tipo_w7_col) (inp): `{_format_text(step1_inputs.get('tipo_w7_col'))}`")
+            lines.append("- Descripción: `soldaduras de tapón`")
             lines.append(
-                f"- Tipo de soldadura #7 (tipo_w7_col) (inp): "
-                f"`{_format_text(step1_inputs.get('tipo_w7_col'))}`"
-            )
-            lines.append(
-                f"- Resistencia del electrodo de soldadura #7 (Fexx_w7_col) (inp): "
+                f"- Resistencia del electrodo (Fexx_w7_col) (inp): "
                 f"`{_format_quantity(step1_inputs.get('Fexx_w7_col') or step1_inputs.get('weld_fexx'))}`"
             )
+            lines.append("")
+            lines.append(f"#### {chapter_number}.{section_offset}.2 Geometría de soldadura")
+            lines.append("")
             lines.append(
-                f"- Espesor/size de soldadura #7 (w_w7_col) (inp): "
+                f"- Tamaño de soldadura (w_w7_col) (inp): "
                 f"`{_format_quantity(step1_inputs.get('w_w7_col') or step1_inputs.get('t_w7_col'))}`"
             )
             lines.append(
-                f"- Numero de filas de soldadura #7 (nfilas_w7_col) (inp): "
+                f"- Número de filas (nfilas_w7_col) (inp): "
                 f"`{_format_text(step1_inputs.get('nfilas_w7_col') if step1_inputs.get('nfilas_w7_col') is not None else step1_inputs.get('nl_w7_col'))}`"
             )
+            lines.append(f"- Número de columnas (ncolumna_w7_col) (inp): `{_format_text(step1_inputs.get('ncolumna_w7_col'))}`")
             lines.append(
-                f"- Numero de columnas de soldadura #7 (ncolumna_w7_col) (inp): "
-                f"`{_format_text(step1_inputs.get('ncolumna_w7_col'))}`"
-            )
-            lines.append(
-                f"- Diametro de hueco para soldadura #7 (d_hole_w7_col) (inp): "
+                f"- Diámetro de hueco (d_hole_w7_col) (inp): "
                 f"`{_format_quantity(step1_inputs.get('d_hole_w7_col'))}`"
             )
             lines.append(
-                f"- Distancia horizontal entre soldaduras tipo 7 (plug) o al borde de la zona de panel (b_w7_col): "
+                f"- Separación horizontal entre soldaduras de tapón o borde de zona de panel (b_w7_col): "
                 f"`{_format_quantity(step1_inputs.get('b_w7_col') or step1_inputs.get('sh_w7_col'))}`"
             )
             lines.append(
-                f"- Distancia vertical entre soldaduras tipo 7 (plug) o al borde de la zona de panel (h_w7_col): "
+                f"- Separación vertical entre soldaduras de tapón o borde de zona de panel (h_w7_col): "
                 f"`{_format_quantity(step1_inputs.get('h_w7_col') or step1_inputs.get('sv_w7_col'))}`"
             )
             lines.append(
@@ -7571,30 +7729,34 @@ def _render_step_1_notes_by_scope_template(
             tipo_w8_step1_norm = tipo_w8_step1_raw.strip().lower()
             if tipo_w8_step1_norm in {"partial_joint_penetration"}:
                 tipo_w8_step1_norm = "pjp"
-            lines.append(f"#### {chapter_number}.{section_offset}.1 Resumen de geometria")
+            lines.append(f"#### {chapter_number}.{section_offset}.1 Material y procedimiento")
             lines.append("")
-            lines.append(
-                f"- Tipo de soldadura #8 (tipo_w8_col) (inp): "
-                f"`{_format_text(step1_inputs.get('tipo_w8_col'))}`"
-            )
+            lines.append(f"- Tipo de soldadura (tipo_w8_col) (inp): `{_format_text(step1_inputs.get('tipo_w8_col'))}`")
             if tipo_w8_step1_norm == "pjp":
                 lines.append(
                     "- Nota PJP soldadura #8: `Debe ser conforme a AWS D1.8/D1.8M clause 4.3`"
                 )
             lines.append(
-                f"- Resistencia del electrodo de soldadura #8 (Fexx_w8_col) (inp): "
+                f"- Resistencia del electrodo (Fexx_w8_col) (inp): "
                 f"`{_format_quantity(step1_inputs.get('Fexx_w8_col') or step1_inputs.get('weld_fexx'))}`"
             )
             lines.append(
-                f"- Espesor/size de soldadura #8 (w_w8_col) (inp): "
+                f"- Factor de dirección/sistema (kds_w8_col) (inp): "
+                f"`{_format_text(step1_inputs.get('kds_w8_col'))}`"
+            )
+            lines.append("")
+            lines.append(f"#### {chapter_number}.{section_offset}.2 Geometría de soldadura")
+            lines.append("")
+            lines.append(
+                f"- Tamaño de soldadura (w_w8_col) (inp): "
                 f"`{_format_quantity(step1_inputs.get('w_w8_col') or step1_inputs.get('t_w8_col'))}`"
             )
             lines.append(
-                f"- Numero de lineas de soldadura #8 (nl_w8_col) (inp): "
+                f"- Número de líneas (nl_w8_col) (inp): "
                 f"`{_format_text(step1_inputs.get('nl_w8_col'))}`"
             )
             lines.append(
-                f"- Parametro Encr para soldadura #8 (Encr_w8_col): "
+                f"- Parámetro Encr (Encr_w8_col): "
                 f"`{_format_quantity(step1_inputs.get('Encr_w8_col'))}`"
             )
             if step1_inputs.get("Encr_w8_col_fuente") is not None:
@@ -7602,46 +7764,45 @@ def _render_step_1_notes_by_scope_template(
                     f"- Fuente de Encr_w8_col: "
                     f"`{_format_text(step1_inputs.get('Encr_w8_col_fuente'))}`"
                 )
-            lines.append(
-                f"- Factor de direccion/sistema de soldadura #8 (kds_w8_col) (inp): "
-                f"`{_format_text(step1_inputs.get('kds_w8_col'))}`"
-            )
             lines.append("")
             continue
         if chapter_number == 1 and scope == "WELD_9_COL":
             step1_inputs = step_1_inputs if isinstance(step_1_inputs, dict) else {}
-            lines.append(f"#### {chapter_number}.{section_offset}.1 Resumen de geometria")
+            lines.append(f"#### {chapter_number}.{section_offset}.1 Activación, material y procedimiento")
             lines.append("")
             lines.append(
-                f"- Uso de soldadura #9 (use_weld_9_col) (inp): "
+                f"- Uso de soldadura (use_weld_9_col) (inp): "
                 f"`{_format_text(step1_inputs.get('use_weld_9_col'))}`"
             )
             lines.append(
-                f"- Tipo de soldadura #9 (tipo_w9_col) (inp): "
+                f"- Tipo de soldadura (tipo_w9_col) (inp): "
                 f"`{_format_text(step1_inputs.get('tipo_w9_col'))}`"
             )
             lines.append(
-                f"- Resistencia del electrodo de soldadura #9 (Fexx_w9_col) (inp): "
+                f"- Resistencia del electrodo (Fexx_w9_col) (inp): "
                 f"`{_format_quantity(step1_inputs.get('Fexx_w9_col') or step1_inputs.get('weld_fexx'))}`"
             )
             lines.append(
-                f"- Espesor/size de soldadura #9 (w_w9_col) (inp): "
+                f"- Factor de dirección/sistema (kds_w9_col) (inp): "
+                f"`{_format_text(step1_inputs.get('kds_w9_col'))}`"
+            )
+            lines.append("")
+            lines.append(f"#### {chapter_number}.{section_offset}.2 Geometría de soldadura")
+            lines.append("")
+            lines.append(
+                f"- Tamaño de soldadura (w_w9_col) (inp): "
                 f"`{_format_quantity(step1_inputs.get('w_w9_col') or step1_inputs.get('t_w9_col'))}`"
             )
             lines.append(
-                f"- Numero de lineas de soldadura #9 (nl_w9_col) (inp): "
+                f"- Número de líneas (nl_w9_col) (inp): "
                 f"`{_format_text(step1_inputs.get('nl_w9_col'))}`"
             )
             lines.append(
-                f"- Separacion de extremos de soldadura #9 (L_gap_w9_col) (inp): "
+                f"- Separación de extremos (L_gap_w9_col) (inp): "
                 f"`{_format_quantity(step1_inputs.get('L_gap_w9_col'))}`"
             )
             lines.append(
-                f"- Factor de direccion/sistema de soldadura #9 (kds_w9_col) (inp): "
-                f"`{_format_text(step1_inputs.get('kds_w9_col'))}`"
-            )
-            lines.append(
-                f"- Longitud efectiva de soldadura #9 (L_w9_col): "
+                f"- Longitud efectiva (L_w9_col): "
                 f"`{_format_quantity(step1_inputs.get('L_w9_col'))}`"
             )
             lines.append("")
@@ -7661,6 +7822,8 @@ def _render_step_1_notes_by_scope_template(
                 or step2_inputs.get(f"beam_steel_type_{side_tag}")
                 or step2_inputs.get("beam_steel_type")
             )
+            fy_pest = _format_quantity((step_1_inputs or {}).get(f"fy_pest_{side_tag}"))
+            fu_pest = _format_quantity((step_1_inputs or {}).get(f"fu_pest_{side_tag}"))
             t_pest = _format_quantity(
                 (step_1_inputs or {}).get(f"t_pest_{side_tag}")
                 or (step_1_inputs or {}).get(f"stiffener_thickness_{side_tag}")
@@ -7682,26 +7845,37 @@ def _render_step_1_notes_by_scope_template(
                 if h_pest != "n/a" and l_pest != "n/a" and ed_pest != "n/a":
                     break
 
-            lines.append(f"#### {chapter_number}.{section_offset}.1 Resumen de geometria")
+            lines.append(f"#### {chapter_number}.{section_offset}.1 Material")
             lines.append("")
             lines.append(
-                f"- Tipo de acero de rigidizador {side_label} "
+                f"- Tipo de acero "
                 f"(tipo_acero_pest_{side_tag}) (inp): `{tipo_acero_pest}`"
             )
             lines.append(
-                f"- Espesor de rigidizador {side_label} "
+                f"- Esfuerzo de fluencia Fy "
+                f"(fy_pest_{side_tag}): `{fy_pest}`"
+            )
+            lines.append(
+                f"- Resistencia última Fu "
+                f"(fu_pest_{side_tag}): `{fu_pest}`"
+            )
+            lines.append("")
+            lines.append(f"#### {chapter_number}.{section_offset}.2 Geometría")
+            lines.append("")
+            lines.append(
+                f"- Espesor "
                 f"(t_pest_{side_tag}) (inp): `{t_pest}`"
             )
             lines.append(
-                f"- Altura del rigidizador de platina extremo {side_label} "
+                f"- Altura "
                 f"(h_pest_{side_tag}): `{h_pest}`"
             )
             lines.append(
-                f"- Longitud del rigidizador de platina extremo {side_label} "
+                f"- Longitud "
                 f"(L_pest_{side_tag}): `{l_pest}`"
             )
             lines.append(
-                f"- Requisito de borde del rigidizador de platina extremo {side_label} "
+                f"- Chaflán de recorte de borde "
                 f"(Ed_pest_{side_tag}): `{ed_pest}`"
             )
             lines.append("")
@@ -7732,19 +7906,50 @@ def _render_step_1_notes_by_scope_template(
             thread_b = inputs62.get(f"thread_b_{side_tag}")
             n_b = inputs62.get(f"n_b_{side_tag}")
             bolt_fabrication_standard = inputs61.get("bolt_fabrication_standard") or inputs62.get("bolt_fabrication_standard") or step1_inputs.get("bolt_fabrication_standard")
+            std_b = (
+                step1_inputs.get(f"std_b_{side_tag}")
+                or step1_inputs.get(f"bolt_fabrication_standard_{side_tag}")
+                or bolt_fabrication_standard
+            )
             bolt_tightening_type = inputs61.get("bolt_tightening_type") or inputs62.get("bolt_tightening_type") or step1_inputs.get("bolt_tightening_type")
+            bolt_shape = (
+                step1_inputs.get(f"shape_b_{side_tag}")
+                or step1_inputs.get(f"bolt_shape_{side_tag}")
+                or step1_inputs.get("bolt_shape")
+            )
+            bolt_group = (
+                step1_inputs.get(f"desc_b_{side_tag}")
+                or step1_inputs.get(f"bolt_description_{side_tag}")
+                or step1_inputs.get("bolt_description")
+            )
             bolt_area = inter62.get(f"a_b_{side_tag}") or inter61.get(f"a_b_{side_tag}")
+            g_b = (
+                (rows_by_scope_symbol.get((f"BOLTS_{side.upper()}", f"g_b_{side_tag}")) or {}).get("calculated")
+                or (rows_by_scope_symbol.get((f"END_PLATE_{side.upper()}", f"g_b_{side_tag}")) or {}).get("calculated")
+                or (rows_by_scope_symbol.get((f"BEAM_{side.upper()}", f"g_b_{side_tag}")) or {}).get("calculated")
+                or step1_inputs.get(f"g_b_{side_tag}")
+                or step1_inputs.get("bolt_gage_g")
+            )
 
-            lines.append(f"#### {chapter_number}.{section_offset}.1 Resumen de geometria")
+            lines.append(f"#### {chapter_number}.{section_offset}.1 Material y norma")
             lines.append("")
-            lines.append(f"- Diametro nominal de perno lado {side_label} (db_b_{side_tag}) (inp): `{_format_quantity(bolt_diameter)}`")
-            lines.append(f"- Resistencia nominal a traccion de perno lado {side_label} (Fnt_b_{side_tag}) (inp): `{_format_quantity(fnt_b)}`")
-            lines.append(f"- Resistencia nominal a cortante de perno lado {side_label} (Fnv_b_{side_tag}) (inp): `{_format_quantity(fnv_b)}`")
-            lines.append(f"- Condicion de rosca de perno lado {side_label} (thread_b_{side_tag}) (inp): `{_format_text(thread_b)}`")
-            lines.append(f"- Numero de pernos lado {side_label} (n_b_{side_tag}) (inp): `{_format_text(n_b)}`")
-            lines.append(f"- Norma de fabricacion del perno lado {side_label} (std_v_{side_tag}) (inp): `{_format_text(bolt_fabrication_standard)}`")
-            lines.append(f"- Tipo de apriete del perno lado {side_label} (tipo_apriete_b_{side_tag}) (inp): `{_format_text(bolt_tightening_type)}`")
-            lines.append(f"- Area efectiva de perno lado {side_label} (A_b_{side_tag}): `{_format_quantity(bolt_area)}`")
+            lines.append(f"- Grupo (desc_b_{side_tag}) (inp): `{_format_text(bolt_group)}`")
+            lines.append(f"- Shape (shape_b_{side_tag}) (inp): `{_format_text(bolt_shape)}`")
+            lines.append(f"- Norma de fabricación (std_b_{side_tag}) (inp): `{_format_text(std_b)}`")
+            lines.append(f"- Tipo de apriete (tipo_apriete_b_{side_tag}) (inp): `{_format_text(bolt_tightening_type)}`")
+            lines.append(f"- Condición de rosca (thread_b_{side_tag}) (inp): `{_format_text(thread_b)}`")
+            lines.append("")
+            lines.append(f"#### {chapter_number}.{section_offset}.2 Geometría y cantidad")
+            lines.append("")
+            lines.append(f"- Separación horizontal entre pernos (g_b_{side_tag}) (inp): `{_format_quantity(g_b)}`")
+            lines.append(f"- Diámetro nominal (db_b_{side_tag}) (inp): `{_format_quantity(bolt_diameter)}`")
+            lines.append(f"- Número de pernos (n_b_{side_tag}) (inp): `{_format_text(n_b)}`")
+            lines.append(f"- Área efectiva (A_b_{side_tag}): `{_format_quantity(bolt_area)}`")
+            lines.append("")
+            lines.append(f"#### {chapter_number}.{section_offset}.3 Resistencias nominales")
+            lines.append("")
+            lines.append(f"- Resistencia a tracción (Fnt_b_{side_tag}) (inp): `{_format_quantity(fnt_b)}`")
+            lines.append(f"- Resistencia a cortante (Fnv_b_{side_tag}) (inp): `{_format_quantity(fnv_b)}`")
             lines.append("")
             continue
         if chapter_number == 1 and scope in {"TABLE_6_1_DER", "TABLE_6_1_IZQ"}:
@@ -7839,15 +8044,18 @@ def _render_step_1_notes_by_scope_template(
                             l_w1_raw = {"value": h_q.value - 2.0 * gap_val - clip_val, "unit": h_q.unit}
             l_w1 = _format_quantity(l_w1_raw)
 
-            lines.append(f"#### {chapter_number}.{section_offset}.1 Resumen de geometria")
+            lines.append(f"#### {chapter_number}.{section_offset}.1 Material y procedimiento")
             lines.append("")
-            lines.append(f"- Tipo de soldadura #1 lado {side_label} (tipo_w1_{side_tag}) (inp): `{tipo_w1}`")
-            lines.append(f"- Resistencia del electrodo de soldadura #1 lado {side_label} (Fexx_w1_{side_tag}) (inp): `{fexx_w1}`")
-            lines.append(f"- Espesor/size de soldadura #1 lado {side_label} (w_w1_{side_tag}) (inp): `{w_w1}`")
-            lines.append(f"- Numero de lineas de soldadura #1 lado {side_label} (nl_w1_{side_tag}) (inp): `{nl_w1}`")
-            lines.append(f"- Separacion de extremos de soldadura #1 lado {side_label} (L_gap_w1_{side_tag}) (inp): `{l_gap_w1}`")
-            lines.append(f"- Factor de direccion/sistema de soldadura #1 lado {side_label} (kds_w1_{side_tag}) (inp): `{kds_w1}`")
-            lines.append(f"- Longitud efectiva de soldadura #1 lado {side_label} (L_w1_{side_tag}): `{l_w1}`")
+            lines.append(f"- Tipo de soldadura (tipo_w1_{side_tag}) (inp): `{tipo_w1}`")
+            lines.append(f"- Resistencia del electrodo (Fexx_w1_{side_tag}) (inp): `{fexx_w1}`")
+            lines.append(f"- Factor de dirección/sistema (kds_w1_{side_tag}) (inp): `{kds_w1}`")
+            lines.append("")
+            lines.append(f"#### {chapter_number}.{section_offset}.2 Geometría de soldadura")
+            lines.append("")
+            lines.append(f"- Tamaño de soldadura (w_w1_{side_tag}) (inp): `{w_w1}`")
+            lines.append(f"- Número de líneas (nl_w1_{side_tag}) (inp): `{nl_w1}`")
+            lines.append(f"- Separación de extremos (L_gap_w1_{side_tag}) (inp): `{l_gap_w1}`")
+            lines.append(f"- Longitud efectiva (L_w1_{side_tag}): `{l_w1}`")
             lines.append("")
             continue
         if chapter_number == 1 and scope in {"WELD_2_VGDER", "WELD_2_VGIZQ"}:
@@ -7912,15 +8120,18 @@ def _render_step_1_notes_by_scope_template(
                             l_w2_raw = {"value": l_pest_q.value - 2.0 * gap_val - clip_val, "unit": l_pest_q.unit}
             l_w2 = _format_quantity(l_w2_raw)
 
-            lines.append(f"#### {chapter_number}.{section_offset}.1 Resumen de geometria")
+            lines.append(f"#### {chapter_number}.{section_offset}.1 Material y procedimiento")
             lines.append("")
-            lines.append(f"- Tipo de soldadura #2 lado {side_label} (tipo_w2_{side_tag}) (inp): `{tipo_w2}`")
-            lines.append(f"- Resistencia del electrodo de soldadura #2 lado {side_label} (Fexx_w2_{side_tag}) (inp): `{fexx_w2}`")
-            lines.append(f"- Espesor/size de soldadura #2 lado {side_label} (w_w2_{side_tag}) (inp): `{w_w2}`")
-            lines.append(f"- Numero de lineas de soldadura #2 lado {side_label} (nl_w2_{side_tag}) (inp): `{nl_w2}`")
-            lines.append(f"- Separacion de extremos de soldadura #2 lado {side_label} (L_gap_w2_{side_tag}) (inp): `{l_gap_w2}`")
-            lines.append(f"- Factor de direccion/sistema de soldadura #2 lado {side_label} (kds_w2_{side_tag}) (inp): `{kds_w2}`")
-            lines.append(f"- Longitud efectiva de soldadura #2 lado {side_label} (L_w2_{side_tag}): `{l_w2}`")
+            lines.append(f"- Tipo de soldadura (tipo_w2_{side_tag}) (inp): `{tipo_w2}`")
+            lines.append(f"- Resistencia del electrodo (Fexx_w2_{side_tag}) (inp): `{fexx_w2}`")
+            lines.append(f"- Factor de dirección/sistema (kds_w2_{side_tag}) (inp): `{kds_w2}`")
+            lines.append("")
+            lines.append(f"#### {chapter_number}.{section_offset}.2 Geometría de soldadura")
+            lines.append("")
+            lines.append(f"- Tamaño de soldadura (w_w2_{side_tag}) (inp): `{w_w2}`")
+            lines.append(f"- Número de líneas (nl_w2_{side_tag}) (inp): `{nl_w2}`")
+            lines.append(f"- Separación de extremos (L_gap_w2_{side_tag}) (inp): `{l_gap_w2}`")
+            lines.append(f"- Longitud efectiva (L_w2_{side_tag}): `{l_w2}`")
             lines.append("")
             continue
         if chapter_number == 1 and scope in {"WELD_3_VGDER", "WELD_3_VGIZQ"}:
@@ -7957,15 +8168,18 @@ def _render_step_1_notes_by_scope_template(
             kds_w3 = _format_text(kds_w3_raw)
             hwef_w3 = _format_quantity(inputs11.get(f"hwef_w3_{side_tag}"))
 
-            lines.append(f"#### {chapter_number}.{section_offset}.1 Resumen de geometria")
+            lines.append(f"#### {chapter_number}.{section_offset}.1 Material y procedimiento")
             lines.append("")
-            lines.append(f"- Tipo de soldadura #3 lado {side_label} (tipo_w3_{side_tag}) (inp): `{tipo_w3}`")
-            lines.append(f"- Resistencia del electrodo de soldadura #3 lado {side_label} (Fexx_w3_{side_tag}) (inp): `{fexx_w3}`")
-            lines.append(f"- Espesor/size de soldadura #3 lado {side_label} (w_w3_{side_tag}) (inp): `{w_w3}`")
-            lines.append(f"- Numero de lineas de soldadura #3 lado {side_label} (nl_w3_{side_tag}) (inp): `{nl_w3}`")
+            lines.append(f"- Tipo de soldadura (tipo_w3_{side_tag}) (inp): `{tipo_w3}`")
+            lines.append(f"- Resistencia del electrodo (Fexx_w3_{side_tag}) (inp): `{fexx_w3}`")
             if kds_w3_raw is not None:
-                lines.append(f"- Factor de direccion/sistema de soldadura #3 lado {side_label} (kds_w3_{side_tag}) (inp): `{kds_w3}`")
-            lines.append(f"- Longitud efectiva de soldadura #3 lado {side_label} (hwef_w3_{side_tag}): `{hwef_w3}`")
+                lines.append(f"- Factor de dirección/sistema (kds_w3_{side_tag}) (inp): `{kds_w3}`")
+            lines.append("")
+            lines.append(f"#### {chapter_number}.{section_offset}.2 Geometría de soldadura")
+            lines.append("")
+            lines.append(f"- Tamaño de soldadura (w_w3_{side_tag}) (inp): `{w_w3}`")
+            lines.append(f"- Número de líneas (nl_w3_{side_tag}) (inp): `{nl_w3}`")
+            lines.append(f"- Longitud efectiva (hwef_w3_{side_tag}): `{hwef_w3}`")
             lines.append("")
             continue
         if chapter_number == 1 and scope in {"WELD_4_VGDER", "WELD_4_VGIZQ"}:
@@ -7995,7 +8209,9 @@ def _render_step_1_notes_by_scope_template(
                 or inputs10.get(f"t_w4_{side_tag}")
             )
             t_w4_1 = _format_quantity(
-                step1_inputs.get(f"t_w4.1_{side_tag}")
+                step1_inputs.get(f"w_w4.1_{side_tag}")
+                or step1_inputs.get(f"w_w4_1_{side_tag}")
+                or step1_inputs.get(f"t_w4.1_{side_tag}")
                 or step1_inputs.get(f"t_w4_1_{side_tag}")
                 or inputs10.get(f"t_w4_1_{side_tag}")
             )
@@ -8011,16 +8227,19 @@ def _render_step_1_notes_by_scope_template(
                 or inputs10.get(f"l_w4_{side_tag}")
             )
 
-            lines.append(f"#### {chapter_number}.{section_offset}.1 Resumen de geometria")
+            lines.append(f"#### {chapter_number}.{section_offset}.1 Material y procedimiento")
             lines.append("")
-            lines.append(f"- Tipo de soldadura #4 lado {side_label} (tipo_w4_{side_tag}) (inp): `{tipo_w4}`")
-            lines.append(f"- Resistencia del electrodo de soldadura #4 lado {side_label} (Fexx_w4_{side_tag}) (inp): `{fexx_w4}`")
-            lines.append(f"- Espesor/size de soldadura #4 lado {side_label} (w_w4_{side_tag}) (inp): `{w_w4}`")
-            lines.append(f"- Espesor total de garganta requerida #4 lado {side_label} (t_w4.1_{side_tag}) (inp): `{t_w4_1}`")
-            lines.append(f"- Numero de lineas de soldadura #4 lado {side_label} (nl_w4_{side_tag}) (inp): `{nl_w4}`")
+            lines.append(f"- Tipo de soldadura (tipo_w4_{side_tag}) (inp): `{tipo_w4}`")
+            lines.append(f"- Resistencia del electrodo (Fexx_w4_{side_tag}) (inp): `{fexx_w4}`")
             if kds_w4_raw is not None:
-                lines.append(f"- Factor de direccion/sistema de soldadura #4 lado {side_label} (kds_w4_{side_tag}) (inp): `{kds_w4}`")
-            lines.append(f"- Longitud efectiva de soldadura #4 lado {side_label} (L_w4_{side_tag}): `{l_w4}`")
+                lines.append(f"- Factor de dirección/sistema (kds_w4_{side_tag}) (inp): `{kds_w4}`")
+            lines.append("")
+            lines.append(f"#### {chapter_number}.{section_offset}.2 Geometría de soldadura")
+            lines.append("")
+            lines.append(f"- Tamaño de soldadura (w_w4_{side_tag}) (inp): `{w_w4}`")
+            lines.append(f"- Tamaño total requerido (w_w4.1_{side_tag}) (inp): `{t_w4_1}`")
+            lines.append(f"- Número de líneas (nl_w4_{side_tag}) (inp): `{nl_w4}`")
+            lines.append(f"- Longitud efectiva (L_w4_{side_tag}): `{l_w4}`")
             lines.append("")
             continue
         if chapter_number == 1 and scope == "END_PLATE_DER":
@@ -8039,7 +8258,13 @@ def _render_step_1_notes_by_scope_template(
                 if isinstance((step_6_1_by_side or {}).get("der"), dict)
                 else {}
             )
+            step1_inputs = step_1_inputs if isinstance(step_1_inputs, dict) else {}
 
+            tipo_acero_pe_vgder = _format_text(step1_inputs.get("tipo_acero_pe_vgder"))
+            cond_pe_vgder = _format_text(step1_inputs.get("cond_pe_vgder"))
+            cond_amb_pe_vgder = _format_text(step1_inputs.get("cond_amb_pe_vgder"))
+            fy_pe_vgder = _format_quantity(step1_inputs.get("fy_pe_vgder"))
+            fu_pe_vgder = _format_quantity(step1_inputs.get("fu_pe_vgder"))
             bpe_vgder = _format_quantity((rows_by_scope_symbol.get(("END_PLATE_DER", "bp_pe_vgder")) or {}).get("calculated"))
             bpe_vgder_q = _as_quantity((rows_by_scope_symbol.get(("END_PLATE_DER", "bp_pe_vgder")) or {}).get("calculated"))
             tpe_vgder = _format_quantity(step731_inputs_der.get("tpe_vgder"))
@@ -8080,25 +8305,42 @@ def _render_step_1_notes_by_scope_template(
                     hpe_vgder = _format_quantity(maybe_hpe)
                     break
 
-            lines.append(f"#### {chapter_number}.{section_offset}.1 Resumen de geometria")
+            lines.append(f"#### {chapter_number}.{section_offset}.1 Material")
             lines.append("")
-            lines.append(f"- Altura de platina extremo de viga derecha (Hpe_vgder): `{hpe_vgder}`")
-            lines.append(f"- Ancho de platina extremo de viga derecha (Bpe_vgder) (inp): `{bpe_vgder}`")
-            lines.append(f"- Espesor de platina extremo de viga derecha (tpe_vgder) (inp): `{tpe_vgder}`")
-            lines.append(f"- Distancia de borde a fila 1 de pernos (de_pe_vgder) (inp): `{de_pe_vgder}`")
+            lines.append(f"- Tipo de acero (tipo_acero_pe_vgder) (inp): `{tipo_acero_pe_vgder}`")
+            lines.append(f"- Esfuerzo de fluencia Fy (fy_pe_vgder): `{fy_pe_vgder}`")
+            lines.append(f"- Resistencia última Fu (fu_pe_vgder): `{fu_pe_vgder}`")
+            lines.append(f"- Condición superficial (cond_pe_vgder) (inp): `{cond_pe_vgder}`")
+            lines.append(f"- Condición ambiental (cond_amb_pe_vgder) (inp): `{cond_amb_pe_vgder}`")
+            lines.append("")
+            lines.append(f"#### {chapter_number}.{section_offset}.2 Dimensiones principales")
+            lines.append("")
+            lines.append(f"- Altura (Hpe_vgder): `{hpe_vgder}`")
+            lines.append(f"- Ancho (Bpe_vgder) (inp): `{bpe_vgder}`")
+            lines.append(f"- Espesor (tpe_vgder) (inp): `{tpe_vgder}`")
+            lines.append("")
+            lines.append(f"#### {chapter_number}.{section_offset}.3 Distancias verticales de pernos")
+            lines.append("")
+            lines.append(f"- Distancia de borde a fila 1 (de_pe_vgder) (inp): `{de_pe_vgder}`")
             lines.append(f"- Distancia entre filas de pernos (pb_pe_vgder) (inp): `{pb_pe_vgder}`")
             lines.append(f"- Distancia exterior a fila de pernos (pfo_pe_vgder) (inp): `{pfo_pe_vgder}`")
             lines.append(f"- Distancia interior a fila de pernos (pfi_pe_vgder) (inp): `{pfi_pe_vgder}`")
-            lines.append(f"- Diametro de perforacion de perno (dh_pe_vgder): `{dh_pe_vgder}`")
-            lines.append(f"- Distancia horizontal entre pernos en platina (g_pe_vgder) (inp): `{g_pe_vgder}`")
-            lines.append(f"- Distancia horizontal de borde en platina (deh_pe_vgder): `{deh_pe_vgder}`")
-            lines.append(f"- Parametro s de platina extremo derecha (s_pe_vgder): `{s_pe_vgder}`")
-            lines.append(f"- Distancia h1 de platina extremo derecha (h1_pe_vgder): `{h1_pe_vgder}`")
-            lines.append(f"- Distancia h2 de platina extremo derecha (h2_pe_vgder): `{h2_pe_vgder}`")
+            lines.append("")
+            lines.append(f"#### {chapter_number}.{section_offset}.4 Distancias horizontales y perforaciones")
+            lines.append("")
+            lines.append(f"- Diámetro de perforación de perno (dh_pe_vgder): `{dh_pe_vgder}`")
+            lines.append(f"- Distancia horizontal entre pernos (g_pe_vgder) (inp): `{g_pe_vgder}`")
+            lines.append(f"- Distancia horizontal de borde (deh_pe_vgder): `{deh_pe_vgder}`")
+            lines.append("")
+            lines.append(f"#### {chapter_number}.{section_offset}.5 Parámetros derivados")
+            lines.append("")
+            lines.append(f"- Parámetro s (s_pe_vgder): `{s_pe_vgder}`")
+            lines.append(f"- Distancia h1 (h1_pe_vgder): `{h1_pe_vgder}`")
+            lines.append(f"- Distancia h2 (h2_pe_vgder): `{h2_pe_vgder}`")
             if h3_pe_vgder != "n/a":
-                lines.append(f"- Distancia h3 de platina extremo derecha (h3_pe_vgder): `{h3_pe_vgder}`")
+                lines.append(f"- Distancia h3 (h3_pe_vgder): `{h3_pe_vgder}`")
             if h4_pe_vgder != "n/a":
-                lines.append(f"- Distancia h4 de platina extremo derecha (h4_pe_vgder): `{h4_pe_vgder}`")
+                lines.append(f"- Distancia h4 (h4_pe_vgder): `{h4_pe_vgder}`")
             lines.append("")
             continue
         if chapter_number == 1 and scope == "END_PLATE_IZQ":
@@ -8117,7 +8359,13 @@ def _render_step_1_notes_by_scope_template(
                 if isinstance((step_6_1_by_side or {}).get("izq"), dict)
                 else {}
             )
+            step1_inputs = step_1_inputs if isinstance(step_1_inputs, dict) else {}
 
+            tipo_acero_pe_vgizq = _format_text(step1_inputs.get("tipo_acero_pe_vgizq"))
+            cond_pe_vgizq = _format_text(step1_inputs.get("cond_pe_vgizq"))
+            cond_amb_pe_vgizq = _format_text(step1_inputs.get("cond_amb_pe_vgizq"))
+            fy_pe_vgizq = _format_quantity(step1_inputs.get("fy_pe_vgizq"))
+            fu_pe_vgizq = _format_quantity(step1_inputs.get("fu_pe_vgizq"))
             bpe_vgizq = _format_quantity((rows_by_scope_symbol.get(("END_PLATE_IZQ", "bp_pe_vgizq")) or {}).get("calculated"))
             bpe_vgizq_q = _as_quantity((rows_by_scope_symbol.get(("END_PLATE_IZQ", "bp_pe_vgizq")) or {}).get("calculated"))
             tpe_vgizq = _format_quantity(step731_inputs_izq.get("tpe_vgizq"))
@@ -8158,25 +8406,42 @@ def _render_step_1_notes_by_scope_template(
                     hpe_vgizq = _format_quantity(maybe_hpe)
                     break
 
-            lines.append(f"#### {chapter_number}.{section_offset}.1 Resumen de geometria")
+            lines.append(f"#### {chapter_number}.{section_offset}.1 Material")
             lines.append("")
-            lines.append(f"- Altura de platina extremo de viga izquierda (Hpe_vgizq): `{hpe_vgizq}`")
-            lines.append(f"- Ancho de platina extremo de viga izquierda (Bpe_vgizq) (inp): `{bpe_vgizq}`")
-            lines.append(f"- Espesor de platina extremo de viga izquierda (tpe_vgizq) (inp): `{tpe_vgizq}`")
-            lines.append(f"- Distancia de borde a fila 1 de pernos (de_pe_vgizq) (inp): `{de_pe_vgizq}`")
+            lines.append(f"- Tipo de acero (tipo_acero_pe_vgizq) (inp): `{tipo_acero_pe_vgizq}`")
+            lines.append(f"- Esfuerzo de fluencia Fy (fy_pe_vgizq): `{fy_pe_vgizq}`")
+            lines.append(f"- Resistencia última Fu (fu_pe_vgizq): `{fu_pe_vgizq}`")
+            lines.append(f"- Condición superficial (cond_pe_vgizq) (inp): `{cond_pe_vgizq}`")
+            lines.append(f"- Condición ambiental (cond_amb_pe_vgizq) (inp): `{cond_amb_pe_vgizq}`")
+            lines.append("")
+            lines.append(f"#### {chapter_number}.{section_offset}.2 Dimensiones principales")
+            lines.append("")
+            lines.append(f"- Altura (Hpe_vgizq): `{hpe_vgizq}`")
+            lines.append(f"- Ancho (Bpe_vgizq) (inp): `{bpe_vgizq}`")
+            lines.append(f"- Espesor (tpe_vgizq) (inp): `{tpe_vgizq}`")
+            lines.append("")
+            lines.append(f"#### {chapter_number}.{section_offset}.3 Distancias verticales de pernos")
+            lines.append("")
+            lines.append(f"- Distancia de borde a fila 1 (de_pe_vgizq) (inp): `{de_pe_vgizq}`")
             lines.append(f"- Distancia entre filas de pernos (pb_pe_vgizq) (inp): `{pb_pe_vgizq}`")
             lines.append(f"- Distancia exterior a fila de pernos (pfo_pe_vgizq) (inp): `{pfo_pe_vgizq}`")
             lines.append(f"- Distancia interior a fila de pernos (pfi_pe_vgizq) (inp): `{pfi_pe_vgizq}`")
-            lines.append(f"- Diametro de perforacion de perno (dh_pe_vgizq): `{dh_pe_vgizq}`")
-            lines.append(f"- Distancia horizontal entre pernos en platina (g_pe_vgizq) (inp): `{g_pe_vgizq}`")
-            lines.append(f"- Distancia horizontal de borde en platina (deh_pe_vgizq): `{deh_pe_vgizq}`")
-            lines.append(f"- Parametro s de platina extremo izquierda (s_pe_vgizq): `{s_pe_vgizq}`")
-            lines.append(f"- Distancia h1 de platina extremo izquierda (h1_pe_vgizq): `{h1_pe_vgizq}`")
-            lines.append(f"- Distancia h2 de platina extremo izquierda (h2_pe_vgizq): `{h2_pe_vgizq}`")
+            lines.append("")
+            lines.append(f"#### {chapter_number}.{section_offset}.4 Distancias horizontales y perforaciones")
+            lines.append("")
+            lines.append(f"- Diámetro de perforación de perno (dh_pe_vgizq): `{dh_pe_vgizq}`")
+            lines.append(f"- Distancia horizontal entre pernos (g_pe_vgizq) (inp): `{g_pe_vgizq}`")
+            lines.append(f"- Distancia horizontal de borde (deh_pe_vgizq): `{deh_pe_vgizq}`")
+            lines.append("")
+            lines.append(f"#### {chapter_number}.{section_offset}.5 Parámetros derivados")
+            lines.append("")
+            lines.append(f"- Parámetro s (s_pe_vgizq): `{s_pe_vgizq}`")
+            lines.append(f"- Distancia h1 (h1_pe_vgizq): `{h1_pe_vgizq}`")
+            lines.append(f"- Distancia h2 (h2_pe_vgizq): `{h2_pe_vgizq}`")
             if h3_pe_vgizq != "n/a":
-                lines.append(f"- Distancia h3 de platina extremo izquierda (h3_pe_vgizq): `{h3_pe_vgizq}`")
+                lines.append(f"- Distancia h3 (h3_pe_vgizq): `{h3_pe_vgizq}`")
             if h4_pe_vgizq != "n/a":
-                lines.append(f"- Distancia h4 de platina extremo izquierda (h4_pe_vgizq): `{h4_pe_vgizq}`")
+                lines.append(f"- Distancia h4 (h4_pe_vgizq): `{h4_pe_vgizq}`")
             lines.append("")
             continue
         if chapter_number == 1 and scope == "WELD_6_COL":
@@ -8227,15 +8492,18 @@ def _render_step_1_notes_by_scope_template(
                         if gap_value is not None:
                             l_w6_col_text = _format_quantity({"value": l2["value"] - 2.0 * gap_value, "unit": l2["unit"]})
 
-            lines.append(f"#### {chapter_number}.{section_offset}.1 Resumen de geometria")
+            lines.append(f"#### {chapter_number}.{section_offset}.1 Material y procedimiento")
             lines.append("")
-            lines.append(f"- Tipo de soldadura #6 de platina de continuidad (tipo_w6_col) (inp): `{tipo_w6_col}`")
-            lines.append(f"- Resistencia del electrodo de soldadura #6 (Fexx_w6_col) (inp): `{_format_quantity(fexx_w6_col_q)}`")
-            lines.append(f"- Espesor/size de soldadura #6 (w_w6_col) (inp): `{_format_quantity(t_w6_col_q)}`")
-            lines.append(f"- Numero de lineas de soldadura #6 (nl_w6_col) (inp): `{_format_text(nl_w6_col)}`")
-            lines.append(f"- Separacion de extremos de soldadura #6 (L_gap_w6_col) (inp): `{_format_quantity(l_gap_w6_col_q)}`")
-            lines.append(f"- Factor de direccion/sistema de soldadura #6 (kds_w6_col) (inp): `{_format_text(kds_w6_col)}`")
-            lines.append(f"- Longitud efectiva de soldadura #6 (Lws_col): `{l_w6_col_text}`")
+            lines.append(f"- Tipo de soldadura (tipo_w6_col) (inp): `{tipo_w6_col}`")
+            lines.append(f"- Resistencia del electrodo (Fexx_w6_col) (inp): `{_format_quantity(fexx_w6_col_q)}`")
+            lines.append(f"- Factor de dirección/sistema (kds_w6_col) (inp): `{_format_text(kds_w6_col)}`")
+            lines.append("")
+            lines.append(f"#### {chapter_number}.{section_offset}.2 Geometría de soldadura")
+            lines.append("")
+            lines.append(f"- Tamaño de soldadura (w_w6_col) (inp): `{_format_quantity(t_w6_col_q)}`")
+            lines.append(f"- Número de líneas (nl_w6_col) (inp): `{_format_text(nl_w6_col)}`")
+            lines.append(f"- Separación de extremos (L_gap_w6_col) (inp): `{_format_quantity(l_gap_w6_col_q)}`")
+            lines.append(f"- Longitud efectiva (Lws_col): `{l_w6_col_text}`")
             lines.append("")
             continue
         local_note_index = 1
@@ -8529,7 +8797,7 @@ def render_memory_markdown(result: DetailedRunResult) -> str:
                     )
                 )
             else:
-                content.append(_render_scope_subtitles_only(chapter_number=2, scopes=scope_template_step2))
+                content.append("No hay especificaciones tecnicas disponibles para este caso.")
         else:
             content.append("No hay especificaciones tecnicas disponibles para este caso.")
         content.extend(
@@ -8851,7 +9119,7 @@ def render_memory_markdown(result: DetailedRunResult) -> str:
             fcr_pc_col_q: Quantity | None = None
             e_pc_col_q: Quantity | None = None
             fe_pc_col_q: Quantity | None = None
-            lp_pc_col_q: Quantity | None = None
+            lp_pc_col_q: Quantity | None = _as_quantity((step_1_inputs or {}).get("L2_pc_col"))
             r_pc_col_q: Quantity | None = None
             klr_pc_col: float | None = None
             dcr_pc_pminus_col: float | None = None
@@ -8924,7 +9192,8 @@ def render_memory_markdown(result: DetailedRunResult) -> str:
                 tfdet_col_q = _as_quantity((step_1_inputs or {}).get("tfdet_col"))
 
                 if (
-                    isinstance(d_col_q, Quantity)
+                    not isinstance(lp_pc_col_q, Quantity)
+                    and isinstance(d_col_q, Quantity)
                     and isinstance(kdet_col_q, Quantity)
                     and isinstance(tfdet_col_q, Quantity)
                     and d_col_q.unit == kdet_col_q.unit == tfdet_col_q.unit
@@ -8932,9 +9201,10 @@ def render_memory_markdown(result: DetailedRunResult) -> str:
                     unit_l = d_col_q.unit
                     add_38 = 38.0 if unit_l == "mm" else 38.0 / 25.4
                     sub_3 = 3.0 if unit_l == "mm" else 3.0 / 25.4
+                    step_5 = 5.0 if unit_l == "mm" else 5.0 / 25.4
                     clip1_val = kdet_col_q.value - tfdet_col_q.value + add_38
-                    l1_val = d_col_q.value - 2.0 * tfdet_col_q.value - sub_3
-                    l2_val = l1_val - 2.0 * clip1_val
+                    l1_val = math.floor((d_col_q.value - 2.0 * tfdet_col_q.value - sub_3) / step_5) * step_5
+                    l2_val = math.floor((l1_val - 2.0 * clip1_val) / step_5) * step_5
                     if l2_val > 0:
                         lp_pc_col_q = Quantity(value=l2_val, unit=unit_l)
 

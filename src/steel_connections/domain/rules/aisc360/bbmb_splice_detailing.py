@@ -955,10 +955,12 @@ def run_step1_viga_detailing(case: BeamBeamMomentBoltedCase, rule_binding: objec
         result2_web_v3_vg = "PASS" if dcr2_web_v3_vg <= 1.0 else "FAIL"
     # Beam tension rupture (AISC 360-22 J4.1(b), Eq. J4-2) in direction 3.
     hole_add_v3 = 1.8 if case.units_system == UnitSystem.SI else (1.8 / 25.4)
-    a_vg_v3 = Quantity(
-        value=dvg_catalog.value * tw_catalog.value,
-        unit="in2" if case.units_system == UnitSystem.US else "mm2",
-    )
+    if not isinstance(ag_catalog, Quantity):
+        raise ValueError("Unable to resolve A_vg (using catalog ag) for splice beam tension-rupture check.")
+    z_vg_catalog = beam_props.get("zx")
+    if not isinstance(z_vg_catalog, Quantity):
+        raise ValueError("Unable to resolve z_vg (using catalog zx) for splice beam tension-rupture check.")
+    a_vg_v3 = ag_catalog
     sqrt3 = 3.0 ** 0.5
     ant_v3_length_expr = (
         2.0 * s1x.value * (case.geometry.n_blt_web_x - 1) * sqrt3 / 3.0
@@ -986,12 +988,21 @@ def run_step1_viga_detailing(case: BeamBeamMomentBoltedCase, rule_binding: objec
             "n_blt_web_y*(dh.1 + 1.80mm) > T_vg -> "
             "Ant_v3_vg = A_vg - n_blt_web_y*(dh.1 + 1.80mm)*tw_vg"
         )
-    xt_flange_vg, _xt_flange_vg_meta = compute_half_beam_wt_centroid_distance_from_flange_edge(
+    xt_flange_vg_ref, _xt_flange_vg_meta = compute_half_beam_wt_centroid_distance_from_flange_edge(
         beam_depth_d=dvg_catalog,
         flange_width_bf=bf_catalog,
         flange_thickness_tf=tf_catalog,
         web_thickness_tw=tw_catalog,
         unit_system=case.units_system,
+    )
+    z_vg = z_vg_catalog
+    xt_flange_vg = Quantity(
+        value=0.5 * dvg_catalog.value - z_vg.value / a_vg_v3.value,
+        unit=dvg_catalog.unit,
+    )
+    delta_xt_flange_vg = Quantity(
+        value=xt_flange_vg.value - xt_flange_vg_ref.value,
+        unit=xt_flange_vg.unit,
     )
     u_v3_vg, u_v3_meta = compute_u_v3_shear_lag_factor_case2(
         alpha_pu_web=case.loads.alpha_Pu_web,
@@ -3376,8 +3387,11 @@ def run_step1_viga_detailing(case: BeamBeamMomentBoltedCase, rule_binding: objec
                     "tw_vg_var": "tw_vg",
                     "tw_vg": tw_catalog.model_dump(),
                     "a_vg_var": "A_vg",
-                    "a_vg_formula": "A_vg = d_vg*tw_vg",
+                    "a_vg_formula": "A_vg tomado del catalogo (usando ag)",
                     "a_vg": a_vg_v3.model_dump(),
+                    "z_vg_var": "z_vg",
+                    "z_vg_formula": "z_vg tomado del catalogo (usando zx)",
+                    "z_vg": z_vg.model_dump(),
                     "n_blt_web_y_var": "n_blt_web_y",
                     "n_blt_web_y": case.geometry.n_blt_web_y,
                     "dh_1_var": "dh.1",
@@ -3398,7 +3412,12 @@ def run_step1_viga_detailing(case: BeamBeamMomentBoltedCase, rule_binding: objec
                     "bf_vg_var": "bf_vg",
                     "bf_vg": bf_catalog.model_dump(),
                     "xt_flange_vg_var": "xt_flange_vg",
+                    "xt_flange_vg_formula": "xt_flange_vg = d_vg*0.5 - z_vg/A_vg",
                     "xt_flange_vg": xt_flange_vg.model_dump(),
+                    "xt_flange_vg_ref_var": "xt_flange_vg_ref",
+                    "xt_flange_vg_ref": xt_flange_vg_ref.model_dump(),
+                    "delta_xt_flange_vg_var": "delta_xt_flange_vg",
+                    "delta_xt_flange_vg": delta_xt_flange_vg.model_dump(),
                     "u_web_v3_vg_var": "U_web_v3_vg",
                     "u_web_v3_vg_formula": u_web_v3_vg_formula,
                     "u_web_v3_vg": u_web_v3_vg,

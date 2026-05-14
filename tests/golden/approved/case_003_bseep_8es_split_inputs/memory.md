@@ -10,181 +10,266 @@
 
 Propiedades organizadas por ambito.
 
-### 1.1 Ámbito `BEAM_IZQ`
+### 1.1 Ámbito: viga ubicada a la izquierda de la columna (`BEAM_IZQ`)
 
-#### 1.1.1 Resumen de geometria
+#### 1.1.1 Resumen de geometría
 
-- Perfil de viga izquierda (perfil_vgizq) (inp): `W21X68`
-- Tipo de acero del perfil de viga izquierda (tipo_acero_perfil_vgizq) (inp): `ASTM A572 Gr 50`
-- Demanda de ductilidad de viga izquierda (demanda_ductilidad_vgizq) (inp): `high`
-- Luz libre de viga izquierda (Llb_vgizq) (inp): `7500 mm`
+- Perfil (perfil_vgizq) (inp): `W21X68`
+
+#### 1.1.2 Material del perfil
+
+- Tipo de acero del perfil (tipo_acero_perfil_vgizq) (inp): `ASTM A572 Gr 50`
+
+#### 1.1.3 Geometría del perfil
+
+- Luz libre (Llb_vgizq) (inp): `7500 mm`
 - Longitud sin conectores desde cara de columna (Lnc_vgizq) (inp): `1000 mm`
 - Longitud de zona protegida (Lpz_vgizq): `458.53 mm`
 
-### 1.2 Ámbito `BEAM_DER`
+#### 1.1.4 Demandas y parámetros sísmicos
 
-#### 1.2.1 Resumen de geometria
+- Demanda de ductilidad (demanda_ductilidad_vgizq) (inp): `high`
 
-- Perfil de viga derecha (perfil_vgder) (inp): `W21X68`
-- Tipo de acero del perfil de viga derecha (tipo_acero_perfil_vgder) (inp): `ASTM A572 Gr 50`
-- Demanda de ductilidad de viga derecha (demanda_ductilidad_vgder) (inp): `high`
-- Luz libre de viga derecha (Llb_vgder) (inp): `7500 mm`
+### 1.2 Ámbito: viga ubicada a la derecha de la columna (`BEAM_DER`)
+
+#### 1.2.1 Resumen de geometría
+
+- Perfil (perfil_vgder) (inp): `W21X68`
+
+#### 1.2.2 Material del perfil
+
+- Tipo de acero del perfil (tipo_acero_perfil_vgder) (inp): `ASTM A572 Gr 50`
+
+#### 1.2.3 Geometría del perfil
+
+- Luz libre (Llb_vgder) (inp): `7500 mm`
 - Longitud sin conectores desde cara de columna (Lnc_vgder) (inp): `1000 mm`
 - Longitud de zona protegida (Lpz_vgder): `458.53 mm`
 
-### 1.3 Ámbito `END_PLATE_IZQ`
+#### 1.2.4 Demandas y parámetros sísmicos
 
-#### 1.3.1 Resumen de geometria
+- Demanda de ductilidad (demanda_ductilidad_vgder) (inp): `high`
 
-- Altura de platina extremo de viga izquierda (Hpe_vgizq): `756 mm`
-- Ancho de platina extremo de viga izquierda (Bpe_vgizq) (inp): `235 mm`
-- Espesor de platina extremo de viga izquierda (tpe_vgizq) (inp): `25.4 mm`
-- Distancia de borde a fila 1 de pernos (de_pe_vgizq) (inp): `n/a`
+### 1.3 Ámbito: platina extrema de la viga izquierda (`END_PLATE_IZQ`)
+
+#### 1.3.1 Dimensiones principales
+
+- Altura (Hpe_vgizq): `756 mm`
+- Ancho (Bpe_vgizq) (inp): `235 mm`
+- Espesor (tpe_vgizq) (inp): `25.4 mm`
+
+#### 1.3.2 Distancias verticales de pernos
+
+- Distancia de borde a fila 1 (de_pe_vgizq) (inp): `n/a`
 - Distancia entre filas de pernos (pb_pe_vgizq) (inp): `95 mm`
 - Distancia exterior a fila de pernos (pfo_pe_vgizq) (inp): `50 mm`
 - Distancia interior a fila de pernos (pfi_pe_vgizq) (inp): `50 mm`
-- Diametro de perforacion de perno (dh_pe_vgizq): `28.57 mm`
-- Distancia horizontal entre pernos en platina (g_pe_vgizq) (inp): `n/a`
-- Distancia horizontal de borde en platina (deh_pe_vgizq): `n/a`
-- Parametro s de platina extremo izquierda (s_pe_vgizq): `93.87 mm`
-- Distancia h1 de platina extremo izquierda (h1_pe_vgizq): `672.3 mm`
-- Distancia h2 de platina extremo izquierda (h2_pe_vgizq): `577.3 mm`
-- Distancia h3 de platina extremo izquierda (h3_pe_vgizq): `459.9 mm`
-- Distancia h4 de platina extremo izquierda (h4_pe_vgizq): `364.9 mm`
 
-### 1.4 Ámbito `END_PLATE_DER`
+#### 1.3.3 Distancias horizontales y perforaciones
 
-#### 1.4.1 Resumen de geometria
+- Diámetro de perforación de perno (dh_pe_vgizq): `28.57 mm`
+- Distancia horizontal entre pernos (g_pe_vgizq) (inp): `n/a`
+- Distancia horizontal de borde (deh_pe_vgizq): `n/a`
 
-- Altura de platina extremo de viga derecha (Hpe_vgder): `756 mm`
-- Ancho de platina extremo de viga derecha (Bpe_vgder) (inp): `235 mm`
-- Espesor de platina extremo de viga derecha (tpe_vgder) (inp): `25.4 mm`
-- Distancia de borde a fila 1 de pernos (de_pe_vgder) (inp): `n/a`
+#### 1.3.4 Parámetros derivados
+
+- Parámetro s (s_pe_vgizq): `93.87 mm`
+- Distancia h1 (h1_pe_vgizq): `672.3 mm`
+- Distancia h2 (h2_pe_vgizq): `577.3 mm`
+- Distancia h3 (h3_pe_vgizq): `459.9 mm`
+- Distancia h4 (h4_pe_vgizq): `364.9 mm`
+
+### 1.4 Ámbito: platina extrema de la viga derecha (`END_PLATE_DER`)
+
+#### 1.4.1 Dimensiones principales
+
+- Altura (Hpe_vgder): `756 mm`
+- Ancho (Bpe_vgder) (inp): `235 mm`
+- Espesor (tpe_vgder) (inp): `25.4 mm`
+
+#### 1.4.2 Distancias verticales de pernos
+
+- Distancia de borde a fila 1 (de_pe_vgder) (inp): `n/a`
 - Distancia entre filas de pernos (pb_pe_vgder) (inp): `95 mm`
 - Distancia exterior a fila de pernos (pfo_pe_vgder) (inp): `50 mm`
 - Distancia interior a fila de pernos (pfi_pe_vgder) (inp): `50 mm`
-- Diametro de perforacion de perno (dh_pe_vgder): `28.57 mm`
-- Distancia horizontal entre pernos en platina (g_pe_vgder) (inp): `n/a`
-- Distancia horizontal de borde en platina (deh_pe_vgder): `n/a`
-- Parametro s de platina extremo derecha (s_pe_vgder): `93.87 mm`
-- Distancia h1 de platina extremo derecha (h1_pe_vgder): `672.3 mm`
-- Distancia h2 de platina extremo derecha (h2_pe_vgder): `577.3 mm`
-- Distancia h3 de platina extremo derecha (h3_pe_vgder): `459.9 mm`
-- Distancia h4 de platina extremo derecha (h4_pe_vgder): `364.9 mm`
 
-### 1.5 Ámbito `COLUMN`
+#### 1.4.3 Distancias horizontales y perforaciones
 
-#### 1.5.1 Resumen de geometria
+- Diámetro de perforación de perno (dh_pe_vgder): `28.57 mm`
+- Distancia horizontal entre pernos (g_pe_vgder) (inp): `n/a`
+- Distancia horizontal de borde (deh_pe_vgder): `n/a`
 
-- Perfil de columna (shape_col) (inp): `HEB 500`
-- Tipo de acero del perfil de columna (tipo_acero_perfil_col) (inp): `ASTM A572 Gr 50`
-- Altura de columna (d_col) (inp): `500 mm`
-- Espesor de alma de columna (tw_col) (inp): `14.5 mm`
-- Espesor de ala de columna (tf_col) (inp): `28 mm`
-- Ancho de ala de columna (bf_col) (inp): `300 mm`
-- Proyeccion de columna sobre vigas (St_col) (inp): `2500 mm`
-- Distancia al punto de inflexion superior (ht_col) (inp): `1250 mm`
-- Distancia al punto de inflexion inferior (hb_col) (inp): `1250 mm`
-- gage horizontal de pernos en columna lado izquierda (g_b_col_vgizq) (inp): `150 mm`
-- Distancia exterior ajustada lado izquierda (pso_vgizq): `50.75 mm`
-- Distancia interior ajustada lado izquierda (psi_vgizq): `50.75 mm`
-- Diametro de perforacion en columna lado izquierda (dh_col_vgizq): `28.57 mm`
-- Parametro C de columna lado izquierda (C_col_vgizq): `117.4 mm`
-- Parametro s de columna lado izquierda (s_col_vgizq): `106.07 mm`
-- Distancia h1 de columna lado izquierda (h1_col_vgizq): `672.3 mm`
-- Distancia h2 de columna lado izquierda (h2_col_vgizq): `577.3 mm`
-- Distancia h3 de columna lado izquierda (h3_col_vgizq): `459.9 mm`
-- Distancia h4 de columna lado izquierda (h4_col_vgizq): `364.9 mm`
-- gage horizontal de pernos en columna lado derecha (g_b_col_vgder) (inp): `150 mm`
-- Distancia exterior ajustada lado derecha (pso_vgder): `50.75 mm`
-- Distancia interior ajustada lado derecha (psi_vgder): `50.75 mm`
-- Diametro de perforacion en columna lado derecha (dh_col_vgder): `28.57 mm`
-- Parametro C de columna lado derecha (C_col_vgder): `117.4 mm`
-- Parametro s de columna lado derecha (s_col_vgder): `106.07 mm`
-- Distancia h1 de columna lado derecha (h1_col_vgder): `672.3 mm`
-- Distancia h2 de columna lado derecha (h2_col_vgder): `577.3 mm`
-- Distancia h3 de columna lado derecha (h3_col_vgder): `459.9 mm`
-- Distancia h4 de columna lado derecha (h4_col_vgder): `364.9 mm`
+#### 1.4.4 Parámetros derivados
 
-### 1.6 Ámbito `END_PLATE_STIFFENER_DER`
+- Parámetro s (s_pe_vgder): `93.87 mm`
+- Distancia h1 (h1_pe_vgder): `672.3 mm`
+- Distancia h2 (h2_pe_vgder): `577.3 mm`
+- Distancia h3 (h3_pe_vgder): `459.9 mm`
+- Distancia h4 (h4_pe_vgder): `364.9 mm`
 
-#### 1.6.1 Resumen de geometria
+### 1.5 Ámbito: columna (`COLUMN`)
 
-- Tipo de acero de rigidizador derecha (tipo_acero_pest_vgder) (inp): `ASTM A572 Gr 50`
-- Espesor de rigidizador derecha (t_pest_vgder) (inp): `15.9 mm`
-- Altura del rigidizador de platina extremo derecha (h_pest_vgder): `205 mm`
-- Longitud del rigidizador de platina extremo derecha (L_pest_vgder): `360 mm`
-- Requisito de borde del rigidizador de platina extremo derecha (Ed_pest_vgder): `25 mm`
+#### 1.5.1 Perfil y material
 
-### 1.7 Ámbito `END_PLATE_STIFFENER_IZQ`
+- Perfil (shape_col) (inp): `HEB 500`
+- Tipo de acero del perfil (tipo_acero_perfil_col) (inp): `ASTM A572 Gr 50`
 
-#### 1.7.1 Resumen de geometria
+#### 1.5.2 Geometría de la sección
 
-- Tipo de acero de rigidizador izquierda (tipo_acero_pest_vgizq) (inp): `ASTM A572 Gr 50`
-- Espesor de rigidizador izquierda (t_pest_vgizq) (inp): `15.9 mm`
-- Altura del rigidizador de platina extremo izquierda (h_pest_vgizq): `205 mm`
-- Longitud del rigidizador de platina extremo izquierda (L_pest_vgizq): `360 mm`
-- Requisito de borde del rigidizador de platina extremo izquierda (Ed_pest_vgizq): `25 mm`
+- Altura (d_col) (inp): `500 mm`
+- Espesor de alma (tw_col) (inp): `14.5 mm`
+- Espesor de ala (tf_col) (inp): `28 mm`
+- Ancho de ala (bf_col) (inp): `300 mm`
+- Proyección sobre vigas (St_col) (inp): `2500 mm`
 
-### 1.8 platinas de continuidad
+#### 1.5.3 Puntos de inflexión
 
-#### 1.8.1 Resumen de geometria
+- Distancia al punto de inflexión superior (ht_col) (inp): `1250 mm`
+- Distancia al punto de inflexión inferior (hb_col) (inp): `1250 mm`
 
-- Uso de platinas de continuidad (usar_pc_col) (inp): `True`
-- Tipo de acero de platina de continuidad (tipo_acero_pc_col) (inp): `ASTM A572 Gr 50`
-- Espesor de platina de continuidad (t_pc_col) (inp): `15.9 mm`
-- Ancho base de platina de continuidad (b1_pc_col) (inp): `130 mm`
-- Ancho b1.1 de platina de continuidad (b1.1_pc_col): `130 mm`
-- Ancho b1.2 de platina de continuidad (b1.2_pc_col): `130 mm`
-- Distancia de recorte 1 de platina de continuidad (Clip1_pc_col): `65 mm`
-- Longitud util 1 de platina de continuidad (L1_pc_col): `441 mm`
-- Longitud util 2 de platina de continuidad (L2_pc_col): `311 mm`
-- Distancia de recorte 2 de platina de continuidad (Clip2_pc_col): `21.9 mm`
-- Ancho neto de platina de continuidad (b2_pc_col): `108.1 mm`
+#### 1.5.4 Parámetros de conexión lado izquierdo
 
-### 1.9 platina de enchape del alma
+- Gage horizontal de pernos (g_b_col_vgizq) (inp): `150 mm`
+- Distancia exterior ajustada (pso_vgizq): `50.75 mm`
+- Distancia interior ajustada (psi_vgizq): `50.75 mm`
+- Diámetro de perforación (dh_col_vgizq): `28.57 mm`
+- Distancia entre Pso y Psi (C_col_vgizq): `117.4 mm`
+- Parámetro s (s_col_vgizq): `106.07 mm`
+- Distancia h1 (h1_col_vgizq): `672.3 mm`
+- Distancia h2 (h2_col_vgizq): `577.3 mm`
+- Distancia h3 (h3_col_vgizq): `459.9 mm`
+- Distancia h4 (h4_col_vgizq): `364.9 mm`
 
-#### 1.9.1 Resumen de geometria
+#### 1.5.5 Parámetros de conexión lado derecho
 
-- Uso de platina de enchape del alma (usar_dp_col) (inp): `True`
-- Tipo de acero de platina de enchape del alma (tipo_acero_dp_col) (inp): `ASTM A572 Gr 50`
-- Espesor de platina de enchape del alma (t_dp_col) (inp): `11.1 mm`
-- Numero de platinas de enchape del alma (n_dp_col) (inp): `2`
-- Condicion geometrica de platina de enchape (Extended_dp_col) (inp): `True`
-- Separacion de la platina de enchape respecto al alma (gap_dp_col) (inp): `0 mm`
-- Estado de contacto platina de enchape vs alma: `En contacto con el alma (gap_dp_col <= 2.0 mm)`
-- Altura neta de panel zone en columna para enchape (dz_dp_col): `209 mm`
-- Ancho neto gobernante entre vigas para enchape (wz_dp_col): `111 mm`
-- Altura de platina de enchape (h_dp_col): `836 mm`
-- Ecuacion de h_dp_col: `h_dp_col = 300 mm + max{d_vgder, d_vgizq}` (aplica cuando (`Extended_dp_col=false` y `usar_pc_col=false`) o (`Extended_dp_col=true` y `usar_pc_col=true`))
-- Ancho de platina de enchape (b_dp_col): `444 mm`
-- Ecuacion de b_dp_col: `b_dp_col = d_col - 2*tft_col` (cuando `tipo_w8_col = PJP` o `fillet`)
+- Gage horizontal de pernos (g_b_col_vgder) (inp): `150 mm`
+- Distancia exterior ajustada (pso_vgder): `50.75 mm`
+- Distancia interior ajustada (psi_vgder): `50.75 mm`
+- Diámetro de perforación (dh_col_vgder): `28.57 mm`
+- Distancia entre Pso y Psi (C_col_vgder): `117.4 mm`
+- Parámetro s (s_col_vgder): `106.07 mm`
+- Distancia h1 (h1_col_vgder): `672.3 mm`
+- Distancia h2 (h2_col_vgder): `577.3 mm`
+- Distancia h3 (h3_col_vgder): `459.9 mm`
+- Distancia h4 (h4_col_vgder): `364.9 mm`
 
-### 1.10 Ámbito `BOLTS_DER`
+### 1.6 Ámbito: rigidizador de platina extrema derecha (`END_PLATE_STIFFENER_DER`)
 
-#### 1.10.1 Resumen de geometria
+#### 1.6.1 Material
 
-- Diametro nominal de perno lado derecha (db_b_vgder) (inp): `25.4 mm`
-- Resistencia nominal a traccion de perno lado derecha (Fnt_b_vgder) (inp): `780 MPa`
-- Resistencia nominal a cortante de perno lado derecha (Fnv_b_vgder) (inp): `470 MPa`
-- Condicion de rosca de perno lado derecha (thread_b_vgder) (inp): `N`
-- Numero de pernos lado derecha (n_b_vgder) (inp): `8`
-- Norma de fabricacion del perno lado derecha (std_v_vgder) (inp): `ASTM A490`
-- Tipo de apriete del perno lado derecha (tipo_apriete_b_vgder) (inp): `pretensioned`
-- Area efectiva de perno lado derecha (A_b_vgder): `506.71 mm2`
+- Tipo de acero (tipo_acero_pest_vgder) (inp): `ASTM A572 Gr 50`
 
-### 1.11 Ámbito `BOLTS_IZQ`
+#### 1.6.2 Geometría
 
-#### 1.11.1 Resumen de geometria
+- Espesor (t_pest_vgder) (inp): `15.9 mm`
+- Altura (h_pest_vgder): `205 mm`
+- Longitud (L_pest_vgder): `360 mm`
+- Chaflán de recorte de borde (Ed_pest_vgder): `25 mm`
 
-- Diametro nominal de perno lado izquierda (db_b_vgizq) (inp): `25.4 mm`
-- Resistencia nominal a traccion de perno lado izquierda (Fnt_b_vgizq) (inp): `780 MPa`
-- Resistencia nominal a cortante de perno lado izquierda (Fnv_b_vgizq) (inp): `470 MPa`
-- Condicion de rosca de perno lado izquierda (thread_b_vgizq) (inp): `N`
-- Numero de pernos lado izquierda (n_b_vgizq) (inp): `8`
-- Norma de fabricacion del perno lado izquierda (std_v_vgizq) (inp): `ASTM A490`
-- Tipo de apriete del perno lado izquierda (tipo_apriete_b_vgizq) (inp): `pretensioned`
-- Area efectiva de perno lado izquierda (A_b_vgizq): `506.71 mm2`
+### 1.7 Ámbito: rigidizador de platina extrema izquierda (`END_PLATE_STIFFENER_IZQ`)
+
+#### 1.7.1 Material
+
+- Tipo de acero (tipo_acero_pest_vgizq) (inp): `ASTM A572 Gr 50`
+
+#### 1.7.2 Geometría
+
+- Espesor (t_pest_vgizq) (inp): `15.9 mm`
+- Altura (h_pest_vgizq): `205 mm`
+- Longitud (L_pest_vgizq): `360 mm`
+- Chaflán de recorte de borde (Ed_pest_vgizq): `25 mm`
+
+### 1.8 Ámbito: platinas de continuidad de columna (`CONTINUITY_PLATE_COL`)
+
+#### 1.8.1 Uso y material
+
+- Uso (usar_pc_col) (inp): `True`
+- Tipo de acero (tipo_acero_pc_col) (inp): `ASTM A572 Gr 50`
+
+#### 1.8.2 Dimensiones base
+
+- Espesor (t_pc_col) (inp): `15.9 mm`
+- Ancho base 1 (b1_pc_col) (inp): `130 mm`
+- Ancho b1.1 (b1.1_pc_col): `130 mm`
+- Ancho b1.2 (b1.2_pc_col): `130 mm`
+- Longitud base 1 (L1_pc_col): `441 mm`
+
+#### 1.8.3 Recortes y longitudes útiles
+
+- Recorte 1 (Clip1_pc_col): `65 mm`
+- Longitud 2 (L2_pc_col): `311 mm`
+- Recorte 2 (Clip2_pc_col): `21.9 mm`
+- Ancho 2 (b2_pc_col): `108.1 mm`
+
+### 1.9 Ámbito: platina de enchape del alma de columna (`DOUBLER_PLATE_COL`)
+
+#### 1.9.1 Uso y material
+
+- Uso (usar_dp_col) (inp): `True`
+- Tipo de acero (tipo_acero_dp_col) (inp): `ASTM A572 Gr 50`
+
+#### 1.9.2 Geometría de la platina
+
+- Espesor (t_dp_col) (inp): `11.1 mm`
+- Número de platinas (n_dp_col) (inp): `2`
+- Platina de enchape extendida en altura (Extended_dp_col) (inp): `True`
+- Separación respecto al alma (gap_dp_col) (inp): `0 mm`
+- Estado de contacto con el alma: `En contacto con el alma (gap_dp_col <= 2.0 mm)`
+
+#### 1.9.3 Zona de panel y soldaduras de tapón
+
+- Altura de zona de panel (dz_dp_col): `209 mm`
+- Ancho de zona de panel (wz_dp_col): `111 mm`
+
+#### 1.9.4 Dimensiones finales
+
+- Altura (h_dp_col): `836 mm`
+- Ecuación de h_dp_col: `h_dp_col = 300 mm + max{d_vgder, d_vgizq}` (aplica cuando (`Extended_dp_col=false` y `usar_pc_col=false`) o (`Extended_dp_col=true` y `usar_pc_col=true`))
+- Ancho (b_dp_col): `444 mm`
+- Ecuación de b_dp_col: `b_dp_col = d_col - 2*tft_col` (cuando `tipo_w8_col = PJP` o `fillet`)
+
+### 1.10 Ámbito: grupo de pernos de la viga derecha (`BOLTS_DER`)
+
+#### 1.10.1 Material y norma
+
+- Grupo (desc_b_vgder) (inp): `Grupo 150`
+- Shape (shape_b_vgder) (inp): `P1"X1-3/4"`
+- Norma de fabricación (std_v_vgder) (inp): `ASTM A490`
+- Tipo de apriete (tipo_apriete_b_vgder) (inp): `pretensioned`
+- Condición de rosca (thread_b_vgder) (inp): `N`
+
+#### 1.10.2 Geometría y cantidad
+
+- Diámetro nominal (db_b_vgder) (inp): `25.4 mm`
+- Número de pernos (n_b_vgder) (inp): `8`
+- Área efectiva (A_b_vgder): `506.71 mm2`
+
+#### 1.10.3 Resistencias nominales
+
+- Resistencia a tracción (Fnt_b_vgder) (inp): `780 MPa`
+- Resistencia a cortante (Fnv_b_vgder) (inp): `470 MPa`
+
+### 1.11 Ámbito: grupo de pernos de la viga izquierda (`BOLTS_IZQ`)
+
+#### 1.11.1 Material y norma
+
+- Grupo (desc_b_vgizq) (inp): `Grupo 150`
+- Shape (shape_b_vgizq) (inp): `P1"X1-3/4"`
+- Norma de fabricación (std_v_vgizq) (inp): `ASTM A490`
+- Tipo de apriete (tipo_apriete_b_vgizq) (inp): `pretensioned`
+- Condición de rosca (thread_b_vgizq) (inp): `N`
+
+#### 1.11.2 Geometría y cantidad
+
+- Diámetro nominal (db_b_vgizq) (inp): `25.4 mm`
+- Número de pernos (n_b_vgizq) (inp): `8`
+- Área efectiva (A_b_vgizq): `506.71 mm2`
+
+#### 1.11.3 Resistencias nominales
+
+- Resistencia a tracción (Fnt_b_vgizq) (inp): `780 MPa`
+- Resistencia a cortante (Fnv_b_vgizq) (inp): `470 MPa`
 
 ### 1.12 Ámbito `WELD_1_VGDER`
 

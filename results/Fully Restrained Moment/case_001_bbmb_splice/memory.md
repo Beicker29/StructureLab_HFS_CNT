@@ -841,11 +841,11 @@ Propiedades organizadas por ámbito.
 #### 4.5.1. ELR #2: Rotura por tracción de la viga
 
 - Cláusula: `Documento: AISC 360-22 | Sección: J4.1.(b)`
-- Ecuaciones: `si 2*g_blt_web*(n_blt_web_x - 1)*sqrt(3)/3 + (n_blt_web_y - 1)*p_blt_web - n_blt_web_y*(dh.1 + 1.80mm) <= T_vg -> Ant_v3_vg = tw_vg*(2*g_blt_web*(n_blt_web_x - 1)*sqrt(3)/3 + (n_blt_web_y - 1)*p_blt_web - n_blt_web_y*(dh.1 + 1.80mm)); si no -> Ant_v3_vg = A_vg - n_blt_web_y*(dh.1 + 1.80mm)*tw_vg; si n_blt_web_x <= 1 -> U_web_v3_vg = T_vg*tw_vg/A_vg; si n_blt_web_x > 1 -> U_web_v3_vg = 1 - 0.5*tw_vg/((n_blt_web_x - 1)*g_blt_web); si n_blt_flange_x <= 1 -> U_flange_v3_vg = 2*bf_vg*tw_vg/A_vg; si n_blt_flange_x > 1 -> U_flange_v3_vg = 1 - xt_flange_vg/((n_blt_flange_x - 1)*p_plt_flange); Subcaso 2.1: si 0.75 < alpha_Pu_web <= 1 -> U_v3_vg = U_web_v3_vg; Subcaso 2.2: si 0.25 < alpha_Pu_web <= 0.75 -> U_v3_vg = max(U_web_v3_vg, U_flange_v3_vg); Subcaso 2.3: si alpha_Pu_web <= 0.25 -> U_v3_vg = U_flange_v3_vg; U_v3_vg = min(U_v3_raw, 1.0); Ae_v3_vg = Ant_v3_vg*U_v3_vg; Rn3_v3_vg = Fu_vg*Ae_v3_vg; phi*Rn3_v3_vg = phi_fragil*Rn3_v3_vg; Ru3_v3_vg = Pu_sp; DCR3_v3_vg = Ru3_v3_vg/phi*Rn3_v3_vg`
+- Ecuaciones: `si 2*g_blt_web*(n_blt_web_x - 1)*sqrt(3)/3 + (n_blt_web_y - 1)*p_blt_web - n_blt_web_y*(dh.1 + 1.80mm) <= T_vg -> Ant_v3_vg = tw_vg*(2*g_blt_web*(n_blt_web_x - 1)*sqrt(3)/3 + (n_blt_web_y - 1)*p_blt_web - n_blt_web_y*(dh.1 + 1.80mm)); si no -> Ant_v3_vg = A_vg - n_blt_web_y*(dh.1 + 1.80mm)*tw_vg; si n_blt_web_x <= 1 -> U_web_v3_vg = T_vg*tw_vg/A_vg; si n_blt_web_x > 1 -> U_web_v3_vg = 1 - 0.5*tw_vg/((n_blt_web_x - 1)*g_blt_web); si n_blt_flange_x <= 1 -> U_flange_v3_vg = 2*bf_vg*tw_vg/A_vg; xt_flange_vg = d_vg*0.5 - z_vg/A_vg; si n_blt_flange_x > 1 -> U_flange_v3_vg = 1 - xt_flange_vg/((n_blt_flange_x - 1)*p_plt_flange); Subcaso 2.1: si 0.75 < alpha_Pu_web <= 1 -> U_v3_vg = U_web_v3_vg; Subcaso 2.2: si 0.25 < alpha_Pu_web <= 0.75 -> U_v3_vg = max(U_web_v3_vg, U_flange_v3_vg); Subcaso 2.3: si alpha_Pu_web <= 0.25 -> U_v3_vg = U_flange_v3_vg; U_v3_vg = min(U_v3_raw, 1.0); Ae_v3_vg = Ant_v3_vg*U_v3_vg; Rn3_v3_vg = Fu_vg*Ae_v3_vg; phi*Rn3_v3_vg = phi_fragil*Rn3_v3_vg; Ru3_v3_vg = Pu_sp; DCR3_v3_vg = Ru3_v3_vg/phi*Rn3_v3_vg`
 - Fu_vg: `450 MPa`
 - T_vg: `394 mm`
 - tw_vg: `9.02 mm`
-- A_vg: `4122.14 mm2`
+- A_vg: `9480 mm2`
 - n_blt_web_y: `5`
 - dh.1: `20.64 mm`
 - Ant_v3_vg: `2010.27 mm2`
@@ -855,15 +855,18 @@ Propiedades organizadas por ámbito.
 - n_blt_flange_x: `5`
 - p_plt_flange: `70 mm`
 - bf_vg: `191 mm`
-- xt_flange_vg: `54.17 mm`
+- z_vg: `1660000 mm3`
+- xt_flange_vg_ref: `54.17 mm`
+- xt_flange_vg: `53.39 mm`
+- delta_xt_flange_vg: `-0.78 mm`
 - U_web_v3_vg: `0.93`
 - U_flange_v3_vg: `0.81`
 - Caso U_v3_vg: `2.3`
 - U_v3_vg: `0.81`
-- Ae_v3_vg: `1621.32 mm2`
+- Ae_v3_vg: `1626.92 mm2`
 - phi_fragil: `0.75`
-- Rn3_v3_vg: `729.6 kN`
-- phi*Rn3_v3_vg: `547.2 kN`
+- Rn3_v3_vg: `732.11 kN`
+- phi*Rn3_v3_vg: `549.09 kN`
 - Pu_sp: `0 kN`
 - Ru3_v3_vg = Pu_sp: `0 kN`
 - DCR3_v3_vg: `0`

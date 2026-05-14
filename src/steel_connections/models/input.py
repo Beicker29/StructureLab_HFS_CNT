@@ -443,9 +443,17 @@ class AISC358MomentGeometry(StrictModel):
     def validate_continuity_plate_extra_weld_lines_9(cls, value: int | None) -> int | None:
         if value is None:
             return None
-        if value <= 0:
-            raise ValueError("geometry.nl_w9_col must be >= 1.")
+        if value < 0:
+            raise ValueError("geometry.nl_w9_col must be >= 0.")
         return value
+
+    @model_validator(mode="after")
+    def validate_disabled_weld_9_lines(self) -> "AISC358MomentGeometry":
+        if self.nl_w9_col == 0 and self.use_weld_9_col is not False:
+            raise ValueError(
+                "geometry.nl_w9_col must be >= 1 unless geometry.use_weld_9_col is false."
+            )
+        return self
 
     @field_validator("end_plate_beam_web_weld_lines_nl_vgder", "end_plate_beam_web_weld_lines_nl_vgizq")
     @classmethod

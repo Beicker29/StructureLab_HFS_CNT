@@ -2174,10 +2174,16 @@
                 "unit": "mm"
               },
               "a_vg_var": "A_vg",
-              "a_vg_formula": "A_vg = d_vg*tw_vg",
+              "a_vg_formula": "A_vg tomado del catalogo (usando ag)",
               "a_vg": {
-                "value": 4122.139999999999,
+                "value": 9480.0,
                 "unit": "mm2"
+              },
+              "z_vg_var": "z_vg",
+              "z_vg_formula": "z_vg tomado del catalogo (usando zx)",
+              "z_vg": {
+                "value": 1660000.0,
+                "unit": "mm3"
               },
               "n_blt_web_y_var": "n_blt_web_y",
               "n_blt_web_y": 5,
@@ -2214,8 +2220,19 @@
                 "unit": "mm"
               },
               "xt_flange_vg_var": "xt_flange_vg",
+              "xt_flange_vg_formula": "xt_flange_vg = d_vg*0.5 - z_vg/A_vg",
               "xt_flange_vg": {
+                "value": 53.39451476793249,
+                "unit": "mm"
+              },
+              "xt_flange_vg_ref_var": "xt_flange_vg_ref",
+              "xt_flange_vg_ref": {
                 "value": 54.17442837749852,
+                "unit": "mm"
+              },
+              "delta_xt_flange_vg_var": "delta_xt_flange_vg",
+              "delta_xt_flange_vg": {
+                "value": -0.7799136095660302,
                 "unit": "mm"
               },
               "u_web_v3_vg_var": "U_web_v3_vg",
@@ -2223,16 +2240,16 @@
               "u_web_v3_vg": 0.9306153846153846,
               "u_flange_v3_vg_var": "U_flange_v3_vg",
               "u_flange_v3_vg_formula": "si n_blt_flange_x > 1 -> U_flange = 1 - xt_flange_vg/((n_blt_flange_x - 1)*p_plt_flange)",
-              "u_flange_v3_vg": 0.806519898651791,
+              "u_flange_v3_vg": 0.8093053044002411,
               "u_v3_vg_case_var": "Caso U_v3_vg",
               "u_v3_vg_case": "2.3",
               "u_v3_vg_var": "U_v3_vg",
               "u_v3_vg_formula": "Caso 2 - Subcaso 2.1: si 0.75 < alpha_Pu_web <= 1 -> U_v3_vg = U_web_v3_vg; Subcaso 2.2: si 0.25 < alpha_Pu_web <= 0.75 -> U_v3_vg = max(U_web_v3_vg, U_flange_v3_vg); Subcaso 2.3: si alpha_Pu_web <= 0.25 -> U_v3_vg = U_flange_v3_vg; U_v3_vg = min(U_v3_raw, 1.0)",
-              "u_v3_vg": 0.806519898651791,
+              "u_v3_vg": 0.8093053044002411,
               "ae_v3_vg_var": "Ae_v3_vg",
               "ae_v3_vg_formula": "Ae_v3_vg = Ant_v3_vg*U_v3_vg",
               "ae_v3_vg": {
-                "value": 1621.322495069422,
+                "value": 1626.9219117799175,
                 "unit": "mm2"
               },
               "phi_fragil_var": "phi_fragil",
@@ -2240,13 +2257,13 @@
               "rn3_v3_vg_var": "Rn3_v3_vg",
               "rn3_v3_vg_formula": "Rn3_v3_vg = Fu_vg*Ae_v3_vg",
               "rn3_v3_vg": {
-                "value": 729.5951227812399,
+                "value": 732.114860300963,
                 "unit": "kN"
               },
               "phi_rn3_v3_vg_var": "phi*Rn3_v3_vg",
               "phi_rn3_v3_vg_formula": "phi*Rn3_v3_vg = phi_fragil*Rn3_v3_vg",
               "phi_rn3_v3_vg": {
-                "value": 547.1963420859299,
+                "value": 549.0861452257222,
                 "unit": "kN"
               },
               "pu_sp_var": "Pu_sp",

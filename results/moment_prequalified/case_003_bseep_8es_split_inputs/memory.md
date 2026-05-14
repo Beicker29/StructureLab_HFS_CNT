@@ -10,421 +10,559 @@
 
 Propiedades organizadas por ámbito.
 
-### 1.1 Ámbito `BEAM_IZQ`
+### 1.1 Ámbito: viga ubicada a la izquierda de la columna (`BEAM_IZQ`)
 
 #### 1.1.1 Resumen de geometría
 
-- Perfil de viga izquierda (perfil_vgizq) (inp): `W21X68`
-- Tipo de acero del perfil de viga izquierda (tipo_acero_perfil_vgizq) (inp): `ASTM A572 Gr 50`
-- Demanda de ductilidad de viga izquierda (demanda_ductilidad_vgizq) (inp): `high`
-- Luz libre de viga izquierda (Llb_vgizq) (inp): `7500 mm`
+- Perfil (perfil_vgizq) (inp): `W21X68`
+
+#### 1.1.2 Material del perfil
+
+- Tipo de acero del perfil (tipo_acero_perfil_vgizq) (inp): `ASTM A572 Gr 50`
+- Esfuerzo de fluencia Fy (fy_vgizq): `345 MPa`
+- Resistencia última Fu (fu_vgizq): `450 MPa`
+- Módulo de elasticidad (E_vgizq) (inp): `200000 MPa`
+- Norma asociada a pernos de la viga (std_v_vgizq) (inp): `ASTM A490`
+
+#### 1.1.3 Geometría del perfil
+
+- Luz libre (Llb_vgizq) (inp): `7500 mm`
 - Longitud sin conectores desde cara de columna (Lnc_vgizq) (inp): `1000 mm`
 - Longitud de zona protegida (Lpz_vgizq): `628 mm`
 
-### 1.2 Ámbito `BEAM_DER`
+#### 1.1.4 Demandas y parámetros sísmicos
+
+- Demanda de ductilidad (demanda_ductilidad_vgizq) (inp): `high`
+- Carga axial (Pu_vgizq) (inp): `0 kN`
+- Cortante mayorado (Vu2_vgizq) (inp): `169.92 kN`
+- Momento mayorado (Mu3_vgizq) (inp): `392.52 kN-m`
+- Cortante gravitacional (Vg_vgizq) (inp): `98.2 kN`
+
+### 1.2 Ámbito: viga ubicada a la derecha de la columna (`BEAM_DER`)
 
 #### 1.2.1 Resumen de geometría
 
-- Perfil de viga derecha (perfil_vgder) (inp): `W21X68`
-- Tipo de acero del perfil de viga derecha (tipo_acero_perfil_vgder) (inp): `ASTM A572 Gr 50`
-- Demanda de ductilidad de viga derecha (demanda_ductilidad_vgder) (inp): `high`
-- Luz libre de viga derecha (Llb_vgder) (inp): `7500 mm`
+- Perfil (perfil_vgder) (inp): `W21X68`
+
+#### 1.2.2 Material del perfil
+
+- Tipo de acero del perfil (tipo_acero_perfil_vgder) (inp): `ASTM A572 Gr 50`
+- Esfuerzo de fluencia Fy (fy_vgder): `345 MPa`
+- Resistencia última Fu (fu_vgder): `450 MPa`
+- Módulo de elasticidad (E_vgder) (inp): `200000 MPa`
+- Norma asociada a pernos de la viga (std_v_vgder) (inp): `ASTM A490`
+
+#### 1.2.3 Geometría del perfil
+
+- Luz libre (Llb_vgder) (inp): `7500 mm`
 - Longitud sin conectores desde cara de columna (Lnc_vgder) (inp): `1000 mm`
 - Longitud de zona protegida (Lpz_vgder): `628 mm`
 
-### 1.3 Ámbito `END_PLATE_IZQ`
+#### 1.2.4 Demandas y parámetros sísmicos
 
-#### 1.3.1 Resumen de geometría
+- Demanda de ductilidad (demanda_ductilidad_vgder) (inp): `high`
+- Carga axial (Pu_vgder) (inp): `0 kN`
+- Cortante mayorado (Vu2_vgder) (inp): `164.99 kN`
+- Momento mayorado (Mu3_vgder) (inp): `382.5 kN-m`
+- Cortante gravitacional (Vg_vgder) (inp): `96.64 kN`
 
-- Altura de platina extremo de viga izquierda (Hpe_vgizq): `950 mm`
-- Ancho de platina extremo de viga izquierda (Bpe_vgizq) (inp): `230 mm`
-- Espesor de platina extremo de viga izquierda (tpe_vgizq) (inp): `25 mm`
-- Distancia de borde a fila 1 de pernos (de_pe_vgizq) (inp): `62 mm`
+### 1.3 Ámbito: platina extrema de la viga izquierda (`END_PLATE_IZQ`)
+
+#### 1.3.1 Material
+
+- Tipo de acero (tipo_acero_pe_vgizq) (inp): `ASTM A572 Gr 50`
+- Esfuerzo de fluencia Fy (fy_pe_vgizq): `345 MPa`
+- Resistencia última Fu (fu_pe_vgizq): `450 MPa`
+- Condición superficial (cond_pe_vgizq) (inp): `painted`
+- Condición ambiental (cond_amb_pe_vgizq) (inp): `non_corrosive`
+
+#### 1.3.2 Dimensiones principales
+
+- Altura (Hpe_vgizq): `950 mm`
+- Ancho (Bpe_vgizq) (inp): `230 mm`
+- Espesor (tpe_vgizq) (inp): `25 mm`
+
+#### 1.3.3 Distancias verticales de pernos
+
+- Distancia de borde a fila 1 (de_pe_vgizq) (inp): `62 mm`
 - Distancia entre filas de pernos (pb_pe_vgizq) (inp): `95 mm`
 - Distancia exterior a fila de pernos (pfo_pe_vgizq) (inp): `50 mm`
 - Distancia interior a fila de pernos (pfi_pe_vgizq) (inp): `50 mm`
+
+#### 1.3.4 Distancias horizontales y perforaciones
+
 - Diámetro de perforación de perno (dh_pe_vgizq): `28.57 mm`
-- Distancia horizontal entre pernos en platina (g_pe_vgizq) (inp): `150 mm`
-- Distancia horizontal de borde en platina (deh_pe_vgizq): `40 mm`
-- Parametro s de platina extremo izquierda (s_pe_vgizq): `92.87 mm`
-- Distancia h1 de platina extremo izquierda (h1_pe_vgizq): `672.3 mm`
-- Distancia h2 de platina extremo izquierda (h2_pe_vgizq): `577.3 mm`
-- Distancia h3 de platina extremo izquierda (h3_pe_vgizq): `459.9 mm`
-- Distancia h4 de platina extremo izquierda (h4_pe_vgizq): `364.9 mm`
+- Distancia horizontal entre pernos (g_pe_vgizq) (inp): `150 mm`
+- Distancia horizontal de borde (deh_pe_vgizq): `40 mm`
 
-### 1.4 Ámbito `END_PLATE_DER`
+#### 1.3.5 Parámetros derivados
 
-#### 1.4.1 Resumen de geometría
+- Parámetro s (s_pe_vgizq): `92.87 mm`
+- Distancia h1 (h1_pe_vgizq): `672.3 mm`
+- Distancia h2 (h2_pe_vgizq): `577.3 mm`
+- Distancia h3 (h3_pe_vgizq): `459.9 mm`
+- Distancia h4 (h4_pe_vgizq): `364.9 mm`
 
-- Altura de platina extremo de viga derecha (Hpe_vgder): `950 mm`
-- Ancho de platina extremo de viga derecha (Bpe_vgder) (inp): `230 mm`
-- Espesor de platina extremo de viga derecha (tpe_vgder) (inp): `25 mm`
-- Distancia de borde a fila 1 de pernos (de_pe_vgder) (inp): `62 mm`
+### 1.4 Ámbito: platina extrema de la viga derecha (`END_PLATE_DER`)
+
+#### 1.4.1 Material
+
+- Tipo de acero (tipo_acero_pe_vgder) (inp): `ASTM A572 Gr 50`
+- Esfuerzo de fluencia Fy (fy_pe_vgder): `345 MPa`
+- Resistencia última Fu (fu_pe_vgder): `450 MPa`
+- Condición superficial (cond_pe_vgder) (inp): `painted`
+- Condición ambiental (cond_amb_pe_vgder) (inp): `non_corrosive`
+
+#### 1.4.2 Dimensiones principales
+
+- Altura (Hpe_vgder): `950 mm`
+- Ancho (Bpe_vgder) (inp): `230 mm`
+- Espesor (tpe_vgder) (inp): `25 mm`
+
+#### 1.4.3 Distancias verticales de pernos
+
+- Distancia de borde a fila 1 (de_pe_vgder) (inp): `62 mm`
 - Distancia entre filas de pernos (pb_pe_vgder) (inp): `95 mm`
 - Distancia exterior a fila de pernos (pfo_pe_vgder) (inp): `50 mm`
 - Distancia interior a fila de pernos (pfi_pe_vgder) (inp): `50 mm`
+
+#### 1.4.4 Distancias horizontales y perforaciones
+
 - Diámetro de perforación de perno (dh_pe_vgder): `28.57 mm`
-- Distancia horizontal entre pernos en platina (g_pe_vgder) (inp): `150 mm`
-- Distancia horizontal de borde en platina (deh_pe_vgder): `40 mm`
-- Parametro s de platina extremo derecha (s_pe_vgder): `92.87 mm`
-- Distancia h1 de platina extremo derecha (h1_pe_vgder): `672.3 mm`
-- Distancia h2 de platina extremo derecha (h2_pe_vgder): `577.3 mm`
-- Distancia h3 de platina extremo derecha (h3_pe_vgder): `459.9 mm`
-- Distancia h4 de platina extremo derecha (h4_pe_vgder): `364.9 mm`
+- Distancia horizontal entre pernos (g_pe_vgder) (inp): `150 mm`
+- Distancia horizontal de borde (deh_pe_vgder): `40 mm`
 
-### 1.5 Ámbito `COLUMN`
+#### 1.4.5 Parámetros derivados
 
-#### 1.5.1 Resumen de geometría
+- Parámetro s (s_pe_vgder): `92.87 mm`
+- Distancia h1 (h1_pe_vgder): `672.3 mm`
+- Distancia h2 (h2_pe_vgder): `577.3 mm`
+- Distancia h3 (h3_pe_vgder): `459.9 mm`
+- Distancia h4 (h4_pe_vgder): `364.9 mm`
 
-- Perfil de columna (shape_col) (inp): `HEB 500`
-- Tipo de acero del perfil de columna (tipo_acero_perfil_col) (inp): `ASTM A572 Gr 50`
-- Altura de columna (d_col) (inp): `500 mm`
-- Espesor de alma de columna (tw_col) (inp): `14.5 mm`
-- Espesor de ala de columna (tf_col) (inp): `28 mm`
-- Ancho de ala de columna (bf_col) (inp): `300 mm`
-- Proyeccion de columna sobre vigas (St_col) (inp): `2500 mm`
-- Distancia al punto de inflexion superior (ht_col) (inp): `1250 mm`
-- Distancia al punto de inflexion inferior (hb_col) (inp): `1250 mm`
-- gage horizontal de pernos en columna lado izquierda (g_b_col_vgizq) (inp): `150 mm`
-- Distancia exterior ajustada lado izquierda (pso_vgizq): `50.7 mm`
-- Distancia interior ajustada lado izquierda (psi_vgizq): `50.7 mm`
-- Diámetro de perforación en columna lado izquierda (dh_col_vgizq): `28.57 mm`
-- Parametro C de columna lado izquierda (C_col_vgizq): `117.4 mm`
-- Parametro s de columna lado izquierda (s_col_vgizq): `106.07 mm`
-- Distancia h1 de columna lado izquierda (h1_col_vgizq): `672.3 mm`
-- Distancia h2 de columna lado izquierda (h2_col_vgizq): `577.3 mm`
-- Distancia h3 de columna lado izquierda (h3_col_vgizq): `459.9 mm`
-- Distancia h4 de columna lado izquierda (h4_col_vgizq): `364.9 mm`
-- gage horizontal de pernos en columna lado derecha (g_b_col_vgder) (inp): `150 mm`
-- Distancia exterior ajustada lado derecha (pso_vgder): `50.7 mm`
-- Distancia interior ajustada lado derecha (psi_vgder): `50.7 mm`
-- Diámetro de perforación en columna lado derecha (dh_col_vgder): `28.57 mm`
-- Parametro C de columna lado derecha (C_col_vgder): `117.4 mm`
-- Parametro s de columna lado derecha (s_col_vgder): `106.07 mm`
-- Distancia h1 de columna lado derecha (h1_col_vgder): `672.3 mm`
-- Distancia h2 de columna lado derecha (h2_col_vgder): `577.3 mm`
-- Distancia h3 de columna lado derecha (h3_col_vgder): `459.9 mm`
-- Distancia h4 de columna lado derecha (h4_col_vgder): `364.9 mm`
+### 1.5 Ámbito: columna (`COLUMN`)
 
-### 1.6 Ámbito `END_PLATE_STIFFENER_DER`
+#### 1.5.1 Perfil y material
 
-#### 1.6.1 Resumen de geometría
+- Perfil (shape_col) (inp): `HEB 500`
+- Tipo de acero del perfil (tipo_acero_perfil_col) (inp): `ASTM A572 Gr 50`
+- Esfuerzo de fluencia Fy (fy_col): `345 MPa`
+- Resistencia última Fu (fu_col): `450 MPa`
+- Módulo de elasticidad (E_col) (inp): `200000 MPa`
+- Condición superficial (cond_col) (inp): `painted`
+- Condición ambiental (cond_amb_col) (inp): `non_corrosive`
 
-- Tipo de acero de rigidizador derecha (tipo_acero_pest_vgder) (inp): `ASTM A572 Gr 50`
-- Espesor de rigidizador derecha (t_pest_vgder) (inp): `16 mm`
-- Altura del rigidizador de platina extremo derecha (h_pest_vgder): `207 mm`
-- Longitud del rigidizador de platina extremo derecha (L_pest_vgder): `360 mm`
-- Requisito de borde del rigidizador de platina extremo derecha (Ed_pest_vgder): `25 mm`
+#### 1.5.2 Geometría de la sección
 
-### 1.7 Ámbito `END_PLATE_STIFFENER_IZQ`
+- Altura (d_col) (inp): `500 mm`
+- Espesor de alma (tw_col) (inp): `14.5 mm`
+- Espesor de ala (tf_col) (inp): `28 mm`
+- Ancho de ala (bf_col) (inp): `300 mm`
+- Proyección sobre vigas (St_col) (inp): `2500 mm`
 
-#### 1.7.1 Resumen de geometría
+#### 1.5.3 Puntos de inflexión
 
-- Tipo de acero de rigidizador izquierda (tipo_acero_pest_vgizq) (inp): `ASTM A572 Gr 50`
-- Espesor de rigidizador izquierda (t_pest_vgizq) (inp): `16 mm`
-- Altura del rigidizador de platina extremo izquierda (h_pest_vgizq): `207 mm`
-- Longitud del rigidizador de platina extremo izquierda (L_pest_vgizq): `360 mm`
-- Requisito de borde del rigidizador de platina extremo izquierda (Ed_pest_vgizq): `25 mm`
+- Distancia al punto de inflexión superior (ht_col) (inp): `1250 mm`
+- Distancia al punto de inflexión inferior (hb_col) (inp): `1250 mm`
 
-### 1.8 platinas de continuidad
+#### 1.5.4 Demandas y parámetros de columna
 
-#### 1.8.1 Resumen de geometría
+- Carga axial (Pu_col) (inp): `1101.05 kN`
+- Demanda de ductilidad (demanda_ductilidad_col) (inp): `high`
+- Consideración de deformación inelástica en zona de panel (consideracion_deformacion_inelastica_zona_panel) (inp): `False`
+- Unión columna-losa (union_col_losa) (inp): `isolated`
 
-- Uso de platinas de continuidad (usar_pc_col) (inp): `True`
-- Tipo de acero de platina de continuidad (tipo_acero_pc_col) (inp): `ASTM A572 Gr 50`
-- Espesor de platina de continuidad (t_pc_col) (inp): `16 mm`
-- Ancho base de platina de continuidad (b1_pc_col) (inp): `130 mm`
-- Ancho b1.1 de platina de continuidad (b1.1_pc_col): `130 mm`
-- Ancho b1.2 de platina de continuidad (b1.2_pc_col): `130 mm`
-- Distancia de recorte 1 de platina de continuidad (Clip1_pc_col): `65 mm`
-- Longitud útil 1 de platina de continuidad (L1_pc_col): `441 mm`
-- Longitud útil 2 de platina de continuidad (L2_pc_col): `311 mm`
-- Distancia de recorte 2 de platina de continuidad (Clip2_pc_col): `25 mm`
-- Ancho neto de platina de continuidad (b2_pc_col): `105 mm`
+#### 1.5.5 Parámetros de conexión lado izquierdo
 
-### 1.9 platina de enchape del alma
+- Gage horizontal de pernos (g_b_col_vgizq) (inp): `150 mm`
+- Distancia exterior ajustada (pso_vgizq): `50.7 mm`
+- Distancia interior ajustada (psi_vgizq): `50.7 mm`
+- Diámetro de perforación (dh_col_vgizq): `28.57 mm`
+- Distancia entre Pso y Psi (C_col_vgizq): `117.4 mm`
+- Parámetro s (s_col_vgizq): `106.07 mm`
+- Distancia h1 (h1_col_vgizq): `672.3 mm`
+- Distancia h2 (h2_col_vgizq): `577.3 mm`
+- Distancia h3 (h3_col_vgizq): `459.9 mm`
+- Distancia h4 (h4_col_vgizq): `364.9 mm`
 
-#### 1.9.1 Resumen de geometría
+#### 1.5.6 Parámetros de conexión lado derecho
 
-- Uso de platina de enchape del alma (usar_dp_col) (inp): `True`
-- Tipo de acero de platina de enchape del alma (tipo_acero_dp_col) (inp): `ASTM A572 Gr 50`
-- Espesor de platina de enchape del alma (t_dp_col) (inp): `12 mm`
-- Número de platinas de enchape del alma (n_dp_col) (inp): `2`
-- Condición geometrica de platina de enchape (Extended_dp_col) (inp): `True`
-- Separación de la platina de enchape respecto al alma (gap_dp_col) (inp): `0 mm`
-- Estado de contacto platina de enchape vs alma: `En contacto con el alma (gap_dp_col <= 2.0 mm)`
-- Altura de la zona de panel (dz_dp_col): `501.2 mm`
+- Gage horizontal de pernos (g_b_col_vgder) (inp): `150 mm`
+- Distancia exterior ajustada (pso_vgder): `50.7 mm`
+- Distancia interior ajustada (psi_vgder): `50.7 mm`
+- Diámetro de perforación (dh_col_vgder): `28.57 mm`
+- Distancia entre Pso y Psi (C_col_vgder): `117.4 mm`
+- Parámetro s (s_col_vgder): `106.07 mm`
+- Distancia h1 (h1_col_vgder): `672.3 mm`
+- Distancia h2 (h2_col_vgder): `577.3 mm`
+- Distancia h3 (h3_col_vgder): `459.9 mm`
+- Distancia h4 (h4_col_vgder): `364.9 mm`
+
+### 1.6 Ámbito: rigidizador de platina extrema derecha (`END_PLATE_STIFFENER_DER`)
+
+#### 1.6.1 Material
+
+- Tipo de acero (tipo_acero_pest_vgder) (inp): `ASTM A572 Gr 50`
+- Esfuerzo de fluencia Fy (fy_pest_vgder): `345 MPa`
+- Resistencia última Fu (fu_pest_vgder): `450 MPa`
+
+#### 1.6.2 Geometría
+
+- Espesor (t_pest_vgder) (inp): `16 mm`
+- Altura (h_pest_vgder): `207 mm`
+- Longitud (L_pest_vgder): `360 mm`
+- Chaflán de recorte de borde (Ed_pest_vgder): `25 mm`
+
+### 1.7 Ámbito: rigidizador de platina extrema izquierda (`END_PLATE_STIFFENER_IZQ`)
+
+#### 1.7.1 Material
+
+- Tipo de acero (tipo_acero_pest_vgizq) (inp): `ASTM A572 Gr 50`
+- Esfuerzo de fluencia Fy (fy_pest_vgizq): `345 MPa`
+- Resistencia última Fu (fu_pest_vgizq): `450 MPa`
+
+#### 1.7.2 Geometría
+
+- Espesor (t_pest_vgizq) (inp): `16 mm`
+- Altura (h_pest_vgizq): `207 mm`
+- Longitud (L_pest_vgizq): `360 mm`
+- Chaflán de recorte de borde (Ed_pest_vgizq): `25 mm`
+
+### 1.8 Ámbito: platinas de continuidad de columna (`CONTINUITY_PLATE_COL`)
+
+#### 1.8.1 Uso y material
+
+- Uso (usar_pc_col) (inp): `True`
+- Número de platinas (n_pc_col) (inp): `2`
+- Tipo de acero (tipo_acero_pc_col) (inp): `ASTM A572 Gr 50`
+- Esfuerzo de fluencia Fy (fy_pc_col): `345 MPa`
+- Resistencia última Fu (fu_pc_col): `450 MPa`
+
+#### 1.8.2 Dimensiones base
+
+- Espesor (t_pc_col) (inp): `16 mm`
+- Ancho base 1 (b1_pc_col) (inp): `130 mm`
+- Ancho b1.1 (b1.1_pc_col): `130 mm`
+- Ancho b1.2 (b1.2_pc_col): `130 mm`
+- Longitud base 1 (L1_pc_col): `440 mm`
+
+#### 1.8.3 Recortes y longitudes útiles
+
+- Recorte 1 (Clip1_pc_col): `65 mm`
+- Longitud 2 (L2_pc_col): `310 mm`
+- Recorte 2 (Clip2_pc_col): `25 mm`
+- Ancho 2 (b2_pc_col): `105 mm`
+
+### 1.9 Ámbito: platina de enchape del alma de columna (`DOUBLER_PLATE_COL`)
+
+#### 1.9.1 Uso y material
+
+- Uso (usar_dp_col) (inp): `True`
+- Tipo de acero (tipo_acero_dp_col) (inp): `ASTM A572 Gr 50`
+- Esfuerzo de fluencia Fy (fy_dp_col): `345 MPa`
+- Resistencia última Fu (fu_dp_col): `450 MPa`
+
+#### 1.9.2 Geometría de la platina
+
+- Espesor (t_dp_col) (inp): `12 mm`
+- Número de platinas (n_dp_col) (inp): `2`
+- Platina de enchape extendida en altura (Extended_dp_col) (inp): `True`
+- Separación respecto al alma (gap_dp_col) (inp): `0 mm`
+- Estado de contacto con el alma: `En contacto con el alma (gap_dp_col <= 2.0 mm)`
+
+#### 1.9.3 Zona de panel y soldaduras de tapón
+
+- Altura de zona de panel (dz_dp_col): `501.2 mm`
 - Ancho de zona de panel (wz_dp_col): `444 mm`
-- Distancia vertical entre soldaduras tipo 7 (plug) o al borde de la zona de panel (h_w7_col): `125.3 mm`
-- Distancia horizontal entre soldaduras tipo 7 (plug) o al borde de la zona de panel (b_w7_col): `130 mm`
-- Altura de platina de enchape (h_dp_col): `840 mm`
+- Separación vertical de soldaduras #7 o borde de zona de panel (h_w7_col): `125.3 mm`
+- Separación horizontal de soldaduras #7 o borde de zona de panel (b_w7_col): `130 mm`
+
+#### 1.9.4 Dimensiones finales
+
+- Altura (h_dp_col): `840 mm`
 - Ecuación de h_dp_col: `h_dp_col = 300 mm + max{d_vgder, d_vgizq}` (aplica cuando (`Extended_dp_col=false` y `usar_pc_col=false`) o (`Extended_dp_col=true` y `usar_pc_col=true`))
-- Ancho de platina de enchape (b_dp_col): `390 mm`
+- Ancho (b_dp_col): `390 mm`
 - Ecuación de b_dp_col: `b_dp_col = d_col - 2*kdet_col` (cuando `tipo_w8_col = CJP` o `PJP`)
 
-### 1.10 Ámbito `BOLTS_DER`
+### 1.10 Ámbito: grupo de pernos de la viga derecha (`BOLTS_DER`)
 
-#### 1.10.1 Resumen de geometría
+#### 1.10.1 Material y norma
 
-- Diámetro nominal de perno lado derecha (db_b_vgder) (inp): `25.4 mm`
-- Resistencia nominal a tracción de perno lado derecha (Fnt_b_vgder) (inp): `780 MPa`
-- Resistencia nominal a cortante de perno lado derecha (Fnv_b_vgder) (inp): `470 MPa`
-- Condición de rosca de perno lado derecha (thread_b_vgder) (inp): `N`
-- Número de pernos lado derecha (n_b_vgder) (inp): `8`
-- Norma de fabricación del perno lado derecha (std_v_vgder) (inp): `ASTM A490`
-- Tipo de apriete del perno lado derecha (tipo_apriete_b_vgder) (inp): `pretensioned`
-- Area efectiva de perno lado derecha (A_b_vgder): `506.71 mm2`
+- Grupo (desc_b_vgder) (inp): `Grupo 150`
+- Shape (shape_b_vgder) (inp): `P1"X1-3/4"`
+- Norma de fabricación (std_b_vgder) (inp): `ASTM A490`
+- Tipo de apriete (tipo_apriete_b_vgder) (inp): `pretensioned`
+- Condición de rosca (thread_b_vgder) (inp): `N`
 
-### 1.11 Ámbito `BOLTS_IZQ`
+#### 1.10.2 Geometría y cantidad
 
-#### 1.11.1 Resumen de geometría
+- Separación horizontal entre pernos (g_b_vgder) (inp): `150 mm`
+- Diámetro nominal (db_b_vgder) (inp): `25.4 mm`
+- Número de pernos (n_b_vgder) (inp): `8`
+- Área efectiva (A_b_vgder): `506.71 mm2`
 
-- Diámetro nominal de perno lado izquierda (db_b_vgizq) (inp): `25.4 mm`
-- Resistencia nominal a tracción de perno lado izquierda (Fnt_b_vgizq) (inp): `780 MPa`
-- Resistencia nominal a cortante de perno lado izquierda (Fnv_b_vgizq) (inp): `470 MPa`
-- Condición de rosca de perno lado izquierda (thread_b_vgizq) (inp): `N`
-- Número de pernos lado izquierda (n_b_vgizq) (inp): `8`
-- Norma de fabricación del perno lado izquierda (std_v_vgizq) (inp): `ASTM A490`
-- Tipo de apriete del perno lado izquierda (tipo_apriete_b_vgizq) (inp): `pretensioned`
-- Area efectiva de perno lado izquierda (A_b_vgizq): `506.71 mm2`
+#### 1.10.3 Resistencias nominales
 
-### 1.12 Ámbito `WELD_1_VGDER`
+- Resistencia a tracción (Fnt_b_vgder) (inp): `780 MPa`
+- Resistencia a cortante (Fnv_b_vgder) (inp): `470 MPa`
 
-#### 1.12.1 Resumen de geometría
+### 1.11 Ámbito: grupo de pernos de la viga izquierda (`BOLTS_IZQ`)
 
-- Tipo de soldadura #1 lado derecha (tipo_w1_vgder) (inp): `CJP`
-- Resistencia del electrodo de soldadura #1 lado derecha (Fexx_w1_vgder) (inp): `485 MPa`
-- Espesor/size de soldadura #1 lado derecha (w_w1_vgder) (inp): `0 mm`
-- Número de lineas de soldadura #1 lado derecha (nl_w1_vgder) (inp): `1`
-- Separación de extremos de soldadura #1 lado derecha (L_gap_w1_vgder) (inp): `25 mm`
-- Factor de dirección/sistema de soldadura #1 lado derecha (kds_w1_vgder) (inp): `1`
-- Longitud efectiva de soldadura #1 lado derecha (L_w1_vgder): `132 mm`
+#### 1.11.1 Material y norma
 
-### 1.13 Ámbito `WELD_1_VGIZQ`
+- Grupo (desc_b_vgizq) (inp): `Grupo 150`
+- Shape (shape_b_vgizq) (inp): `P1"X1-3/4"`
+- Norma de fabricación (std_b_vgizq) (inp): `ASTM A490`
+- Tipo de apriete (tipo_apriete_b_vgizq) (inp): `pretensioned`
+- Condición de rosca (thread_b_vgizq) (inp): `N`
 
-#### 1.13.1 Resumen de geometría
+#### 1.11.2 Geometría y cantidad
 
-- Tipo de soldadura #1 lado izquierda (tipo_w1_vgizq) (inp): `CJP`
-- Resistencia del electrodo de soldadura #1 lado izquierda (Fexx_w1_vgizq) (inp): `485 MPa`
-- Espesor/size de soldadura #1 lado izquierda (w_w1_vgizq) (inp): `0 mm`
-- Número de lineas de soldadura #1 lado izquierda (nl_w1_vgizq) (inp): `1`
-- Separación de extremos de soldadura #1 lado izquierda (L_gap_w1_vgizq) (inp): `25 mm`
-- Factor de dirección/sistema de soldadura #1 lado izquierda (kds_w1_vgizq) (inp): `1`
-- Longitud efectiva de soldadura #1 lado izquierda (L_w1_vgizq): `132 mm`
+- Separación horizontal entre pernos (g_b_vgizq) (inp): `150 mm`
+- Diámetro nominal (db_b_vgizq) (inp): `25.4 mm`
+- Número de pernos (n_b_vgizq) (inp): `8`
+- Área efectiva (A_b_vgizq): `506.71 mm2`
 
-### 1.14 Ámbito `WELD_2_VGDER`
+#### 1.11.3 Resistencias nominales
 
-#### 1.14.1 Resumen de geometría
+- Resistencia a tracción (Fnt_b_vgizq) (inp): `780 MPa`
+- Resistencia a cortante (Fnv_b_vgizq) (inp): `470 MPa`
 
-- Tipo de soldadura #2 lado derecha (tipo_w2_vgder) (inp): `CJP`
-- Resistencia del electrodo de soldadura #2 lado derecha (Fexx_w2_vgder) (inp): `485 MPa`
-- Espesor/size de soldadura #2 lado derecha (w_w2_vgder) (inp): `0 mm`
-- Número de lineas de soldadura #2 lado derecha (nl_w2_vgder) (inp): `1`
-- Separación de extremos de soldadura #2 lado derecha (L_gap_w2_vgder) (inp): `25 mm`
-- Factor de dirección/sistema de soldadura #2 lado derecha (kds_w2_vgder) (inp): `1`
-- Longitud efectiva de soldadura #2 lado derecha (L_w2_vgder): `285 mm`
+### 1.12 Ámbito: soldadura #1 del rigidizador de platina extrema derecha (`WELD_1_VGDER`)
 
-### 1.15 Ámbito `WELD_2_VGIZQ`
+#### 1.12.1 Material y procedimiento
 
-#### 1.15.1 Resumen de geometría
+- Tipo de soldadura (tipo_w1_vgder) (inp): `CJP`
+- Resistencia del electrodo (Fexx_w1_vgder) (inp): `485 MPa`
+- Factor de dirección/sistema (kds_w1_vgder) (inp): `1`
 
-- Tipo de soldadura #2 lado izquierda (tipo_w2_vgizq) (inp): `CJP`
-- Resistencia del electrodo de soldadura #2 lado izquierda (Fexx_w2_vgizq) (inp): `485 MPa`
-- Espesor/size de soldadura #2 lado izquierda (w_w2_vgizq) (inp): `0 mm`
-- Número de lineas de soldadura #2 lado izquierda (nl_w2_vgizq) (inp): `1`
-- Separación de extremos de soldadura #2 lado izquierda (L_gap_w2_vgizq) (inp): `25 mm`
-- Factor de dirección/sistema de soldadura #2 lado izquierda (kds_w2_vgizq) (inp): `1`
-- Longitud efectiva de soldadura #2 lado izquierda (L_w2_vgizq): `285 mm`
+#### 1.12.2 Geometría de soldadura
 
-### 1.16 Ámbito `WELD_3_VGDER`
+- Tamaño de soldadura (w_w1_vgder) (inp): `16 mm`
+- Número de líneas (nl_w1_vgder) (inp): `1`
+- Separación de extremos (L_gap_w1_vgder) (inp): `25 mm`
+- Longitud efectiva (L_w1_vgder): `132 mm`
 
-#### 1.16.1 Resumen de geometría
+### 1.13 Ámbito: soldadura #1 del rigidizador de platina extrema izquierda (`WELD_1_VGIZQ`)
 
-- Tipo de soldadura #3 lado derecha (tipo_w3_vgder) (inp): `CJP`
-- Resistencia del electrodo de soldadura #3 lado derecha (Fexx_w3_vgder) (inp): `485 MPa`
-- Espesor/size de soldadura #3 lado derecha (w_w3_vgder) (inp): `8 mm`
-- Número de lineas de soldadura #3 lado derecha (nl_w3_vgder) (inp): `2`
-- Longitud efectiva de soldadura #3 lado derecha (hwef_w3_vgder): `295 mm`
+#### 1.13.1 Material y procedimiento
 
-### 1.17 Ámbito `WELD_3_VGIZQ`
+- Tipo de soldadura (tipo_w1_vgizq) (inp): `CJP`
+- Resistencia del electrodo (Fexx_w1_vgizq) (inp): `485 MPa`
+- Factor de dirección/sistema (kds_w1_vgizq) (inp): `1`
 
-#### 1.17.1 Resumen de geometría
+#### 1.13.2 Geometría de soldadura
 
-- Tipo de soldadura #3 lado izquierda (tipo_w3_vgizq) (inp): `CJP`
-- Resistencia del electrodo de soldadura #3 lado izquierda (Fexx_w3_vgizq) (inp): `485 MPa`
-- Espesor/size de soldadura #3 lado izquierda (w_w3_vgizq) (inp): `8 mm`
-- Número de lineas de soldadura #3 lado izquierda (nl_w3_vgizq) (inp): `2`
-- Longitud efectiva de soldadura #3 lado izquierda (hwef_w3_vgizq): `295 mm`
+- Tamaño de soldadura (w_w1_vgizq) (inp): `16 mm`
+- Número de líneas (nl_w1_vgizq) (inp): `1`
+- Separación de extremos (L_gap_w1_vgizq) (inp): `25 mm`
+- Longitud efectiva (L_w1_vgizq): `132 mm`
 
-### 1.18 Ámbito `WELD_4_VGDER`
+### 1.14 Ámbito: soldadura #2 entre viga derecha y rigidizador (`WELD_2_VGDER`)
 
-#### 1.18.1 Resumen de geometría
+#### 1.14.1 Material y procedimiento
 
-- Tipo de soldadura #4 lado derecha (tipo_w4_vgder) (inp): `cjp`
-- Resistencia del electrodo de soldadura #4 lado derecha (Fexx_w4_vgder) (inp): `485 MPa`
-- Espesor/size de soldadura #4 lado derecha (w_w4_vgder) (inp): `8 mm`
-- Espesor total de garganta requerida #4 lado derecha (t_w4.1_vgder) (inp): `8 mm`
-- Número de lineas de soldadura #4 lado derecha (nl_w4_vgder) (inp): `2`
-- Factor de dirección/sistema de soldadura #4 lado derecha (kds_w4_vgder) (inp): `1`
-- Longitud efectiva de soldadura #4 lado derecha (L_w4_vgder): `210 mm`
+- Tipo de soldadura (tipo_w2_vgder) (inp): `CJP`
+- Resistencia del electrodo (Fexx_w2_vgder) (inp): `485 MPa`
+- Factor de dirección/sistema (kds_w2_vgder) (inp): `1`
 
-### 1.19 Ámbito `WELD_4_VGIZQ`
+#### 1.14.2 Geometría de soldadura
 
-#### 1.19.1 Resumen de geometría
+- Tamaño de soldadura (w_w2_vgder) (inp): `16 mm`
+- Número de líneas (nl_w2_vgder) (inp): `1`
+- Separación de extremos (L_gap_w2_vgder) (inp): `25 mm`
+- Longitud efectiva (L_w2_vgder): `285 mm`
 
-- Tipo de soldadura #4 lado izquierda (tipo_w4_vgizq) (inp): `cjp`
-- Resistencia del electrodo de soldadura #4 lado izquierda (Fexx_w4_vgizq) (inp): `485 MPa`
-- Espesor/size de soldadura #4 lado izquierda (w_w4_vgizq) (inp): `8 mm`
-- Espesor total de garganta requerida #4 lado izquierda (t_w4.1_vgizq) (inp): `8 mm`
-- Número de lineas de soldadura #4 lado izquierda (nl_w4_vgizq) (inp): `2`
-- Factor de dirección/sistema de soldadura #4 lado izquierda (kds_w4_vgizq) (inp): `1`
-- Longitud efectiva de soldadura #4 lado izquierda (L_w4_vgizq): `210 mm`
+### 1.15 Ámbito: soldadura #2 entre viga izquierda y rigidizador (`WELD_2_VGIZQ`)
 
-### 1.20 Ámbito `WELD_5_COL`
+#### 1.15.1 Material y procedimiento
 
-#### 1.20.1 Resumen de geometría
+- Tipo de soldadura (tipo_w2_vgizq) (inp): `CJP`
+- Resistencia del electrodo (Fexx_w2_vgizq) (inp): `485 MPa`
+- Factor de dirección/sistema (kds_w2_vgizq) (inp): `1`
 
-- Tipo de soldadura #5 de platina de continuidad (tipo_w5_col) (inp): `CJP`
-- Resistencia del electrodo de soldadura #5 (Fexx_w5_col) (inp): `485 MPa`
-- Espesor/size de soldadura #5 (w_w5_col) (inp): `12.7 mm`
-- Número de lineas de soldadura #5 (nl_w5_col) (inp): `2`
-- Separación de extremos de soldadura #5 (L_gap_w5_col) (inp): `12.7 mm`
-- Factor de dirección/sistema de soldadura #5 (kds_w5_col) (inp): `1.5`
-- Longitud efectiva de soldadura #5 (L_w5_col): `82.7 mm`
+#### 1.15.2 Geometría de soldadura
 
-### 1.21 Ámbito `WELD_6_COL`
+- Tamaño de soldadura (w_w2_vgizq) (inp): `16 mm`
+- Número de líneas (nl_w2_vgizq) (inp): `1`
+- Separación de extremos (L_gap_w2_vgizq) (inp): `25 mm`
+- Longitud efectiva (L_w2_vgizq): `285 mm`
 
-#### 1.21.1 Resumen de geometría
+### 1.16 Ámbito: soldadura #3 entre alma de viga derecha y platina extrema (`WELD_3_VGDER`)
 
-- Tipo de soldadura #6 de platina de continuidad (tipo_w6_col) (inp): `CJP`
-- Resistencia del electrodo de soldadura #6 (Fexx_w6_col) (inp): `485 MPa`
-- Espesor/size de soldadura #6 (w_w6_col) (inp): `12 mm`
-- Número de lineas de soldadura #6 (nl_w6_col) (inp): `2`
-- Separación de extremos de soldadura #6 (L_gap_w6_col) (inp): `25 mm`
-- Factor de dirección/sistema de soldadura #6 (kds_w6_col) (inp): `1`
-- Longitud efectiva de soldadura #6 (Lws_col): `261 mm`
+#### 1.16.1 Material y procedimiento
 
-### 1.22 Ámbito `WELD_7_COL`
+- Tipo de soldadura (tipo_w3_vgder) (inp): `CJP`
+- Resistencia del electrodo (Fexx_w3_vgder) (inp): `485 MPa`
 
-#### 1.22.1 Resumen de geometría
+#### 1.16.2 Geometría de soldadura
 
-- Tipo de soldadura #7 (tipo_w7_col) (inp): `plug`
-- Resistencia del electrodo de soldadura #7 (Fexx_w7_col) (inp): `485 MPa`
-- Espesor/size de soldadura #7 (w_w7_col) (inp): `16 mm`
-- Número de filas de soldadura #7 (nfilas_w7_col) (inp): `3`
-- Número de columnas de soldadura #7 (ncolumna_w7_col) (inp): `2`
-- Diámetro de hueco para soldadura #7 (d_hole_w7_col) (inp): `31 mm`
-- Distancia horizontal entre soldaduras tipo 7 (plug) o al borde de la zona de panel (b_w7_col): `130 mm`
-- Distancia vertical entre soldaduras tipo 7 (plug) o al borde de la zona de panel (h_w7_col): `125.3 mm`
+- Tamaño de soldadura (w_w3_vgder) (inp): `10.9 mm`
+- Número de líneas (nl_w3_vgder) (inp): `2`
+- Longitud efectiva (hwef_w3_vgder): `295 mm`
+
+### 1.17 Ámbito: soldadura #3 entre alma de viga izquierda y platina extrema (`WELD_3_VGIZQ`)
+
+#### 1.17.1 Material y procedimiento
+
+- Tipo de soldadura (tipo_w3_vgizq) (inp): `CJP`
+- Resistencia del electrodo (Fexx_w3_vgizq) (inp): `485 MPa`
+
+#### 1.17.2 Geometría de soldadura
+
+- Tamaño de soldadura (w_w3_vgizq) (inp): `10.9 mm`
+- Número de líneas (nl_w3_vgizq) (inp): `2`
+- Longitud efectiva (hwef_w3_vgizq): `295 mm`
+
+### 1.18 Ámbito: soldadura #4 entre ala de viga derecha y platina extrema (`WELD_4_VGDER`)
+
+#### 1.18.1 Material y procedimiento
+
+- Tipo de soldadura (tipo_w4_vgder) (inp): `cjp`
+- Resistencia del electrodo (Fexx_w4_vgder) (inp): `485 MPa`
+- Factor de dirección/sistema (kds_w4_vgder) (inp): `1`
+
+#### 1.18.2 Geometría de soldadura
+
+- Tamaño de soldadura (w_w4_vgder) (inp): `17.4 mm`
+- Tamaño total requerido (w_w4.1_vgder) (inp): `8 mm`
+- Número de líneas (nl_w4_vgder) (inp): `2`
+- Longitud efectiva (L_w4_vgder): `210 mm`
+
+### 1.19 Ámbito: soldadura #4 entre ala de viga izquierda y platina extrema (`WELD_4_VGIZQ`)
+
+#### 1.19.1 Material y procedimiento
+
+- Tipo de soldadura (tipo_w4_vgizq) (inp): `cjp`
+- Resistencia del electrodo (Fexx_w4_vgizq) (inp): `485 MPa`
+- Factor de dirección/sistema (kds_w4_vgizq) (inp): `1`
+
+#### 1.19.2 Geometría de soldadura
+
+- Tamaño de soldadura (w_w4_vgizq) (inp): `17.4 mm`
+- Tamaño total requerido (w_w4.1_vgizq) (inp): `8 mm`
+- Número de líneas (nl_w4_vgizq) (inp): `2`
+- Longitud efectiva (L_w4_vgizq): `210 mm`
+
+### 1.20 Ámbito: soldadura #5 de platina de continuidad contra ala de columna (`WELD_5_COL`)
+
+#### 1.20.1 Material y procedimiento
+
+- Tipo de soldadura (tipo_w5_col) (inp): `CJP`
+- Resistencia del electrodo (Fexx_w5_col) (inp): `485 MPa`
+- Factor de dirección/sistema (kds_w5_col) (inp): `1.5`
+
+#### 1.20.2 Geometría de soldadura
+
+- Tamaño de soldadura (w_w5_col) (inp): `16 mm`
+- Número de líneas (nl_w5_col) (inp): `1`
+- Separación de extremos (L_gap_w5_col) (inp): `12.7 mm`
+- Longitud efectiva (L_w5_col): `82.7 mm`
+
+### 1.21 Ámbito: soldadura #6 de platina de continuidad contra alma de columna (`WELD_6_COL`)
+
+#### 1.21.1 Material y procedimiento
+
+- Tipo de soldadura (tipo_w6_col) (inp): `CJP`
+- Resistencia del electrodo (Fexx_w6_col) (inp): `485 MPa`
+- Factor de dirección/sistema (kds_w6_col) (inp): `1`
+
+#### 1.21.2 Geometría de soldadura
+
+- Tamaño de soldadura (w_w6_col) (inp): `16 mm`
+- Número de líneas (nl_w6_col) (inp): `1`
+- Separación de extremos (L_gap_w6_col) (inp): `25 mm`
+- Longitud efectiva (Lws_col): `261 mm`
+
+### 1.22 Ámbito: soldaduras de tapón de platina de enchape (`WELD_7_COL`)
+
+#### 1.22.1 Material y procedimiento
+
+- Tipo de soldadura (tipo_w7_col) (inp): `plug`
+- Descripción: `soldaduras de tapón`
+- Resistencia del electrodo (Fexx_w7_col) (inp): `485 MPa`
+
+#### 1.22.2 Geometría de soldadura
+
+- Tamaño de soldadura (w_w7_col) (inp): `16 mm`
+- Número de filas (nfilas_w7_col) (inp): `3`
+- Número de columnas (ncolumna_w7_col) (inp): `2`
+- Diámetro de hueco (d_hole_w7_col) (inp): `31 mm`
+- Separación horizontal entre soldaduras de tapón o borde de zona de panel (b_w7_col): `130 mm`
+- Separación vertical entre soldaduras de tapón o borde de zona de panel (h_w7_col): `125.3 mm`
 - Espesor de parte contenedora (t_part_w7_col = t_pc_col): `16 mm`
 
-### 1.23 Ámbito `WELD_8_COL`
+### 1.23 Ámbito: soldadura #8 de platina de enchape contra ala de columna (`WELD_8_COL`)
 
-#### 1.23.1 Resumen de geometría
+#### 1.23.1 Material y procedimiento
 
-- Tipo de soldadura #8 (tipo_w8_col) (inp): `PJP`
+- Tipo de soldadura (tipo_w8_col) (inp): `PJP`
 - Nota PJP soldadura #8: `Debe ser conforme a AWS D1.8/D1.8M clause 4.3`
-- Resistencia del electrodo de soldadura #8 (Fexx_w8_col) (inp): `485 MPa`
-- Espesor/size de soldadura #8 (w_w8_col) (inp): `8 mm`
-- Número de lineas de soldadura #8 (nl_w8_col) (inp): `1`
-- Parametro Encr para soldadura #8 (Encr_w8_col): `7.9 mm`
+- Resistencia del electrodo (Fexx_w8_col) (inp): `485 MPa`
+- Factor de dirección/sistema (kds_w8_col) (inp): `1`
+
+#### 1.23.2 Geometría de soldadura
+
+- Tamaño de soldadura (w_w8_col) (inp): `12 mm`
+- Número de líneas (nl_w8_col) (inp): `1`
+- Parámetro Encr (Encr_w8_col): `7.9 mm`
 - Fuente de Encr_w8_col: `AISC 16th Fig 10-3, rango 22.2 - 31.8 mm`
-- Factor de dirección/sistema de soldadura #8 (kds_w8_col) (inp): `1`
 
-### 1.24 Ámbito `WELD_9_COL`
+### 1.24 Ámbito: soldadura #9 de platina de enchape contra alma de columna (`WELD_9_COL`)
 
-#### 1.24.1 Resumen de geometría
+#### 1.24.1 Activación, material y procedimiento
 
-- Uso de soldadura #9 (use_weld_9_col) (inp): `False`
-- Tipo de soldadura #9 (tipo_w9_col) (inp): `fillet`
-- Resistencia del electrodo de soldadura #9 (Fexx_w9_col) (inp): `485 MPa`
-- Espesor/size de soldadura #9 (w_w9_col) (inp): `8 mm`
-- Número de lineas de soldadura #9 (nl_w9_col) (inp): `2`
-- Separación de extremos de soldadura #9 (L_gap_w9_col) (inp): `50 mm`
-- Factor de dirección/sistema de soldadura #9 (kds_w9_col) (inp): `1`
-- Longitud efectiva de soldadura #9 (L_w9_col): `0 mm`
+- Uso de soldadura (use_weld_9_col) (inp): `False`
+- Tipo de soldadura (tipo_w9_col) (inp): `fillet`
+- Resistencia del electrodo (Fexx_w9_col) (inp): `485 MPa`
+- Factor de dirección/sistema (kds_w9_col) (inp): `1`
+
+#### 1.24.2 Geometría de soldadura
+
+- Tamaño de soldadura (w_w9_col) (inp): `0 mm`
+- Número de líneas (nl_w9_col) (inp): `0`
+- Separación de extremos (L_gap_w9_col) (inp): `0 mm`
+- Longitud efectiva (L_w9_col): `0 mm`
 
 ## Paso 2 - Especificaciones técnicas
 
 Especificaciones tecnicas organizadas por ámbito.
 
-### 2.1 Ámbito `BEAM_IZQ`
+### 2.1 Ámbito: columna (`COLUMN`)
 
-### 2.2 Ámbito `BEAM_DER`
-
-### 2.3 Ámbito `END_PLATE_IZQ`
-
-### 2.4 Ámbito `END_PLATE_DER`
-
-### 2.5 Ámbito `COLUMN`
-
-#### 2.5.1 Nota técnica - Ubicacion de la conexión de placa de extremo en columna
+#### 2.1.1 Nota técnica - Ubicacion de la conexión de placa de extremo en columna
 
 - Ámbito: `COLUMN`
 - Cláusula: `Documento: AISC 358-22 | Sección: Sección 6.3 (2)`
 - Requisito: `La placa de extremo debe conectarse al ala de la columna.`
 
-### 2.6 Ámbito `END_PLATE_STIFFENER_DER`
+### 2.2 Ámbito: grupo de pernos de la viga derecha (`BOLTS_DER`)
 
-### 2.7 Ámbito `END_PLATE_STIFFENER_IZQ`
-
-### 2.8 Ámbito `CONTINUITY_PLATE_COL`
-
-### 2.9 Ámbito `DOUBLER_PLATE_COL`
-
-### 2.10 Ámbito `BOLTS_DER`
-
-#### 2.10.1 Nota técnica - Requisitos de instalacion para conjuntos empernados (right beam)
+#### 2.2.1 Nota técnica - Requisitos de instalacion para conjuntos empernados (right beam)
 
 - Ámbito: `BOLTS_DER`
 - Cláusula: `Documento: AISC 358-22 | Sección: Sección 4.2`
 - Requisito: `Los requisitos de instalacion deben cumplir con las AISC Seismic Provisions y con la especificacion RCSC, salvo que este estándar indique lo contrario.`
 
-#### 2.10.2 Nota técnica - Control y aseguramiento de calidad para conjuntos empernados (right beam)
+#### 2.2.2 Nota técnica - Control y aseguramiento de calidad para conjuntos empernados (right beam)
 
 - Ámbito: `BOLTS_DER`
 - Cláusula: `Documento: AISC 358-22 | Sección: Sección 4.3`
 - Requisito: `El control de calidad y el aseguramiento de calidad deben cumplir con las AISC Seismic Provisions.`
 
-### 2.11 Ámbito `BOLTS_IZQ`
+### 2.3 Ámbito: grupo de pernos de la viga izquierda (`BOLTS_IZQ`)
 
-#### 2.11.1 Nota técnica - Requisitos de instalacion para conjuntos empernados (left beam)
+#### 2.3.1 Nota técnica - Requisitos de instalacion para conjuntos empernados (left beam)
 
 - Ámbito: `BOLTS_IZQ`
 - Cláusula: `Documento: AISC 358-22 | Sección: Sección 4.2`
 - Requisito: `Los requisitos de instalacion deben cumplir con las AISC Seismic Provisions y con la especificacion RCSC, salvo que este estándar indique lo contrario.`
 
-#### 2.11.2 Nota técnica - Control y aseguramiento de calidad para conjuntos empernados (left beam)
+#### 2.3.2 Nota técnica - Control y aseguramiento de calidad para conjuntos empernados (left beam)
 
 - Ámbito: `BOLTS_IZQ`
 - Cláusula: `Documento: AISC 358-22 | Sección: Sección 4.3`
 - Requisito: `El control de calidad y el aseguramiento de calidad deben cumplir con las AISC Seismic Provisions.`
-
-### 2.12 Ámbito `WELD_1_VGDER`
-
-### 2.13 Ámbito `WELD_1_VGIZQ`
-
-### 2.14 Ámbito `WELD_2_VGDER`
-
-### 2.15 Ámbito `WELD_2_VGIZQ`
-
-### 2.16 Ámbito `WELD_3_VGDER`
-
-### 2.17 Ámbito `WELD_3_VGIZQ`
-
-### 2.18 Ámbito `WELD_4_VGDER`
-
-### 2.19 Ámbito `WELD_4_VGIZQ`
-
-### 2.20 Ámbito `WELD_5_COL`
-
-### 2.21 Ámbito `WELD_6_COL`
-
-### 2.22 Ámbito `WELD_7_COL`
-
-### 2.23 Ámbito `WELD_8_COL`
-
-### 2.24 Ámbito `WELD_9_COL`
 
 ## Paso 3 - Revisiones de requerimientos de propiedades mecánicas y geométricas
 
@@ -2004,17 +2142,17 @@ Donde:
 - Ru_pc_p-_col: `802.46 kN`
 - phi usado: `0.9`
 - K: `0.65`
-- Lp_pc_col: `311 mm`
+- Lp_pc_col: `310 mm`
 - r_pc_col: `4.64 mm`
-- KLr_pc_col: `43.57`
+- KLr_pc_col: `43.43`
 - E_pc_col: `200000 MPa`
 - Fy_pc_col: `345 MPa`
-- Fe_pc_col: `1039.96 MPa`
-- Fcr_pc_col: `300.27 MPa`
+- Fe_pc_col: `1046.68 MPa`
+- Fcr_pc_col: `300.54 MPa`
 - b1_pc_col: `130 mm`
 - t_pc_col: `16 mm`
 - n_pc_col: `2`
-- phi*Rn_pc_p-_col: `1124.22 kN`
+- phi*Rn_pc_p-_col: `1125.23 kN`
 - DCR_pc_p-_col: `0.71`
 - Resultado: `🟢 Cumple`
 
@@ -2045,8 +2183,8 @@ Donde:
 - Fy_pc_col: `345 MPa`
 - t_pc_col: `16 mm`
 - n_pc_col: `2`
-- L2_pc_col: `311 mm`
-- phi*Rn_pc_v2_col: `2060.06 kN`
+- L2_pc_col: `310 mm`
+- phi*Rn_pc_v2_col: `2053.44 kN`
 - DCR_pc_v2_col: `0.78`
 - Resultado: `🟢 Cumple`
 
