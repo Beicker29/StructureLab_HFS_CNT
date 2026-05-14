@@ -3958,10 +3958,10 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
                     comparison="ge",
                 ),
                 _step1_compound_limit(
-                    check_id="section_6_3_1.beam_sc_greater_than_s_threshold_izq",
+                    check_id="section_6_7_2.beam_sc_greater_than_s_threshold_izq",
                     scope="beam_izq",
-                    clause="Section 6.3.1 (beam clearance criterion)",
-                    description="Beam clearance criterion using Sc and S threshold (left beam)",
+                    clause="6.7.2 (top column clearance above top bolt line)",
+                    description="Top column clearance above top bolt line (left beam)",
                     calculated_symbol="Sc_vgizq",
                     verification_text=(
                         f"{sc_formula_izq}; S_vgizq = 0.5*sqrt(bcf*g_vgizq); "
@@ -4045,10 +4045,10 @@ def run_section63_prequalification_limits(case: AISC358MomentCase, rule_binding:
                 comparison="ge",
             ),
             _step1_compound_limit(
-                check_id="section_6_3_1.beam_sc_greater_than_s_threshold_der",
+                check_id="section_6_7_2.beam_sc_greater_than_s_threshold_der",
                 scope="beam_der",
-                clause="Section 6.3.1 (beam clearance criterion)",
-                description="Beam clearance criterion using Sc and S threshold (right beam)",
+                clause="6.7.2 (top column clearance above top bolt line)",
+                description="Top column clearance above top bolt line (right beam)",
                 calculated_symbol="Sc_vgder",
                 verification_text=(
                     f"{sc_formula_der}; S_vgder = 0.5*sqrt(bcf*g_vgder); "

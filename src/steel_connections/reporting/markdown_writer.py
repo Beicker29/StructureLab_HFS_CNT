@@ -263,6 +263,10 @@ def _translate_text_es(raw_text: object) -> str:
         "Bolt gage minimum spacing": "Separacion minima de gage de pernos",
         "Length without shear connectors from column face": "Longitud sin conectores de cortante desde la cara de columna",
         "Beam clearance criterion using Sc and S threshold": "Criterio de despeje de viga con umbral Sc y S",
+        "Horizontal beam clearance from column projection using Sc and S threshold": (
+            "Despeje horizontal de la viga respecto a la proyeccion de la columna con umbral Sc y S"
+        ),
+        "Top column clearance above top bolt line": "Despeje superior de columna sobre la linea superior de pernos",
         "Clear span-to-depth ratio by frame system": "Relacion luz libre/peralte por sistema de marco",
         "Beam flange width-to-thickness compactness": "Compacidad ancho-espesor del ala de viga",
         "Beam web width-to-thickness compactness": "Compacidad ancho-espesor del alma de viga",
@@ -309,6 +313,15 @@ def _translate_text_es(raw_text: object) -> str:
     return text
 
 
+def _strip_redundant_scope_suffix(text: str) -> str:
+    return re.sub(
+        r"\s+\((?:left beam|right beam|viga izquierda|viga derecha)\)",
+        "",
+        text,
+        flags=re.IGNORECASE,
+    ).strip()
+
+
 def _render_clause_text(clause: object, source_document: object = None, rule_id: object = None) -> str:
     clause_text = _format_text(clause)
     if clause_text.startswith("Documento:"):
@@ -319,6 +332,8 @@ def _render_clause_text(clause: object, source_document: object = None, rule_id:
         .replace("Step", "Paso")
         .replace("Table", "Tabla")
         .replace("continuity plate weld detail", "detalle de soldadura de platina de continuidad")
+        .replace("top column clearance above top bolt line", "despeje superior de columna sobre la linea superior de pernos")
+        .replace("horizontal beam clearance criterion", "criterio de despeje horizontal de viga respecto a la columna")
         .replace("beam clearance criterion", "criterio de despeje de viga")
         .replace("column top clearance criterion", "criterio de despeje superior de columna")
     )
@@ -6748,17 +6763,12 @@ def _render_step_1_list_grouped_by_scope(
     ordered_scopes = sorted(scope_order, key=_scope_sort_key)
     if scope_template:
         normalized_template = [str(scope).upper() for scope in scope_template]
-        ordered_scopes = list(normalized_template)
+        ordered_scopes = [scope for scope in normalized_template if grouped.get(scope)]
 
     lines: list[str] = []
     scope_summary: list[dict[str, Any]] = []
     for section_offset, scope in enumerate(ordered_scopes, start=1):
-        if chapter_number == 3 and scope.upper() == "CONTINUITY_PLATE_COL":
-            lines.append(f"### {chapter_number}.{section_offset} platina de continuidad")
-        elif chapter_number == 1 and scope.upper() == "DOUBLER_PLATE_COL":
-            lines.append(f"### {chapter_number}.{section_offset} platina de enchape del alma")
-        else:
-            lines.append(f"### {chapter_number}.{section_offset} Ambito `{scope}`")
+        lines.append(_render_moment_scope_heading(chapter_number, section_offset, scope))
         lines.append("")
         local_idx = 1
         total_checks = 0
@@ -6778,7 +6788,7 @@ def _render_step_1_list_grouped_by_scope(
                 if str(item.get("id", "")).strip().lower() not in excluded_ids
             ]
         for item in items_for_scope:
-            description = _translate_text_es(item.get("description"))
+            description = _strip_redundant_scope_suffix(_translate_text_es(item.get("description")))
             calculated_symbol = str(item.get("calculated_symbol", "calc"))
             limit_symbol = str(item.get("limit_symbol", "lim"))
             calculated = _format_quantity(item.get("calculated"))
@@ -6939,7 +6949,7 @@ def _ordered_scopes_from_rows(rows: list[dict]) -> list[str]:
 
 
 def _render_moment_scope_heading(chapter_number: int, section_offset: int, scope: str) -> str:
-    if chapter_number in {1, 2}:
+    if chapter_number in {1, 2, 3}:
         scope_titles = {
             "CONTINUITY_PLATE_COL": "platinas de continuidad de columna",
             "DOUBLER_PLATE_COL": "platina de enchape del alma de columna",
