@@ -36,7 +36,7 @@ Propiedades organizadas por ámbito.
 - Carga axial (Pu_vgizq) (inp): `0 kN`
 - Cortante mayorado (Vu2_vgizq) (inp): `169.92 kN`
 - Momento mayorado (Mu3_vgizq) (inp): `392.52 kN-m`
-- Cortante gravitacional (Vg_vgizq) (inp): `98.2 kN`
+- Cortante gravitacional (Vg_vgizq) (inp): `97.59 kN`
 
 ### 1.2 Ámbito: viga ubicada a la derecha de la columna (`BEAM_DER`)
 
@@ -64,7 +64,7 @@ Propiedades organizadas por ámbito.
 - Carga axial (Pu_vgder) (inp): `0 kN`
 - Cortante mayorado (Vu2_vgder) (inp): `164.99 kN`
 - Momento mayorado (Mu3_vgder) (inp): `382.5 kN-m`
-- Cortante gravitacional (Vg_vgder) (inp): `96.64 kN`
+- Cortante gravitacional (Vg_vgder) (inp): `96.56 kN`
 
 ### 1.3 Ámbito: platina extrema de la viga izquierda (`END_PLATE_IZQ`)
 
@@ -167,7 +167,7 @@ Propiedades organizadas por ámbito.
 
 #### 1.5.4 Demandas y parámetros de columna
 
-- Carga axial (Pu_col) (inp): `1101.05 kN`
+- Carga axial (Pu_col) (inp): `1121.16 kN`
 - Demanda de ductilidad (demanda_ductilidad_col) (inp): `high`
 - Consideración de deformación inelástica en zona de panel (consideracion_deformacion_inelastica_zona_panel) (inp): `False`
 - Unión columna-losa (union_col_losa) (inp): `isolated`
@@ -917,7 +917,7 @@ Comparacion directa de valor calculado contra limite normativo (sin formato DCR)
 #### Chequeo 3.5.7 - Compacidad ancho-espesor del alma de columna (`lambda_w_col`)
 
 - Ámbito: `COLUMN`
-- Verificación: `lambda_w_col <= lambda_w_limit; 26.9 adim <= 49.49 adim`
+- Verificación: `lambda_w_col <= lambda_w_limit; 26.9 adim <= 49.44 adim`
 - Cláusula: `Documento: AISC 358-22 | Sección: AISC 341-22w / AISC 358-22w Sección 2.3.4 (6) + AISC Seismic Provisions`
 - Resultado: 🟢 Cumple
 
@@ -1410,10 +1410,10 @@ Cálculo según Eq. (2.4-3): `Vhmax = 2*Mpr/Llb + Vg` y `Vhmin = 2*Mpr/Llb - Vg`
 - Ecuación: `Vh_vgizq_max = 2*Mpr_vgizq/Llb_vgizq + Vg_vgizq; Vh_vgizq_min = 2*Mpr_vgizq/Llb_vgizq - Vg_vgizq`
 - Mpr_vgizq: `1143.43 kN-m`
 - Llb_vgizq: `7500 mm`
-- Vg_vgizq: `98.2 kN`
-- Vh_vgizq_max: `403.12 kN`
-- Vh_vgizq_min: `206.72 kN`
-- Vhmax_vgizq adoptado: `403.12 kN`
+- Vg_vgizq: `97.59 kN`
+- Vh_vgizq_max: `402.51 kN`
+- Vh_vgizq_min: `207.33 kN`
+- Vhmax_vgizq adoptado: `402.51 kN`
 
 ### 6.2 Cortante probable en rótula plástica de la viga derecha
 
@@ -1421,10 +1421,10 @@ Cálculo según Eq. (2.4-3): `Vhmax = 2*Mpr/Llb + Vg` y `Vhmin = 2*Mpr/Llb - Vg`
 - Ecuación: `Vh_vgder_max = 2*Mpr_vgder/Llb_vgder + Vg_vgder; Vh_vgder_min = 2*Mpr_vgder/Llb_vgder - Vg_vgder`
 - Mpr_vgder: `1143.43 kN-m`
 - Llb_vgder: `7500 mm`
-- Vg_vgder: `96.64 kN`
-- Vh_vgder_max: `401.56 kN`
-- Vh_vgder_min: `208.28 kN`
-- Vhmax_vgder adoptado: `401.56 kN`
+- Vg_vgder: `96.56 kN`
+- Vh_vgder_max: `401.48 kN`
+- Vh_vgder_min: `208.36 kN`
+- Vhmax_vgder adoptado: `401.48 kN`
 
 ## Paso 7 - Momento probable en la cara de columna (Mf)
 
@@ -1436,8 +1436,8 @@ Cálculo según Eq. (2.4-4): `Mfmax = Mpr + Vhmax*Sh` y `Mfmin = Mpr + Vhmin*Sh`
 - Ecuación: `Mf_vgizq_max = Mpr_vgizq + Vh_vgizq_max*Sh_vgizq; Mf_vgizq_min = Mpr_vgizq + Vh_vgizq_min*Sh_vgizq`
 - Mpr_vgizq: `1143.43 kN-m`
 - Sh_vgizq: `385 mm`
-- Mf_vgizq_max: `1298.63 kN-m`
-- Mf_vgizq_min: `1223.02 kN-m`
+- Mf_vgizq_max: `1298.4 kN-m`
+- Mf_vgizq_min: `1223.25 kN-m`
 
 ### 7.2 Momento probable en cara de columna de la viga derecha
 
@@ -1445,8 +1445,8 @@ Cálculo según Eq. (2.4-4): `Mfmax = Mpr + Vhmax*Sh` y `Mfmin = Mpr + Vhmin*Sh`
 - Ecuación: `Mf_vgder_max = Mpr_vgder + Vh_vgder_max*Sh_vgder; Mf_vgder_min = Mpr_vgder + Vh_vgder_min*Sh_vgder`
 - Mpr_vgder: `1143.43 kN-m`
 - Sh_vgder: `385 mm`
-- Mf_vgder_max: `1298.03 kN-m`
-- Mf_vgder_min: `1223.62 kN-m`
+- Mf_vgder_max: `1298 kN-m`
+- Mf_vgder_min: `1223.65 kN-m`
 
 ## Paso 8 - Revisión De Resistencia Pernos (vg_izq)
 
@@ -1457,14 +1457,14 @@ Cálculo según Eq. (2.4-4): `Mfmax = Mpr + Vhmax*Sh` y `Mfmin = Mpr + Vhmin*Sh`
 - Cláusula: `Documento: AISC 358-22 | Sección: Capitulo 6 / Sección 6.7.1 Paso 6.1 + AISC 360-22 J3.7`
 - Ecuación: `Ru_b_p+_vgizq = Mf_vgizq_critico/(2*(h1_pe_vgizq + h2_pe_vgizq + h3_pe_vgizq + h4_pe_vgizq)); phi*Rn_b_p+_vgizq = phi * Rn_b_p+_vgizq, Rn_b_p+_vgizq = A_b_vgizq * Fnt_b_vgizq, A_b_vgizq = pi*db^2/4 (AISC 360-22 J3.7)`
 - phi usado: `0.9`
-- Mf_vgizq_critico: `1298.63 kN-m`
+- Mf_vgizq_critico: `1298.4 kN-m`
 - h1_pe_vgizq: `672.3 mm`
 - h2_pe_vgizq: `577.3 mm`
 - h3_pe_vgizq: `459.9 mm`
 - h4_pe_vgizq: `364.9 mm`
 - A_b_vgizq: `506.71 mm2`
 - Fnt_b_vgizq: `780 MPa`
-- Ru_b_p+_vgizq: `313.01 kN`
+- Ru_b_p+_vgizq: `312.96 kN`
 - phi*Rn_b_p+_vgizq: `355.71 kN`
 - DCR_b_p+_vgizq: `0.88`
 - Resultado: `🟢 Cumple`
@@ -1476,14 +1476,14 @@ Cálculo según Eq. (2.4-4): `Mfmax = Mpr + Vhmax*Sh` y `Mfmin = Mpr + Vhmin*Sh`
 - Cláusula: `Documento: AISC 358-22 | Sección: Capitulo 6 / Sección 6.7.1 Paso 6.2 + AISC 360-22 J3.7`
 - Ecuación: `Ru_b_v2_vgizq = Vh_vgizq_critico/n_b_vgizq, phi*Rn_b_v2_vgizq = phi * Rn_b_v2_vgizq, Rn_b_v2_vgizq = A_b_vgizq * Fnv_b_vgizq, A_b_vgizq = pi*db^2/4, n_b_vgizq = 4 (4E/4ES) or 8 (8ES) (AISC 360-22 J3.7)`
 - phi usado: `0.9`
-- Vh_vgizq_critico: `403.12 kN`
+- Vh_vgizq_critico: `402.51 kN`
 - n_b_vgizq: `8`
 - A_b_vgizq: `506.71 mm2`
 - Fnv_b_vgizq: `470 MPa`
 - thread_b_vgizq: `N`
-- Ru_b_v2_vgizq: `50.39 kN`
+- Ru_b_v2_vgizq: `50.31 kN`
 - phi*Rn_b_v2_vgizq: `214.34 kN`
-- DCR_b_v2_vgizq: `0.24`
+- DCR_b_v2_vgizq: `0.23`
 - Resultado: `🟢 Cumple`
 
 ## Paso 9 - Revisión De Resistencia Pernos (vg_der)
@@ -1495,14 +1495,14 @@ Cálculo según Eq. (2.4-4): `Mfmax = Mpr + Vhmax*Sh` y `Mfmin = Mpr + Vhmin*Sh`
 - Cláusula: `Documento: AISC 358-22 | Sección: Capitulo 6 / Sección 6.7.1 Paso 6.1 + AISC 360-22 J3.7`
 - Ecuación: `Ru_b_p+_vgder = Mf_vgder_critico/(2*(h1_pe_vgder + h2_pe_vgder + h3_pe_vgder + h4_pe_vgder)); phi*Rn_b_p+_vgder = phi * Rn_b_p+_vgder, Rn_b_p+_vgder = A_b_vgder * Fnt_b_vgder, A_b_vgder = pi*db^2/4 (AISC 360-22 J3.7)`
 - phi usado: `0.9`
-- Mf_vgder_critico: `1298.03 kN-m`
+- Mf_vgder_critico: `1298 kN-m`
 - h1_pe_vgder: `672.3 mm`
 - h2_pe_vgder: `577.3 mm`
 - h3_pe_vgder: `459.9 mm`
 - h4_pe_vgder: `364.9 mm`
 - A_b_vgder: `506.71 mm2`
 - Fnt_b_vgder: `780 MPa`
-- Ru_b_p+_vgder: `312.87 kN`
+- Ru_b_p+_vgder: `312.86 kN`
 - phi*Rn_b_p+_vgder: `355.71 kN`
 - DCR_b_p+_vgder: `0.88`
 - Resultado: `🟢 Cumple`
@@ -1514,12 +1514,12 @@ Cálculo según Eq. (2.4-4): `Mfmax = Mpr + Vhmax*Sh` y `Mfmin = Mpr + Vhmin*Sh`
 - Cláusula: `Documento: AISC 358-22 | Sección: Capitulo 6 / Sección 6.7.1 Paso 6.2 + AISC 360-22 J3.7`
 - Ecuación: `Ru_b_v2_vgder = Vh_vgder_critico/n_b_vgder, phi*Rn_b_v2_vgder = phi * Rn_b_v2_vgder, Rn_b_v2_vgder = A_b_vgder * Fnv_b_vgder, A_b_vgder = pi*db^2/4, n_b_vgder = 4 (4E/4ES) or 8 (8ES) (AISC 360-22 J3.7)`
 - phi usado: `0.9`
-- Vh_vgder_critico: `401.56 kN`
+- Vh_vgder_critico: `401.48 kN`
 - n_b_vgder: `8`
 - A_b_vgder: `506.71 mm2`
 - Fnv_b_vgder: `470 MPa`
 - thread_b_vgder: `N`
-- Ru_b_v2_vgder: `50.19 kN`
+- Ru_b_v2_vgder: `50.18 kN`
 - phi*Rn_b_v2_vgder: `214.34 kN`
 - DCR_b_v2_vgder: `0.23`
 - Resultado: `🟢 Cumple`
@@ -1533,7 +1533,7 @@ Cálculo según Eq. (2.4-4): `Mfmax = Mpr + Vhmax*Sh` y `Mfmin = Mpr + Vhmin*Sh`
 - Cláusula: `Documento: AISC 358-22 | Sección: Capitulo 6 / Sección 6.7.1 Paso 7.1.1 + Eq. (6.7-8)`
 - Ecuación: `Ru_pe_m3_vgizq = Mf_vgizq_critico; phi*Rn_pe_m3_vgizq = phi * tpe_vgizq^2 * Fyp_pe_vgizq * Yp_pe_vgizq (AISC 358-22 Eq. 6.7-8)`
 - phi usado: `1`
-- Mf_vgizq_critico: `1298.63 kN-m`
+- Mf_vgizq_critico: `1298.4 kN-m`
 - tpe_vgizq: `25 mm`
 - Fyp_pe_vgizq: `345 MPa`
 - Yp_pe_vgizq: `6683.95 mm`
@@ -1542,7 +1542,7 @@ Cálculo según Eq. (2.4-4): `Mfmax = Mpr + Vhmax*Sh` y `Mfmin = Mpr + Vhmin*Sh`
 - s_pe_vgizq: `92.87 mm`
 - pfi_pe_vgizq_entrada: `50 mm`
 - pfi_pe_vgizq_efectivo: `50 mm`
-- Ru_pe_m3_vgizq: `1298.63 kN-m`
+- Ru_pe_m3_vgizq: `1298.4 kN-m`
 - phi*Rn_pe_m3_vgizq: `1441.23 kN-m`
 - DCR_pe_m3_vgizq: `0.9`
 - Resultado: `🟢 Cumple`
@@ -1554,7 +1554,7 @@ Cálculo según Eq. (2.4-4): `Mfmax = Mpr + Vhmax*Sh` y `Mfmin = Mpr + Vhmin*Sh`
 - Cláusula: `Documento: AISC 360-22 | Sección: Capitulo 6 / Sección 7.3.1 + AISC 360-22 J3.11(a)`
 - Ecuación: `lc_pe_vgizq = min(pb_pe_vgizq - dh_pe_vgizq, pfo_pe_vgizq + pfi_pe_vgizq + tf_vgizq - dh_pe_vgizq); Ru_pe_v2_vgizq = Vh_vgizq_critico / n_b_vgizq; phi*Rn_pe_v2_vgizq = phi * 1.2 * lc_pe_vgizq * tpe_vgizq * Fup_pe_vgizq (AISC 360-22 J3.11a)`
 - phi usado: `0.9`
-- Vh_vgizq_critico: `403.12 kN`
+- Vh_vgizq_critico: `402.51 kN`
 - n_b_vgizq: `8`
 - pb_pe_vgizq: `95 mm`
 - pfo_pe_vgizq: `50 mm`
@@ -1564,7 +1564,7 @@ Cálculo según Eq. (2.4-4): `Mfmax = Mpr + Vhmax*Sh` y `Mfmin = Mpr + Vhmin*Sh`
 - lc_pe_vgizq: `66.42 mm`
 - tpe_vgizq: `25 mm`
 - Fup_pe_vgizq: `450 MPa`
-- Ru_pe_v2_vgizq: `50.39 kN`
+- Ru_pe_v2_vgizq: `50.31 kN`
 - phi*Rn_pe_v2_vgizq: `807.06 kN`
 - DCR_pe_v2_vgizq: `0.06`
 - Resultado: `🟢 Cumple`
@@ -1574,12 +1574,12 @@ Cálculo según Eq. (2.4-4): `Mfmax = Mpr + Vhmax*Sh` y `Mfmin = Mpr + Vhmin*Sh`
 - Cláusula: `Documento: AISC 360-22 | Sección: Capitulo 6 / Sección 7.3.2 + AISC 360-22 J3.11(a)`
 - Ecuación: `Ru_pe_v2_vgizq = Vh_vgizq_critico / n_b_vgizq; phi*Rn_pe_v2_vgizq = phi * 2.4 * d_b_vgizq * tpe_vgizq * Fup_pe_vgizq (AISC 360-22 J3.11a)`
 - phi usado: `0.9`
-- Vh_vgizq_critico: `403.12 kN`
+- Vh_vgizq_critico: `402.51 kN`
 - n_b_vgizq: `8`
 - tpe_vgizq: `25 mm`
 - Fup_pe_vgizq: `450 MPa`
 - d_b_vgizq: `25.4 mm`
-- Ru_pe_v2_vgizq: `50.39 kN`
+- Ru_pe_v2_vgizq: `50.31 kN`
 - phi*Rn_pe_v2_vgizq: `617.22 kN`
 - DCR_pe_v2_vgizq: `0.08`
 - Resultado: `🟢 Cumple`
@@ -1593,7 +1593,7 @@ Cálculo según Eq. (2.4-4): `Mfmax = Mpr + Vhmax*Sh` y `Mfmin = Mpr + Vhmin*Sh`
 - Cláusula: `Documento: AISC 358-22 | Sección: Capitulo 6 / Sección 6.7.1 Paso 7.1.1 + Eq. (6.7-8)`
 - Ecuación: `Ru_pe_m3_vgder = Mf_vgder_critico; phi*Rn_pe_m3_vgder = phi * tpe_vgder^2 * Fyp_pe_vgder * Yp_pe_vgder (AISC 358-22 Eq. 6.7-8)`
 - phi usado: `1`
-- Mf_vgder_critico: `1298.03 kN-m`
+- Mf_vgder_critico: `1298 kN-m`
 - tpe_vgder: `25 mm`
 - Fyp_pe_vgder: `345 MPa`
 - Yp_pe_vgder: `6683.95 mm`
@@ -1602,7 +1602,7 @@ Cálculo según Eq. (2.4-4): `Mfmax = Mpr + Vhmax*Sh` y `Mfmin = Mpr + Vhmin*Sh`
 - s_pe_vgder: `92.87 mm`
 - pfi_pe_vgder_entrada: `50 mm`
 - pfi_pe_vgder_efectivo: `50 mm`
-- Ru_pe_m3_vgder: `1298.03 kN-m`
+- Ru_pe_m3_vgder: `1298 kN-m`
 - phi*Rn_pe_m3_vgder: `1441.23 kN-m`
 - DCR_pe_m3_vgder: `0.9`
 - Resultado: `🟢 Cumple`
@@ -1614,7 +1614,7 @@ Cálculo según Eq. (2.4-4): `Mfmax = Mpr + Vhmax*Sh` y `Mfmin = Mpr + Vhmin*Sh`
 - Cláusula: `Documento: AISC 360-22 | Sección: Capitulo 6 / Sección 7.3.1 + AISC 360-22 J3.11(a)`
 - Ecuación: `lc_pe_vgder = min(pb_pe_vgder - dh_pe_vgder, pfo_pe_vgder + pfi_pe_vgder + tf_vgder - dh_pe_vgder); Ru_pe_v2_vgder = Vh_vgder_critico / n_b_vgder; phi*Rn_pe_v2_vgder = phi * 1.2 * lc_pe_vgder * tpe_vgder * Fup_pe_vgder (AISC 360-22 J3.11a)`
 - phi usado: `0.9`
-- Vh_vgder_critico: `401.56 kN`
+- Vh_vgder_critico: `401.48 kN`
 - n_b_vgder: `8`
 - pb_pe_vgder: `95 mm`
 - pfo_pe_vgder: `50 mm`
@@ -1624,7 +1624,7 @@ Cálculo según Eq. (2.4-4): `Mfmax = Mpr + Vhmax*Sh` y `Mfmin = Mpr + Vhmin*Sh`
 - lc_pe_vgder: `66.42 mm`
 - tpe_vgder: `25 mm`
 - Fup_pe_vgder: `450 MPa`
-- Ru_pe_v2_vgder: `50.19 kN`
+- Ru_pe_v2_vgder: `50.18 kN`
 - phi*Rn_pe_v2_vgder: `807.06 kN`
 - DCR_pe_v2_vgder: `0.06`
 - Resultado: `🟢 Cumple`
@@ -1634,12 +1634,12 @@ Cálculo según Eq. (2.4-4): `Mfmax = Mpr + Vhmax*Sh` y `Mfmin = Mpr + Vhmin*Sh`
 - Cláusula: `Documento: AISC 360-22 | Sección: Capitulo 6 / Sección 7.3.2 + AISC 360-22 J3.11(a)`
 - Ecuación: `Ru_pe_v2_vgder = Vh_vgder_critico / n_b_vgder; phi*Rn_pe_v2_vgder = phi * 2.4 * d_b_vgder * tpe_vgder * Fup_pe_vgder (AISC 360-22 J3.11a)`
 - phi usado: `0.9`
-- Vh_vgder_critico: `401.56 kN`
+- Vh_vgder_critico: `401.48 kN`
 - n_b_vgder: `8`
 - tpe_vgder: `25 mm`
 - Fup_pe_vgder: `450 MPa`
 - d_b_vgder: `25.4 mm`
-- Ru_pe_v2_vgder: `50.19 kN`
+- Ru_pe_v2_vgder: `50.18 kN`
 - phi*Rn_pe_v2_vgder: `617.22 kN`
 - DCR_pe_v2_vgder: `0.08`
 - Resultado: `🟢 Cumple`
@@ -1725,7 +1725,7 @@ Cálculo según Eq. (2.4-4): `Mfmax = Mpr + Vhmax*Sh` y `Mfmin = Mpr + Vhmin*Sh`
 - Cláusula: `Documento: AISC 360-22 | Sección: Capitulo 6 / Sección 6.7.1 Paso 11.1.1 + AISC 360-22 G2.1`
 - Ecuación: `Ru_v2_vgizq = Vh_vgizq_max; Rn_v2_vgizq = 0.6 * Fy_vgizq * tw_vgizq * d_vgizq * Cv1; phi*Rn_v2_vgizq = phi * Rn_v2_vgizq; DCR_v2_vgizq = Ru_v2_vgizq / phi*Rn_v2_vgizq (AISC 360-22 G2.1, Eq. G2-3/G2-4; kv=5.34 for webs without transverse stiffeners)`
 - phi usado: `1`
-- Vh_vgizq_max: `403.12 kN`
+- Vh_vgizq_max: `402.51 kN`
 - Fy_vgizq: `345 MPa`
 - tw_vgizq: `10.9 mm`
 - d_vgizq: `536 mm`
@@ -1735,7 +1735,7 @@ Cálculo según Eq. (2.4-4): `Mfmax = Mpr + Vhmax*Sh` y `Mfmin = Mpr + Vhmin*Sh`
 - kv: `5.34`
 - h_vgizq/tw_vgizq: `43.63`
 - h_vgizq: `475.6 mm`
-- Ru_v2_vgizq: `403.12 kN`
+- Ru_v2_vgizq: `402.51 kN`
 - phi*Rn_v2_vgizq: `1209.38 kN`
 - DCR_v2_vgizq: `0.33`
 - Resultado: `🟢 Cumple`
@@ -1749,7 +1749,7 @@ Cálculo según Eq. (2.4-4): `Mfmax = Mpr + Vhmax*Sh` y `Mfmin = Mpr + Vhmin*Sh`
 - Cláusula: `Documento: AISC 360-22 | Sección: Capitulo 6 / Sección 6.7.1 Paso 11.1.1 + AISC 360-22 G2.1`
 - Ecuación: `Ru_v2_vgder = Vh_vgder_max; Rn_v2_vgder = 0.6 * Fy_vgder * tw_vgder * d_vgder * Cv1; phi*Rn_v2_vgder = phi * Rn_v2_vgder; DCR_v2_vgder = Ru_v2_vgder / phi*Rn_v2_vgder (AISC 360-22 G2.1, Eq. G2-3/G2-4; kv=5.34 for webs without transverse stiffeners)`
 - phi usado: `1`
-- Vh_vgder_max: `401.56 kN`
+- Vh_vgder_max: `401.48 kN`
 - Fy_vgder: `345 MPa`
 - tw_vgder: `10.9 mm`
 - d_vgder: `536 mm`
@@ -1759,7 +1759,7 @@ Cálculo según Eq. (2.4-4): `Mfmax = Mpr + Vhmax*Sh` y `Mfmin = Mpr + Vhmin*Sh`
 - kv: `5.34`
 - h_vgder/tw_vgder: `43.63`
 - h_vgder: `475.6 mm`
-- Ru_v2_vgder: `401.56 kN`
+- Ru_v2_vgder: `401.48 kN`
 - phi*Rn_v2_vgder: `1209.38 kN`
 - DCR_v2_vgder: `0.33`
 - Resultado: `🟢 Cumple`
@@ -1797,7 +1797,7 @@ Cálculo según Eq. (2.4-4): `Mfmax = Mpr + Vhmax*Sh` y `Mfmin = Mpr + Vhmin*Sh`
 - Cláusula: `Documento: AISC 358-22 | Sección: Capitulo 6 / Sección 6.7.2 + Eq. (6.7-13)`
 - Ecuación: `Ru_cf_v2_col_vgizq = Mf_vgizq_critico/(d_vgizq - tf_vgizq); phi*Rn_cf_v2_col_vgizq = phi_ductil * ((tf_col^2 * Fy_col * Y_cs)/(1.11 * (d_vgizq - tf_vgizq))); DCR_cf_v2_col_vgizq = Ru_cf_v2_col_vgizq / phi*Rn_cf_v2_col_vgizq`
 - phi usado: `1`
-- Mf_vgizq_critico: `1298.63 kN-m`
+- Mf_vgizq_critico: `1298.4 kN-m`
 - d_vgizq: `536 mm`
 - tf_vgizq: `17.4 mm`
 - z_vgizq = d_vgizq - tf_vgizq: `518.6 mm`
@@ -1809,7 +1809,7 @@ Cálculo según Eq. (2.4-4): `Mfmax = Mpr + Vhmax*Sh` y `Mfmin = Mpr + Vhmin*Sh`
 - Ecuación s_col: `s_col = 0.5 * sqrt(bcf_col * g_b_vgizq)`
 - s_col: `106.07 mm`
 - usar_pc_col: `hay platinas de continuidad`
-- Ru_cf_v2_col_vgizq: `2504.11 kN`
+- Ru_cf_v2_col_vgizq: `2503.66 kN`
 - phi*Rn_cf_v2_col_vgizq: `3837.55 kN`
 - DCR_cf_v2_col_vgizq: `0.65`
 - Resultado: `🟢 Cumple`
@@ -1828,7 +1828,7 @@ Donde:
 - Cláusula: `Documento: AISC 358-22 | Sección: Capitulo 6 / Sección 6.7.2 + Eq. (6.7-13)`
 - Ecuación: `Ru_cf_v2_col_vgder = Mf_vgder_critico/(d_vgder - tf_vgder); phi*Rn_cf_v2_col_vgder = phi_ductil * ((tf_col^2 * Fy_col * Y_cs)/(1.11 * (d_vgder - tf_vgder))); DCR_cf_v2_col_vgder = Ru_cf_v2_col_vgder / phi*Rn_cf_v2_col_vgder`
 - phi usado: `1`
-- Mf_vgder_critico: `1298.03 kN-m`
+- Mf_vgder_critico: `1298 kN-m`
 - d_vgder: `536 mm`
 - tf_vgder: `17.4 mm`
 - z_vgder = d_vgder - tf_vgder: `518.6 mm`
@@ -1840,7 +1840,7 @@ Donde:
 - Ecuación s_col: `s_col = 0.5 * sqrt(bcf_col * g_b_vgder)`
 - s_col: `106.07 mm`
 - usar_pc_col: `hay platinas de continuidad`
-- Ru_cf_v2_col_vgder: `2502.95 kN`
+- Ru_cf_v2_col_vgder: `2502.9 kN`
 - phi*Rn_cf_v2_col_vgder: `3837.55 kN`
 - DCR_cf_v2_col_vgder: `0.65`
 - Resultado: `🟢 Cumple`
@@ -1861,7 +1861,7 @@ Donde:
 - Cláusula: `Documento: AISC 358-22 | Sección: Capitulo 6 / Sección 6.7.2 + Eq. (6.7-17)`
 - Ecuación: `Ru_cw_v2_col_vgizq = Mf_vgizq_critico/(d_vgizq - tf_vgizq); lb_col = tf_vgizq + 2w_w4_vgizq + 2*tpe_vgizq; phi*Rn_cw_v2_col_vgizq = phi_ductil * (6*Ct_col*kc_col + lb_col) * Fy_col * tw_col; DCR_cw_v2_col_vgizq = Ru_cw_v2_col_vgizq / phi*Rn_cw_v2_col_vgizq`
 - phi usado (phi_ductil): `1`
-- Mf_vgizq_critico: `1298.63 kN-m`
+- Mf_vgizq_critico: `1298.4 kN-m`
 - St_col: `2500 mm`
 - d_col: `500 mm`
 - Ct_col: `1`
@@ -1890,7 +1890,7 @@ Donde:
 - Cláusula: `Documento: AISC 358-22 | Sección: Capitulo 6 / Sección 6.7.2 + Eq. (6.7-19) to Eq. (6.7-21)`
 - Ecuación: `Ru_cw_v2_col_vgizq = Mf_vgizq_critico/(d_vgizq - tf_vgizq); lb_col = tf_vgizq + 2w_w4_vgizq + 2*tpe_vgizq; Rn_cw_v2_col_vgizq = 0.80*tw_col^2 * [1 + 3*(lb_col/d_col)*(tw_col/tf_col)^1.5] * sqrt(E_col*Fy_col*tf_col/tw_col) [Eq. 6.7-19]; phi*Rn_cw_v2_col_vgizq = phi_wlc * Rn_cw_v2_col_vgizq; DCR_cw_v2_col_vgizq = Ru_cw_v2_col_vgizq / phi*Rn_cw_v2_col_vgizq`
 - phi usado: `0.75`
-- Mf_vgizq_critico: `1298.63 kN-m`
+- Mf_vgizq_critico: `1298.4 kN-m`
 - St_col: `2500 mm`
 - d_col (dc): `500 mm`
 - lb_col: `75.4 mm`
@@ -1953,7 +1953,7 @@ Donde:
 - Cláusula: `Documento: AISC 358-22 | Sección: Capitulo 6 / Sección 6.7.2 + Eq. (6.7-17)`
 - Ecuación: `Ru_cw_v2_col_vgder = Mf_vgder_critico/(d_vgder - tf_vgder); lb_col = tf_vgder + 2w_w4_vgder + 2*tpe_vgder; phi*Rn_cw_v2_col_vgder = phi_ductil * (6*Ct_col*kc_col + lb_col) * Fy_col * tw_col; DCR_cw_v2_col_vgder = Ru_cw_v2_col_vgder / phi*Rn_cw_v2_col_vgder`
 - phi usado (phi_ductil): `1`
-- Mf_vgder_critico: `1298.03 kN-m`
+- Mf_vgder_critico: `1298 kN-m`
 - St_col: `2500 mm`
 - d_col: `500 mm`
 - Ct_col: `1`
@@ -1982,7 +1982,7 @@ Donde:
 - Cláusula: `Documento: AISC 358-22 | Sección: Capitulo 6 / Sección 6.7.2 + Eq. (6.7-19) to Eq. (6.7-21)`
 - Ecuación: `Ru_cw_v2_col_vgder = Mf_vgder_critico/(d_vgder - tf_vgder); lb_col = tf_vgder + 2w_w4_vgder + 2*tpe_vgder; Rn_cw_v2_col_vgder = 0.80*tw_col^2 * [1 + 3*(lb_col/d_col)*(tw_col/tf_col)^1.5] * sqrt(E_col*Fy_col*tf_col/tw_col) [Eq. 6.7-19]; phi*Rn_cw_v2_col_vgder = phi_wlc * Rn_cw_v2_col_vgder; DCR_cw_v2_col_vgder = Ru_cw_v2_col_vgder / phi*Rn_cw_v2_col_vgder`
 - phi usado: `0.75`
-- Mf_vgder_critico: `1298.03 kN-m`
+- Mf_vgder_critico: `1298 kN-m`
 - St_col: `2500 mm`
 - d_col (dc): `500 mm`
 - lb_col: `75.4 mm`
@@ -2048,24 +2048,24 @@ Donde:
 - phi_ductil (usado en WPZS): `1`
 - hb_col: `1250 mm`
 - ht_col: `1250 mm`
-- Mbe_col_vgizq_max: `1399.41 kN-m`
-- Mbe_col_vgizq_min: `1274.7 kN-m`
-- Mbe_col_vgder_max: `1398.42 kN-m`
-- Mbe_col_vgder_min: `1275.69 kN-m`
-- sum_Mbe_col: `2675.1 kN-m`
+- Mbe_col_vgizq_max: `1399.02 kN-m`
+- Mbe_col_vgizq_min: `1275.09 kN-m`
+- Mbe_col_vgder_max: `1398.37 kN-m`
+- Mbe_col_vgder_min: `1275.74 kN-m`
+- sum_Mbe_col: `2674.76 kN-m`
 - Ecuación Vc2_col: `Vc2_col = sum_Mbe_col/(hb_col + ht_col)`
-- Vc2_col: `1070.04 kN`
+- Vc2_col: `1069.91 kN`
 - d_vgizq: `536 mm`
-- Mf_vgizq_max: `1298.63 kN-m`
-- Mf_vgizq_min: `1223.02 kN-m`
+- Mf_vgizq_max: `1298.4 kN-m`
+- Mf_vgizq_min: `1223.25 kN-m`
 - d_vgder: `536 mm`
-- Mf_vgder_max: `1298.03 kN-m`
-- Mf_vgder_min: `1223.62 kN-m`
-- sum_Mf_col/(db-tf): `4863.58 kN`
-- Ru_wpz_v2_col: `3793.54 kN`
-- Pr_col: `1101.05 kN`
+- Mf_vgder_max: `1298 kN-m`
+- Mf_vgder_min: `1223.65 kN-m`
+- sum_Mf_col/(db-tf): `4863.19 kN`
+- Ru_wpz_v2_col: `3793.28 kN`
+- Pr_col: `1121.16 kN`
 - Py_col: `8233.08 kN`
-- alphaPr/Py: `0.13`
+- alphaPr/Py: `0.14`
 - Ag_col: `23864 mm2`
 - Fy_col: `345 MPa`
 - d_col: `500 mm`
@@ -2089,23 +2089,23 @@ Donde:
 
 - Cláusula: `Documento: AISC 358-22 | Sección: Desarrollo interno de demanda para alma de platinas de continuidad`
 - Ecuación: `Ru_pc_p+_col_vgizq = Mf_vgizq_critico/(d_vgizq - tf_vgizq) - min{phi*Rn_(23.1.1), phi*Rn_(23.2.1), phi*Rn_(22.1.1)}; Ru_pc_p+_col_vgder = Mf_vgder_critico/(d_vgder - tf_vgder) - min{phi*Rn_(23.3.1), phi*Rn_(23.4.1), phi*Rn_(22.2.1)}; Ru_pc_p+_col = max{Ru_pc_p+_col_vgder, Ru_pc_p+_col_vgizq}; phi*Rn_pc_p+_col = phi * Fy_pc_col * b1_pc_col * t_pc_col * n_pc_col`
-- Mf_vgizq_critico: `1298.63 kN-m`
+- Mf_vgizq_critico: `1298.4 kN-m`
 - d_vgizq: `536 mm`
 - tf_vgizq: `17.4 mm`
 - phi*Rn_cw_v2_col_vgizq (22.1.1): `3837.55 kN`
 - phi*Rn_cw_v2_col_vgizq (23.1.1): `2028.01 kN`
 - phi*Rn_cw_v2_col_vgizq (23.2.1): `1701.65 kN`
 - min_capacidad_vgizq: `1701.65 kN`
-- Ru_pc_p+_col_vgizq: `802.46 kN`
-- Mf_vgder_critico: `1298.03 kN-m`
+- Ru_pc_p+_col_vgizq: `802.01 kN`
+- Mf_vgder_critico: `1298 kN-m`
 - d_vgder: `536 mm`
 - tf_vgder: `17.4 mm`
 - phi*Rn_cw_v2_col_vgder (22.2.1): `3837.55 kN`
 - phi*Rn_cw_v2_col_vgder (23.3.1): `2028.01 kN`
 - phi*Rn_cw_v2_col_vgder (23.4.1): `1701.65 kN`
 - min_capacidad_vgder: `1701.65 kN`
-- Ru_pc_p+_col_vgder: `801.31 kN`
-- Ru_pc_p+_col: `802.46 kN`
+- Ru_pc_p+_col_vgder: `801.25 kN`
+- Ru_pc_p+_col: `802.01 kN`
 - phi usado: `0.9`
 - Fy_pc_col: `345 MPa`
 - b1_pc_col: `130 mm`
@@ -2121,23 +2121,23 @@ Donde:
 
 - Cláusula: `Documento: AISC 358-22 | Sección: Fórmula de Fcr segun imagen de usuario (K=0.65)`
 - Ecuación: `Fcr_pc_col = 0.658^(Fy_pc_col/Fe_pc_col)*Fy_pc_col; phi*Rn_pc_p-_col = phi * Fcr_pc_col * b1_pc_col * t_pc_col * n_pc_col`
-- Mf_vgizq_critico: `1298.63 kN-m`
+- Mf_vgizq_critico: `1298.4 kN-m`
 - d_vgizq: `536 mm`
 - tf_vgizq: `17.4 mm`
 - phi*Rn_cw_v2_col_vgizq (22.1.1): `3837.55 kN`
 - phi*Rn_cw_v2_col_vgizq (23.1.1): `2028.01 kN`
 - phi*Rn_cw_v2_col_vgizq (23.2.1): `1701.65 kN`
 - min_capacidad_vgizq: `1701.65 kN`
-- Ru_pc_p-_col_vgizq: `802.46 kN`
-- Mf_vgder_critico: `1298.03 kN-m`
+- Ru_pc_p-_col_vgizq: `802.01 kN`
+- Mf_vgder_critico: `1298 kN-m`
 - d_vgder: `536 mm`
 - tf_vgder: `17.4 mm`
 - phi*Rn_cw_v2_col_vgder (22.2.1): `3837.55 kN`
 - phi*Rn_cw_v2_col_vgder (23.3.1): `2028.01 kN`
 - phi*Rn_cw_v2_col_vgder (23.4.1): `1701.65 kN`
 - min_capacidad_vgder: `1701.65 kN`
-- Ru_pc_p-_col_vgder: `801.31 kN`
-- Ru_pc_p-_col: `802.46 kN`
+- Ru_pc_p-_col_vgder: `801.25 kN`
+- Ru_pc_p-_col: `802.01 kN`
 - phi usado: `0.9`
 - K: `0.65`
 - Lp_pc_col: `310 mm`
@@ -2160,23 +2160,23 @@ Donde:
 
 - Cláusula: `Documento: AISC 360-22 | Sección: G2.1 (adaptado a demanda de alma de platina de continuidad)`
 - Ecuación: `Ru_pc_v2_col = Ru_pc_p+_col_vgder + Ru_pc_p+_col_vgizq; phi*Rn_pc_v2_col = phi * 0.6 * Fy_pc_col * t_pc_col * n_pc_col * L2_pc_col; DCR_pc_v2_col = Ru_pc_v2_col / phi*Rn_pc_v2_col`
-- Mf_vgizq_critico: `1298.63 kN-m`
+- Mf_vgizq_critico: `1298.4 kN-m`
 - d_vgizq: `536 mm`
 - tf_vgizq: `17.4 mm`
 - phi*Rn_cw_v2_col_vgizq (22.1.1): `3837.55 kN`
 - phi*Rn_cw_v2_col_vgizq (23.1.1): `2028.01 kN`
 - phi*Rn_cw_v2_col_vgizq (23.2.1): `1701.65 kN`
 - min_capacidad_vgizq: `1701.65 kN`
-- Ru_pc_p+_col_vgizq: `802.46 kN`
-- Mf_vgder_critico: `1298.03 kN-m`
+- Ru_pc_p+_col_vgizq: `802.01 kN`
+- Mf_vgder_critico: `1298 kN-m`
 - d_vgder: `536 mm`
 - tf_vgder: `17.4 mm`
 - phi*Rn_cw_v2_col_vgder (22.2.1): `3837.55 kN`
 - phi*Rn_cw_v2_col_vgder (23.3.1): `2028.01 kN`
 - phi*Rn_cw_v2_col_vgder (23.4.1): `1701.65 kN`
 - min_capacidad_vgder: `1701.65 kN`
-- Ru_pc_p+_col_vgder: `801.31 kN`
-- Ru_pc_v2_col: `1603.77 kN`
+- Ru_pc_p+_col_vgder: `801.25 kN`
+- Ru_pc_v2_col: `1603.26 kN`
 - phi usado: `1`
 - Fy_pc_col: `345 MPa`
 - t_pc_col: `16 mm`
@@ -2244,13 +2244,13 @@ Donde:
 - phi usado (phi_fragil): `0.75`
 - nfilas_w7_col: `3`
 - ncolumna_w7_col: `2`
-- Ru_wpz_v2_col: `3793.54 kN`
+- Ru_wpz_v2_col: `3793.28 kN`
 - t_dp_col: `12 mm`
 - n_dp_col: `2`
 - tw_col: `14.5 mm`
 - Fexx_w7_col: `485 MPa`
 - d_hole_w7_col (usado en fórmula): `31 mm`
-- Ru_w7_v2_col: `1182.4 kN`
+- Ru_w7_v2_col: `1182.32 kN`
 - phi*Rn_w7_v2_col: `988.37 kN`
 - DCR_w7_v2_col: `1.2`
 - Resultado: `🔴 No cumple`
@@ -2299,7 +2299,7 @@ Subcapitulo aplicado: `24.1.1. ELR #1: Fluencia por tracción area bruta`
 Subcapitulo aplicado: `18.1.1. ELR #1: Fluencia por cortante (AISC 360-22 G2.1) (vg_izq)`
 19. 🟢 `DCR_v2_vgder` = `0.33`
 Subcapitulo aplicado: `19.1.1. ELR #1: Fluencia por cortante (AISC 360-22 G2.1) (vg_der)`
-20. 🟢 `DCR_b_v2_vgizq` = `0.24`
+20. 🟢 `DCR_b_v2_vgizq` = `0.23`
 Subcapitulo aplicado: `8.2.1 ELR #2: Rotura por cortante en el perno (vg_izq)`
 21. 🟢 `DCR_b_v2_vgder` = `0.23`
 Subcapitulo aplicado: `9.2.1 ELR #2: Rotura por cortante en el perno (vg_der)`
