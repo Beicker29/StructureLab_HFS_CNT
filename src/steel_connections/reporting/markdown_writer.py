@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import math
 import re
@@ -39,6 +39,76 @@ def _format_decimal(value: float) -> str:
     if "." in text:
         text = text.rstrip("0").rstrip(".")
     return text
+
+
+def _format_dcr_value(value: float) -> str:
+    """Format DCR for display without masking values slightly above/below 1.0."""
+
+    text = _format_decimal(value)
+    if text == "1" and abs(value - 1.0) > 1e-9:
+        for precision in (6, 8, 10, 12):
+            text = f"{value:.{precision}f}".rstrip("0").rstrip(".")
+            if text != "1":
+                break
+    return text
+
+
+def _coerce_float(value: object) -> float | None:
+    if value is None:
+        return None
+    try:
+        numeric = float(str(value).strip().replace(",", ""))
+    except (TypeError, ValueError):
+        return None
+    return numeric if math.isfinite(numeric) else None
+
+
+def _compute_dcr_numeric(
+    demand_q: Quantity | None = None,
+    capacity_q: Quantity | None = None,
+    displayed_dcr: object = None,
+) -> float | None:
+    if (
+        isinstance(demand_q, Quantity)
+        and isinstance(capacity_q, Quantity)
+        and demand_q.unit == capacity_q.unit
+        and abs(capacity_q.value) > 1e-12
+    ):
+        return abs(demand_q.value) / abs(capacity_q.value)
+    return _coerce_float(displayed_dcr)
+
+
+def _result_label_from_dcr(dcr_value: float | None, *, fallback: str = "NOT_APPLICABLE") -> str:
+    if isinstance(dcr_value, float) and math.isfinite(dcr_value):
+        return _render_result_label("PASS" if dcr_value <= 1.0 else "FAIL")
+    return _render_result_label(fallback)
+
+
+def _round_dcr_rendered_values_in_markdown(markdown_text: str) -> str:
+    """Force rendered DCR values to max 2 decimals without affecting internal checks."""
+
+    def _round_token(token: str) -> str:
+        raw = token.strip().replace(",", "")
+        try:
+            num = float(raw)
+        except (TypeError, ValueError):
+            return token
+        return _format_decimal(num)
+
+    patterns = [
+        re.compile(r"(^\s*-\s*DCR[^:`]+:\s*`)([^`]+)(`)", flags=re.MULTILINE),
+        re.compile(r"(^\s*-\s*DCR[^=`]+=\s*`)([^`]+)(`)", flags=re.MULTILINE),
+        re.compile(r"(^\s*\d+\.\s*[\U0001F7E2\U0001F534\u26AA]\s*`DCR[^`]+`\s*=\s*`)([^`]+)(`)", flags=re.MULTILINE),
+        re.compile(
+            r"(^\s*-\s*DCR critico global:\s*[^\n`]*`DCR[^`]+=\s*)([^`]+)(`)",
+            flags=re.MULTILINE,
+        ),
+    ]
+
+    out = markdown_text
+    for pattern in patterns:
+        out = pattern.sub(lambda m: f"{m.group(1)}{_round_token(m.group(2))}{m.group(3)}", out)
+    return out
 
 
 def _format_quantity(value: object) -> str:
@@ -2295,7 +2365,7 @@ def _render_step_11_end_plate_beam_web_weld_tension(step_11_ctx: dict | None, st
     hwef_text = _format_quantity(hwef_w3_vgizq_q.model_dump()) if hwef_w3_vgizq_q is not None else "n/a"
     ru_text = _format_quantity(ru_w3_p_pos_vgizq_q.model_dump()) if ru_w3_p_pos_vgizq_q is not None else "n/a"
     phi_rn_text = _format_quantity(phi_pn_q.model_dump()) if phi_pn_q is not None else "n/a"
-    dcr_text = _format_decimal(dcr_w3_p_pos_vgizq) if dcr_w3_p_pos_vgizq is not None else "n/a"
+    dcr_text = _format_dcr_value(dcr_w3_p_pos_vgizq) if dcr_w3_p_pos_vgizq is not None else "n/a"
     twe_text = _format_quantity(weld_thickness_twe)
     fexx_text = _format_quantity(_pick(step_11_inputs, "Fexx_w3_vgizq", "weld_fexx"))
     fy_text = _format_quantity(_pick(step_10_inputs, "Fy_vgizq", "fybm"))
@@ -2476,7 +2546,7 @@ def _render_step_12_column_flange_local_bending(
     if case_y == "n/a" and pfi_mm is not None and s_mm is not None:
         case_y = "Case 1 (pfi <= s)" if pfi_mm <= s_mm else "Case 2 (pfi > s)"
 
-    dcr_text = _format_decimal(dcr_cf_v2_col) if dcr_cf_v2_col is not None else "n/a"
+    dcr_text = _format_dcr_value(dcr_cf_v2_col) if dcr_cf_v2_col is not None else "n/a"
     if dcr_cf_v2_col is None:
         result_line = "n/a"
     else:
@@ -3923,15 +3993,12 @@ def _render_fully_restrained_splice_outline(
         and ru_web_v2_vg_disp.unit == phi_rn_web_q.unit
         and abs(phi_rn_web_q.value) > 1e-12
     ):
-        dcr1_web_v2_vg_disp = _format_decimal(abs(ru_web_v2_vg_disp.value) / phi_rn_web_q.value)
+        dcr1_web_v2_vg_disp = _format_dcr_value(abs(ru_web_v2_vg_disp.value) / phi_rn_web_q.value)
     ru_web_v2_vg_abs_disp: Quantity | None = None
     if isinstance(ru_web_v2_vg_disp, Quantity):
         ru_web_v2_vg_abs_disp = Quantity(value=abs(ru_web_v2_vg_disp.value), unit=ru_web_v2_vg_disp.unit)
-    try:
-        dcr1_num = float(dcr1_web_v2_vg_disp)
-        tearout_result = _render_result_label("PASS" if dcr1_num <= 1.0 else "FAIL")
-    except (TypeError, ValueError):
-        pass
+    dcr1_num = _compute_dcr_numeric(ru_web_v2_vg_disp, phi_rn_web_q, dcr1_web_v2_vg_disp)
+    tearout_result = _result_label_from_dcr(dcr1_num, fallback="UNKNOWN")
     # 5.1.1 plate 1 tearout in v2 direction
     phi_rn1_plt_v2_web_q = _as_quantity(plt1_tearout_v2_note.get("phi_rn1_plt_v2_web"))
     ru1_plt_v2_web_disp = _convert_ru_to_capacity_unit(ru_web_v2_max_vg_q, phi_rn1_plt_v2_web_q)
@@ -3945,13 +4012,9 @@ def _render_fully_restrained_splice_outline(
         and ru1_plt_v2_web_disp.unit == phi_rn1_plt_v2_web_q.unit
         and abs(phi_rn1_plt_v2_web_q.value) > 1e-12
     ):
-        dcr1_plt_v2_web_disp = _format_decimal(abs(ru1_plt_v2_web_disp.value) / phi_rn1_plt_v2_web_q.value)
-    plt1_tearout_v2_result = _render_result_label("UNKNOWN")
-    try:
-        dcr1_plt_num = float(dcr1_plt_v2_web_disp)
-        plt1_tearout_v2_result = _render_result_label("PASS" if dcr1_plt_num <= 1.0 else "FAIL")
-    except (TypeError, ValueError):
-        pass
+        dcr1_plt_v2_web_disp = _format_dcr_value(abs(ru1_plt_v2_web_disp.value) / phi_rn1_plt_v2_web_q.value)
+    dcr1_plt_num = _compute_dcr_numeric(ru1_plt_v2_web_disp, phi_rn1_plt_v2_web_q, dcr1_plt_v2_web_disp)
+    plt1_tearout_v2_result = _result_label_from_dcr(dcr1_plt_num, fallback="UNKNOWN")
     # 5.1.2 plate 1 bearing in v2-v3 direction
     phi_rn2_plt_v2_web_q = _as_quantity(plt1_bearing_v2_note.get("phi_rn2_plt_v2_web"))
     ru2_plt_v2_web_disp = _convert_ru_to_capacity_unit(ru_web_vg_q, phi_rn2_plt_v2_web_q)
@@ -3965,13 +4028,9 @@ def _render_fully_restrained_splice_outline(
         and ru2_plt_v2_web_disp.unit == phi_rn2_plt_v2_web_q.unit
         and abs(phi_rn2_plt_v2_web_q.value) > 1e-12
     ):
-        dcr2_plt_v2_web_disp = _format_decimal(abs(ru2_plt_v2_web_disp.value) / phi_rn2_plt_v2_web_q.value)
-    plt1_bearing_v2_result = _render_result_label("UNKNOWN")
-    try:
-        dcr2_plt_num = float(dcr2_plt_v2_web_disp)
-        plt1_bearing_v2_result = _render_result_label("PASS" if dcr2_plt_num <= 1.0 else "FAIL")
-    except (TypeError, ValueError):
-        pass
+        dcr2_plt_v2_web_disp = _format_dcr_value(abs(ru2_plt_v2_web_disp.value) / phi_rn2_plt_v2_web_q.value)
+    dcr2_plt_num = _compute_dcr_numeric(ru2_plt_v2_web_disp, phi_rn2_plt_v2_web_q, dcr2_plt_v2_web_disp)
+    plt1_bearing_v2_result = _result_label_from_dcr(dcr2_plt_num, fallback="UNKNOWN")
     # 5.1.3 plate 1 bolt shear rupture in v2-v3 direction
     phi_rn3_plt_v2_v3_web_q = _as_quantity(plt1_bolt_shear_v2_v3_note.get("phi_rn3_plt_v2_v3_web"))
     ru3_plt_v2_v3_web_disp = _convert_ru_to_capacity_unit(ru_web_vg_q, phi_rn3_plt_v2_v3_web_q)
@@ -3988,15 +4047,13 @@ def _render_fully_restrained_splice_outline(
         and ru3_plt_v2_v3_web_disp.unit == phi_rn3_plt_v2_v3_web_q.unit
         and abs(phi_rn3_plt_v2_v3_web_q.value) > 1e-12
     ):
-        dcr3_plt_v2_v3_web_disp = _format_decimal(
+        dcr3_plt_v2_v3_web_disp = _format_dcr_value(
             abs(ru3_plt_v2_v3_web_disp.value) / phi_rn3_plt_v2_v3_web_q.value
         )
-    plt1_bolt_shear_v2_v3_result = _render_result_label("UNKNOWN")
-    try:
-        dcr3_plt_num = float(dcr3_plt_v2_v3_web_disp)
-        plt1_bolt_shear_v2_v3_result = _render_result_label("PASS" if dcr3_plt_num <= 1.0 else "FAIL")
-    except (TypeError, ValueError):
-        pass
+    dcr3_plt_num = _compute_dcr_numeric(
+        ru3_plt_v2_v3_web_disp, phi_rn3_plt_v2_v3_web_q, dcr3_plt_v2_v3_web_disp
+    )
+    plt1_bolt_shear_v2_v3_result = _result_label_from_dcr(dcr3_plt_num, fallback="UNKNOWN")
     # 5.1.4 plate 1 block shear in v2 direction
     rn4_1_plt_v2_web_q = _as_quantity(plt1_block_shear_v2_note.get("rn4_1_plt_v2_web"))
     rn4_2_plt_v2_web_q = _as_quantity(plt1_block_shear_v2_note.get("rn4_2_plt_v2_web"))
@@ -4037,13 +4094,11 @@ def _render_fully_restrained_splice_outline(
         and ru4_plt_v2_web_disp.unit == phi_rn4_plt_v2_web_q.unit
         and abs(phi_rn4_plt_v2_web_q.value) > 1e-12
     ):
-        dcr4_plt_v2_web_disp = _format_decimal(abs(ru4_plt_v2_web_disp.value) / phi_rn4_plt_v2_web_q.value)
+        dcr4_plt_v2_web_disp = _format_dcr_value(abs(ru4_plt_v2_web_disp.value) / phi_rn4_plt_v2_web_q.value)
     plt1_block_shear_v2_result = _render_result_label(plt1_block_shear_v2_note.get("result4_plt_v2_web"))
-    try:
-        dcr4_plt_num = float(dcr4_plt_v2_web_disp)
-        plt1_block_shear_v2_result = _render_result_label("PASS" if dcr4_plt_num <= 1.0 else "FAIL")
-    except (TypeError, ValueError):
-        pass
+    dcr4_plt_num = _compute_dcr_numeric(ru4_plt_v2_web_disp, phi_rn4_plt_v2_web_q, dcr4_plt_v2_web_disp)
+    if dcr4_plt_num is not None:
+        plt1_block_shear_v2_result = _result_label_from_dcr(dcr4_plt_num, fallback="UNKNOWN")
     # 5.1.5 plate 1 shear yielding in v2 direction
     phi_rn5_plt_v2_web_q = _as_quantity(plt1_shear_yielding_v2_note.get("phi_rn5_plt_v2_web"))
     ru5_plt_v2_web_q = _as_quantity(plt1_shear_yielding_v2_note.get("ru5_plt_v2_web"))
@@ -4058,13 +4113,11 @@ def _render_fully_restrained_splice_outline(
         and ru5_plt_v2_web_disp.unit == phi_rn5_plt_v2_web_q.unit
         and abs(phi_rn5_plt_v2_web_q.value) > 1e-12
     ):
-        dcr5_plt_v2_web_disp = _format_decimal(abs(ru5_plt_v2_web_disp.value) / phi_rn5_plt_v2_web_q.value)
+        dcr5_plt_v2_web_disp = _format_dcr_value(abs(ru5_plt_v2_web_disp.value) / phi_rn5_plt_v2_web_q.value)
     plt1_shear_yielding_v2_result = _render_result_label(plt1_shear_yielding_v2_note.get("result5_plt_v2_web"))
-    try:
-        dcr5_plt_num = float(dcr5_plt_v2_web_disp)
-        plt1_shear_yielding_v2_result = _render_result_label("PASS" if dcr5_plt_num <= 1.0 else "FAIL")
-    except (TypeError, ValueError):
-        pass
+    dcr5_plt_num = _compute_dcr_numeric(ru5_plt_v2_web_disp, phi_rn5_plt_v2_web_q, dcr5_plt_v2_web_disp)
+    if dcr5_plt_num is not None:
+        plt1_shear_yielding_v2_result = _result_label_from_dcr(dcr5_plt_num, fallback="UNKNOWN")
     # 5.1.6 plate 1 shear rupture in v2 direction
     phi_rn6_plt_v2_web_q = _as_quantity(plt1_shear_rupture_v2_note.get("phi_rn6_plt_v2_web"))
     ru6_plt_v2_web_q = _as_quantity(plt1_shear_rupture_v2_note.get("ru6_plt_v2_web"))
@@ -4079,13 +4132,11 @@ def _render_fully_restrained_splice_outline(
         and ru6_plt_v2_web_disp.unit == phi_rn6_plt_v2_web_q.unit
         and abs(phi_rn6_plt_v2_web_q.value) > 1e-12
     ):
-        dcr6_plt_v2_web_disp = _format_decimal(abs(ru6_plt_v2_web_disp.value) / phi_rn6_plt_v2_web_q.value)
+        dcr6_plt_v2_web_disp = _format_dcr_value(abs(ru6_plt_v2_web_disp.value) / phi_rn6_plt_v2_web_q.value)
     plt1_shear_rupture_v2_result = _render_result_label(plt1_shear_rupture_v2_note.get("result6_plt_v2_web"))
-    try:
-        dcr6_plt_num = float(dcr6_plt_v2_web_disp)
-        plt1_shear_rupture_v2_result = _render_result_label("PASS" if dcr6_plt_num <= 1.0 else "FAIL")
-    except (TypeError, ValueError):
-        pass
+    dcr6_plt_num = _compute_dcr_numeric(ru6_plt_v2_web_disp, phi_rn6_plt_v2_web_q, dcr6_plt_v2_web_disp)
+    if dcr6_plt_num is not None:
+        plt1_shear_rupture_v2_result = _result_label_from_dcr(dcr6_plt_num, fallback="UNKNOWN")
     # 5.2.1 plate 1 tearout in v3 direction
     phi_rn1_plt_v3_web_q = _as_quantity(plt1_tearout_v3_note.get("phi_rn1_plt_v3_web"))
     ru1_plt_v3_web_disp = _convert_ru_to_capacity_unit(ru_web_v3_max_vg_q, phi_rn1_plt_v3_web_q)
@@ -4099,13 +4150,9 @@ def _render_fully_restrained_splice_outline(
         and ru1_plt_v3_web_disp.unit == phi_rn1_plt_v3_web_q.unit
         and abs(phi_rn1_plt_v3_web_q.value) > 1e-12
     ):
-        dcr1_plt_v3_web_disp = _format_decimal(abs(ru1_plt_v3_web_disp.value) / phi_rn1_plt_v3_web_q.value)
-    plt1_tearout_v3_result = _render_result_label("UNKNOWN")
-    try:
-        dcr1_plt_v3_num = float(dcr1_plt_v3_web_disp)
-        plt1_tearout_v3_result = _render_result_label("PASS" if dcr1_plt_v3_num <= 1.0 else "FAIL")
-    except (TypeError, ValueError):
-        pass
+        dcr1_plt_v3_web_disp = _format_dcr_value(abs(ru1_plt_v3_web_disp.value) / phi_rn1_plt_v3_web_q.value)
+    dcr1_plt_v3_num = _compute_dcr_numeric(ru1_plt_v3_web_disp, phi_rn1_plt_v3_web_q, dcr1_plt_v3_web_disp)
+    plt1_tearout_v3_result = _result_label_from_dcr(dcr1_plt_v3_num, fallback="UNKNOWN")
     # 5.2.2 plate 1 block shear in v3 direction
     ru2_plt_v3_web_q = _as_quantity(plt1_block_shear_v3_note.get("ru2_plt_v3_web"))
     phi_rn2_plt_v3_web_q = _as_quantity(plt1_block_shear_v3_note.get("phi_rn2_plt_v3_web"))
@@ -4120,13 +4167,11 @@ def _render_fully_restrained_splice_outline(
         and ru2_plt_v3_web_disp.unit == phi_rn2_plt_v3_web_q.unit
         and abs(phi_rn2_plt_v3_web_q.value) > 1e-12
     ):
-        dcr2_plt_v3_web_disp = _format_decimal(abs(ru2_plt_v3_web_disp.value) / phi_rn2_plt_v3_web_q.value)
+        dcr2_plt_v3_web_disp = _format_dcr_value(abs(ru2_plt_v3_web_disp.value) / phi_rn2_plt_v3_web_q.value)
     plt1_block_shear_v3_result = _render_result_label(plt1_block_shear_v3_note.get("result2_plt_v3_web"))
-    try:
-        dcr2_plt_v3_num = float(dcr2_plt_v3_web_disp)
-        plt1_block_shear_v3_result = _render_result_label("PASS" if dcr2_plt_v3_num <= 1.0 else "FAIL")
-    except (TypeError, ValueError):
-        pass
+    dcr2_plt_v3_num = _compute_dcr_numeric(ru2_plt_v3_web_disp, phi_rn2_plt_v3_web_q, dcr2_plt_v3_web_disp)
+    if dcr2_plt_v3_num is not None:
+        plt1_block_shear_v3_result = _result_label_from_dcr(dcr2_plt_v3_num, fallback="UNKNOWN")
     # 5.2.3 plate 1 tension yielding in v3 direction
     ru3_plt_v3_web_q = _as_quantity(plt1_tension_yielding_v3_note.get("ru3_plt_v3_web"))
     phi_rn3_plt_v3_web_q = _as_quantity(plt1_tension_yielding_v3_note.get("phi_rn3_plt_v3_web"))
@@ -4141,13 +4186,11 @@ def _render_fully_restrained_splice_outline(
         and ru3_plt_v3_web_disp.unit == phi_rn3_plt_v3_web_q.unit
         and abs(phi_rn3_plt_v3_web_q.value) > 1e-12
     ):
-        dcr3_plt_v3_web_disp = _format_decimal(abs(ru3_plt_v3_web_disp.value) / phi_rn3_plt_v3_web_q.value)
+        dcr3_plt_v3_web_disp = _format_dcr_value(abs(ru3_plt_v3_web_disp.value) / phi_rn3_plt_v3_web_q.value)
     plt1_tension_yielding_v3_result = _render_result_label(plt1_tension_yielding_v3_note.get("result3_plt_v3_web"))
-    try:
-        dcr3_plt_v3_num = float(dcr3_plt_v3_web_disp)
-        plt1_tension_yielding_v3_result = _render_result_label("PASS" if dcr3_plt_v3_num <= 1.0 else "FAIL")
-    except (TypeError, ValueError):
-        pass
+    dcr3_plt_v3_num = _compute_dcr_numeric(ru3_plt_v3_web_disp, phi_rn3_plt_v3_web_q, dcr3_plt_v3_web_disp)
+    if dcr3_plt_v3_num is not None:
+        plt1_tension_yielding_v3_result = _result_label_from_dcr(dcr3_plt_v3_num, fallback="UNKNOWN")
     # 5.2.4 plate 1 tension rupture in v3 direction
     ru4_plt_v3_web_q = _as_quantity(plt1_tension_rupture_v3_note.get("ru4_plt_v3_web"))
     phi_rn4_plt_v3_web_q = _as_quantity(plt1_tension_rupture_v3_note.get("phi_rn4_plt_v3_web"))
@@ -4162,13 +4205,11 @@ def _render_fully_restrained_splice_outline(
         and ru4_plt_v3_web_disp.unit == phi_rn4_plt_v3_web_q.unit
         and abs(phi_rn4_plt_v3_web_q.value) > 1e-12
     ):
-        dcr4_plt_v3_web_disp = _format_decimal(abs(ru4_plt_v3_web_disp.value) / phi_rn4_plt_v3_web_q.value)
+        dcr4_plt_v3_web_disp = _format_dcr_value(abs(ru4_plt_v3_web_disp.value) / phi_rn4_plt_v3_web_q.value)
     plt1_tension_rupture_v3_result = _render_result_label(plt1_tension_rupture_v3_note.get("result4_plt_v3_web"))
-    try:
-        dcr4_plt_v3_num = float(dcr4_plt_v3_web_disp)
-        plt1_tension_rupture_v3_result = _render_result_label("PASS" if dcr4_plt_v3_num <= 1.0 else "FAIL")
-    except (TypeError, ValueError):
-        pass
+    dcr4_plt_v3_num = _compute_dcr_numeric(ru4_plt_v3_web_disp, phi_rn4_plt_v3_web_q, dcr4_plt_v3_web_disp)
+    if dcr4_plt_v3_num is not None:
+        plt1_tension_rupture_v3_result = _result_label_from_dcr(dcr4_plt_v3_num, fallback="UNKNOWN")
     # 5.3.1 plate 1 compression buckling (only for Pu_sp < 0)
     ru1_plt_p3_minus_web_q = _as_quantity(plt1_comp_buckling_p3_minus_note.get("ru1_plt_p3_minus_web"))
     phi_rn1_plt_p3_minus_web_q = _as_quantity(plt1_comp_buckling_p3_minus_note.get("phi_rn1_plt_p3_minus_web"))
@@ -4204,17 +4245,17 @@ def _render_fully_restrained_splice_outline(
         and ru1_plt_p3_minus_web_disp.unit == phi_rn1_plt_p3_minus_web_q.unit
         and abs(phi_rn1_plt_p3_minus_web_q.value) > 1e-12
     ):
-        dcr1_plt_p3_minus_web_disp = _format_decimal(
+        dcr1_plt_p3_minus_web_disp = _format_dcr_value(
             abs(ru1_plt_p3_minus_web_disp.value) / phi_rn1_plt_p3_minus_web_q.value
         )
+    dcr1_p3_minus_num = _compute_dcr_numeric(
+        ru1_plt_p3_minus_web_disp, phi_rn1_plt_p3_minus_web_q, dcr1_plt_p3_minus_web_disp
+    )
     plt1_comp_buckling_p3_minus_result = _render_result_label(
         plt1_comp_buckling_p3_minus_note.get("result1_plt_p3_minus_web")
     )
-    try:
-        dcr1_p3_minus_num = float(dcr1_plt_p3_minus_web_disp)
-        plt1_comp_buckling_p3_minus_result = _render_result_label("PASS" if dcr1_p3_minus_num <= 1.0 else "FAIL")
-    except (TypeError, ValueError):
-        pass
+    if dcr1_p3_minus_num is not None:
+        plt1_comp_buckling_p3_minus_result = _result_label_from_dcr(dcr1_p3_minus_num, fallback="UNKNOWN")
     # 5.3.2 plate 1 flexural yielding around axis 1
     ru1_plt_m1_web_q = _as_quantity(plt1_flex_yielding_m1_note.get("ru1_plt_m1_web"))
     phi_mn1_plt_m1_web_q = _as_quantity(plt1_flex_yielding_m1_note.get("phi_mn1_plt_m1_web"))
@@ -4229,13 +4270,11 @@ def _render_fully_restrained_splice_outline(
         and ru1_plt_m1_web_disp.unit == phi_mn1_plt_m1_web_q.unit
         and abs(phi_mn1_plt_m1_web_q.value) > 1e-12
     ):
-        dcr1_plt_m1_web_disp = _format_decimal(abs(ru1_plt_m1_web_disp.value) / phi_mn1_plt_m1_web_q.value)
+        dcr1_plt_m1_web_disp = _format_dcr_value(abs(ru1_plt_m1_web_disp.value) / phi_mn1_plt_m1_web_q.value)
+    dcr1_plt_m1_num = _compute_dcr_numeric(ru1_plt_m1_web_disp, phi_mn1_plt_m1_web_q, dcr1_plt_m1_web_disp)
     plt1_flex_yielding_m1_result = _render_result_label(plt1_flex_yielding_m1_note.get("result1_plt_m1_web"))
-    try:
-        dcr1_plt_m1_num = float(dcr1_plt_m1_web_disp)
-        plt1_flex_yielding_m1_result = _render_result_label("PASS" if dcr1_plt_m1_num <= 1.0 else "FAIL")
-    except (TypeError, ValueError):
-        pass
+    if dcr1_plt_m1_num is not None:
+        plt1_flex_yielding_m1_result = _result_label_from_dcr(dcr1_plt_m1_num, fallback="UNKNOWN")
     # 5.3.3 plate 1 LTB around axis 1
     ru2_plt_m1_web_q = _as_quantity(plt1_ltb_m1_note.get("ru2_plt_m1_web"))
     phi_mn2_plt_m1_web_q = _as_quantity(plt1_ltb_m1_note.get("phi_mn2_plt_m1_web"))
@@ -4250,13 +4289,11 @@ def _render_fully_restrained_splice_outline(
         and ru2_plt_m1_web_disp.unit == phi_mn2_plt_m1_web_q.unit
         and abs(phi_mn2_plt_m1_web_q.value) > 1e-12
     ):
-        dcr2_plt_m1_web_disp = _format_decimal(abs(ru2_plt_m1_web_disp.value) / phi_mn2_plt_m1_web_q.value)
+        dcr2_plt_m1_web_disp = _format_dcr_value(abs(ru2_plt_m1_web_disp.value) / phi_mn2_plt_m1_web_q.value)
+    dcr2_plt_m1_num = _compute_dcr_numeric(ru2_plt_m1_web_disp, phi_mn2_plt_m1_web_q, dcr2_plt_m1_web_disp)
     plt1_ltb_m1_result = _render_result_label(plt1_ltb_m1_note.get("result2_plt_m1_web"))
-    try:
-        dcr2_plt_m1_num = float(dcr2_plt_m1_web_disp)
-        plt1_ltb_m1_result = _render_result_label("PASS" if dcr2_plt_m1_num <= 1.0 else "FAIL")
-    except (TypeError, ValueError):
-        pass
+    if dcr2_plt_m1_num is not None:
+        plt1_ltb_m1_result = _result_label_from_dcr(dcr2_plt_m1_num, fallback="UNKNOWN")
     # 5.3.4 plate 1 flexural rupture around axis 1
     ru3_plt_m1_web_q = _as_quantity(plt1_flex_rupture_m1_note.get("ru3_plt_m1_web"))
     phi_rn3_plt_m1_web_q = _as_quantity(plt1_flex_rupture_m1_note.get("phi_rn3_plt_m1_web"))
@@ -4271,39 +4308,32 @@ def _render_fully_restrained_splice_outline(
         and ru3_plt_m1_web_disp.unit == phi_rn3_plt_m1_web_q.unit
         and abs(phi_rn3_plt_m1_web_q.value) > 1e-12
     ):
-        dcr3_plt_m1_web_disp = _format_decimal(abs(ru3_plt_m1_web_disp.value) / phi_rn3_plt_m1_web_q.value)
+        dcr3_plt_m1_web_disp = _format_dcr_value(abs(ru3_plt_m1_web_disp.value) / phi_rn3_plt_m1_web_q.value)
+    dcr3_plt_m1_num = _compute_dcr_numeric(ru3_plt_m1_web_disp, phi_rn3_plt_m1_web_q, dcr3_plt_m1_web_disp)
     plt1_flex_rupture_m1_result = _render_result_label(plt1_flex_rupture_m1_note.get("result3_plt_m1_web"))
-    try:
-        dcr3_plt_m1_num = float(dcr3_plt_m1_web_disp)
-        plt1_flex_rupture_m1_result = _render_result_label("PASS" if dcr3_plt_m1_num <= 1.0 else "FAIL")
-    except (TypeError, ValueError):
-        pass
-    def _safe_float(raw: object) -> float | None:
-        try:
-            return float(raw)
-        except (TypeError, ValueError):
-            return None
+    if dcr3_plt_m1_num is not None:
+        plt1_flex_rupture_m1_result = _result_label_from_dcr(dcr3_plt_m1_num, fallback="UNKNOWN")
 
     dcr_v2_values = [
-        _safe_float(dcr1_plt_v2_web_disp),
-        _safe_float(dcr2_plt_v2_web_disp),
-        _safe_float(dcr3_plt_v2_v3_web_disp),
-        _safe_float(dcr4_plt_v2_web_disp),
-        _safe_float(dcr5_plt_v2_web_disp),
-        _safe_float(dcr6_plt_v2_web_disp),
+        dcr1_plt_num,
+        dcr2_plt_num,
+        dcr3_plt_num,
+        dcr4_plt_num,
+        dcr5_plt_num,
+        dcr6_plt_num,
     ]
     dcr_v3_values = [
-        _safe_float(dcr1_plt_v3_web_disp),
-        _safe_float(dcr2_plt_v3_web_disp),
-        _safe_float(dcr3_plt_v3_web_disp),
-        _safe_float(dcr4_plt_v3_web_disp),
+        dcr1_plt_v3_num,
+        dcr2_plt_v3_num,
+        dcr3_plt_v3_num,
+        dcr4_plt_v3_num,
     ]
     dcr_m1_values = [
-        _safe_float(dcr1_plt_m1_web_disp),
-        _safe_float(dcr2_plt_m1_web_disp),
-        _safe_float(dcr3_plt_m1_web_disp),
+        dcr1_plt_m1_num,
+        dcr2_plt_m1_num,
+        dcr3_plt_m1_num,
     ]
-    dcr_p3_minus_value = _safe_float(dcr1_plt_p3_minus_web_disp)
+    dcr_p3_minus_value = dcr1_p3_minus_num
 
     dcr_plt_v2_web_num = max((v for v in dcr_v2_values if v is not None), default=0.0)
     dcr_plt_v3_web_num = max((v for v in dcr_v3_values if v is not None), default=0.0)
@@ -4316,19 +4346,16 @@ def _render_fully_restrained_splice_outline(
     )
     dcr_plt_fcomb_web_num = max(dcr_case_1_plt_fcomb_web_num, dcr_case_2_plt_fcomb_web_num)
 
-    dcr_plt_v2_web_disp = _format_decimal(dcr_plt_v2_web_num)
-    dcr_plt_v3_web_disp = _format_decimal(dcr_plt_v3_web_num)
-    dcr_plt_p3_minus_web_disp = _format_decimal(dcr_plt_p3_minus_web_num)
-    dcr_plt_m1_web_disp = _format_decimal(dcr_plt_m1_web_num)
-    dcr_case_1_plt_fcomb_web_disp = _format_decimal(dcr_case_1_plt_fcomb_web_num)
-    dcr_case_2_plt_fcomb_web_disp = _format_decimal(dcr_case_2_plt_fcomb_web_num)
-    dcr_plt_fcomb_web_disp = _format_decimal(dcr_plt_fcomb_web_num)
+    dcr_plt_v2_web_disp = _format_dcr_value(dcr_plt_v2_web_num)
+    dcr_plt_v3_web_disp = _format_dcr_value(dcr_plt_v3_web_num)
+    dcr_plt_p3_minus_web_disp = _format_dcr_value(dcr_plt_p3_minus_web_num)
+    dcr_plt_m1_web_disp = _format_dcr_value(dcr_plt_m1_web_num)
+    dcr_case_1_plt_fcomb_web_disp = _format_dcr_value(dcr_case_1_plt_fcomb_web_num)
+    dcr_case_2_plt_fcomb_web_disp = _format_dcr_value(dcr_case_2_plt_fcomb_web_num)
+    dcr_plt_fcomb_web_disp = _format_dcr_value(dcr_plt_fcomb_web_num)
+    dcr_fcomb_num = dcr_plt_fcomb_web_num
     plt1_combined_forces_result = _render_result_label(plt1_combined_forces_note.get("result_plt_fcomb_web"))
-    try:
-        dcr_fcomb_num = float(dcr_plt_fcomb_web_disp)
-        plt1_combined_forces_result = _render_result_label("PASS" if dcr_fcomb_num <= 1.0 else "FAIL")
-    except (TypeError, ValueError):
-        pass
+    plt1_combined_forces_result = _result_label_from_dcr(dcr_fcomb_num, fallback="UNKNOWN")
     # 4.2.1 tearout metrics in v3 direction
     phi_rn1_web_v3_q = _as_quantity(tearout_v3_note.get("phi_rn1_web_v3_vg"))
     ru1_web_v3_vg_disp = _convert_ru_to_capacity_unit(ru_web_v3_max_vg_q, phi_rn1_web_v3_q)
@@ -4342,13 +4369,11 @@ def _render_fully_restrained_splice_outline(
         and ru1_web_v3_vg_disp.unit == phi_rn1_web_v3_q.unit
         and abs(phi_rn1_web_v3_q.value) > 1e-12
     ):
-        dcr1_web_v3_vg_disp = _format_decimal(abs(ru1_web_v3_vg_disp.value) / phi_rn1_web_v3_q.value)
+        dcr1_web_v3_vg_disp = _format_dcr_value(abs(ru1_web_v3_vg_disp.value) / phi_rn1_web_v3_q.value)
+    dcr1_v3_num = _compute_dcr_numeric(ru1_web_v3_vg_disp, phi_rn1_web_v3_q, dcr1_web_v3_vg_disp)
     tearout_v3_result = _render_result_label(tearout_v3_note.get("result1_web_v3_vg"))
-    try:
-        dcr1_v3_num = float(dcr1_web_v3_vg_disp)
-        tearout_v3_result = _render_result_label("PASS" if dcr1_v3_num <= 1.0 else "FAIL")
-    except (TypeError, ValueError):
-        pass
+    if dcr1_v3_num is not None:
+        tearout_v3_result = _result_label_from_dcr(dcr1_v3_num, fallback="UNKNOWN")
     # 4.2.2 tension rupture metrics in v3 direction
     ru3_v3_vg_q = _as_quantity(tension_rupture_v3_note.get("ru3_v3_vg"))
     phi_rn3_v3_q = _as_quantity(tension_rupture_v3_note.get("phi_rn3_v3_vg"))
@@ -4363,13 +4388,11 @@ def _render_fully_restrained_splice_outline(
         and ru3_v3_vg_disp.unit == phi_rn3_v3_q.unit
         and abs(phi_rn3_v3_q.value) > 1e-12
     ):
-        dcr3_v3_vg_disp = _format_decimal(abs(ru3_v3_vg_disp.value) / phi_rn3_v3_q.value)
+        dcr3_v3_vg_disp = _format_dcr_value(abs(ru3_v3_vg_disp.value) / phi_rn3_v3_q.value)
+    dcr3_v3_num = _compute_dcr_numeric(ru3_v3_vg_disp, phi_rn3_v3_q, dcr3_v3_vg_disp)
     tension_rupture_v3_result = _render_result_label(tension_rupture_v3_note.get("result3_v3_vg"))
-    try:
-        dcr3_v3_num = float(dcr3_v3_vg_disp)
-        tension_rupture_v3_result = _render_result_label("PASS" if dcr3_v3_num <= 1.0 else "FAIL")
-    except (TypeError, ValueError):
-        pass
+    if dcr3_v3_num is not None:
+        tension_rupture_v3_result = _result_label_from_dcr(dcr3_v3_num, fallback="UNKNOWN")
     # 4.2.3 block shear metrics in v3 direction
     ru4_web_v3_vg_q = _as_quantity(block_shear_v3_note.get("ru4_web_v3_vg"))
     phi_rn4_web_v3_q = _as_quantity(block_shear_v3_note.get("phi_rn4_web_v3_vg"))
@@ -4384,13 +4407,11 @@ def _render_fully_restrained_splice_outline(
         and ru4_web_v3_vg_disp.unit == phi_rn4_web_v3_q.unit
         and abs(phi_rn4_web_v3_q.value) > 1e-12
     ):
-        dcr4_web_v3_vg_disp = _format_decimal(abs(ru4_web_v3_vg_disp.value) / phi_rn4_web_v3_q.value)
+        dcr4_web_v3_vg_disp = _format_dcr_value(abs(ru4_web_v3_vg_disp.value) / phi_rn4_web_v3_q.value)
+    dcr4_v3_num = _compute_dcr_numeric(ru4_web_v3_vg_disp, phi_rn4_web_v3_q, dcr4_web_v3_vg_disp)
     block_shear_v3_result = _render_result_label(block_shear_v3_note.get("result4_web_v3_vg"))
-    try:
-        dcr4_v3_num = float(dcr4_web_v3_vg_disp)
-        block_shear_v3_result = _render_result_label("PASS" if dcr4_v3_num <= 1.0 else "FAIL")
-    except (TypeError, ValueError):
-        pass
+    if dcr4_v3_num is not None:
+        block_shear_v3_result = _result_label_from_dcr(dcr4_v3_num, fallback="UNKNOWN")
     # 4.3.1 flange tearout in direction 3
     ru_flange_v3_max_kip = _extract_step2_component_max_kip(step2_pernos2, component_key="fx_kip")
     ru1_flange_p3_vg_q = (
@@ -4413,13 +4434,11 @@ def _render_fully_restrained_splice_outline(
         and ru1_flange_p3_vg_disp.unit == phi_rn1_flange_p3_vg_q.unit
         and abs(phi_rn1_flange_p3_vg_q.value) > 1e-12
     ):
-        dcr1_flange_p3_vg_disp = _format_decimal(abs(ru1_flange_p3_vg_disp.value) / phi_rn1_flange_p3_vg_q.value)
+        dcr1_flange_p3_vg_disp = _format_dcr_value(abs(ru1_flange_p3_vg_disp.value) / phi_rn1_flange_p3_vg_q.value)
+    dcr_flange_num = _compute_dcr_numeric(ru1_flange_p3_vg_disp, phi_rn1_flange_p3_vg_q, dcr1_flange_p3_vg_disp)
     flange_tearout_v3_result = _render_result_label(flange_tearout_v3_note.get("result1_flange_p3_vg"))
-    try:
-        dcr_flange_num = float(dcr1_flange_p3_vg_disp)
-        flange_tearout_v3_result = _render_result_label("PASS" if dcr_flange_num <= 1.0 else "FAIL")
-    except (TypeError, ValueError):
-        pass
+    if dcr_flange_num is not None:
+        flange_tearout_v3_result = _result_label_from_dcr(dcr_flange_num, fallback="UNKNOWN")
     # 6.1.1 plate 2 flange tearout in tension direction 3 (J3.11a.(b), DRY J3.6)
     fu_plt_flange_q = _as_quantity(plt2_geom_note.get("fu_plt_flange"))
     t_plt_flange_q = _as_quantity(plt2_geom_note.get("t_plt_flange"))
@@ -4430,7 +4449,7 @@ def _render_fully_restrained_splice_outline(
     svc_hole_deformation_design_flange_plt2 = bool(
         flange_tearout_v3_note.get("svc_hole_deformation_design_flange")
     )
-    phi_pr_plt_flange = _safe_float(flange_tearout_v3_note.get("phi_pr")) or 0.75
+    phi_pr_plt_flange = _coerce_float(flange_tearout_v3_note.get("phi_pr")) or 0.75
     lc_plt_p3_flange_q: Quantity | None = None
     rn1_plt_p3_flange_q: Quantity | None = None
     phi_rn1_plt_p3_flange_q: Quantity | None = None
@@ -4482,20 +4501,18 @@ def _render_fully_restrained_splice_outline(
         )
     dcr1_plt_p3_plus_flange_disp = "n/a"
     result1_plt_p3_plus_flange = _render_result_label("NOT_APPLICABLE")
+    dcr1_plt_p3_plus_flange_num: float | None = None
     if (
         isinstance(ru1_plt_p3_plus_flange_disp, Quantity)
         and isinstance(phi_rn1_plt_p3_flange_q, Quantity)
         and ru1_plt_p3_plus_flange_disp.unit == phi_rn1_plt_p3_flange_q.unit
         and abs(phi_rn1_plt_p3_flange_q.value) > 1e-12
     ):
-        dcr1_plt_p3_plus_flange_disp = _format_decimal(
-            abs(ru1_plt_p3_plus_flange_disp.value) / phi_rn1_plt_p3_flange_q.value
-        )
-        try:
-            dcr_num = float(dcr1_plt_p3_plus_flange_disp)
-            result1_plt_p3_plus_flange = _render_result_label("PASS" if dcr_num <= 1.0 else "FAIL")
-        except (TypeError, ValueError):
-            result1_plt_p3_plus_flange = _render_result_label("NOT_APPLICABLE")
+        dcr1_plt_p3_plus_flange_num = abs(ru1_plt_p3_plus_flange_disp.value) / abs(phi_rn1_plt_p3_flange_q.value)
+        dcr1_plt_p3_plus_flange_disp = _format_dcr_value(dcr1_plt_p3_plus_flange_num)
+    result1_plt_p3_plus_flange = _result_label_from_dcr(
+        dcr1_plt_p3_plus_flange_num, fallback="NOT_APPLICABLE"
+    )
     # 6.1.2 plate 2 flange bearing in tension direction 3 (J3.11a.(a), DRY J3.6)
     db_blt_flange_q = _as_quantity(pernos2_note.get("diameter_nominal"))
     ru_blt_2_flange_vg_max_kip = _extract_step2_resultant_max_kip(step2_pernos2)
@@ -4535,20 +4552,18 @@ def _render_fully_restrained_splice_outline(
         )
     dcr2_plt_p3_plus_flange_disp = "n/a"
     result2_plt_p3_plus_flange = _render_result_label("NOT_APPLICABLE")
+    dcr2_plt_p3_plus_flange_num: float | None = None
     if (
         isinstance(ru2_plt_p3_plus_flange_disp, Quantity)
         and isinstance(phi_rn2_plt_p3_flange_q, Quantity)
         and ru2_plt_p3_plus_flange_disp.unit == phi_rn2_plt_p3_flange_q.unit
         and abs(phi_rn2_plt_p3_flange_q.value) > 1e-12
     ):
-        dcr2_plt_p3_plus_flange_disp = _format_decimal(
-            abs(ru2_plt_p3_plus_flange_disp.value) / phi_rn2_plt_p3_flange_q.value
-        )
-        try:
-            dcr_num = float(dcr2_plt_p3_plus_flange_disp)
-            result2_plt_p3_plus_flange = _render_result_label("PASS" if dcr_num <= 1.0 else "FAIL")
-        except (TypeError, ValueError):
-            result2_plt_p3_plus_flange = _render_result_label("NOT_APPLICABLE")
+        dcr2_plt_p3_plus_flange_num = abs(ru2_plt_p3_plus_flange_disp.value) / abs(phi_rn2_plt_p3_flange_q.value)
+        dcr2_plt_p3_plus_flange_disp = _format_dcr_value(dcr2_plt_p3_plus_flange_num)
+    result2_plt_p3_plus_flange = _result_label_from_dcr(
+        dcr2_plt_p3_plus_flange_num, fallback="NOT_APPLICABLE"
+    )
     # 6.1.3 plate 2 flange bolt shear rupture (J3.7, DRY)
     fnv_blt_flange_q = _as_quantity(pernos2_note.get("fnv"))
     ru3_plt_p3_plus_flange_q = (
@@ -4590,27 +4605,25 @@ def _render_fully_restrained_splice_outline(
         )
     dcr3_plt_p3_plus_flange_disp = "n/a"
     result3_plt_p3_plus_flange = _render_result_label("NOT_APPLICABLE")
+    dcr3_plt_p3_plus_flange_num: float | None = None
     if (
         isinstance(ru3_plt_p3_plus_flange_disp, Quantity)
         and isinstance(phi_rn3_plt_p3_flange_q, Quantity)
         and ru3_plt_p3_plus_flange_disp.unit == phi_rn3_plt_p3_flange_q.unit
         and abs(phi_rn3_plt_p3_flange_q.value) > 1e-12
     ):
-        dcr3_plt_p3_plus_flange_disp = _format_decimal(
-            abs(ru3_plt_p3_plus_flange_disp.value) / phi_rn3_plt_p3_flange_q.value
-        )
-        try:
-            dcr_num = float(dcr3_plt_p3_plus_flange_disp)
-            result3_plt_p3_plus_flange = _render_result_label("PASS" if dcr_num <= 1.0 else "FAIL")
-        except (TypeError, ValueError):
-            result3_plt_p3_plus_flange = _render_result_label("NOT_APPLICABLE")
+        dcr3_plt_p3_plus_flange_num = abs(ru3_plt_p3_plus_flange_disp.value) / abs(phi_rn3_plt_p3_flange_q.value)
+        dcr3_plt_p3_plus_flange_disp = _format_dcr_value(dcr3_plt_p3_plus_flange_num)
+    result3_plt_p3_plus_flange = _result_label_from_dcr(
+        dcr3_plt_p3_plus_flange_num, fallback="NOT_APPLICABLE"
+    )
     # 6.1.4 plate 2 flange tension yielding with Whitmore section (J4.1(a), DRY)
     fy_plt_flange_q = _as_quantity(plt2_geom_note.get("fy_plt_flange"))
     b_plt_flange_q = _as_quantity(plt2_geom_note.get("b_plt_flange"))
     g1_plt_flange_q = _as_quantity(plt2_geom_note.get("g1_blt_flange"))
     g_plt_flange_q = _as_quantity(plt2_geom_note.get("g_blt_flange"))
-    n_plt_flange_x = int(_safe_float(plt2_geom_note.get("n_blt_flange_x")) or 0)
-    n_plt_flange_z = int(_safe_float(plt2_geom_note.get("n_blt_flange_z")) or 0)
+    n_plt_flange_x = int(_coerce_float(plt2_geom_note.get("n_blt_flange_x")) or 0)
+    n_plt_flange_z = int(_coerce_float(plt2_geom_note.get("n_blt_flange_z")) or 0)
     phi_no_ductil_plt_flange = 0.9
     agt_plt_p3_plus_flange_q: Quantity | None = None
     agt_rect_plt_p3_plus_flange_q: Quantity | None = None
@@ -4660,7 +4673,7 @@ def _render_fully_restrained_splice_outline(
         if isinstance(rn4_raw, Quantity):
             rn4_plt_p3_plus_flange_q = rn4_raw
     # Demand Ru4_plt_p3(+)_flange = (1-alpha)*Pu + Mu3/(d-tf), clipped to zero if negative.
-    alpha_pu_web_plt2 = _safe_float(flange_tearout_v3_note.get("alpha_pu_web")) or 0.0
+    alpha_pu_web_plt2 = _coerce_float(flange_tearout_v3_note.get("alpha_pu_web")) or 0.0
     pu_sp_plt2_q = _as_quantity(flange_tearout_v3_note.get("pu_sp"))
     mu3_sp_plt2_q = _as_quantity(flange_tearout_v3_note.get("mu3_sp"))
     d_vg_plt2_q = _as_quantity(flange_tearout_v3_note.get("d_vg"))
@@ -4698,20 +4711,18 @@ def _render_fully_restrained_splice_outline(
     )
     dcr4_plt_p3_plus_flange_disp = "n/a"
     result4_plt_p3_plus_flange = _render_result_label("NOT_APPLICABLE")
+    dcr4_plt_p3_plus_flange_num: float | None = None
     if (
         isinstance(ru4_plt_p3_plus_flange_disp, Quantity)
         and isinstance(phi_rn4_plt_p3_plus_flange_q, Quantity)
         and ru4_plt_p3_plus_flange_disp.unit == phi_rn4_plt_p3_plus_flange_q.unit
         and abs(phi_rn4_plt_p3_plus_flange_q.value) > 1e-12
     ):
-        dcr4_plt_p3_plus_flange_disp = _format_decimal(
-            abs(ru4_plt_p3_plus_flange_disp.value) / phi_rn4_plt_p3_plus_flange_q.value
-        )
-        try:
-            dcr_num = float(dcr4_plt_p3_plus_flange_disp)
-            result4_plt_p3_plus_flange = _render_result_label("PASS" if dcr_num <= 1.0 else "FAIL")
-        except (TypeError, ValueError):
-            result4_plt_p3_plus_flange = _render_result_label("NOT_APPLICABLE")
+        dcr4_plt_p3_plus_flange_num = abs(ru4_plt_p3_plus_flange_disp.value) / abs(phi_rn4_plt_p3_plus_flange_q.value)
+        dcr4_plt_p3_plus_flange_disp = _format_dcr_value(dcr4_plt_p3_plus_flange_num)
+    result4_plt_p3_plus_flange = _result_label_from_dcr(
+        dcr4_plt_p3_plus_flange_num, fallback="NOT_APPLICABLE"
+    )
     # 6.1.5 plate 2 flange tension rupture (J4.1(b), DRY)
     phi_fragil_plt_flange_j41b = 0.75
     hole_add_plt2 = 1.8 if unit_system_plt2 == UnitSystem.SI else (1.8 / 25.4)
@@ -4758,14 +4769,9 @@ def _render_fully_restrained_splice_outline(
         and ru5_plt_p3_plus_flange_disp.unit == phi_rn5_plt_p3_plus_flange_q.unit
         and abs(phi_rn5_plt_p3_plus_flange_q.value) > 1e-12
     ):
-        dcr5_plt_p3_plus_flange_disp = _format_decimal(
-            abs(ru5_plt_p3_plus_flange_disp.value) / phi_rn5_plt_p3_plus_flange_q.value
-        )
-        try:
-            dcr_num = float(dcr5_plt_p3_plus_flange_disp)
-            result5_plt_p3_plus_flange = _render_result_label("PASS" if dcr_num <= 1.0 else "FAIL")
-        except (TypeError, ValueError):
-            result5_plt_p3_plus_flange = _render_result_label("NOT_APPLICABLE")
+        dcr5_raw = abs(ru5_plt_p3_plus_flange_disp.value) / phi_rn5_plt_p3_plus_flange_q.value
+        dcr5_plt_p3_plus_flange_disp = _format_dcr_value(dcr5_raw)
+        result5_plt_p3_plus_flange = _result_label_from_dcr(dcr5_raw, fallback="NOT_APPLICABLE")
     # 6.1.6 plate 2 flange block shear by three geometric cases (J4.3, DRY)
     phi_fragil_plt_flange_j45 = 0.75
     le_plt_flange_z2_q = _as_quantity(plt2_geom_note.get("le_blt_flange_z2"))
@@ -4931,20 +4937,18 @@ def _render_fully_restrained_splice_outline(
     )
     dcr6_plt_p3_plus_flange_disp = "n/a"
     result6_plt_p3_plus_flange = _render_result_label("NOT_APPLICABLE")
+    dcr6_plt_p3_plus_flange_num: float | None = None
     if (
         isinstance(ru6_plt_p3_plus_flange_disp, Quantity)
         and isinstance(phi_rn6_plt_p3_plus_flange_q, Quantity)
         and ru6_plt_p3_plus_flange_disp.unit == phi_rn6_plt_p3_plus_flange_q.unit
         and abs(phi_rn6_plt_p3_plus_flange_q.value) > 1e-12
     ):
-        dcr6_plt_p3_plus_flange_disp = _format_decimal(
-            abs(ru6_plt_p3_plus_flange_disp.value) / phi_rn6_plt_p3_plus_flange_q.value
-        )
-        try:
-            dcr_num = float(dcr6_plt_p3_plus_flange_disp)
-            result6_plt_p3_plus_flange = _render_result_label("PASS" if dcr_num <= 1.0 else "FAIL")
-        except (TypeError, ValueError):
-            result6_plt_p3_plus_flange = _render_result_label("NOT_APPLICABLE")
+        dcr6_plt_p3_plus_flange_num = abs(ru6_plt_p3_plus_flange_disp.value) / abs(phi_rn6_plt_p3_plus_flange_q.value)
+        dcr6_plt_p3_plus_flange_disp = _format_dcr_value(dcr6_plt_p3_plus_flange_num)
+    result6_plt_p3_plus_flange = _result_label_from_dcr(
+        dcr6_plt_p3_plus_flange_num, fallback="NOT_APPLICABLE"
+    )
     # 6.2.1 plate 2 flange compression buckling in direction 3 (E3/J4.4, DRY)
     gap_sp_q = _as_quantity(geom_note.get("alpha"))
     lp_plt_p3_minus_flange_q: Quantity | None = None
@@ -5055,20 +5059,18 @@ def _render_fully_restrained_splice_outline(
         )
     dcr1_plt_p3_minus_flange_disp = "n/a"
     result1_plt_p3_minus_flange = _render_result_label("NOT_APPLICABLE")
+    dcr1_plt_p3_minus_flange_num: float | None = None
     if (
         isinstance(ru1_plt_p3_minus_flange_disp, Quantity)
         and isinstance(phi_rn1_plt_p3_minus_flange_q, Quantity)
         and ru1_plt_p3_minus_flange_disp.unit == phi_rn1_plt_p3_minus_flange_q.unit
         and abs(phi_rn1_plt_p3_minus_flange_q.value) > 1e-12
     ):
-        dcr1_plt_p3_minus_flange_disp = _format_decimal(
-            abs(ru1_plt_p3_minus_flange_disp.value) / phi_rn1_plt_p3_minus_flange_q.value
-        )
-        try:
-            dcr_num = float(dcr1_plt_p3_minus_flange_disp)
-            result1_plt_p3_minus_flange = _render_result_label("PASS" if dcr_num <= 1.0 else "FAIL")
-        except (TypeError, ValueError):
-            result1_plt_p3_minus_flange = _render_result_label("NOT_APPLICABLE")
+        dcr1_plt_p3_minus_flange_num = abs(ru1_plt_p3_minus_flange_disp.value) / abs(phi_rn1_plt_p3_minus_flange_q.value)
+        dcr1_plt_p3_minus_flange_disp = _format_dcr_value(dcr1_plt_p3_minus_flange_num)
+    result1_plt_p3_minus_flange = _result_label_from_dcr(
+        dcr1_plt_p3_minus_flange_num, fallback="NOT_APPLICABLE"
+    )
     # 4.3.2 flange bearing in direction 3
     ru2_flange_p3_vg_q = (
         Quantity(value=ru_flange_v3_max_kip, unit="kip")
@@ -5090,13 +5092,11 @@ def _render_fully_restrained_splice_outline(
         and ru2_flange_p3_vg_disp.unit == phi_rn2_flange_p3_vg_q.unit
         and abs(phi_rn2_flange_p3_vg_q.value) > 1e-12
     ):
-        dcr2_flange_p3_vg_disp = _format_decimal(abs(ru2_flange_p3_vg_disp.value) / phi_rn2_flange_p3_vg_q.value)
+        dcr2_flange_p3_vg_disp = _format_dcr_value(abs(ru2_flange_p3_vg_disp.value) / phi_rn2_flange_p3_vg_q.value)
+    dcr_flange2_num = _compute_dcr_numeric(ru2_flange_p3_vg_disp, phi_rn2_flange_p3_vg_q, dcr2_flange_p3_vg_disp)
     flange_bearing_v3_result = _render_result_label(flange_bearing_v3_note.get("result2_flange_p3_vg"))
-    try:
-        dcr_flange2_num = float(dcr2_flange_p3_vg_disp)
-        flange_bearing_v3_result = _render_result_label("PASS" if dcr_flange2_num <= 1.0 else "FAIL")
-    except (TypeError, ValueError):
-        pass
+    if dcr_flange2_num is not None:
+        flange_bearing_v3_result = _result_label_from_dcr(dcr_flange2_num, fallback="UNKNOWN")
     # 4.3.3 flange bolt shear rupture in direction 3
     ru3_flange_p3_vg_q = (
         Quantity(value=ru_flange_v3_max_kip, unit="kip")
@@ -5118,13 +5118,11 @@ def _render_fully_restrained_splice_outline(
         and ru3_flange_p3_vg_disp.unit == phi_rn3_flange_p3_vg_q.unit
         and abs(phi_rn3_flange_p3_vg_q.value) > 1e-12
     ):
-        dcr3_flange_p3_vg_disp = _format_decimal(abs(ru3_flange_p3_vg_disp.value) / phi_rn3_flange_p3_vg_q.value)
+        dcr3_flange_p3_vg_disp = _format_dcr_value(abs(ru3_flange_p3_vg_disp.value) / phi_rn3_flange_p3_vg_q.value)
+    dcr_flange3_num = _compute_dcr_numeric(ru3_flange_p3_vg_disp, phi_rn3_flange_p3_vg_q, dcr3_flange_p3_vg_disp)
     flange_bolt_shear_v3_result = _render_result_label(flange_bolt_shear_v3_note.get("result3_flange_p3_vg"))
-    try:
-        dcr_flange3_num = float(dcr3_flange_p3_vg_disp)
-        flange_bolt_shear_v3_result = _render_result_label("PASS" if dcr_flange3_num <= 1.0 else "FAIL")
-    except (TypeError, ValueError):
-        pass
+    if dcr_flange3_num is not None:
+        flange_bolt_shear_v3_result = _result_label_from_dcr(dcr_flange3_num, fallback="UNKNOWN")
     # 4.3.4 flange block shear in direction 3
     ru4_flange_p3_vg_q = _as_quantity(flange_block_shear_v3_note.get("ru4_flange_p3_vg"))
     phi_rn4_flange_p3_vg_q = _as_quantity(flange_block_shear_v3_note.get("phi_rn4_flange_p3_vg"))
@@ -5142,13 +5140,11 @@ def _render_fully_restrained_splice_outline(
         and ru4_flange_p3_vg_disp.unit == phi_rn4_flange_p3_vg_q.unit
         and abs(phi_rn4_flange_p3_vg_q.value) > 1e-12
     ):
-        dcr4_flange_p3_vg_disp = _format_decimal(abs(ru4_flange_p3_vg_disp.value) / phi_rn4_flange_p3_vg_q.value)
+        dcr4_flange_p3_vg_disp = _format_dcr_value(abs(ru4_flange_p3_vg_disp.value) / phi_rn4_flange_p3_vg_q.value)
+    dcr_flange4_num = _compute_dcr_numeric(ru4_flange_p3_vg_disp, phi_rn4_flange_p3_vg_q, dcr4_flange_p3_vg_disp)
     flange_block_shear_v3_result = _render_result_label(flange_block_shear_v3_note.get("result4_flange_p3_vg"))
-    try:
-        dcr_flange4_num = float(dcr4_flange_p3_vg_disp)
-        flange_block_shear_v3_result = _render_result_label("PASS" if dcr_flange4_num <= 1.0 else "FAIL")
-    except (TypeError, ValueError):
-        pass
+    if dcr_flange4_num is not None:
+        flange_block_shear_v3_result = _result_label_from_dcr(dcr_flange4_num, fallback="UNKNOWN")
     # 4.4.1 flange tearout in direction 1
     ru_flange_v1_max_kip = _extract_step2_component_max_kip(step2_pernos2, component_key="fy_kip")
     ru1_flange_v1_vg_q = (
@@ -5171,13 +5167,11 @@ def _render_fully_restrained_splice_outline(
         and ru1_flange_v1_vg_disp.unit == phi_rn1_flange_v1_vg_q.unit
         and abs(phi_rn1_flange_v1_vg_q.value) > 1e-12
     ):
-        dcr1_flange_v1_vg_disp = _format_decimal(abs(ru1_flange_v1_vg_disp.value) / phi_rn1_flange_v1_vg_q.value)
+        dcr1_flange_v1_vg_disp = _format_dcr_value(abs(ru1_flange_v1_vg_disp.value) / phi_rn1_flange_v1_vg_q.value)
+    dcr_flange_v1_num = _compute_dcr_numeric(ru1_flange_v1_vg_disp, phi_rn1_flange_v1_vg_q, dcr1_flange_v1_vg_disp)
     flange_tearout_v1_result = _render_result_label(flange_tearout_v1_note.get("result1_flange_v1_vg"))
-    try:
-        dcr_flange_v1_num = float(dcr1_flange_v1_vg_disp)
-        flange_tearout_v1_result = _render_result_label("PASS" if dcr_flange_v1_num <= 1.0 else "FAIL")
-    except (TypeError, ValueError):
-        pass
+    if dcr_flange_v1_num is not None:
+        flange_tearout_v1_result = _result_label_from_dcr(dcr_flange_v1_num, fallback="UNKNOWN")
     # 6.3.1 plate 2 flange tearout in shear direction 1 (J3.11a.(b), DRY J3.6)
     lc_plt_v1_flange_q: Quantity | None = None
     rn1_plt_v1_flange_q: Quantity | None = None
@@ -5231,20 +5225,18 @@ def _render_fully_restrained_splice_outline(
         )
     dcr1_plt_v1_flange_disp = "n/a"
     result1_plt_v1_flange = _render_result_label("NOT_APPLICABLE")
+    dcr1_plt_v1_flange_num: float | None = None
     if (
         isinstance(ru1_plt_v1_flange_disp, Quantity)
         and isinstance(phi_rn1_plt_v1_flange_q, Quantity)
         and ru1_plt_v1_flange_disp.unit == phi_rn1_plt_v1_flange_q.unit
         and abs(phi_rn1_plt_v1_flange_q.value) > 1e-12
     ):
-        dcr1_plt_v1_flange_disp = _format_decimal(
-            abs(ru1_plt_v1_flange_disp.value) / phi_rn1_plt_v1_flange_q.value
-        )
-        try:
-            dcr_num = float(dcr1_plt_v1_flange_disp)
-            result1_plt_v1_flange = _render_result_label("PASS" if dcr_num <= 1.0 else "FAIL")
-        except (TypeError, ValueError):
-            result1_plt_v1_flange = _render_result_label("NOT_APPLICABLE")
+        dcr1_plt_v1_flange_num = abs(ru1_plt_v1_flange_disp.value) / abs(phi_rn1_plt_v1_flange_q.value)
+        dcr1_plt_v1_flange_disp = _format_dcr_value(dcr1_plt_v1_flange_num)
+    result1_plt_v1_flange = _result_label_from_dcr(
+        dcr1_plt_v1_flange_num, fallback="NOT_APPLICABLE"
+    )
     # 4.8.1 flange flexural rupture in beam (F13.1)
     ru1_flange_m1_vg_q = _as_quantity(flange_flex_rupture_m1_note.get("ru1_flange_m1_vg"))
     phi_rn1_flange_m1_vg_q = _as_quantity(flange_flex_rupture_m1_note.get("phi_rn1_flange_m1_vg"))
@@ -5262,13 +5254,11 @@ def _render_fully_restrained_splice_outline(
         and ru1_flange_m1_vg_disp.unit == phi_rn1_flange_m1_vg_q.unit
         and abs(phi_rn1_flange_m1_vg_q.value) > 1e-12
     ):
-        dcr1_flange_m1_vg_disp = _format_decimal(abs(ru1_flange_m1_vg_disp.value) / phi_rn1_flange_m1_vg_q.value)
+        dcr1_flange_m1_vg_disp = _format_dcr_value(abs(ru1_flange_m1_vg_disp.value) / phi_rn1_flange_m1_vg_q.value)
+    dcr_flange_m1_num = _compute_dcr_numeric(ru1_flange_m1_vg_disp, phi_rn1_flange_m1_vg_q, dcr1_flange_m1_vg_disp)
     flange_flex_rupture_m1_result = _render_result_label(flange_flex_rupture_m1_note.get("result1_flange_m1_vg"))
-    try:
-        dcr_flange_m1_num = float(dcr1_flange_m1_vg_disp)
-        flange_flex_rupture_m1_result = _render_result_label("PASS" if dcr_flange_m1_num <= 1.0 else "FAIL")
-    except (TypeError, ValueError):
-        pass
+    if dcr_flange_m1_num is not None:
+        flange_flex_rupture_m1_result = _result_label_from_dcr(dcr_flange_m1_num, fallback="UNKNOWN")
     pr_over_pc_vg_disp = _format_text(viga_combined_forces_note.get("pr_over_pc"))
     mrx_over_mcx_vg_disp = _format_text(viga_combined_forces_note.get("mrx_over_mcx"))
     mry_over_mcy_vg_disp = _format_text(viga_combined_forces_note.get("mry_over_mcy"))
@@ -5276,13 +5266,11 @@ def _render_fully_restrained_splice_outline(
     dcr_451_disp = _format_text(viga_combined_forces_note.get("dcr_451"))
     dcr_481_disp = _format_text(viga_combined_forces_note.get("dcr_481"))
     dcr_fcomb_vg_disp = _format_text(viga_combined_forces_note.get("dcr_fcomb_vg"))
+    dcr_fcomb_num = _coerce_float(dcr_fcomb_vg_disp)
     viga_combined_forces_result = _render_result_label(viga_combined_forces_note.get("result_fcomb_vg"))
-    try:
-        dcr_fcomb_num = float(dcr_fcomb_vg_disp)
-        dcr_fcomb_vg_disp = _format_decimal(dcr_fcomb_num)
-        viga_combined_forces_result = _render_result_label("PASS" if dcr_fcomb_num <= 1.0 else "FAIL")
-    except (TypeError, ValueError):
-        pass
+    if dcr_fcomb_num is not None:
+        dcr_fcomb_vg_disp = _format_dcr_value(dcr_fcomb_num)
+        viga_combined_forces_result = _result_label_from_dcr(dcr_fcomb_num, fallback="UNKNOWN")
     # 4.1.2 bearing (aplatamiento) metrics
     phi_rn2_web_q = _as_quantity(bearing_note.get("phi_rn2_web_v2_vg"))
     ru2_web_v2_vg_disp = _convert_ru_to_capacity_unit(ru_web_vg_q, phi_rn2_web_q)
@@ -5296,13 +5284,9 @@ def _render_fully_restrained_splice_outline(
         and ru2_web_v2_vg_disp.unit == phi_rn2_web_q.unit
         and abs(phi_rn2_web_q.value) > 1e-12
     ):
-        dcr2_web_v2_vg_disp = _format_decimal(abs(ru2_web_v2_vg_disp.value) / phi_rn2_web_q.value)
-    bearing_result = _render_result_label("UNKNOWN")
-    try:
-        dcr2_num = float(dcr2_web_v2_vg_disp)
-        bearing_result = _render_result_label("PASS" if dcr2_num <= 1.0 else "FAIL")
-    except (TypeError, ValueError):
-        pass
+        dcr2_web_v2_vg_disp = _format_dcr_value(abs(ru2_web_v2_vg_disp.value) / phi_rn2_web_q.value)
+    dcr2_num = _compute_dcr_numeric(ru2_web_v2_vg_disp, phi_rn2_web_q, dcr2_web_v2_vg_disp)
+    bearing_result = _result_label_from_dcr(dcr2_num, fallback="UNKNOWN")
     # 4.1.3 bolt shear rupture metrics
     phi_rn3_web_q = _as_quantity(bolt_shear_note.get("phi_rn3_web_v2_vg"))
     ru3_web_v2_vg_disp = _convert_ru_to_capacity_unit(ru_web_vg_q, phi_rn3_web_q)
@@ -5316,13 +5300,9 @@ def _render_fully_restrained_splice_outline(
         and ru3_web_v2_vg_disp.unit == phi_rn3_web_q.unit
         and abs(phi_rn3_web_q.value) > 1e-12
     ):
-        dcr3_web_v2_vg_disp = _format_decimal(abs(ru3_web_v2_vg_disp.value) / phi_rn3_web_q.value)
-    bolt_shear_result = _render_result_label("UNKNOWN")
-    try:
-        dcr3_num = float(dcr3_web_v2_vg_disp)
-        bolt_shear_result = _render_result_label("PASS" if dcr3_num <= 1.0 else "FAIL")
-    except (TypeError, ValueError):
-        pass
+        dcr3_web_v2_vg_disp = _format_dcr_value(abs(ru3_web_v2_vg_disp.value) / phi_rn3_web_q.value)
+    dcr3_num = _compute_dcr_numeric(ru3_web_v2_vg_disp, phi_rn3_web_q, dcr3_web_v2_vg_disp)
+    bolt_shear_result = _result_label_from_dcr(dcr3_num, fallback="UNKNOWN")
     # 4.1.4 web shear rupture metrics (J4.3)
     ru4_web_v2_vg_q = _as_quantity(web_shear_rupture_note.get("ru4_web_v2_vg"))
     phi_rn4_web_q = _as_quantity(web_shear_rupture_note.get("phi_rn4_web_v2_vg"))
@@ -5337,13 +5317,11 @@ def _render_fully_restrained_splice_outline(
         and ru4_web_v2_vg_disp.unit == phi_rn4_web_q.unit
         and abs(phi_rn4_web_q.value) > 1e-12
     ):
-        dcr4_web_v2_vg_disp = _format_decimal(abs(ru4_web_v2_vg_disp.value) / phi_rn4_web_q.value)
+        dcr4_web_v2_vg_disp = _format_dcr_value(abs(ru4_web_v2_vg_disp.value) / phi_rn4_web_q.value)
+    dcr4_num = _compute_dcr_numeric(ru4_web_v2_vg_disp, phi_rn4_web_q, dcr4_web_v2_vg_disp)
     web_shear_rupture_result = _render_result_label(web_shear_rupture_note.get("result4_web_v2_vg"))
-    try:
-        dcr4_num = float(dcr4_web_v2_vg_disp)
-        web_shear_rupture_result = _render_result_label("PASS" if dcr4_num <= 1.0 else "FAIL")
-    except (TypeError, ValueError):
-        pass
+    if dcr4_num is not None:
+        web_shear_rupture_result = _result_label_from_dcr(dcr4_num, fallback="UNKNOWN")
     # 4.1.5 web block shear metrics (J4-5)
     ru5_web_v2_vg_q = _as_quantity(web_block_shear_note.get("ru5_web_v2_vg"))
     phi_rn5_web_q = _as_quantity(web_block_shear_note.get("phi_rn5_web_v2_vg"))
@@ -5358,13 +5336,11 @@ def _render_fully_restrained_splice_outline(
         and ru5_web_v2_vg_disp.unit == phi_rn5_web_q.unit
         and abs(phi_rn5_web_q.value) > 1e-12
     ):
-        dcr5_web_v2_vg_disp = _format_decimal(abs(ru5_web_v2_vg_disp.value) / phi_rn5_web_q.value)
+        dcr5_web_v2_vg_disp = _format_dcr_value(abs(ru5_web_v2_vg_disp.value) / phi_rn5_web_q.value)
+    dcr5_num = _compute_dcr_numeric(ru5_web_v2_vg_disp, phi_rn5_web_q, dcr5_web_v2_vg_disp)
     web_block_shear_result = _render_result_label(web_block_shear_note.get("result5_web_v2_vg"))
-    try:
-        dcr5_num = float(dcr5_web_v2_vg_disp)
-        web_block_shear_result = _render_result_label("PASS" if dcr5_num <= 1.0 else "FAIL")
-    except (TypeError, ValueError):
-        pass
+    if dcr5_num is not None:
+        web_block_shear_result = _result_label_from_dcr(dcr5_num, fallback="UNKNOWN")
     web_block_shear_result_text = "Cumple"
     if "No aplica" in web_block_shear_result:
         web_block_shear_result_text = "No aplica (cumple)"
@@ -6634,7 +6610,7 @@ def _render_fully_restrained_splice_outline(
             3,
             (
                 f"- DCR critico global: {worst_state} `{worst_entry['name']} = "
-                f"{_format_decimal(float(worst_entry['value']))}` en `{worst_entry['subchapter']}`"
+                f"{_format_dcr_value(float(worst_entry['value']))}` en `{worst_entry['subchapter']}`"
             ),
         )
     else:
@@ -6649,7 +6625,7 @@ def _render_fully_restrained_splice_outline(
                 status_icon = chr(0x1F7E2)
             else:
                 status_icon = chr(0x1F7E2) if value_num <= 1.0 else chr(0x1F534)
-            value_text = _format_decimal(value_num)
+            value_text = _format_dcr_value(value_num)
         else:
             status_icon = chr(0x26AA)
             value_text = _format_text(entry.get("raw"))
@@ -9376,7 +9352,7 @@ def render_memory_markdown(result: DetailedRunResult) -> str:
                 f"- t_pc_col: `{_format_quantity(t_pc_q.model_dump() if isinstance(t_pc_q, Quantity) else None)}`",
                 f"- n_pc_col: `{_format_text(n_pc_col_val)}`",
                 f"- phi*Rn_pc_p+_col: `{_format_quantity(phi_rn_pc_col_q.model_dump() if isinstance(phi_rn_pc_col_q, Quantity) else None)}`",
-                f"- DCR_pc_p+_col: `{_format_decimal(dcr_pc_col) if dcr_pc_col is not None else 'n/a'}`",
+                f"- DCR_pc_p+_col: `{_format_dcr_value(dcr_pc_col) if dcr_pc_col is not None else 'n/a'}`",
                 f"- Resultado: `{_render_result_plain_es(result_pc_col)}`",
                 "",
                 f"### {step_number}.2. Revision de capacidad a compresion",
@@ -9419,7 +9395,7 @@ def render_memory_markdown(result: DetailedRunResult) -> str:
                 f"- t_pc_col: `{_format_quantity(t_pc_q.model_dump() if isinstance(t_pc_q, Quantity) else None)}`",
                 f"- n_pc_col: `{_format_text(n_pc_col_val)}`",
                 f"- phi*Rn_pc_p-_col: `{_format_quantity(phi_rn_pc_pminus_col_q.model_dump() if isinstance(phi_rn_pc_pminus_col_q, Quantity) else None)}`",
-                f"- DCR_pc_p-_col: `{_format_decimal(dcr_pc_pminus_col) if dcr_pc_pminus_col is not None else 'n/a'}`",
+                f"- DCR_pc_p-_col: `{_format_dcr_value(dcr_pc_pminus_col) if dcr_pc_pminus_col is not None else 'n/a'}`",
                 f"- Resultado: `{_render_result_plain_es(result_pc_pminus_col)}`",
                 "",
                 f"### {step_number}.3. Revision de capacidad a cortante",
@@ -9455,7 +9431,7 @@ def render_memory_markdown(result: DetailedRunResult) -> str:
                 f"- n_pc_col: `{_format_text(n_pc_col_val)}`",
                 f"- L2_pc_col: `{_format_quantity(l2_pc_col_q.model_dump() if isinstance(l2_pc_col_q, Quantity) else None)}`",
                 f"- phi*Rn_pc_v2_col: `{_format_quantity(phi_rn_pc_v2_col_q.model_dump() if isinstance(phi_rn_pc_v2_col_q, Quantity) else None)}`",
-                f"- DCR_pc_v2_col: `{_format_decimal(dcr_pc_v2_col) if dcr_pc_v2_col is not None else 'n/a'}`",
+                f"- DCR_pc_v2_col: `{_format_dcr_value(dcr_pc_v2_col) if dcr_pc_v2_col is not None else 'n/a'}`",
                 f"- Resultado: `{_render_result_plain_es(result_pc_v2_col)}`",
                 "",
             ]
@@ -9637,7 +9613,7 @@ def render_memory_markdown(result: DetailedRunResult) -> str:
                         f"- nl_w5_col: `{_format_text(nl_w5_col)}`",
                         f"- kds_w5_col: `{_format_text(kds_w5_col)}`",
                         f"- phi*Rn_w5_p+_col: `{_format_quantity(phi_rn_w3_p_pos_col_q.model_dump() if isinstance(phi_rn_w3_p_pos_col_q, Quantity) else None)}`",
-                        f"- DCR_w5_p+_col: `{_format_decimal(dcr_w3_p_pos_col) if dcr_w3_p_pos_col is not None else 'n/a'}`",
+                        f"- DCR_w5_p+_col: `{_format_dcr_value(dcr_w3_p_pos_col) if dcr_w3_p_pos_col is not None else 'n/a'}`",
                         f"- Resultado: `{_render_result_plain_es(result_w3_p_pos_col)}`",
                         "",
                     ]
@@ -10123,7 +10099,7 @@ def render_memory_markdown(result: DetailedRunResult) -> str:
                         f"- nl_w6_col: `{_format_text(nl_w6_col)}`",
                         f"- kds_w6_col: `{_format_text(kds_w6_col)}`",
                         f"- phi*Rn_w6_v2_col: `{_format_quantity(phi_rn_w6_p_pos_col_q.model_dump() if isinstance(phi_rn_w6_p_pos_col_q, Quantity) else None)}`",
-                        f"- DCR_w6_v2_col: `{_format_decimal(dcr_w6_p_pos_col) if dcr_w6_p_pos_col is not None else 'n/a'}`",
+                        f"- DCR_w6_v2_col: `{_format_dcr_value(dcr_w6_p_pos_col) if dcr_w6_p_pos_col is not None else 'n/a'}`",
                         f"- Resultado: `{_render_result_plain_es(result_w6_p_pos_col)}`",
                         "",
                     ]
@@ -10165,7 +10141,7 @@ def render_memory_markdown(result: DetailedRunResult) -> str:
                         f"- phi*Rn1_w6-cw_v2_col: `{_format_quantity(phi_rn1_w6_cw_v2_col_q.model_dump() if isinstance(phi_rn1_w6_cw_v2_col_q, Quantity) else None)}`",
                         f"- phi*Rn2_w6-cw_v2_col: `{_format_quantity(phi_rn2_w6_cw_v2_col_q.model_dump() if isinstance(phi_rn2_w6_cw_v2_col_q, Quantity) else None)}`",
                         f"- phi*Rn_w6_v2_col: `{_format_quantity(phi_rn_w6_v2_col_base_q.model_dump() if isinstance(phi_rn_w6_v2_col_base_q, Quantity) else None)}`",
-                        f"- DCR_w6_v2_col: `{_format_decimal(dcr_w6_v2_col_base) if dcr_w6_v2_col_base is not None else 'n/a'}`",
+                        f"- DCR_w6_v2_col: `{_format_dcr_value(dcr_w6_v2_col_base) if dcr_w6_v2_col_base is not None else 'n/a'}`",
                         f"- Resultado: `{_render_result_plain_es(result_w6_v2_col_base)}`",
                         "",
                     ]
@@ -10438,7 +10414,7 @@ def render_memory_markdown(result: DetailedRunResult) -> str:
                 block_27_lines.extend(
                     [
                         "- PJP: `Cumple`",
-                        f"- DCR_w8_v2_col: `{_format_decimal(dcr_w8_v2_col) if dcr_w8_v2_col is not None else 'n/a'}`",
+                        f"- DCR_w8_v2_col: `{_format_dcr_value(dcr_w8_v2_col) if dcr_w8_v2_col is not None else 'n/a'}`",
                         f"- Resultado: `{_render_result_plain_es(result_w8_v2_col)}`",
                         "",
                     ]
@@ -10471,7 +10447,7 @@ def render_memory_markdown(result: DetailedRunResult) -> str:
                         f"- Ru2_w8_v2_col: `{_format_quantity(ru2_w8_v2_col_q.model_dump() if isinstance(ru2_w8_v2_col_q, Quantity) else None)}`",
                         f"- Ru_w8_v2_col: `{_format_quantity(ru_w8_v2_col_q.model_dump() if isinstance(ru_w8_v2_col_q, Quantity) else None)}`",
                         f"- phi*Rn_w8_v2_col: `{_format_quantity(phi_rn_w8_v2_col_q.model_dump() if isinstance(phi_rn_w8_v2_col_q, Quantity) else None)}`",
-                        f"- DCR_w8_v2_col: `{_format_decimal(dcr_w8_v2_col) if dcr_w8_v2_col is not None else 'n/a'}`",
+                        f"- DCR_w8_v2_col: `{_format_dcr_value(dcr_w8_v2_col) if dcr_w8_v2_col is not None else 'n/a'}`",
                         f"- Resultado: `{_render_result_plain_es(result_w8_v2_col)}`",
                         "",
                     ]
@@ -10642,7 +10618,7 @@ def render_memory_markdown(result: DetailedRunResult) -> str:
 	                f"- d_hole_w7_col (usado en formula): `{_format_quantity(d_hole_for_w7_capacity_q.model_dump() if isinstance(d_hole_for_w7_capacity_q, Quantity) else None)}`",
 	                f"- Ru_w7_v2_col: `{_format_quantity(ru_w7_v2_col_q.model_dump() if isinstance(ru_w7_v2_col_q, Quantity) else None)}`",
 	                f"- phi*Rn_w7_v2_col: `{_format_quantity(phi_rn_w7_v2_col_q.model_dump() if isinstance(phi_rn_w7_v2_col_q, Quantity) else None)}`",
-                f"- DCR_w7_v2_col: `{_format_decimal(dcr_w7_v2_col) if dcr_w7_v2_col is not None else 'n/a'}`",
+                f"- DCR_w7_v2_col: `{_format_dcr_value(dcr_w7_v2_col) if dcr_w7_v2_col is not None else 'n/a'}`",
                 f"- Resultado: `{_render_result_plain_es(result_w7_v2_col)}`",
                 "",
             ]
@@ -10733,7 +10709,7 @@ def render_memory_markdown(result: DetailedRunResult) -> str:
                     3,
                     (
                         f"- DCR critico global: {worst_state} `{worst_entry['name']} = "
-                        f"{_format_decimal(float(worst_entry['value']))}` en `{worst_entry['subchapter']}`"
+                        f"{_format_dcr_value(float(worst_entry['value']))}` en `{worst_entry['subchapter']}`"
                     ),
                 )
             else:
@@ -10747,7 +10723,7 @@ def render_memory_markdown(result: DetailedRunResult) -> str:
                         status_icon = chr(0x1F7E2)
                     else:
                         status_icon = chr(0x1F7E2) if value_num <= 1.0 else chr(0x1F534)
-                    value_text = _format_decimal(value_num)
+                    value_text = _format_dcr_value(value_num)
                 else:
                     status_icon = chr(0x26AA)  # no evaluable / no numerico
                     value_text = _format_text(entry.get("raw"))
@@ -10770,6 +10746,7 @@ def render_memory_markdown(result: DetailedRunResult) -> str:
     rendered = _normalize_markdown_spacing(rendered)
     rendered = _normalize_memory_spanish_labels(rendered)
     rendered = _dedupe_markdown_headings(rendered)
+    rendered = _round_dcr_rendered_values_in_markdown(rendered)
     return rendered + "\n"
 
 

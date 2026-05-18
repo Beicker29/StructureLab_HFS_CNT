@@ -10,7 +10,7 @@
 ### 1.1 Variables de carga
 
 - Ecuacion base: `Muz_blt_web = Vu2_sp*ex_blt_web - alpha_Pu_web*Pu_sp*ey_blt_web`
-- Pu_sp: `893.31 kN` (origen: `loads.Pu_sp`)
+- Pu_sp: `893.29 kN` (origen: `loads.Pu_sp`)
 - Vu2_sp: `0 kN` (origen: `loads.Vu2_sp`)
 - ex_blt_web: `390 mm` (origen: `formula splice`)
 - ey_blt_web: `0 mm` (origen: `input ey`)

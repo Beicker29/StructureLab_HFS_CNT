@@ -11,10 +11,10 @@
 
 - Ecuacion base: `Muz_blt_web = Vu2_sp*ex_blt_web - alpha_Pu_web*Pu_sp*ey_blt_web`
 - Pu_sp: `0 kN` (origen: `loads.Pu_sp`)
-- Vu2_sp: `212.85 kN` (origen: `loads.Vu2_sp`)
+- Vu2_sp: `212.86 kN` (origen: `loads.Vu2_sp`)
 - ex_blt_web: `145 mm` (origen: `formula splice`)
 - ey_blt_web: `0 mm` (origen: `input ey`)
-- Muz_blt_web: `30863.25 kN-mm`
+- Muz_blt_web: `30864.18 kN-mm`
 
 ## 2. Geometria de pernos derivada
 
@@ -27,7 +27,7 @@
 - Ix_blt_web: `130.98 in2` con `sum((y_i_blt_web-y_cg_blt_web)^2)`
 - Iy_blt_web: `16.37 in2` con `sum((x_i_blt_web-x_cg_blt_web)^2)`
 - J_blt_web: `147.35 in2` con `Ix_blt_web + Iy_blt_web`
-- Muz_blt_web: `273.16 kip-in` con `Vu2_sp*ex_blt_web - alpha_Pu_web*Pu_sp*ey_blt_web`
+- Muz_blt_web: `273.17 kip-in` con `Vu2_sp*ex_blt_web - alpha_Pu_web*Pu_sp*ey_blt_web`
 - dmax_blt_web: `5.28 in` con `max(sqrt((x_i_blt_web-x_cg_blt_web)^2+(y_i_blt_web-y_cg_blt_web)^2))`
 
 ## 3. Geometria del grupo de pernos
@@ -45,7 +45,7 @@
 
 ## 4. Resumen global por metodo
 
-- Metodo `elastic_superposition`: applicable=`True`, estado=`PASS`, demanda=`11.88 kip`, capacidad=`21.34 kip`, DCR=`0.56`
+- Metodo `elastic_superposition`: applicable=`True`, estado=`PASS`, demanda=`11.89 kip`, capacidad=`21.34 kip`, DCR=`0.56`
 - Metodo `elastic_ecr`: applicable=`True`, estado=`PASS`, demanda=`47.85 kip`, capacidad=`85.91 kip`, DCR=`0.56`
 - Metodo `icr`: applicable=`True`, estado=`PASS`, demanda=`47.85 kip`, capacidad=`363.21 kip`, DCR=`0.13`
 
@@ -81,11 +81,11 @@
 - `w3`: Ru_dir_3_blt_web_v3=`-0`, Ru_dir_3_blt_web_v2=`-4.79`, Ru_rot_3_blt_web_v3=`0`, Ru_rot_3_blt_web_v2=`2.37`, Ru_3_blt_web=`2.41`
 - `w4`: Ru_dir_4_blt_web_v3=`-0`, Ru_dir_4_blt_web_v2=`-4.79`, Ru_rot_4_blt_web_v3=`4.74`, Ru_rot_4_blt_web_v2=`2.37`, Ru_4_blt_web=`5.32`
 - `w5`: Ru_dir_5_blt_web_v3=`-0`, Ru_dir_5_blt_web_v2=`-4.79`, Ru_rot_5_blt_web_v3=`9.49`, Ru_rot_5_blt_web_v2=`2.37`, Ru_5_blt_web=`9.79`
-- `w6`: Ru_dir_6_blt_web_v3=`-0`, Ru_dir_6_blt_web_v2=`-4.79`, Ru_rot_6_blt_web_v3=`-9.49`, Ru_rot_6_blt_web_v2=`-2.37`, Ru_6_blt_web=`11.88`
+- `w6`: Ru_dir_6_blt_web_v3=`-0`, Ru_dir_6_blt_web_v2=`-4.79`, Ru_rot_6_blt_web_v3=`-9.49`, Ru_rot_6_blt_web_v2=`-2.37`, Ru_6_blt_web=`11.89`
 - `w7`: Ru_dir_7_blt_web_v3=`-0`, Ru_dir_7_blt_web_v2=`-4.79`, Ru_rot_7_blt_web_v3=`-4.74`, Ru_rot_7_blt_web_v2=`-2.37`, Ru_7_blt_web=`8.59`
 - `w8`: Ru_dir_8_blt_web_v3=`-0`, Ru_dir_8_blt_web_v2=`-4.79`, Ru_rot_8_blt_web_v3=`0`, Ru_rot_8_blt_web_v2=`-2.37`, Ru_8_blt_web=`7.16`
 - `w9`: Ru_dir_9_blt_web_v3=`-0`, Ru_dir_9_blt_web_v2=`-4.79`, Ru_rot_9_blt_web_v3=`4.74`, Ru_rot_9_blt_web_v2=`-2.37`, Ru_9_blt_web=`8.59`
-- `w10`: Ru_dir_10_blt_web_v3=`-0`, Ru_dir_10_blt_web_v2=`-4.79`, Ru_rot_10_blt_web_v3=`9.49`, Ru_rot_10_blt_web_v2=`-2.37`, Ru_10_blt_web=`11.88`
+- `w10`: Ru_dir_10_blt_web_v3=`-0`, Ru_dir_10_blt_web_v2=`-4.79`, Ru_rot_10_blt_web_v3=`9.49`, Ru_rot_10_blt_web_v2=`-2.37`, Ru_10_blt_web=`11.89`
 
 ### 5.4 Resumen de fuerzas en pernos
 
@@ -94,11 +94,11 @@
 - `w3`: Ru_3_blt_web_v3=`0`, Ru_3_blt_web_v2=`-2.41`, Ru_3_blt_web=`2.41`
 - `w4`: Ru_4_blt_web_v3=`4.74`, Ru_4_blt_web_v2=`-2.41`, Ru_4_blt_web=`5.32`
 - `w5`: Ru_5_blt_web_v3=`9.49`, Ru_5_blt_web_v2=`-2.41`, Ru_5_blt_web=`9.79`
-- `w6`: Ru_6_blt_web_v3=`-9.49`, Ru_6_blt_web_v2=`-7.16`, Ru_6_blt_web=`11.88`
+- `w6`: Ru_6_blt_web_v3=`-9.49`, Ru_6_blt_web_v2=`-7.16`, Ru_6_blt_web=`11.89`
 - `w7`: Ru_7_blt_web_v3=`-4.74`, Ru_7_blt_web_v2=`-7.16`, Ru_7_blt_web=`8.59`
 - `w8`: Ru_8_blt_web_v3=`0`, Ru_8_blt_web_v2=`-7.16`, Ru_8_blt_web=`7.16`
 - `w9`: Ru_9_blt_web_v3=`4.74`, Ru_9_blt_web_v2=`-7.16`, Ru_9_blt_web=`8.59`
-- `w10`: Ru_10_blt_web_v3=`9.49`, Ru_10_blt_web_v2=`-7.16`, Ru_10_blt_web=`11.88`
+- `w10`: Ru_10_blt_web_v3=`9.49`, Ru_10_blt_web_v2=`-7.16`, Ru_10_blt_web=`11.89`
 
 ## 6. Elastic Method - Center of Rotation (ECR)
 
@@ -123,7 +123,7 @@
 - Vu2_sp (componente aplicada en direccion v2): `47.85 kip`
 - n_blt_web: `10`
 - J_blt_web: `147.35 in2`
-- Muz_blt_web: `273.16 kip-in`
+- Muz_blt_web: `273.17 kip-in`
 - ax_blt_web: `2.58 in`
 - ay_blt_web: `0 in`
 - x_ecr_blt_web: `3.86 in`
@@ -207,44 +207,44 @@
 ### 7.2 Iteraciones globales (residuales)
 
 - Iter `1`: x_icr_blt_web=`-1.3`, y_icr_blt_web=`5.12`, res_Ru_blt_web_v3=`-0`, res_Ru_blt_web_v2=`-6.66`, res_norm_blt_web=`6.66`
-- Iter `2`: x_icr_blt_web=`-1.12`, y_icr_blt_web=`5.12`, res_Ru_blt_web_v3=`0`, res_Ru_blt_web_v2=`-4.42`, res_norm_blt_web=`4.42`
-- Iter `3`: x_icr_blt_web=`-1`, y_icr_blt_web=`5.12`, res_Ru_blt_web_v3=`-0`, res_Ru_blt_web_v2=`-2.79`, res_norm_blt_web=`2.79`
+- Iter `2`: x_icr_blt_web=`-1.12`, y_icr_blt_web=`5.12`, res_Ru_blt_web_v3=`-0`, res_Ru_blt_web_v2=`-4.42`, res_norm_blt_web=`4.42`
+- Iter `3`: x_icr_blt_web=`-1`, y_icr_blt_web=`5.12`, res_Ru_blt_web_v3=`0`, res_Ru_blt_web_v2=`-2.79`, res_norm_blt_web=`2.79`
 - Iter `4`: x_icr_blt_web=`-0.93`, y_icr_blt_web=`5.12`, res_Ru_blt_web_v3=`-0`, res_Ru_blt_web_v2=`-1.7`, res_norm_blt_web=`1.7`
-- Iter `5`: x_icr_blt_web=`-0.88`, y_icr_blt_web=`5.12`, res_Ru_blt_web_v3=`0`, res_Ru_blt_web_v2=`-1.01`, res_norm_blt_web=`1.01`
+- Iter `5`: x_icr_blt_web=`-0.88`, y_icr_blt_web=`5.12`, res_Ru_blt_web_v3=`-0`, res_Ru_blt_web_v2=`-1.01`, res_norm_blt_web=`1.01`
 - Iter `6`: x_icr_blt_web=`-0.85`, y_icr_blt_web=`5.12`, res_Ru_blt_web_v3=`-0`, res_Ru_blt_web_v2=`-0.59`, res_norm_blt_web=`0.59`
 - Iter `7`: x_icr_blt_web=`-0.84`, y_icr_blt_web=`5.12`, res_Ru_blt_web_v3=`0`, res_Ru_blt_web_v2=`-0.34`, res_norm_blt_web=`0.34`
 - Iter `8`: x_icr_blt_web=`-0.83`, y_icr_blt_web=`5.12`, res_Ru_blt_web_v3=`0`, res_Ru_blt_web_v2=`-0.2`, res_norm_blt_web=`0.2`
-- Iter `9`: x_icr_blt_web=`-0.82`, y_icr_blt_web=`5.12`, res_Ru_blt_web_v3=`0`, res_Ru_blt_web_v2=`-0.11`, res_norm_blt_web=`0.11`
+- Iter `9`: x_icr_blt_web=`-0.82`, y_icr_blt_web=`5.12`, res_Ru_blt_web_v3=`-0`, res_Ru_blt_web_v2=`-0.11`, res_norm_blt_web=`0.11`
 - Iter `10`: x_icr_blt_web=`-0.82`, y_icr_blt_web=`5.12`, res_Ru_blt_web_v3=`-0`, res_Ru_blt_web_v2=`-0.07`, res_norm_blt_web=`0.07`
 - Iter `11`: x_icr_blt_web=`-0.82`, y_icr_blt_web=`5.12`, res_Ru_blt_web_v3=`-0`, res_Ru_blt_web_v2=`-0.04`, res_norm_blt_web=`0.04`
-- Iter `12`: x_icr_blt_web=`-0.82`, y_icr_blt_web=`5.12`, res_Ru_blt_web_v3=`-0`, res_Ru_blt_web_v2=`-0.02`, res_norm_blt_web=`0.02`
-- Iter `13`: x_icr_blt_web=`-0.82`, y_icr_blt_web=`5.12`, res_Ru_blt_web_v3=`-0`, res_Ru_blt_web_v2=`-0.01`, res_norm_blt_web=`0.01`
+- Iter `12`: x_icr_blt_web=`-0.82`, y_icr_blt_web=`5.12`, res_Ru_blt_web_v3=`0`, res_Ru_blt_web_v2=`-0.02`, res_norm_blt_web=`0.02`
+- Iter `13`: x_icr_blt_web=`-0.82`, y_icr_blt_web=`5.12`, res_Ru_blt_web_v3=`0`, res_Ru_blt_web_v2=`-0.01`, res_norm_blt_web=`0.01`
 - Iter `14`: x_icr_blt_web=`-0.82`, y_icr_blt_web=`5.12`, res_Ru_blt_web_v3=`-0`, res_Ru_blt_web_v2=`-0.01`, res_norm_blt_web=`0.01`
 - Iter `15`: x_icr_blt_web=`-0.82`, y_icr_blt_web=`5.12`, res_Ru_blt_web_v3=`-0`, res_Ru_blt_web_v2=`-0`, res_norm_blt_web=`0`
-- Iter `16`: x_icr_blt_web=`-0.82`, y_icr_blt_web=`5.12`, res_Ru_blt_web_v3=`-0`, res_Ru_blt_web_v2=`-0`, res_norm_blt_web=`0`
-- Iter `17`: x_icr_blt_web=`-0.82`, y_icr_blt_web=`5.12`, res_Ru_blt_web_v3=`-0`, res_Ru_blt_web_v2=`-0`, res_norm_blt_web=`0`
-- Iter `18`: x_icr_blt_web=`-0.82`, y_icr_blt_web=`5.12`, res_Ru_blt_web_v3=`0`, res_Ru_blt_web_v2=`-0`, res_norm_blt_web=`0`
+- Iter `16`: x_icr_blt_web=`-0.82`, y_icr_blt_web=`5.12`, res_Ru_blt_web_v3=`0`, res_Ru_blt_web_v2=`-0`, res_norm_blt_web=`0`
+- Iter `17`: x_icr_blt_web=`-0.82`, y_icr_blt_web=`5.12`, res_Ru_blt_web_v3=`0`, res_Ru_blt_web_v2=`-0`, res_norm_blt_web=`0`
+- Iter `18`: x_icr_blt_web=`-0.82`, y_icr_blt_web=`5.12`, res_Ru_blt_web_v3=`-0`, res_Ru_blt_web_v2=`-0`, res_norm_blt_web=`0`
 
 ### 7.3 Parametros auxiliares por iteracion
 
-- Iter `1`: dmax_icr_blt_web=`6.41`, sum(phi_i_blt_web*r_icr_i_blt_web)=`41.09`, Rult_blt_web=`-9.65`, Cu_blt_web=`4.96`, M_icr_blt_web=`-396.67`
-- Iter `2`: dmax_icr_blt_web=`6.3`, sum(phi_i_blt_web*r_icr_i_blt_web)=`40.02`, Rult_blt_web=`-9.7`, Cu_blt_web=`4.93`, M_icr_blt_web=`-388.08`
-- Iter `3`: dmax_icr_blt_web=`6.24`, sum(phi_i_blt_web*r_icr_i_blt_web)=`39.33`, Rult_blt_web=`-9.72`, Cu_blt_web=`4.92`, M_icr_blt_web=`-382.38`
-- Iter `4`: dmax_icr_blt_web=`6.19`, sum(phi_i_blt_web*r_icr_i_blt_web)=`38.91`, Rult_blt_web=`-9.73`, Cu_blt_web=`4.92`, M_icr_blt_web=`-378.77`
-- Iter `5`: dmax_icr_blt_web=`6.17`, sum(phi_i_blt_web*r_icr_i_blt_web)=`38.66`, Rult_blt_web=`-9.74`, Cu_blt_web=`4.91`, M_icr_blt_web=`-376.58`
-- Iter `6`: dmax_icr_blt_web=`6.15`, sum(phi_i_blt_web*r_icr_i_blt_web)=`38.51`, Rult_blt_web=`-9.74`, Cu_blt_web=`4.91`, M_icr_blt_web=`-375.27`
-- Iter `7`: dmax_icr_blt_web=`6.14`, sum(phi_i_blt_web*r_icr_i_blt_web)=`38.42`, Rult_blt_web=`-9.75`, Cu_blt_web=`4.91`, M_icr_blt_web=`-374.51`
-- Iter `8`: dmax_icr_blt_web=`6.14`, sum(phi_i_blt_web*r_icr_i_blt_web)=`38.37`, Rult_blt_web=`-9.75`, Cu_blt_web=`4.91`, M_icr_blt_web=`-374.06`
-- Iter `9`: dmax_icr_blt_web=`6.14`, sum(phi_i_blt_web*r_icr_i_blt_web)=`38.35`, Rult_blt_web=`-9.75`, Cu_blt_web=`4.91`, M_icr_blt_web=`-373.8`
-- Iter `10`: dmax_icr_blt_web=`6.13`, sum(phi_i_blt_web*r_icr_i_blt_web)=`38.33`, Rult_blt_web=`-9.75`, Cu_blt_web=`4.91`, M_icr_blt_web=`-373.66`
-- Iter `11`: dmax_icr_blt_web=`6.13`, sum(phi_i_blt_web*r_icr_i_blt_web)=`38.32`, Rult_blt_web=`-9.75`, Cu_blt_web=`4.91`, M_icr_blt_web=`-373.57`
-- Iter `12`: dmax_icr_blt_web=`6.13`, sum(phi_i_blt_web*r_icr_i_blt_web)=`38.31`, Rult_blt_web=`-9.75`, Cu_blt_web=`4.91`, M_icr_blt_web=`-373.52`
-- Iter `13`: dmax_icr_blt_web=`6.13`, sum(phi_i_blt_web*r_icr_i_blt_web)=`38.31`, Rult_blt_web=`-9.75`, Cu_blt_web=`4.91`, M_icr_blt_web=`-373.49`
-- Iter `14`: dmax_icr_blt_web=`6.13`, sum(phi_i_blt_web*r_icr_i_blt_web)=`38.31`, Rult_blt_web=`-9.75`, Cu_blt_web=`4.91`, M_icr_blt_web=`-373.48`
-- Iter `15`: dmax_icr_blt_web=`6.13`, sum(phi_i_blt_web*r_icr_i_blt_web)=`38.31`, Rult_blt_web=`-9.75`, Cu_blt_web=`4.91`, M_icr_blt_web=`-373.47`
-- Iter `16`: dmax_icr_blt_web=`6.13`, sum(phi_i_blt_web*r_icr_i_blt_web)=`38.31`, Rult_blt_web=`-9.75`, Cu_blt_web=`4.91`, M_icr_blt_web=`-373.46`
-- Iter `17`: dmax_icr_blt_web=`6.13`, sum(phi_i_blt_web*r_icr_i_blt_web)=`38.31`, Rult_blt_web=`-9.75`, Cu_blt_web=`4.91`, M_icr_blt_web=`-373.46`
-- Iter `18`: dmax_icr_blt_web=`6.13`, sum(phi_i_blt_web*r_icr_i_blt_web)=`38.31`, Rult_blt_web=`-9.75`, Cu_blt_web=`4.91`, M_icr_blt_web=`-373.46`
+- Iter `1`: dmax_icr_blt_web=`6.41`, sum(phi_i_blt_web*r_icr_i_blt_web)=`41.09`, Rult_blt_web=`-9.65`, Cu_blt_web=`4.96`, M_icr_blt_web=`-396.68`
+- Iter `2`: dmax_icr_blt_web=`6.3`, sum(phi_i_blt_web*r_icr_i_blt_web)=`40.02`, Rult_blt_web=`-9.7`, Cu_blt_web=`4.93`, M_icr_blt_web=`-388.09`
+- Iter `3`: dmax_icr_blt_web=`6.24`, sum(phi_i_blt_web*r_icr_i_blt_web)=`39.33`, Rult_blt_web=`-9.72`, Cu_blt_web=`4.92`, M_icr_blt_web=`-382.39`
+- Iter `4`: dmax_icr_blt_web=`6.19`, sum(phi_i_blt_web*r_icr_i_blt_web)=`38.91`, Rult_blt_web=`-9.73`, Cu_blt_web=`4.92`, M_icr_blt_web=`-378.79`
+- Iter `5`: dmax_icr_blt_web=`6.17`, sum(phi_i_blt_web*r_icr_i_blt_web)=`38.66`, Rult_blt_web=`-9.74`, Cu_blt_web=`4.91`, M_icr_blt_web=`-376.59`
+- Iter `6`: dmax_icr_blt_web=`6.15`, sum(phi_i_blt_web*r_icr_i_blt_web)=`38.51`, Rult_blt_web=`-9.74`, Cu_blt_web=`4.91`, M_icr_blt_web=`-375.28`
+- Iter `7`: dmax_icr_blt_web=`6.14`, sum(phi_i_blt_web*r_icr_i_blt_web)=`38.42`, Rult_blt_web=`-9.75`, Cu_blt_web=`4.91`, M_icr_blt_web=`-374.52`
+- Iter `8`: dmax_icr_blt_web=`6.14`, sum(phi_i_blt_web*r_icr_i_blt_web)=`38.37`, Rult_blt_web=`-9.75`, Cu_blt_web=`4.91`, M_icr_blt_web=`-374.07`
+- Iter `9`: dmax_icr_blt_web=`6.14`, sum(phi_i_blt_web*r_icr_i_blt_web)=`38.35`, Rult_blt_web=`-9.75`, Cu_blt_web=`4.91`, M_icr_blt_web=`-373.82`
+- Iter `10`: dmax_icr_blt_web=`6.13`, sum(phi_i_blt_web*r_icr_i_blt_web)=`38.33`, Rult_blt_web=`-9.75`, Cu_blt_web=`4.91`, M_icr_blt_web=`-373.67`
+- Iter `11`: dmax_icr_blt_web=`6.13`, sum(phi_i_blt_web*r_icr_i_blt_web)=`38.32`, Rult_blt_web=`-9.75`, Cu_blt_web=`4.91`, M_icr_blt_web=`-373.58`
+- Iter `12`: dmax_icr_blt_web=`6.13`, sum(phi_i_blt_web*r_icr_i_blt_web)=`38.31`, Rult_blt_web=`-9.75`, Cu_blt_web=`4.91`, M_icr_blt_web=`-373.53`
+- Iter `13`: dmax_icr_blt_web=`6.13`, sum(phi_i_blt_web*r_icr_i_blt_web)=`38.31`, Rult_blt_web=`-9.75`, Cu_blt_web=`4.91`, M_icr_blt_web=`-373.51`
+- Iter `14`: dmax_icr_blt_web=`6.13`, sum(phi_i_blt_web*r_icr_i_blt_web)=`38.31`, Rult_blt_web=`-9.75`, Cu_blt_web=`4.91`, M_icr_blt_web=`-373.49`
+- Iter `15`: dmax_icr_blt_web=`6.13`, sum(phi_i_blt_web*r_icr_i_blt_web)=`38.31`, Rult_blt_web=`-9.75`, Cu_blt_web=`4.91`, M_icr_blt_web=`-373.48`
+- Iter `16`: dmax_icr_blt_web=`6.13`, sum(phi_i_blt_web*r_icr_i_blt_web)=`38.31`, Rult_blt_web=`-9.75`, Cu_blt_web=`4.91`, M_icr_blt_web=`-373.48`
+- Iter `17`: dmax_icr_blt_web=`6.13`, sum(phi_i_blt_web*r_icr_i_blt_web)=`38.31`, Rult_blt_web=`-9.75`, Cu_blt_web=`4.91`, M_icr_blt_web=`-373.47`
+- Iter `18`: dmax_icr_blt_web=`6.13`, sum(phi_i_blt_web*r_icr_i_blt_web)=`38.31`, Rult_blt_web=`-9.75`, Cu_blt_web=`4.91`, M_icr_blt_web=`-373.47`
 
 ### 7.4 Bolt Detail ICR por iteracion
 
@@ -267,11 +267,11 @@
 - `w3`: phi_3_blt_web=`0.68`, Ru_3_blt_web=`-6.58`, Ru_3_blt_web_v3=`0`, Ru_3_blt_web_v2=`-6.58`
 - `w4`: phi_4_blt_web=`0.87`, Ru_4_blt_web=`-8.43`, Ru_4_blt_web_v3=`7.52`, Ru_4_blt_web_v2=`-3.82`
 - `w5`: phi_5_blt_web=`0.97`, Ru_5_blt_web=`-9.33`, Ru_5_blt_web_v3=`9.04`, Ru_5_blt_web_v2=`-2.3`
-- `w6`: phi_6_blt_web=`0.98`, Ru_6_blt_web=`-9.48`, Ru_6_blt_web_v3=`-7.56`, Ru_6_blt_web_v2=`-5.71`
+- `w6`: phi_6_blt_web=`0.98`, Ru_6_blt_web=`-9.48`, Ru_6_blt_web_v3=`-7.57`, Ru_6_blt_web_v2=`-5.71`
 - `w7`: phi_7_blt_web=`0.95`, Ru_7_blt_web=`-9.19`, Ru_7_blt_web_v3=`-5.08`, Ru_7_blt_web_v2=`-7.66`
 - `w8`: phi_8_blt_web=`0.93`, Ru_8_blt_web=`-8.95`, Ru_8_blt_web_v3=`0`, Ru_8_blt_web_v2=`-8.95`
 - `w9`: phi_9_blt_web=`0.95`, Ru_9_blt_web=`-9.19`, Ru_9_blt_web_v3=`5.08`, Ru_9_blt_web_v2=`-7.66`
-- `w10`: phi_10_blt_web=`0.98`, Ru_10_blt_web=`-9.48`, Ru_10_blt_web_v3=`7.56`, Ru_10_blt_web_v2=`-5.71`
+- `w10`: phi_10_blt_web=`0.98`, Ru_10_blt_web=`-9.48`, Ru_10_blt_web_v3=`7.57`, Ru_10_blt_web_v2=`-5.71`
 
 #### 7.4.2 Iteracion 2
 
@@ -338,9 +338,9 @@
 - `w10`: dx_icr_10_blt_web=`3.49`, dy_icr_10_blt_web=`5.12`, r_icr_10_blt_web=`6.19`, delta_10_blt_web=`0.34`
 - Fuerzas por perno:
 - `w1`: phi_1_blt_web=`0.97`, Ru_1_blt_web=`-9.42`, Ru_1_blt_web_v3=`-9.27`, Ru_1_blt_web_v2=`-1.68`
-- `w2`: phi_2_blt_web=`0.87`, Ru_2_blt_web=`-8.46`, Ru_2_blt_web_v3=`-7.96`, Ru_2_blt_web_v2=`-2.88`
+- `w2`: phi_2_blt_web=`0.87`, Ru_2_blt_web=`-8.47`, Ru_2_blt_web_v3=`-7.96`, Ru_2_blt_web_v2=`-2.88`
 - `w3`: phi_3_blt_web=`0.6`, Ru_3_blt_web=`-5.87`, Ru_3_blt_web_v3=`0`, Ru_3_blt_web_v2=`-5.87`
-- `w4`: phi_4_blt_web=`0.87`, Ru_4_blt_web=`-8.46`, Ru_4_blt_web_v3=`7.96`, Ru_4_blt_web_v2=`-2.88`
+- `w4`: phi_4_blt_web=`0.87`, Ru_4_blt_web=`-8.47`, Ru_4_blt_web_v3=`7.96`, Ru_4_blt_web_v2=`-2.88`
 - `w5`: phi_5_blt_web=`0.97`, Ru_5_blt_web=`-9.42`, Ru_5_blt_web_v3=`9.27`, Ru_5_blt_web_v2=`-1.68`
 - `w6`: phi_6_blt_web=`0.98`, Ru_6_blt_web=`-9.55`, Ru_6_blt_web_v3=`-7.9`, Ru_6_blt_web_v2=`-5.38`
 - `w7`: phi_7_blt_web=`0.95`, Ru_7_blt_web=`-9.23`, Ru_7_blt_web_v3=`-5.46`, Ru_7_blt_web_v2=`-7.44`
@@ -469,7 +469,7 @@
 - `w5`: phi_5_blt_web=`0.97`, Ru_5_blt_web=`-9.44`, Ru_5_blt_web_v3=`9.32`, Ru_5_blt_web_v2=`-1.5`
 - `w6`: phi_6_blt_web=`0.98`, Ru_6_blt_web=`-9.57`, Ru_6_blt_web_v3=`-7.98`, Ru_6_blt_web_v2=`-5.28`
 - `w7`: phi_7_blt_web=`0.95`, Ru_7_blt_web=`-9.23`, Ru_7_blt_web_v3=`-5.57`, Ru_7_blt_web_v2=`-7.36`
-- `w8`: phi_8_blt_web=`0.91`, Ru_8_blt_web=`-8.89`, Ru_8_blt_web_v3=`0`, Ru_8_blt_web_v2=`-8.89`
+- `w8`: phi_8_blt_web=`0.91`, Ru_8_blt_web=`-8.9`, Ru_8_blt_web_v3=`0`, Ru_8_blt_web_v2=`-8.9`
 - `w9`: phi_9_blt_web=`0.95`, Ru_9_blt_web=`-9.23`, Ru_9_blt_web_v3=`5.57`, Ru_9_blt_web_v2=`-7.36`
 - `w10`: phi_10_blt_web=`0.98`, Ru_10_blt_web=`-9.57`, Ru_10_blt_web_v3=`7.98`, Ru_10_blt_web_v2=`-5.28`
 

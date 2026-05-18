@@ -1228,11 +1228,11 @@
                 "unit": "mm"
               },
               "svc_hole_deformation_design_web_var": "svc_hole_deformation_design_web",
-              "svc_hole_deformation_design_web": false,
+              "svc_hole_deformation_design_web": true,
               "rn1_web_v2_vg_var": "Rn1_web_v2_vg",
-              "rn1_web_v2_vg_formula": "Rn1_web_v2_vg = 1.5*lc_blt_web_y*tw_vg*Fu_vg",
+              "rn1_web_v2_vg_formula": "Rn1_web_v2_vg = 1.2*lc_blt_web_y*tw_vg*Fu_vg",
               "rn1_web_v2_vg": {
-                "value": 270.10108124999994,
+                "value": 216.08086499999996,
                 "unit": "kN"
               },
               "phi_fragil_var": "phi_fragil",
@@ -1240,18 +1240,18 @@
               "phi_rn1_web_v2_vg_var": "phi*Rn1_web_v2_vg",
               "phi_rn1_web_v2_vg_formula": "phi*Rn1_web_v2_vg = phi_fragil*Rn1_web_v2_vg",
               "phi_rn1_web_v2_vg": {
-                "value": 202.57581093749994,
+                "value": 162.06064874999996,
                 "unit": "kN"
               },
               "ru1_web_v2_vg_var": "Ru1_web_v2_vg",
               "ru1_web_v2_vg": {
-                "value": 212.85,
+                "value": 212.8564,
                 "unit": "kN"
               },
               "dcr1_web_v2_vg_var": "DCR1_web_v2_vg",
-              "dcr1_web_v2_vg": 1.0507177486539592,
+              "dcr1_web_v2_vg": 1.3134366772057,
               "result_web_tearout_v2_vg": "FAIL",
-              "coefficient": 1.5,
+              "coefficient": 1.2,
               "reference": "AISC 360-22 J3.11a.(b) (DRY: compute_bolt_hole_tearout_strength_j36)"
             },
             {
@@ -1296,11 +1296,11 @@
                 "unit": "mm"
               },
               "svc_hole_deformation_design_web_var": "svc_hole_deformation_design_web",
-              "svc_hole_deformation_design_web": false,
+              "svc_hole_deformation_design_web": true,
               "rn1_plt_v2_web_var": "Rn1_plt_v2_web",
-              "rn1_plt_v2_web_formula": "Rn1_plt_v2_web = 1.5*lc_plt_v2_web*t_plt_web*Fu_plt_web",
+              "rn1_plt_v2_web_formula": "Rn1_plt_v2_web = 1.2*lc_plt_v2_web*t_plt_web*Fu_plt_web",
               "rn1_plt_v2_web": {
-                "value": 126.206015625,
+                "value": 100.96481249999997,
                 "unit": "kN"
               },
               "phi_fragil_var": "phi_fragil",
@@ -1308,10 +1308,10 @@
               "phi_rn1_plt_v2_web_var": "phi*Rn1_plt_v2_web",
               "phi_rn1_plt_v2_web_formula": "phi*Rn1_plt_v2_web = phi_fragil*Rn1_plt_v2_web",
               "phi_rn1_plt_v2_web": {
-                "value": 94.65451171875,
+                "value": 75.72360937499997,
                 "unit": "kN"
               },
-              "coefficient": 1.5,
+              "coefficient": 1.2,
               "reference": "AISC 360-22 J3.11a.(b) (DRY: compute_bolt_hole_tearout_strength_j36)"
             },
             {
@@ -1351,11 +1351,11 @@
                 "unit": "mm"
               },
               "svc_hole_deformation_design_web_var": "deformation_at_bolt_hole_service_load_is_design",
-              "svc_hole_deformation_design_web": false,
+              "svc_hole_deformation_design_web": true,
               "rn1_plt_v3_web_var": "Rn1_plt_v3_web",
-              "rn1_plt_v3_web_formula": "Rn1_plt_v3_web = 1.5*lc_plt_v3_web*t_plt_web*Fu_plt_web",
+              "rn1_plt_v3_web_formula": "Rn1_plt_v3_web = 1.2*lc_plt_v3_web*t_plt_web*Fu_plt_web",
               "rn1_plt_v3_web": {
-                "value": 158.26851562499996,
+                "value": 126.61481249999999,
                 "unit": "kN"
               },
               "phi_fragil_var": "phi_fragil",
@@ -1363,10 +1363,10 @@
               "phi_rn1_plt_v3_web_var": "phi*Rn1_plt_v3_web",
               "phi_rn1_plt_v3_web_formula": "phi*Rn1_plt_v3_web = phi_fragil*Rn1_plt_v3_web",
               "phi_rn1_plt_v3_web": {
-                "value": 118.70138671874997,
+                "value": 94.96110937499999,
                 "unit": "kN"
               },
-              "coefficient": 1.5,
+              "coefficient": 1.2,
               "reference": "AISC 360-22 J3.11a.(b) (DRY: compute_bolt_hole_tearout_strength_j36)"
             },
             {
@@ -1406,11 +1406,11 @@
                 "unit": "mm"
               },
               "svc_hole_deformation_design_web_var": "svc_hole_deformation_design_web",
-              "svc_hole_deformation_design_web": false,
+              "svc_hole_deformation_design_web": true,
               "rn1_web_v3_vg_var": "Rn1_web_v3_vg",
-              "rn1_web_v3_vg_formula": "Rn1_web_v3_vg = 1.5*lc_web_v3_vg*tw_vg*Fu_vg",
+              "rn1_web_v3_vg_formula": "Rn1_web_v3_vg = 1.2*lc_web_v3_vg*tw_vg*Fu_vg",
               "rn1_web_v3_vg": {
-                "value": 150.27179062499997,
+                "value": 120.21743249999999,
                 "unit": "kN"
               },
               "phi_fragil_var": "phi_fragil",
@@ -1418,7 +1418,7 @@
               "phi_rn1_web_v3_vg_var": "phi*Rn1_web_v3_vg",
               "phi_rn1_web_v3_vg_formula": "phi*Rn1_web_v3_vg = phi_fragil*Rn1_web_v3_vg",
               "phi_rn1_web_v3_vg": {
-                "value": 112.70384296874997,
+                "value": 90.16307437499998,
                 "unit": "kN"
               },
               "ru1_web_v3_vg_var": "Ru1_web_v3_vg",
@@ -1429,7 +1429,7 @@
               "dcr1_web_v3_vg_var": "DCR1_web_v3_vg",
               "dcr1_web_v3_vg": 0.0,
               "result1_web_v3_vg": "PASS",
-              "coefficient": 1.5,
+              "coefficient": 1.2,
               "reference": "AISC 360-22 J3.11a.(b) (DRY: compute_bolt_hole_tearout_strength_j36)"
             },
             {
@@ -1493,7 +1493,7 @@
               },
               "mu3_sp_var": "Mu3_sp",
               "mu3_sp": {
-                "value": 395.289,
+                "value": 395.2814,
                 "unit": "kN-m"
               },
               "d_vg_var": "d_vg",
@@ -1504,11 +1504,11 @@
               "ru1_flange_p3_vg_var": "Ru1_flange_p3(+)_vg",
               "ru1_flange_p3_vg_formula": "Ru1_flange_p3(+)_vg = (1- alpha_Pu_web)*Pu_sp + Mu3_sp/(d_vg - tf_vg)",
               "ru1_flange_p3_vg": {
-                "value": 893.3084745762712,
+                "value": 893.2912994350283,
                 "unit": "kN"
               },
               "dcr1_flange_p3_vg_var": "DCR1_flange_p3_vg",
-              "dcr1_flange_p3_vg": 3.993233458245116,
+              "dcr1_flange_p3_vg": 3.9931566825840616,
               "result1_flange_p3_vg": "FAIL",
               "coefficient": 1.2,
               "reference": "AISC 360-22 J3.11a.(b) (DRY: compute_bolt_hole_tearout_strength_j36)"
@@ -1659,15 +1659,15 @@
               "ru1_flange_m1_vg_formula": "Ru1_flange_m1_vg = Mu3_sp",
               "mu3_sp_var": "Mu3_sp",
               "mu3_sp": {
-                "value": 395.289,
+                "value": 395.2814,
                 "unit": "kN-m"
               },
               "ru1_flange_m1_vg": {
-                "value": 395289.0,
+                "value": 395281.4,
                 "unit": "kN-mm"
               },
               "dcr1_flange_m1_vg_var": "DCR1_flange_m1_vg",
-              "dcr1_flange_m1_vg": 0.8034437637271796,
+              "dcr1_flange_m1_vg": 0.8034283163643532,
               "result1_flange_m1_vg": "PASS",
               "reference": "AISC 360-22 F13.1 (DRY: compute_member_flexural_rupture_with_tension_flange_holes_f131)"
             },
@@ -1699,18 +1699,18 @@
               "dcr_451_var": "DCR_4.5.1",
               "dcr_451": 0.0,
               "dcr_481_var": "DCR_4.8.1",
-              "dcr_481": 0.8034437637271796,
+              "dcr_481": 0.8034283163643532,
               "mrx_from_mu3_var": "|Mu3_sp|/phiMn3",
-              "mrx_from_mu3": 0.49411125,
+              "mrx_from_mu3": 0.49410175,
               "pr_over_pc_var": "Pr/(phiPc)",
               "pr_over_pc": 0.0,
               "mrx_over_mcx_var": "Mrx/Mcx",
-              "mrx_over_mcx": 0.8034437637271796,
+              "mrx_over_mcx": 0.8034283163643532,
               "mry_over_mcy_var": "Mry/Mcy",
               "mry_over_mcy": 0.0,
               "equation_used": "H1-1b",
               "dcr_fcomb_vg_var": "DCR_Fcomb_vg",
-              "dcr_fcomb_vg": 0.8034437637271796,
+              "dcr_fcomb_vg": 0.8034283163643532,
               "result_fcomb_vg": "PASS",
               "reference": "AISC 360-22 H1.1 (DRY: compute_member_combined_interaction_h11)"
             },
@@ -1759,7 +1759,7 @@
               },
               "mu3_sp_var": "Mu3_sp",
               "mu3_sp": {
-                "value": 395.289,
+                "value": 395.2814,
                 "unit": "kN-m"
               },
               "d_vg_var": "d_vg",
@@ -1770,11 +1770,11 @@
               "ru2_flange_p3_vg_var": "Ru2_flange_p3(+)_vg",
               "ru2_flange_p3_vg_formula": "Ru2_flange_p3(+)_vg = (1- alpha_Pu_web)*Pu_sp + Mu3_sp/(d_vg - tf_vg)",
               "ru2_flange_p3_vg": {
-                "value": 893.3084745762712,
+                "value": 893.2912994350283,
                 "unit": "kN"
               },
               "dcr2_flange_p3_vg_var": "DCR2_flange_p3_vg",
-              "dcr2_flange_p3_vg": 3.4222100573683893,
+              "dcr2_flange_p3_vg": 3.422144260454142,
               "result2_flange_p3_vg": "FAIL",
               "coefficient": 2.4,
               "reference": "AISC 360-22 J3.11a.(a) (DRY: compute_bolt_hole_bearing_strength_j36)"
@@ -1816,11 +1816,11 @@
               "ru3_flange_p3_vg_var": "Ru3_flange_p3(+)_vg",
               "ru3_flange_p3_vg_formula": "Ru3_flange_p3(+)_vg = Ru_blt_2_flange_vg (tomado de 3.2)",
               "ru3_flange_p3_vg": {
-                "value": 893.3084745762712,
+                "value": 893.2912994350283,
                 "unit": "kN"
               },
               "dcr3_flange_p3_vg_var": "DCR3_flange_p3_vg",
-              "dcr3_flange_p3_vg": 8.29783979901649,
+              "dcr3_flange_p3_vg": 8.297680261102528,
               "result3_flange_p3_vg": "FAIL",
               "reference": "AISC 360-22 J3.7 (DRY: compute_bolt_shear_rupture_capacity_per_bolt)"
             },
@@ -2004,17 +2004,17 @@
               },
               "mu3_sp_var": "Mu3_sp",
               "mu3_sp": {
-                "value": 395.289,
+                "value": 395.2814,
                 "unit": "kN-m"
               },
               "ru4_flange_p3_vg_var": "Ru4_flange_p3(+)_vg",
               "ru4_flange_p3_vg_formula": "Ru4_flange_p3(+)_vg = (1- alpha_Pu_web ) * Pu_sp + Mu3_sp /(d_vg - tf_vg), si <0 entonces 0",
               "ru4_flange_p3_vg": {
-                "value": 893.3084745762712,
+                "value": 893.2912994350283,
                 "unit": "kN"
               },
               "dcr4_flange_p3_vg_var": "DCR4_flange_p3_vg",
-              "dcr4_flange_p3_vg": 0.6787502174870641,
+              "dcr4_flange_p3_vg": 0.6787371675371466,
               "result4_flange_p3_vg": "PASS",
               "reference_case1": "AISC 360-22 J4.3 (DRY: compute_block_shear_strength_j45)",
               "reference_case2": "AISC 360-22 J4.3 (DRY: compute_block_shear_strength_j45)"
@@ -2040,11 +2040,11 @@
                 "unit": "mm"
               },
               "svc_hole_deformation_design_web_var": "svc_hole_deformation_design_web",
-              "svc_hole_deformation_design_web": false,
+              "svc_hole_deformation_design_web": true,
               "rn2_web_v2_vg_var": "Rn2_web_v2_vg",
-              "rn2_web_v2_vg_formula": "Rn2_web_v2_vg = 3.0*db_blt_web*tw_vg*Fu_vg",
+              "rn2_web_v2_vg_formula": "Rn2_web_v2_vg = 2.4*db_blt_web*tw_vg*Fu_vg",
               "rn2_web_v2_vg": {
-                "value": 231.97185,
+                "value": 185.57747999999995,
                 "unit": "kN"
               },
               "phi_fragil_var": "phi_fragil",
@@ -2052,10 +2052,10 @@
               "phi_rn2_web_v2_vg_var": "phi*Rn2_web_v2_vg",
               "phi_rn2_web_v2_vg_formula": "phi*Rn2_web_v2_vg = phi_fragil*Rn2_web_v2_vg",
               "phi_rn2_web_v2_vg": {
-                "value": 173.97888749999998,
+                "value": 139.18310999999997,
                 "unit": "kN"
               },
-              "coefficient": 3.0,
+              "coefficient": 2.4,
               "reference": "AISC 360-22 J3.11a.(a) (DRY: compute_bolt_hole_bearing_strength_j36)"
             },
             {
@@ -2079,11 +2079,11 @@
                 "unit": "mm"
               },
               "svc_hole_deformation_design_web_var": "svc_hole_deformation_design_web",
-              "svc_hole_deformation_design_web": false,
+              "svc_hole_deformation_design_web": true,
               "rn2_web_v3_vg_var": "Rn2_web_v3_vg",
-              "rn2_web_v3_vg_formula": "Rn2_web_v3_vg = 3.0*db_blt_web*tw_vg*Fu_vg",
+              "rn2_web_v3_vg_formula": "Rn2_web_v3_vg = 2.4*db_blt_web*tw_vg*Fu_vg",
               "rn2_web_v3_vg": {
-                "value": 231.97185,
+                "value": 185.57747999999995,
                 "unit": "kN"
               },
               "phi_fragil_var": "phi_fragil",
@@ -2091,7 +2091,7 @@
               "phi_rn2_web_v3_vg_var": "phi*Rn2_web_v3_vg",
               "phi_rn2_web_v3_vg_formula": "phi*Rn2_web_v3_vg = phi_fragil*Rn2_web_v3_vg",
               "phi_rn2_web_v3_vg": {
-                "value": 173.97888749999998,
+                "value": 139.18310999999997,
                 "unit": "kN"
               },
               "ru2_web_v3_vg_var": "Ru2_web_v3_vg",
@@ -2102,7 +2102,7 @@
               "dcr2_web_v3_vg_var": "DCR2_web_v3_vg",
               "dcr2_web_v3_vg": 0.0,
               "result2_web_v3_vg": "PASS",
-              "coefficient": 3.0,
+              "coefficient": 2.4,
               "reference": "AISC 360-22 J3.11a.(a) (DRY: compute_bolt_hole_bearing_strength_j36)"
             },
             {
@@ -2126,11 +2126,11 @@
                 "unit": "mm"
               },
               "svc_hole_deformation_design_web_var": "deformation_at_bolt_hole_service_load_is_design",
-              "svc_hole_deformation_design_web": false,
+              "svc_hole_deformation_design_web": true,
               "rn2_plt_v2_web_var": "Rn2_plt_v2_web",
-              "rn2_plt_v2_web_formula": "Rn2_plt_v2_web = 3.0*db_blt_web*t_plt_web*Fu_plt_web",
+              "rn2_plt_v2_web_formula": "Rn2_plt_v2_web = 2.4*db_blt_web*t_plt_web*Fu_plt_web",
               "rn2_plt_v2_web": {
-                "value": 244.31624999999997,
+                "value": 195.45299999999997,
                 "unit": "kN"
               },
               "phi_fragil_var": "phi_fragil",
@@ -2138,19 +2138,19 @@
               "phi_rn2_plt_v2_web_var": "phi*Rn2_plt_v2_web",
               "phi_rn2_plt_v2_web_formula": "phi*Rn2_plt_v2_web = phi_fragil*Rn2_plt_v2_web",
               "phi_rn2_plt_v2_web": {
-                "value": 183.23718749999998,
+                "value": 146.58974999999998,
                 "unit": "kN"
               },
               "ru2_plt_v2_web_var": "Ru2_plt_v2_web",
               "ru2_plt_v2_web_formula": "Ru2_plt_v2_web = Ru_web_v2_max_vg",
               "ru2_plt_v2_web": {
-                "value": 212.85,
+                "value": 212.8564,
                 "unit": "kN"
               },
               "dcr2_plt_v2_web_var": "DCR2_plt_v2_web",
-              "dcr2_plt_v2_web": 1.1616091848168102,
+              "dcr2_plt_v2_web": 1.4520551402809545,
               "result2_plt_v2_web": "FAIL",
-              "coefficient": 3.0,
+              "coefficient": 2.4,
               "reference": "AISC 360-22 J3.11a.(a) (DRY: compute_bolt_hole_bearing_strength_j36)"
             },
             {
@@ -2573,11 +2573,11 @@
               "ru4_plt_v2_web_var": "Ru4_plt_v2_web",
               "ru4_plt_v2_web_formula": "Ru4_plt_v2_web = Vu2_sp",
               "ru4_plt_v2_web": {
-                "value": 212.85,
+                "value": 212.8564,
                 "unit": "kN"
               },
               "dcr4_plt_v2_web_var": "DCR4_plt_v2_web",
-              "dcr4_plt_v2_web": 0.4528663747240364,
+              "dcr4_plt_v2_web": 0.45287999156593556,
               "result4_plt_v2_web": "PASS",
               "controlling": "rn1_fu_anv_ant",
               "reference": "AISC 360-22w J4.3 (DRY: compute_block_shear_strength_j45)"
@@ -3021,7 +3021,7 @@
               },
               "vu2_sp_var": "Vu2_sp",
               "vu2_sp": {
-                "value": 212.85,
+                "value": 212.8564,
                 "unit": "kN"
               },
               "pu_sp_var": "Pu_sp",
@@ -3034,11 +3034,11 @@
               "ru1_plt_m1_web_var": "Ru1_plt_m1_web",
               "ru1_plt_m1_web_formula": "Ru1_plt_m1_web = Vu2_sp*ex_blt_web - alpha_Pu_web*Pu_sp*ey_blt_web",
               "ru1_plt_m1_web": {
-                "value": 30863.25,
+                "value": 30864.178,
                 "unit": "kN-mm"
               },
               "dcr1_plt_m1_web_var": "DCR1_plt_m1_web",
-              "dcr1_plt_m1_web": 0.40871114607170095,
+              "dcr1_plt_m1_web": 0.4087234352487499,
               "result1_plt_m1_web": "PASS",
               "controlling": "fy_z",
               "reference": "AISC 360-22 F11.1 (DRY: compute_rectangular_bar_flexural_yielding_strength_f111)"
@@ -3125,7 +3125,7 @@
               },
               "vu2_sp_var": "Vu2_sp",
               "vu2_sp": {
-                "value": 212.85,
+                "value": 212.8564,
                 "unit": "kN"
               },
               "pu_sp_var": "Pu_sp",
@@ -3138,11 +3138,11 @@
               "ru2_plt_m1_web_var": "Ru2_plt_m1_web",
               "ru2_plt_m1_web_formula": "Ru2_plt_m1_web = Vu2_sp*ex_blt_web - alpha_Pu_web*Pu_sp*ey_blt_web",
               "ru2_plt_m1_web": {
-                "value": 30863.25,
+                "value": 30864.178,
                 "unit": "kN-mm"
               },
               "dcr2_plt_m1_web_var": "DCR2_plt_m1_web",
-              "dcr2_plt_m1_web": 0.44235050066658466,
+              "dcr2_plt_m1_web": 0.4423638013158882,
               "result2_plt_m1_web": "PASS",
               "reference": "AISC 360-22 F11.2 (DRY: compute_rectangular_bar_ltb_strength_f112)"
             },
@@ -3233,7 +3233,7 @@
               },
               "vu2_sp_var": "Vu2_sp",
               "vu2_sp": {
-                "value": 212.85,
+                "value": 212.8564,
                 "unit": "kN"
               },
               "pu_sp_var": "Pu_sp",
@@ -3246,11 +3246,11 @@
               "ru3_plt_m1_web_var": "Ru3_plt_m1_web",
               "ru3_plt_m1_web_formula": "Ru3_plt_m1_web = Vu2_sp*ex_blt_web - alpha_Pu_web*Pu_sp*ey_blt_web",
               "ru3_plt_m1_web": {
-                "value": 30863.25,
+                "value": 30864.178,
                 "unit": "kN-mm"
               },
               "dcr3_plt_m1_web_var": "DCR3_plt_m1_web",
-              "dcr3_plt_m1_web": 0.5712950725045114,
+              "dcr3_plt_m1_web": 0.5713122502750729,
               "result3_plt_m1_web": "PASS",
               "reference": "AISC 360-22 J5.5 (DRY: compute_rectangular_bar_net_flexural_rupture_strength_j55)"
             },
@@ -3260,22 +3260,22 @@
               "description": "Revision de capacidad bajo accion de fuerzas combinadas en la platina 1 de alma",
               "clause": "Criterio de interaccion solicitado por usuario (DRY)",
               "dcr_plt_v2_web_var": "DCR_plt_v2_web",
-              "dcr_plt_v2_web": 1.1616091848168102,
+              "dcr_plt_v2_web": 1.4520551402809545,
               "dcr_plt_v3_web_var": "DCR_plt_v3_web",
               "dcr_plt_v3_web": 0.0,
               "dcr_plt_p3_minus_web_var": "DCR_plt_p3(-)_web",
               "dcr_plt_p3_minus_web": 0.0,
               "dcr_plt_m1_web_var": "DCR_plt_m1_web",
-              "dcr_plt_m1_web": 0.5712950725045114,
+              "dcr_plt_m1_web": 0.5713122502750729,
               "dcr_case_1_var": "DCR_case_1",
               "dcr_case_1_formula": "DCR_case_1 = DCR_plt_m1_web + (DCR_plt_v3_web)^2 + (DCR_plt_v2_web)^4",
-              "dcr_case_1": 2.392002438812735,
+              "dcr_case_1": 5.016933239527416,
               "dcr_case_2_var": "DCR_case_2",
               "dcr_case_2_formula": "DCR_case_2 = DCR_plt_m1_web + (DCR_plt_p3(-)_web)^2 + (DCR_plt_v2_web)^4",
-              "dcr_case_2": 2.392002438812735,
+              "dcr_case_2": 5.016933239527416,
               "dcr_plt_fcomb_web_var": "DCR_plt_Fcomb_web",
               "dcr_plt_fcomb_web_formula": "DCR_plt_Fcomb_web = max(DCR_case_1, DCR_case_2)",
-              "dcr_plt_fcomb_web": 2.392002438812735,
+              "dcr_plt_fcomb_web": 5.016933239527416,
               "controlling_case": "Caso 1",
               "result_plt_fcomb_web": "FAIL",
               "reference": "DRY: compute_plate_combined_force_interaction"
@@ -3335,11 +3335,11 @@
               "ru5_plt_v2_web_var": "Ru5_plt_v2_web",
               "ru5_plt_v2_web_formula": "Ru5_plt_v2_web = Vu2_sp",
               "ru5_plt_v2_web": {
-                "value": 212.85,
+                "value": 212.8564,
                 "unit": "kN"
               },
               "dcr5_plt_v2_web_var": "DCR5_plt_v2_web",
-              "dcr5_plt_v2_web": 0.3382437070938215,
+              "dcr5_plt_v2_web": 0.33825387744724134,
               "result5_plt_v2_web": "PASS",
               "reference": "AISC 360-22 J4.2(a) (DRY: compute_element_shear_yielding_strength_j42a)"
             },
@@ -3403,11 +3403,11 @@
               "ru6_plt_v2_web_var": "Ru6_plt_v2_web",
               "ru6_plt_v2_web_formula": "Ru6_plt_v2_web = Vu2_sp",
               "ru6_plt_v2_web": {
-                "value": 212.85,
+                "value": 212.8564,
                 "unit": "kN"
               },
               "dcr6_plt_v2_web_var": "DCR6_plt_v2_web",
-              "dcr6_plt_v2_web": 0.53241876621378,
+              "dcr6_plt_v2_web": 0.5324347750467787,
               "result6_plt_v2_web": "PASS",
               "reference": "AISC 360-22 J4.2(b) (DRY: compute_element_shear_rupture_strength_j43)"
             },
@@ -3461,11 +3461,11 @@
               },
               "ru4_web_v2_vg_var": "Ru4_web_v2_vg",
               "ru4_web_v2_vg": {
-                "value": 212.85,
+                "value": 212.8564,
                 "unit": "kN"
               },
               "dcr4_web_v2_vg_var": "DCR4_web_v2_vg",
-              "dcr4_web_v2_vg": 0.33795516494226036,
+              "dcr4_web_v2_vg": 0.3379653266197592,
               "result4_web_v2_vg": "PASS",
               "reference": "AISC 360-22 J4.2(b) (DRY: compute_element_shear_rupture_strength_j43)"
             },
@@ -3582,11 +3582,11 @@
               },
               "ru5_web_v2_vg_var": "Ru5_web_v2_vg",
               "ru5_web_v2_vg": {
-                "value": 212.85,
+                "value": 212.8564,
                 "unit": "kN"
               },
               "dcr5_web_v2_vg_var": "DCR5_web_v2_vg",
-              "dcr5_web_v2_vg": 0.21018683289001286,
+              "dcr5_web_v2_vg": 0.2101931528135764,
               "result5_web_v2_vg": "PASS",
               "controlling": "rn2_fy_agv_ant",
               "reference": "AISC 360-22 J4-5"
@@ -3698,7 +3698,7 @@
               },
               "t_plt_flange_var": "t_plt_flange",
               "t_plt_flange": {
-                "value": 19.05,
+                "value": 19.1,
                 "unit": "mm"
               },
               "type_hole_plt_flange_var": "type_hole_plt_flange",
@@ -3917,14 +3917,14 @@
       "clause": "Metodo configurable de pernos grupo 1 (ICR / Elastic)",
       "source_document": "AISC 360-22 (motor interno ICR/Elastic)",
       "demand": {
-        "value": 212.85,
+        "value": 212.8564,
         "unit": "kN"
       },
       "capacity": {
         "value": 1615.6527214187765,
         "unit": "kN"
       },
-      "dcr": 0.131742420371803,
+      "dcr": 0.13174638161911512,
       "status": "PASS",
       "calculation_memory": {
         "inputs": {
@@ -3935,7 +3935,7 @@
             "unit": "kN"
           },
           "v2_blt_web": {
-            "value": 212.85,
+            "value": 212.8564,
             "unit": "kN"
           },
           "e3_blt_web": {
@@ -3948,7 +3948,7 @@
           },
           "eccentricity_source": "splice_formula_ex_plus_input_ey",
           "Mu1_blt_web": {
-            "value": 30863.25,
+            "value": 30864.178,
             "unit": "kN-mm"
           },
           "n_blt_web_x": 2,
@@ -4120,11 +4120,11 @@
           },
           "load_in_plane_kip_in": {
             "vx_kip": 0.0,
-            "vy_kip": 47.85058353877338,
-            "mz_kip_in": 273.16278004417876,
+            "vy_kip": 47.85202231600922,
+            "mz_kip_in": 273.1709935362731,
             "ex_in": 5.708661417322835,
             "ey_in": 0.0,
-            "resultant_kip": 47.85058353877338
+            "resultant_kip": 47.85202231600922
           },
           "active_mode_data": {
             "method_selected": "icr",
@@ -4133,10 +4133,10 @@
             "icr_x_in": -0.8165135378145331,
             "icr_y_in": 5.118110236220473,
             "cu": 4.908286225923327,
-            "demand_kip": 47.85058353877338,
+            "demand_kip": 47.85202231600922,
             "capacity_kip": 363.21318071832616,
-            "dcr": 0.131742420371803,
-            "final_residual": 0.0007707254724920176,
+            "dcr": 0.13174638161911512,
+            "final_residual": 0.0007707486467509739,
             "n_iterations": 18,
             "solver_note": null
           },
@@ -4146,189 +4146,189 @@
             "icr_x": -0.8165135378145331,
             "icr_y": 5.118110236220473,
             "cu": 4.908286225923327,
-            "demand": 47.85058353877338,
+            "demand": 47.85202231600922,
             "capacity": 363.21318071832616,
-            "dcr": 0.131742420371803,
-            "final_residual": 0.0007707254724920176,
+            "dcr": 0.13174638161911512,
+            "final_residual": 0.0007707486467509739,
             "n_iterations": 18,
             "iterations": [
               {
                 "iteration": 1,
-                "icr_x": -1.301588379038827,
+                "icr_x": -1.3015883790388274,
                 "icr_y": 5.118110236220473,
-                "residual_fx": -2.6645352591003757e-15,
-                "residual_fy": -6.656143509809773,
-                "residual_norm": 6.656143509809773,
-                "step_dx": -0.17952004791633713,
-                "step_dy": -7.18640601248304e-17
+                "residual_fx": -8.881784197001252e-16,
+                "residual_fy": -6.6563436475521485,
+                "residual_norm": 6.6563436475521485,
+                "step_dx": -0.17952004791633738,
+                "step_dy": -2.3953966457464832e-17
               },
               {
                 "iteration": 2,
                 "icr_x": -1.12206833112249,
                 "icr_y": 5.118110236220473,
-                "residual_fx": 0.0,
-                "residual_fy": -4.419622563030018,
-                "residual_norm": 4.419622563030018,
-                "step_dx": -0.11919978184333775,
-                "step_dy": 0.0
+                "residual_fx": -1.7763568394002505e-15,
+                "residual_fy": -4.4197554527852745,
+                "residual_norm": 4.4197554527852745,
+                "step_dx": -0.11919978184333815,
+                "step_dy": -4.7907932914929664e-17
               },
               {
                 "iteration": 3,
-                "icr_x": -1.0028685492791523,
+                "icr_x": -1.0028685492791518,
                 "icr_y": 5.118110236220473,
-                "residual_fx": -8.881784197001252e-16,
-                "residual_fy": -2.791726383795016,
-                "residual_norm": 2.791726383795016,
-                "step_dx": -0.07529447846933619,
-                "step_dy": -2.39546867082768e-17
+                "residual_fx": 8.881784197001252e-16,
+                "residual_fy": -2.7918103257675497,
+                "residual_norm": 2.7918103257675497,
+                "step_dx": -0.07529447846933589,
+                "step_dy": 2.3953966457464832e-17
               },
               {
                 "iteration": 4,
-                "icr_x": -0.927574070809816,
+                "icr_x": -0.9275740708098159,
                 "icr_y": 5.118110236220473,
                 "residual_fx": -2.6645352591003757e-15,
-                "residual_fy": -1.7013043320556136,
-                "residual_norm": 1.7013043320556136,
-                "step_dx": -0.04588516379804201,
-                "step_dy": -7.18640601248304e-17
+                "residual_fy": -1.7013554870836884,
+                "residual_norm": 1.7013554870836884,
+                "step_dx": -0.04588516379804208,
+                "step_dy": -7.186189937239449e-17
               },
               {
                 "iteration": 5,
-                "icr_x": -0.881688907011774,
+                "icr_x": -0.8816889070117738,
                 "icr_y": 5.118110236220473,
-                "residual_fx": 0.0,
-                "residual_fy": -1.0123018762665126,
-                "residual_norm": 1.0123018762665126,
-                "step_dx": -0.0273023682655478,
-                "step_dy": 0.0
+                "residual_fx": -3.552713678800501e-15,
+                "residual_fy": -1.0123323142839382,
+                "residual_norm": 1.0123323142839382,
+                "step_dx": -0.02730236826554792,
+                "step_dy": -9.581586582985933e-17
               },
               {
                 "iteration": 6,
-                "icr_x": -0.8543865387462263,
+                "icr_x": -0.8543865387462259,
                 "icr_y": 5.118110236220473,
-                "residual_fx": -3.552713678800501e-15,
-                "residual_fy": -0.5933195287531916,
-                "residual_norm": 0.5933195287531916,
-                "step_dx": -0.016002171538893932,
-                "step_dy": -9.58187468331072e-17
+                "residual_fx": -1.7763568394002505e-15,
+                "residual_fy": -0.5933373687578225,
+                "residual_norm": 0.5933373687578225,
+                "step_dx": -0.016002171538894144,
+                "step_dy": -4.7907932914929664e-17
               },
               {
                 "iteration": 7,
-                "icr_x": -0.8383843672073323,
+                "icr_x": -0.8383843672073318,
                 "icr_y": 5.118110236220473,
-                "residual_fx": 8.881784197001252e-16,
-                "residual_fy": -0.3445760699766254,
-                "residual_norm": 0.3445760699766254,
-                "step_dx": -0.00929341630057414,
-                "step_dy": 2.39546867082768e-17
+                "residual_fx": 1.7763568394002505e-15,
+                "residual_fy": -0.3445864307322921,
+                "residual_norm": 0.3445864307322921,
+                "step_dx": -0.009293416300573612,
+                "step_dy": 4.7907932914929664e-17
               },
               {
                 "iteration": 8,
                 "icr_x": -0.8290909509067582,
                 "icr_y": 5.118110236220473,
-                "residual_fx": 8.881784197001252e-16,
-                "residual_fy": -0.19902924907700736,
-                "residual_norm": 0.19902924907700736,
-                "step_dx": -0.005367934191683028,
-                "step_dy": 2.39546867082768e-17
-              },
-              {
-                "iteration": 9,
-                "icr_x": -0.8237230167150752,
-                "icr_y": 5.118110236220473,
                 "residual_fx": 0.0,
-                "residual_fy": -0.11459474510000689,
-                "residual_norm": 0.11459474510000689,
-                "step_dx": -0.0030906866868171843,
+                "residual_fy": -0.1990352335129515,
+                "residual_norm": 0.1990352335129515,
+                "step_dx": -0.0053679341916826,
                 "step_dy": 0.0
               },
               {
-                "iteration": 10,
-                "icr_x": -0.820632330028258,
+                "iteration": 9,
+                "icr_x": -0.8237230167150756,
                 "icr_y": 5.118110236220473,
-                "residual_fx": -1.7763568394002505e-15,
-                "residual_fy": -0.06585814113961419,
-                "residual_norm": 0.06585814113961419,
-                "step_dx": -0.0017762322335208062,
-                "step_dy": -4.79093734165536e-17
+                "residual_fx": -3.552713678800501e-15,
+                "residual_fy": -0.11459819074892863,
+                "residual_norm": 0.11459819074892863,
+                "step_dx": -0.0030906866868177364,
+                "step_dy": -9.581586582985933e-17
+              },
+              {
+                "iteration": 10,
+                "icr_x": -0.8206323300282579,
+                "icr_y": 5.118110236220473,
+                "residual_fx": -8.881784197001252e-16,
+                "residual_fy": -0.06586012137029229,
+                "residual_norm": 0.06586012137029229,
+                "step_dx": -0.001776232233520368,
+                "step_dy": -2.3953966457464832e-17
               },
               {
                 "iteration": 11,
-                "icr_x": -0.8188560977947371,
+                "icr_x": -0.8188560977947374,
                 "icr_y": 5.118110236220473,
-                "residual_fx": -8.881784197001252e-16,
-                "residual_fy": -0.0378086052350568,
-                "residual_norm": 0.0378086052350568,
-                "step_dx": -0.0010197199945349812,
-                "step_dy": -2.39546867082768e-17
+                "residual_fx": -2.6645352591003757e-15,
+                "residual_fy": -0.037809742068866115,
+                "residual_norm": 0.037809742068866115,
+                "step_dx": -0.001019719994535337,
+                "step_dy": -7.186189937239449e-17
               },
               {
                 "iteration": 12,
                 "icr_x": -0.8178363778002021,
                 "icr_y": 5.118110236220473,
-                "residual_fx": -2.6645352591003757e-15,
-                "residual_fy": -0.021692270920190992,
-                "residual_norm": 0.021692270920190992,
-                "step_dx": -0.0005850531181107521,
-                "step_dy": -7.18640601248304e-17
+                "residual_fx": 0.0,
+                "residual_fy": -0.02169292316607141,
+                "residual_norm": 0.02169292316607141,
+                "step_dx": -0.0005850531181109749,
+                "step_dy": 0.0
               },
               {
                 "iteration": 13,
-                "icr_x": -0.8172513246820914,
+                "icr_x": -0.8172513246820912,
                 "icr_y": 5.118110236220473,
-                "residual_fx": -8.881784197001252e-16,
-                "residual_fy": -0.012441308741209411,
-                "residual_norm": 0.012441308741209411,
-                "step_dx": -0.000335549306903043,
-                "step_dy": -2.39546867082768e-17
+                "residual_fx": 0.0,
+                "residual_fy": -0.012441682827997624,
+                "residual_norm": 0.012441682827997624,
+                "step_dx": -0.0003355493069026537,
+                "step_dy": 0.0
               },
               {
                 "iteration": 14,
-                "icr_x": -0.8169157753751883,
+                "icr_x": -0.8169157753751886,
                 "icr_y": 5.118110236220473,
                 "residual_fx": -8.881784197001252e-16,
-                "residual_fy": -0.007134098611800255,
-                "residual_norm": 0.007134098611800255,
-                "step_dx": -0.0001924107740079146,
-                "step_dy": -2.39546867082768e-17
+                "residual_fy": -0.0071343131207584065,
+                "residual_norm": 0.0071343131207584065,
+                "step_dx": -0.0001924107740079941,
+                "step_dy": -2.3953966457464832e-17
               },
               {
                 "iteration": 15,
-                "icr_x": -0.8167233646011804,
+                "icr_x": -0.8167233646011806,
                 "icr_y": 5.118110236220473,
-                "residual_fx": -1.7763568394002505e-15,
-                "residual_fy": -0.00409036118698225,
-                "residual_norm": 0.00409036118698225,
-                "step_dx": -0.0001103194117133999,
-                "step_dy": -4.79093734165536e-17
+                "residual_fx": -8.881784197001252e-16,
+                "residual_fy": -0.004090484176458631,
+                "residual_norm": 0.004090484176458631,
+                "step_dx": -0.00011031941171320366,
+                "step_dy": -2.3953966457464832e-17
               },
               {
                 "iteration": 16,
-                "icr_x": -0.8166130451894671,
+                "icr_x": -0.8166130451894673,
                 "icr_y": 5.118110236220473,
-                "residual_fx": -3.552713678800501e-15,
-                "residual_fy": -0.0023450669859457207,
-                "residual_norm": 0.0023450669859457207,
-                "step_dx": -0.00006324781565534898,
-                "step_dy": -9.58187468331072e-17
+                "residual_fx": 8.881784197001252e-16,
+                "residual_fy": -0.0023451374977128125,
+                "residual_norm": 0.0023451374977128125,
+                "step_dx": -0.00006324781565546498,
+                "step_dy": 2.3953966457464832e-17
               },
               {
                 "iteration": 17,
-                "icr_x": -0.8165497973738117,
+                "icr_x": -0.8165497973738118,
                 "icr_y": 5.118110236220473,
-                "residual_fx": -1.7763568394002505e-15,
-                "residual_fy": -0.0013444115738749929,
-                "residual_norm": 0.0013444115738749929,
-                "step_dx": -0.00003625955927867524,
-                "step_dy": -4.79093734165536e-17
+                "residual_fx": 0.0,
+                "residual_fy": -0.001344451997809415,
+                "residual_norm": 0.001344451997809415,
+                "step_dx": -0.00003625955927872199,
+                "step_dy": 0.0
               },
               {
                 "iteration": 18,
                 "icr_x": -0.8165135378145331,
                 "icr_y": 5.118110236220473,
-                "residual_fx": 0.0,
-                "residual_fy": -0.0007707254724920176,
-                "residual_norm": 0.0007707254724920176,
+                "residual_fx": -1.7763568394002505e-15,
+                "residual_fy": -0.0007707486467509739,
+                "residual_norm": 0.0007707486467509739,
                 "step_dx": 0.0,
                 "step_dy": 0.0
               }
@@ -4345,7 +4345,7 @@
               "unit": "kN"
             },
             "py": {
-              "value": 212.85,
+              "value": 212.8564,
               "unit": "kN"
             },
             "ex": {
@@ -4358,107 +4358,107 @@
             },
             "eccentricity_source": "splice_formula_ex_plus_input_ey",
             "mz": {
-              "value": 30863.25,
+              "value": 30864.178,
               "unit": "kN-mm"
             },
             "demand": {
-              "value": 212.85,
+              "value": 212.8564,
               "unit": "kN"
             },
             "capacity": {
               "value": 1615.6527214187765,
               "unit": "kN"
             },
-            "dcr": 0.131742420371803,
+            "dcr": 0.13174638161911512,
             "status": "PASS",
             "cu": 4.908286225923327,
             "icr_compare_capacity": null,
-            "final_residual": 0.0007707254724920176,
+            "final_residual": 0.0007707486467509739,
             "n_iterations": 18,
             "methods_summary": [
               {
                 "method": "elastic_superposition",
                 "applicable": true,
                 "status": "PASS",
-                "demand_kip": 11.88498484435424,
+                "demand_kip": 11.885342203541477,
                 "capacity_kip": 21.337211336960717,
-                "dcr": 0.5570074109809676,
+                "dcr": 0.5570241591483637,
                 "direct_fx_kip": -0.0,
-                "direct_fy_kip": -4.7850583538773375,
+                "direct_fy_kip": -4.7852022316009215,
                 "ip_in2": 147.3471696943394,
-                "sum_fx_kip": -3.552713678800501e-15,
-                "sum_fy_kip": -47.85058353877337,
-                "sum_mz_kip_in": -273.1627800441788,
+                "sum_fx_kip": 0.0,
+                "sum_fy_kip": -47.85202231600922,
+                "sum_mz_kip_in": -273.17099353627304,
                 "bolt_forces": [
                   {
                     "tag": "w1",
-                    "fx_kip": -9.488320838457629,
-                    "fy_kip": -2.4129781442629303,
-                    "resultant_kip": 9.79033686132402,
-                    "moment_about_cg_kip_in": -45.474799972871914
+                    "fx_kip": -9.488606134456528,
+                    "fy_kip": -2.4130506979867894,
+                    "resultant_kip": 9.79063123837787,
+                    "moment_about_cg_kip_in": -45.476167314755045
                   },
                   {
                     "tag": "w2",
-                    "fx_kip": -4.744160419228814,
-                    "fy_kip": -2.4129781442629303,
-                    "resultant_kip": 5.322548412937913,
-                    "moment_about_cg_kip_in": -9.053095966981406
+                    "fx_kip": -4.744303067228264,
+                    "fy_kip": -2.4130506979867894,
+                    "resultant_kip": 5.322708451978753,
+                    "moment_about_cg_kip_in": -9.053368176585296
                   },
                   {
                     "tag": "w3",
                     "fx_kip": 0.0,
-                    "fy_kip": -2.4129781442629303,
-                    "resultant_kip": 2.4129781442629303,
-                    "moment_about_cg_kip_in": 3.0874720349820963
+                    "fy_kip": -2.4130506979867894,
+                    "resultant_kip": 2.4130506979867894,
+                    "moment_about_cg_kip_in": 3.087564869471286
                   },
                   {
                     "tag": "w4",
-                    "fx_kip": 4.7441604192288125,
-                    "fy_kip": -2.4129781442629303,
-                    "resultant_kip": 5.322548412937911,
-                    "moment_about_cg_kip_in": -9.053095966981399
+                    "fx_kip": 4.744303067228263,
+                    "fy_kip": -2.4130506979867894,
+                    "resultant_kip": 5.322708451978752,
+                    "moment_about_cg_kip_in": -9.053368176585293
                   },
                   {
                     "tag": "w5",
-                    "fx_kip": 9.488320838457629,
-                    "fy_kip": -2.4129781442629303,
-                    "resultant_kip": 9.79033686132402,
-                    "moment_about_cg_kip_in": -45.474799972871914
+                    "fx_kip": 9.488606134456528,
+                    "fy_kip": -2.4130506979867894,
+                    "resultant_kip": 9.79063123837787,
+                    "moment_about_cg_kip_in": -45.476167314755045
                   },
                   {
                     "tag": "w6",
-                    "fx_kip": -9.488320838457629,
-                    "fy_kip": -7.157138563491745,
-                    "resultant_kip": 11.88498484435424,
-                    "moment_about_cg_kip_in": -57.72002804381786
+                    "fx_kip": -9.488606134456528,
+                    "fy_kip": -7.157353765215054,
+                    "resultant_kip": 11.885342203541477,
+                    "moment_about_cg_kip_in": -57.721763576725905
                   },
                   {
                     "tag": "w7",
-                    "fx_kip": -4.744160419228814,
-                    "fy_kip": -7.157138563491745,
-                    "resultant_kip": 8.586715932205863,
-                    "moment_about_cg_kip_in": -21.29832403792735
+                    "fx_kip": -4.744303067228264,
+                    "fy_kip": -7.157353765215054,
+                    "resultant_kip": 8.586974118637462,
+                    "moment_about_cg_kip_in": -21.298964438556162
                   },
                   {
                     "tag": "w8",
                     "fx_kip": 0.0,
-                    "fy_kip": -7.157138563491745,
-                    "resultant_kip": 7.157138563491745,
-                    "moment_about_cg_kip_in": -9.157756035963848
+                    "fy_kip": -7.157353765215054,
+                    "resultant_kip": 7.157353765215054,
+                    "moment_about_cg_kip_in": -9.158031392499577
                   },
                   {
                     "tag": "w9",
-                    "fx_kip": 4.7441604192288125,
-                    "fy_kip": -7.157138563491745,
-                    "resultant_kip": 8.58671593220586,
-                    "moment_about_cg_kip_in": -21.298324037927344
+                    "fx_kip": 4.744303067228263,
+                    "fy_kip": -7.157353765215054,
+                    "resultant_kip": 8.586974118637462,
+                    "moment_about_cg_kip_in": -21.298964438556155
                   },
                   {
                     "tag": "w10",
-                    "fx_kip": 9.488320838457629,
-                    "fy_kip": -7.157138563491745,
-                    "resultant_kip": 11.88498484435424,
-                    "moment_about_cg_kip_in": -57.72002804381786
+                    "fx_kip": 9.488606134456528,
+                    "fy_kip": -7.157353765215054,
+                    "resultant_kip": 11.885342203541477,
+                    "moment_about_cg_kip_in": -57.721763576725905
                   }
                 ],
                 "note": null
@@ -4467,91 +4467,91 @@
                 "method": "elastic_ecr",
                 "applicable": true,
                 "status": "PASS",
-                "demand_kip": 47.85058353877338,
+                "demand_kip": 47.85202231600922,
                 "capacity_kip": 85.9065473734036,
-                "dcr": 0.5570074109809676,
-                "ax_in": 2.5811159380939452,
+                "dcr": 0.5570241591483638,
+                "ax_in": 2.5811159380939457,
                 "ay_in": 0.0,
                 "ecc_x_in": 8.289777355416781,
                 "ecc_y_in": 0.0,
                 "dmax_in": 6.4108985799327805,
                 "sum_d2_in2": 213.9687645531653,
-                "center_x_in": -1.301588379038827,
+                "center_x_in": -1.3015883790388274,
                 "center_y_in": 5.118110236220473,
                 "ce": 4.026137531130634,
                 "sum_fx_kip": 0.0,
-                "sum_fy_kip": -47.85058353877338,
-                "sum_mz_kip_in": -273.1627800441788,
+                "sum_fy_kip": -47.85202231600923,
+                "sum_mz_kip_in": -273.17099353627316,
                 "bolt_forces": [
                   {
                     "tag": "w1",
-                    "fx_kip": -9.488320838457629,
-                    "fy_kip": -2.412978144262931,
-                    "resultant_kip": 9.79033686132402,
-                    "moment_about_cg_kip_in": -45.474799972871914
+                    "fx_kip": -9.48860613445653,
+                    "fy_kip": -2.4130506979867903,
+                    "resultant_kip": 9.790631238377873,
+                    "moment_about_cg_kip_in": -45.47616731475505
                   },
                   {
                     "tag": "w2",
-                    "fx_kip": -4.744160419228814,
-                    "fy_kip": -2.412978144262931,
-                    "resultant_kip": 5.322548412937913,
-                    "moment_about_cg_kip_in": -9.053095966981406
+                    "fx_kip": -4.744303067228265,
+                    "fy_kip": -2.4130506979867903,
+                    "resultant_kip": 5.3227084519787535,
+                    "moment_about_cg_kip_in": -9.053368176585298
                   },
                   {
                     "tag": "w3",
                     "fx_kip": 0.0,
-                    "fy_kip": -2.412978144262931,
-                    "resultant_kip": 2.412978144262931,
-                    "moment_about_cg_kip_in": 3.0874720349820968
+                    "fy_kip": -2.4130506979867903,
+                    "resultant_kip": 2.4130506979867903,
+                    "moment_about_cg_kip_in": 3.0875648694712874
                   },
                   {
                     "tag": "w4",
-                    "fx_kip": 4.744160419228813,
-                    "fy_kip": -2.412978144262931,
-                    "resultant_kip": 5.322548412937913,
-                    "moment_about_cg_kip_in": -9.0530959669814
+                    "fx_kip": 4.744303067228264,
+                    "fy_kip": -2.4130506979867903,
+                    "resultant_kip": 5.322708451978753,
+                    "moment_about_cg_kip_in": -9.053368176585295
                   },
                   {
                     "tag": "w5",
-                    "fx_kip": 9.488320838457629,
-                    "fy_kip": -2.412978144262931,
-                    "resultant_kip": 9.79033686132402,
-                    "moment_about_cg_kip_in": -45.474799972871914
+                    "fx_kip": 9.48860613445653,
+                    "fy_kip": -2.4130506979867903,
+                    "resultant_kip": 9.790631238377873,
+                    "moment_about_cg_kip_in": -45.47616731475505
                   },
                   {
                     "tag": "w6",
-                    "fx_kip": -9.488320838457629,
-                    "fy_kip": -7.1571385634917455,
-                    "resultant_kip": 11.88498484435424,
-                    "moment_about_cg_kip_in": -57.72002804381786
+                    "fx_kip": -9.48860613445653,
+                    "fy_kip": -7.157353765215055,
+                    "resultant_kip": 11.88534220354148,
+                    "moment_about_cg_kip_in": -57.72176357672592
                   },
                   {
                     "tag": "w7",
-                    "fx_kip": -4.744160419228814,
-                    "fy_kip": -7.1571385634917455,
-                    "resultant_kip": 8.586715932205863,
-                    "moment_about_cg_kip_in": -21.29832403792735
+                    "fx_kip": -4.744303067228265,
+                    "fy_kip": -7.157353765215055,
+                    "resultant_kip": 8.586974118637464,
+                    "moment_about_cg_kip_in": -21.298964438556165
                   },
                   {
                     "tag": "w8",
                     "fx_kip": 0.0,
-                    "fy_kip": -7.1571385634917455,
-                    "resultant_kip": 7.1571385634917455,
-                    "moment_about_cg_kip_in": -9.157756035963848
+                    "fy_kip": -7.157353765215055,
+                    "resultant_kip": 7.157353765215055,
+                    "moment_about_cg_kip_in": -9.15803139249958
                   },
                   {
                     "tag": "w9",
-                    "fx_kip": 4.744160419228813,
-                    "fy_kip": -7.1571385634917455,
-                    "resultant_kip": 8.586715932205863,
-                    "moment_about_cg_kip_in": -21.298324037927344
+                    "fx_kip": 4.744303067228264,
+                    "fy_kip": -7.157353765215055,
+                    "resultant_kip": 8.586974118637464,
+                    "moment_about_cg_kip_in": -21.298964438556162
                   },
                   {
                     "tag": "w10",
-                    "fx_kip": 9.488320838457629,
-                    "fy_kip": -7.1571385634917455,
-                    "resultant_kip": 11.88498484435424,
-                    "moment_about_cg_kip_in": -57.72002804381786
+                    "fx_kip": 9.48860613445653,
+                    "fy_kip": -7.157353765215055,
+                    "resultant_kip": 11.88534220354148,
+                    "moment_about_cg_kip_in": -57.72176357672592
                   }
                 ],
                 "note": null
@@ -4562,13 +4562,13 @@
                 "status": "PASS",
                 "converged": true,
                 "acceptance_ok": true,
-                "demand_kip": 47.85058353877338,
+                "demand_kip": 47.85202231600922,
                 "capacity_kip": 363.21318071832616,
-                "dcr": 0.131742420371803,
+                "dcr": 0.13174638161911512,
                 "icr_x_in": -0.8165135378145331,
                 "icr_y_in": 5.118110236220473,
                 "cu": 4.908286225923327,
-                "final_residual": 0.0007707254724920176,
+                "final_residual": 0.0007707486467509739,
                 "n_iterations": 18,
                 "law_mu": 10.0,
                 "law_lambda": 0.55,
@@ -4576,73 +4576,73 @@
                 "bolt_forces": [
                   {
                     "tag": "w1",
-                    "fx_kip": -9.324322966473996,
-                    "fy_kip": -1.4875482515404383,
-                    "resultant_kip": 9.442234829942297,
-                    "moment_about_cg_kip_in": -45.819553837265964
+                    "fx_kip": -9.324603331364694,
+                    "fy_kip": -1.4875929793243696,
+                    "resultant_kip": 9.44251874022142,
+                    "moment_about_cg_kip_in": -45.82093154525072
                   },
                   {
                     "tag": "w2",
-                    "fx_kip": -8.070123398586734,
-                    "fy_kip": -2.5749210949570673,
-                    "resultant_kip": 8.470956871196547,
-                    "moment_about_cg_kip_in": -17.35720808354461
+                    "fx_kip": -8.070366052050444,
+                    "fy_kip": -2.5749985180015003,
+                    "resultant_kip": 8.47121157697045,
+                    "moment_about_cg_kip_in": -17.357729982213787
                   },
                   {
                     "tag": "w3",
                     "fx_kip": 0.0,
-                    "fy_kip": -5.593269125435296,
-                    "resultant_kip": 5.593269125435296,
-                    "moment_about_cg_kip_in": 7.156741991206581
+                    "fy_kip": -5.593437304539841,
+                    "resultant_kip": 5.593437304539841,
+                    "moment_about_cg_kip_in": 7.156957181005703
                   },
                   {
                     "tag": "w4",
-                    "fx_kip": 8.070123398586734,
-                    "fy_kip": -2.574921094957068,
-                    "resultant_kip": 8.470956871196547,
-                    "moment_about_cg_kip_in": -17.357208083544606
+                    "fx_kip": 8.070366052050444,
+                    "fy_kip": -2.5749985180015007,
+                    "resultant_kip": 8.47121157697045,
+                    "moment_about_cg_kip_in": -17.357729982213783
                   },
                   {
                     "tag": "w5",
-                    "fx_kip": 9.324322966473996,
-                    "fy_kip": -1.4875482515404383,
-                    "resultant_kip": 9.442234829942297,
-                    "moment_about_cg_kip_in": -45.819553837265964
+                    "fx_kip": 9.324603331364694,
+                    "fy_kip": -1.4875929793243696,
+                    "resultant_kip": 9.44251874022142,
+                    "moment_about_cg_kip_in": -45.82093154525072
                   },
                   {
                     "tag": "w6",
-                    "fx_kip": -7.987777627458941,
-                    "fy_kip": -5.268212395842976,
-                    "resultant_kip": 9.56862859941001,
-                    "moment_about_cg_kip_in": -47.623149387187375
+                    "fx_kip": -7.988017804939868,
+                    "fy_kip": -5.268370801101765,
+                    "resultant_kip": 9.56891631011255,
+                    "moment_about_cg_kip_in": -47.62458132590513
                   },
                   {
                     "tag": "w7",
-                    "fx_kip": -5.573429834598126,
-                    "fy_kip": -7.351734990983096,
-                    "resultant_kip": 9.225569223567385,
-                    "moment_about_cg_kip_in": -23.669461671489326
+                    "fx_kip": -5.573597417172433,
+                    "fy_kip": -7.351956043855739,
+                    "resultant_kip": 9.225846619118386,
+                    "moment_about_cg_kip_in": -23.670173367776368
                   },
                   {
                     "tag": "w8",
                     "fx_kip": 0.0,
-                    "fy_kip": -8.89325167216342,
-                    "resultant_kip": 8.89325167216342,
-                    "moment_about_cg_kip_in": -11.37916060414611
+                    "fy_kip": -8.893519075549378,
+                    "resultant_kip": 8.893519075549378,
+                    "moment_about_cg_kip_in": -11.379502754147827
                   },
                   {
                     "tag": "w9",
-                    "fx_kip": 5.573429834598125,
-                    "fy_kip": -7.351734990983096,
-                    "resultant_kip": 9.225569223567383,
-                    "moment_about_cg_kip_in": -23.669461671489323
+                    "fx_kip": 5.573597417172432,
+                    "fy_kip": -7.351956043855739,
+                    "resultant_kip": 9.225846619118386,
+                    "moment_about_cg_kip_in": -23.670173367776364
                   },
                   {
                     "tag": "w10",
-                    "fx_kip": 7.987777627458941,
-                    "fy_kip": -5.268212395842976,
-                    "resultant_kip": 9.56862859941001,
-                    "moment_about_cg_kip_in": -47.623149387187375
+                    "fx_kip": 7.988017804939868,
+                    "fy_kip": -5.268370801101765,
+                    "resultant_kip": 9.56891631011255,
+                    "moment_about_cg_kip_in": -47.62458132590513
                   }
                 ],
                 "note": null
@@ -4651,181 +4651,181 @@
             "icr_iterations": [
               {
                 "iteration": 1,
-                "icr_x": -1.301588379038827,
+                "icr_x": -1.3015883790388274,
                 "icr_y": 5.118110236220473,
-                "residual_fx": -2.6645352591003757e-15,
-                "residual_fy": -6.656143509809773,
-                "residual_norm": 6.656143509809773,
-                "step_dx": -0.17952004791633713,
-                "step_dy": -7.18640601248304e-17
+                "residual_fx": -8.881784197001252e-16,
+                "residual_fy": -6.6563436475521485,
+                "residual_norm": 6.6563436475521485,
+                "step_dx": -0.17952004791633738,
+                "step_dy": -2.3953966457464832e-17
               },
               {
                 "iteration": 2,
                 "icr_x": -1.12206833112249,
                 "icr_y": 5.118110236220473,
-                "residual_fx": 0.0,
-                "residual_fy": -4.419622563030018,
-                "residual_norm": 4.419622563030018,
-                "step_dx": -0.11919978184333775,
-                "step_dy": 0.0
+                "residual_fx": -1.7763568394002505e-15,
+                "residual_fy": -4.4197554527852745,
+                "residual_norm": 4.4197554527852745,
+                "step_dx": -0.11919978184333815,
+                "step_dy": -4.7907932914929664e-17
               },
               {
                 "iteration": 3,
-                "icr_x": -1.0028685492791523,
+                "icr_x": -1.0028685492791518,
                 "icr_y": 5.118110236220473,
-                "residual_fx": -8.881784197001252e-16,
-                "residual_fy": -2.791726383795016,
-                "residual_norm": 2.791726383795016,
-                "step_dx": -0.07529447846933619,
-                "step_dy": -2.39546867082768e-17
+                "residual_fx": 8.881784197001252e-16,
+                "residual_fy": -2.7918103257675497,
+                "residual_norm": 2.7918103257675497,
+                "step_dx": -0.07529447846933589,
+                "step_dy": 2.3953966457464832e-17
               },
               {
                 "iteration": 4,
-                "icr_x": -0.927574070809816,
+                "icr_x": -0.9275740708098159,
                 "icr_y": 5.118110236220473,
                 "residual_fx": -2.6645352591003757e-15,
-                "residual_fy": -1.7013043320556136,
-                "residual_norm": 1.7013043320556136,
-                "step_dx": -0.04588516379804201,
-                "step_dy": -7.18640601248304e-17
+                "residual_fy": -1.7013554870836884,
+                "residual_norm": 1.7013554870836884,
+                "step_dx": -0.04588516379804208,
+                "step_dy": -7.186189937239449e-17
               },
               {
                 "iteration": 5,
-                "icr_x": -0.881688907011774,
+                "icr_x": -0.8816889070117738,
                 "icr_y": 5.118110236220473,
-                "residual_fx": 0.0,
-                "residual_fy": -1.0123018762665126,
-                "residual_norm": 1.0123018762665126,
-                "step_dx": -0.0273023682655478,
-                "step_dy": 0.0
+                "residual_fx": -3.552713678800501e-15,
+                "residual_fy": -1.0123323142839382,
+                "residual_norm": 1.0123323142839382,
+                "step_dx": -0.02730236826554792,
+                "step_dy": -9.581586582985933e-17
               },
               {
                 "iteration": 6,
-                "icr_x": -0.8543865387462263,
+                "icr_x": -0.8543865387462259,
                 "icr_y": 5.118110236220473,
-                "residual_fx": -3.552713678800501e-15,
-                "residual_fy": -0.5933195287531916,
-                "residual_norm": 0.5933195287531916,
-                "step_dx": -0.016002171538893932,
-                "step_dy": -9.58187468331072e-17
+                "residual_fx": -1.7763568394002505e-15,
+                "residual_fy": -0.5933373687578225,
+                "residual_norm": 0.5933373687578225,
+                "step_dx": -0.016002171538894144,
+                "step_dy": -4.7907932914929664e-17
               },
               {
                 "iteration": 7,
-                "icr_x": -0.8383843672073323,
+                "icr_x": -0.8383843672073318,
                 "icr_y": 5.118110236220473,
-                "residual_fx": 8.881784197001252e-16,
-                "residual_fy": -0.3445760699766254,
-                "residual_norm": 0.3445760699766254,
-                "step_dx": -0.00929341630057414,
-                "step_dy": 2.39546867082768e-17
+                "residual_fx": 1.7763568394002505e-15,
+                "residual_fy": -0.3445864307322921,
+                "residual_norm": 0.3445864307322921,
+                "step_dx": -0.009293416300573612,
+                "step_dy": 4.7907932914929664e-17
               },
               {
                 "iteration": 8,
                 "icr_x": -0.8290909509067582,
                 "icr_y": 5.118110236220473,
-                "residual_fx": 8.881784197001252e-16,
-                "residual_fy": -0.19902924907700736,
-                "residual_norm": 0.19902924907700736,
-                "step_dx": -0.005367934191683028,
-                "step_dy": 2.39546867082768e-17
-              },
-              {
-                "iteration": 9,
-                "icr_x": -0.8237230167150752,
-                "icr_y": 5.118110236220473,
                 "residual_fx": 0.0,
-                "residual_fy": -0.11459474510000689,
-                "residual_norm": 0.11459474510000689,
-                "step_dx": -0.0030906866868171843,
+                "residual_fy": -0.1990352335129515,
+                "residual_norm": 0.1990352335129515,
+                "step_dx": -0.0053679341916826,
                 "step_dy": 0.0
               },
               {
-                "iteration": 10,
-                "icr_x": -0.820632330028258,
+                "iteration": 9,
+                "icr_x": -0.8237230167150756,
                 "icr_y": 5.118110236220473,
-                "residual_fx": -1.7763568394002505e-15,
-                "residual_fy": -0.06585814113961419,
-                "residual_norm": 0.06585814113961419,
-                "step_dx": -0.0017762322335208062,
-                "step_dy": -4.79093734165536e-17
+                "residual_fx": -3.552713678800501e-15,
+                "residual_fy": -0.11459819074892863,
+                "residual_norm": 0.11459819074892863,
+                "step_dx": -0.0030906866868177364,
+                "step_dy": -9.581586582985933e-17
+              },
+              {
+                "iteration": 10,
+                "icr_x": -0.8206323300282579,
+                "icr_y": 5.118110236220473,
+                "residual_fx": -8.881784197001252e-16,
+                "residual_fy": -0.06586012137029229,
+                "residual_norm": 0.06586012137029229,
+                "step_dx": -0.001776232233520368,
+                "step_dy": -2.3953966457464832e-17
               },
               {
                 "iteration": 11,
-                "icr_x": -0.8188560977947371,
+                "icr_x": -0.8188560977947374,
                 "icr_y": 5.118110236220473,
-                "residual_fx": -8.881784197001252e-16,
-                "residual_fy": -0.0378086052350568,
-                "residual_norm": 0.0378086052350568,
-                "step_dx": -0.0010197199945349812,
-                "step_dy": -2.39546867082768e-17
+                "residual_fx": -2.6645352591003757e-15,
+                "residual_fy": -0.037809742068866115,
+                "residual_norm": 0.037809742068866115,
+                "step_dx": -0.001019719994535337,
+                "step_dy": -7.186189937239449e-17
               },
               {
                 "iteration": 12,
                 "icr_x": -0.8178363778002021,
                 "icr_y": 5.118110236220473,
-                "residual_fx": -2.6645352591003757e-15,
-                "residual_fy": -0.021692270920190992,
-                "residual_norm": 0.021692270920190992,
-                "step_dx": -0.0005850531181107521,
-                "step_dy": -7.18640601248304e-17
+                "residual_fx": 0.0,
+                "residual_fy": -0.02169292316607141,
+                "residual_norm": 0.02169292316607141,
+                "step_dx": -0.0005850531181109749,
+                "step_dy": 0.0
               },
               {
                 "iteration": 13,
-                "icr_x": -0.8172513246820914,
+                "icr_x": -0.8172513246820912,
                 "icr_y": 5.118110236220473,
-                "residual_fx": -8.881784197001252e-16,
-                "residual_fy": -0.012441308741209411,
-                "residual_norm": 0.012441308741209411,
-                "step_dx": -0.000335549306903043,
-                "step_dy": -2.39546867082768e-17
+                "residual_fx": 0.0,
+                "residual_fy": -0.012441682827997624,
+                "residual_norm": 0.012441682827997624,
+                "step_dx": -0.0003355493069026537,
+                "step_dy": 0.0
               },
               {
                 "iteration": 14,
-                "icr_x": -0.8169157753751883,
+                "icr_x": -0.8169157753751886,
                 "icr_y": 5.118110236220473,
                 "residual_fx": -8.881784197001252e-16,
-                "residual_fy": -0.007134098611800255,
-                "residual_norm": 0.007134098611800255,
-                "step_dx": -0.0001924107740079146,
-                "step_dy": -2.39546867082768e-17
+                "residual_fy": -0.0071343131207584065,
+                "residual_norm": 0.0071343131207584065,
+                "step_dx": -0.0001924107740079941,
+                "step_dy": -2.3953966457464832e-17
               },
               {
                 "iteration": 15,
-                "icr_x": -0.8167233646011804,
+                "icr_x": -0.8167233646011806,
                 "icr_y": 5.118110236220473,
-                "residual_fx": -1.7763568394002505e-15,
-                "residual_fy": -0.00409036118698225,
-                "residual_norm": 0.00409036118698225,
-                "step_dx": -0.0001103194117133999,
-                "step_dy": -4.79093734165536e-17
+                "residual_fx": -8.881784197001252e-16,
+                "residual_fy": -0.004090484176458631,
+                "residual_norm": 0.004090484176458631,
+                "step_dx": -0.00011031941171320366,
+                "step_dy": -2.3953966457464832e-17
               },
               {
                 "iteration": 16,
-                "icr_x": -0.8166130451894671,
+                "icr_x": -0.8166130451894673,
                 "icr_y": 5.118110236220473,
-                "residual_fx": -3.552713678800501e-15,
-                "residual_fy": -0.0023450669859457207,
-                "residual_norm": 0.0023450669859457207,
-                "step_dx": -0.00006324781565534898,
-                "step_dy": -9.58187468331072e-17
+                "residual_fx": 8.881784197001252e-16,
+                "residual_fy": -0.0023451374977128125,
+                "residual_norm": 0.0023451374977128125,
+                "step_dx": -0.00006324781565546498,
+                "step_dy": 2.3953966457464832e-17
               },
               {
                 "iteration": 17,
-                "icr_x": -0.8165497973738117,
+                "icr_x": -0.8165497973738118,
                 "icr_y": 5.118110236220473,
-                "residual_fx": -1.7763568394002505e-15,
-                "residual_fy": -0.0013444115738749929,
-                "residual_norm": 0.0013444115738749929,
-                "step_dx": -0.00003625955927867524,
-                "step_dy": -4.79093734165536e-17
+                "residual_fx": 0.0,
+                "residual_fy": -0.001344451997809415,
+                "residual_norm": 0.001344451997809415,
+                "step_dx": -0.00003625955927872199,
+                "step_dy": 0.0
               },
               {
                 "iteration": 18,
                 "icr_x": -0.8165135378145331,
                 "icr_y": 5.118110236220473,
-                "residual_fx": 0.0,
-                "residual_fy": -0.0007707254724920176,
-                "residual_norm": 0.0007707254724920176,
+                "residual_fx": -1.7763568394002505e-15,
+                "residual_fy": -0.0007707486467509739,
+                "residual_norm": 0.0007707486467509739,
                 "step_dx": 0.0,
                 "step_dy": 0.0
               }
@@ -4860,21 +4860,21 @@
       "clause": "Metodo configurable de pernos grupo 2 (ICR / Elastic)",
       "source_document": "AISC 360-22 (motor interno ICR/Elastic)",
       "demand": {
-        "value": 89.33084745762712,
+        "value": 89.32912994350282,
         "unit": "kN"
       },
       "capacity": {
         "value": 129.18665525677923,
         "unit": "kN"
       },
-      "dcr": 0.6914866499180408,
+      "dcr": 0.6914733550918772,
       "status": "PASS",
       "calculation_memory": {
         "inputs": {
           "method_selected": "elastic_superposition",
           "method_effective": "elastic_superposition",
           "P3_blt_flange": {
-            "value": 893.3084745762711,
+            "value": 893.2912994350282,
             "unit": "kN"
           },
           "v1_blt_flange": {
@@ -5066,20 +5066,20 @@
             ]
           },
           "load_in_plane_kip_in": {
-            "vx_kip": 200.82373403150612,
+            "vx_kip": 200.81987290615572,
             "vy_kip": 0.0,
             "mz_kip_in": 0.0,
             "ex_in": 15.354330708661418,
             "ey_in": 0.0,
-            "resultant_kip": 200.82373403150612
+            "resultant_kip": 200.81987290615572
           },
           "active_mode_data": {
             "method_selected": "elastic_superposition",
             "method_effective": "elastic_superposition",
-            "demand_kip": 20.082373403150612,
+            "demand_kip": 20.081987290615572,
             "capacity_kip": 29.042315430863198,
-            "dcr": 0.6914866499180408,
-            "sum_fx_kip": -200.8237340315061,
+            "dcr": 0.6914733550918772,
+            "sum_fx_kip": -200.81987290615575,
             "sum_fy_kip": 0.0,
             "sum_mz_kip_in": 0.0
           },
@@ -5103,7 +5103,7 @@
             "method_selected": "elastic_superposition",
             "method_effective": "elastic_superposition",
             "px": {
-              "value": 893.3084745762711,
+              "value": 893.2912994350282,
               "unit": "kN"
             },
             "py": {
@@ -5124,14 +5124,14 @@
               "unit": "kN-mm"
             },
             "demand": {
-              "value": 89.33084745762712,
+              "value": 89.32912994350282,
               "unit": "kN"
             },
             "capacity": {
               "value": 129.18665525677923,
               "unit": "kN"
             },
-            "dcr": 0.6914866499180408,
+            "dcr": 0.6914733550918772,
             "status": "PASS",
             "cu": null,
             "icr_compare_capacity": null,
@@ -5142,85 +5142,85 @@
                 "method": "elastic_superposition",
                 "applicable": true,
                 "status": "PASS",
-                "demand_kip": 20.082373403150612,
+                "demand_kip": 20.081987290615572,
                 "capacity_kip": 29.042315430863198,
-                "dcr": 0.6914866499180408,
-                "direct_fx_kip": -20.082373403150612,
+                "dcr": 0.6914733550918772,
+                "direct_fx_kip": -20.081987290615572,
                 "direct_fy_kip": -0.0,
                 "ip_in2": 206.7742885485771,
-                "sum_fx_kip": -200.8237340315061,
+                "sum_fx_kip": -200.81987290615575,
                 "sum_fy_kip": 0.0,
                 "sum_mz_kip_in": 0.0,
                 "bolt_forces": [
                   {
                     "tag": "f1",
-                    "fx_kip": -20.082373403150612,
+                    "fx_kip": -20.081987290615572,
                     "fy_kip": 0.0,
-                    "resultant_kip": 20.082373403150612,
-                    "moment_about_cg_kip_in": -47.0433550191914
+                    "resultant_kip": 20.081987290615572,
+                    "moment_about_cg_kip_in": -47.04245054297743
                   },
                   {
                     "tag": "f2",
-                    "fx_kip": -20.082373403150612,
+                    "fx_kip": -20.081987290615572,
                     "fy_kip": 0.0,
-                    "resultant_kip": 20.082373403150612,
-                    "moment_about_cg_kip_in": 47.0433550191914
+                    "resultant_kip": 20.081987290615572,
+                    "moment_about_cg_kip_in": 47.04245054297743
                   },
                   {
                     "tag": "f3",
-                    "fx_kip": -20.082373403150612,
+                    "fx_kip": -20.081987290615572,
                     "fy_kip": 0.0,
-                    "resultant_kip": 20.082373403150612,
-                    "moment_about_cg_kip_in": -47.0433550191914
+                    "resultant_kip": 20.081987290615572,
+                    "moment_about_cg_kip_in": -47.04245054297743
                   },
                   {
                     "tag": "f4",
-                    "fx_kip": -20.082373403150612,
+                    "fx_kip": -20.081987290615572,
                     "fy_kip": 0.0,
-                    "resultant_kip": 20.082373403150612,
-                    "moment_about_cg_kip_in": 47.0433550191914
+                    "resultant_kip": 20.081987290615572,
+                    "moment_about_cg_kip_in": 47.04245054297743
                   },
                   {
                     "tag": "f5",
-                    "fx_kip": -20.082373403150612,
+                    "fx_kip": -20.081987290615572,
                     "fy_kip": 0.0,
-                    "resultant_kip": 20.082373403150612,
-                    "moment_about_cg_kip_in": -47.0433550191914
+                    "resultant_kip": 20.081987290615572,
+                    "moment_about_cg_kip_in": -47.04245054297743
                   },
                   {
                     "tag": "f6",
-                    "fx_kip": -20.082373403150612,
+                    "fx_kip": -20.081987290615572,
                     "fy_kip": 0.0,
-                    "resultant_kip": 20.082373403150612,
-                    "moment_about_cg_kip_in": 47.0433550191914
+                    "resultant_kip": 20.081987290615572,
+                    "moment_about_cg_kip_in": 47.04245054297743
                   },
                   {
                     "tag": "f7",
-                    "fx_kip": -20.082373403150612,
+                    "fx_kip": -20.081987290615572,
                     "fy_kip": 0.0,
-                    "resultant_kip": 20.082373403150612,
-                    "moment_about_cg_kip_in": -47.0433550191914
+                    "resultant_kip": 20.081987290615572,
+                    "moment_about_cg_kip_in": -47.04245054297743
                   },
                   {
                     "tag": "f8",
-                    "fx_kip": -20.082373403150612,
+                    "fx_kip": -20.081987290615572,
                     "fy_kip": 0.0,
-                    "resultant_kip": 20.082373403150612,
-                    "moment_about_cg_kip_in": 47.0433550191914
+                    "resultant_kip": 20.081987290615572,
+                    "moment_about_cg_kip_in": 47.04245054297743
                   },
                   {
                     "tag": "f9",
-                    "fx_kip": -20.082373403150612,
+                    "fx_kip": -20.081987290615572,
                     "fy_kip": 0.0,
-                    "resultant_kip": 20.082373403150612,
-                    "moment_about_cg_kip_in": -47.0433550191914
+                    "resultant_kip": 20.081987290615572,
+                    "moment_about_cg_kip_in": -47.04245054297743
                   },
                   {
                     "tag": "f10",
-                    "fx_kip": -20.082373403150612,
+                    "fx_kip": -20.081987290615572,
                     "fy_kip": 0.0,
-                    "resultant_kip": 20.082373403150612,
-                    "moment_about_cg_kip_in": 47.0433550191914
+                    "resultant_kip": 20.081987290615572,
+                    "moment_about_cg_kip_in": 47.04245054297743
                   }
                 ],
                 "note": null
@@ -5300,6 +5300,6 @@
     "fail_count": 0,
     "error_count": 0,
     "not_implemented_count": 0,
-    "worst_dcr": 0.6914866499180408
+    "worst_dcr": 0.6914733550918772
   }
 }

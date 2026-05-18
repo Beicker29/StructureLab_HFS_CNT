@@ -38,7 +38,7 @@
   "platina_flange": {
     "steel_plt_flange": "ASTM A572 Gr 50",
     "t_plt_flange": {
-      "value": 19.05,
+      "value": 19.10,
       "unit": "mm"
     },
     "type_hole_plt_flange": "standard",
@@ -51,7 +51,7 @@
     "desc_blt_web": "Grupo 120",
     "thread_blt_web": "N",
     "type_tight_blt_web": "pretensioned",
-    "deformation_at_bolt_hole_service_load_is_design": false,
+    "deformation_at_bolt_hole_service_load_is_design": true,
     "Ubs_web_v2_vg": 0.5,
     "Ubs_web_v3_vg": 0.5,
     "n_blt_web_x": 2,
@@ -123,7 +123,7 @@
       "unit": "kN"
     },
     "Vu2_sp": {
-      "value": 212.85,
+      "value": 212.8564,
       "unit": "kN"
     },
     "Vu3_sp": {
@@ -131,7 +131,7 @@
       "unit": "kN"
     },
     "Mu3_sp": {
-      "value": 395.289,
+      "value": 395.2814,
       "unit": "kN-m"
     },
     "Mu2_sp": {
