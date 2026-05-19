@@ -112,7 +112,6 @@ class XlsxSectionsCatalog:
             diameter_nominal=record["diameter_nominal"],  # type: ignore[arg-type]
             length=record["length"],  # type: ignore[arg-type]
             width_across_flats=record["width_across_flats"],  # type: ignore[arg-type]
-            head_diameter=record["head_diameter"],  # type: ignore[arg-type]
             head_height=record["head_height"],  # type: ignore[arg-type]
             source=self._source(sheet="Perno", key=str(record["shape"])),
         )

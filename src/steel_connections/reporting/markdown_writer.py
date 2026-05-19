@@ -2895,7 +2895,6 @@ def _render_splice_step_1_notes(notes: list[dict], *, allowed_scopes: set[str] |
                     f"- Diametro nominal (db_blt_web): `{_format_quantity(item.get('diameter_nominal'))}`",
                     f"- Longitud de vastago: `{_format_quantity(item.get('length_shank'))}`",
                     f"- Width across flats: `{_format_quantity(item.get('width_across_flats'))}`",
-                    f"- Diametro de cabeza: `{_format_quantity(item.get('head_diameter'))}`",
                     f"- Altura de cabeza: `{_format_quantity(item.get('head_height'))}`",
                     "",
                 ]
@@ -2916,7 +2915,6 @@ def _render_splice_step_1_notes(notes: list[dict], *, allowed_scopes: set[str] |
                     f"- Diametro nominal (db_blt_flange): `{_format_quantity(item.get('diameter_nominal'))}`",
                     f"- Longitud de vastago: `{_format_quantity(item.get('length_shank'))}`",
                     f"- Width across flats: `{_format_quantity(item.get('width_across_flats'))}`",
-                    f"- Diametro de cabeza: `{_format_quantity(item.get('head_diameter'))}`",
                     f"- Altura de cabeza: `{_format_quantity(item.get('head_height'))}`",
                     "",
                 ]
@@ -3365,7 +3363,6 @@ def _render_fully_restrained_splice_outline(
                         f"- Diametro nominal (db_blt_web): `{_format_quantity(note.get('diameter_nominal'))}`",
                         f"- Longitud de vastago: `{_format_quantity(note.get('length_shank'))}`",
                         f"- Width across flats: `{_format_quantity(note.get('width_across_flats'))}`",
-                        f"- Diametro de cabeza: `{_format_quantity(note.get('head_diameter'))}`",
                         f"- Altura de cabeza: `{_format_quantity(note.get('head_height'))}`",
                         "",
                     ]
@@ -3439,7 +3436,6 @@ def _render_fully_restrained_splice_outline(
                         f"- Diametro nominal (db_blt_flange): `{_format_quantity(note.get('diameter_nominal'))}`",
                         f"- Longitud de vastago: `{_format_quantity(note.get('length_shank'))}`",
                         f"- Width across flats: `{_format_quantity(note.get('width_across_flats'))}`",
-                        f"- Diametro de cabeza: `{_format_quantity(note.get('head_diameter'))}`",
                         f"- Altura de cabeza: `{_format_quantity(note.get('head_height'))}`",
                         "",
                     ]

@@ -370,7 +370,6 @@ def _load_bolt_sections_index() -> dict[str, list[dict[str, float | str]]]:
         diameter_in_raw = normalized.get("diametro nominal [in]")
         length_in_raw = normalized.get("longitud vastago (l) [in]")
         flats_in_raw = normalized.get("width across flats (f) [in]")
-        head_d_in_raw = normalized.get("head diameter (d) [in]")
         head_h_in_raw = normalized.get("height (h1) [in]")
         socket_dia_in_raw = normalized.get("socket dia.")
         h1_table_in_raw = normalized.get("h1")
@@ -391,7 +390,6 @@ def _load_bolt_sections_index() -> dict[str, list[dict[str, float | str]]]:
             "diameter_in": diameter_in,
             "length_in": _as_float_or_fraction(length_in_raw) or 0.0,
             "width_across_flats_in": _as_float_or_fraction(flats_in_raw) or 0.0,
-            "head_diameter_in": _as_float_or_fraction(head_d_in_raw) or 0.0,
             "head_height_in": _as_float_or_fraction(head_h_in_raw) or 0.0,
             "socket_dia_in": _as_float_or_fraction(socket_dia_in_raw) or 0.0,
             "h1_table_715_in": _as_float_or_fraction(h1_table_in_raw) or 0.0,
@@ -562,7 +560,6 @@ def get_bolt_section_properties(
         "diameter_nominal": _in_to_length_unit(float(selected["diameter_in"]), unit_system),
         "length": _in_to_length_unit(float(selected["length_in"]), unit_system),
         "width_across_flats": _in_to_length_unit(float(selected["width_across_flats_in"]), unit_system),
-        "head_diameter": _in_to_length_unit(float(selected["head_diameter_in"]), unit_system),
         "head_height": _in_to_length_unit(float(selected["head_height_in"]), unit_system),
         "socket_diameter_table_715": _in_to_length_unit(float(selected["socket_dia_in"]), unit_system),
         "h1_table_715": _in_to_length_unit(float(selected["h1_table_715_in"]), unit_system),

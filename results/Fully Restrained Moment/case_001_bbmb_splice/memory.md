@@ -130,7 +130,6 @@ Propiedades organizadas por ámbito.
 - Diámetro nominal (db_blt_web): `19.05 mm`
 - Longitud de vástago: `44.45 mm`
 - Width across flats: `31.75 mm`
-- Diámetro de cabeza: `39.69 mm`
 - Altura de cabeza: `11.91 mm`
 
 ### 1.4 Ámbito `PLATINA_2`
@@ -185,7 +184,6 @@ Propiedades organizadas por ámbito.
 - Diámetro nominal (db_blt_flange): `22.22 mm`
 - Longitud de vástago: `44.45 mm`
 - Width across flats: `36.51 mm`
-- Diámetro de cabeza: `47.62 mm`
 - Altura de cabeza: `15.48 mm`
 
 ## Paso 2 - Revisiones de requerimientos de propiedades mecánicas y geométricas

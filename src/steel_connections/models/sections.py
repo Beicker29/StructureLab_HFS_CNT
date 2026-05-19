@@ -25,6 +25,5 @@ class BoltSection(StrictModel):
     diameter_nominal: Quantity
     length: Quantity
     width_across_flats: Quantity
-    head_diameter: Quantity
     head_height: Quantity
     source: CatalogSource

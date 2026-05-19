@@ -76,7 +76,6 @@ def test_xlsx_bolt_section_matches_legacy_repository() -> None:
         _assert_quantity_equal(typed.diameter_nominal, legacy["diameter_nominal"])  # type: ignore[arg-type]
         _assert_quantity_equal(typed.length, legacy["length"])  # type: ignore[arg-type]
         _assert_quantity_equal(typed.width_across_flats, legacy["width_across_flats"])  # type: ignore[arg-type]
-        _assert_quantity_equal(typed.head_diameter, legacy["head_diameter"])  # type: ignore[arg-type]
         _assert_quantity_equal(typed.head_height, legacy["head_height"])  # type: ignore[arg-type]
         assert typed.source.sheet == "Perno"
         assert typed.source.checksum_sha256

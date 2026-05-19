@@ -3835,10 +3835,6 @@
                 "value": 31.75,
                 "unit": "mm"
               },
-              "head_diameter": {
-                "value": 39.6875,
-                "unit": "mm"
-              },
               "head_height": {
                 "value": 11.90625,
                 "unit": "mm"
@@ -3874,10 +3870,6 @@
               },
               "width_across_flats": {
                 "value": 36.512499999999996,
-                "unit": "mm"
-              },
-              "head_diameter": {
-                "value": 47.625,
                 "unit": "mm"
               },
               "head_height": {

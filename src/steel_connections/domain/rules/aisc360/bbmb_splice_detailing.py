@@ -4369,11 +4369,6 @@ def run_step1_viga_detailing(case: BeamBeamMomentBoltedCase, rule_binding: objec
                         if isinstance(bolt_web.get("width_across_flats"), Quantity)
                         else None
                     ),
-                    "head_diameter": (
-                        bolt_web["head_diameter"].model_dump()
-                        if isinstance(bolt_web.get("head_diameter"), Quantity)
-                        else None
-                    ),
                     "head_height": (
                         bolt_web["head_height"].model_dump()
                         if isinstance(bolt_web.get("head_height"), Quantity)
@@ -4401,11 +4396,6 @@ def run_step1_viga_detailing(case: BeamBeamMomentBoltedCase, rule_binding: objec
                     "width_across_flats": (
                         bolt_flange["width_across_flats"].model_dump()
                         if isinstance(bolt_flange.get("width_across_flats"), Quantity)
-                        else None
-                    ),
-                    "head_diameter": (
-                        bolt_flange["head_diameter"].model_dump()
-                        if isinstance(bolt_flange.get("head_diameter"), Quantity)
                         else None
                     ),
                     "head_height": (
